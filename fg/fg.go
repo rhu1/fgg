@@ -26,8 +26,7 @@ func (p FGProgram) String() string {
 	return b.String()
 }
 
-var _ TypeLit = TStruct{}
-var _ FGNode = FieldDecl{}
+var _ FGNode = FGProgram{}
 
 type TypeLit interface {
 	FGNode
@@ -35,8 +34,7 @@ type TypeLit interface {
 }
 
 type TStruct struct {
-	typ Name
-	//elems map[Name]Name // N.B. Unordered -- OK?
+	typ   Name
 	elems []FieldDecl
 }
 
@@ -62,6 +60,8 @@ func (s TStruct) String() string {
 	return b.String()
 }
 
+var _ TypeLit = TStruct{}
+
 type FieldDecl struct {
 	field Name
 	typ   Name
@@ -71,14 +71,13 @@ func (fd FieldDecl) String() string {
 	return fd.field + " " + fd.typ
 }
 
+var _ FGNode = FieldDecl{}
+
 type Expr interface {
 	FGNode
 	Subs(map[Variable]Expr) Expr
 	Eval() Expr
 }
-
-var _ Expr = Variable{}
-var _ Expr = StructLit{}
 
 type Variable struct {
 	n Name
@@ -99,6 +98,8 @@ func (this Variable) Eval() Expr {
 func (this Variable) String() string {
 	return this.n
 }
+
+var _ Expr = Variable{}
 
 type StructLit struct {
 	t  Name
@@ -127,6 +128,8 @@ func (this StructLit) String() string {
 	sb.WriteString("}")
 	return sb.String()
 }
+
+var _ Expr = StructLit{}
 
 /*
 type Select struct {
