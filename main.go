@@ -28,7 +28,7 @@ var _ = strconv.Itoa
 */
 
 func main() {
-	var adptr fg.FGAdaptor // i.e., a zero-value constructor? -- stack is empty and rest only needs methods?
+	var adptr fg.FGAdaptor
 
 	//e := "t_S{}"
 	e := "B{A{}}"
@@ -45,7 +45,8 @@ func main() {
 
 	ast := adptr.Parse(prog)
 
-	fmt.Println("ast:\n", ast)
+	fmt.Println("ast:")
+	fmt.Print(ast)
 
 	ast.Ok()
 }

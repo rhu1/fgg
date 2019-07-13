@@ -26,77 +26,41 @@ func (a *FGAdaptor) Parse(input string) FGProgram {
 	return a.pop().(FGProgram)
 }
 
-func (l *FGAdaptor) push(i FGNode) {
-	l.stack = append(l.stack, i)
-}
-
-func (l *FGAdaptor) pop() FGNode {
-	if len(l.stack) < 1 {
-		panic("stack is empty unable to pop")
-	}
-	result := l.stack[len(l.stack)-1]
-	l.stack = l.stack[:len(l.stack)-1]
-	return result
-}
-
-// Children: 3=type_decl start (if any)
 func (a *FGAdaptor) ExitProgram(ctx *parser.ProgramContext) {
 
 	body := a.pop().(Expr)
-	fmt.Println("body: ", body)
-
-	fmt.Println("program children: ", ctx.GetChildCount())
-	c := ctx.GetChild(3)
-	fmt.Println(c, reflect.TypeOf(c), c.GetChildCount()) // Type_declsContext
-
-	var numDecls int
-	if ctx.GetChildCount() <= 13 {
-		numDecls = 0
-	} else {
-		numDecls = ctx.GetChild(3).GetChildCount() / 2 // e.g., decl ';' decl ';' decl ';'
+	var ds []TypeLit
+	if ctx.GetChildCount() > 13 {
+		nds := ctx.GetChild(3).GetChildCount() / 2 // e.g., decl ';' decl ';' decl ';'
+		ds = make([]TypeLit, nds)
+		for i := nds - 1; i >= 0; i-- {
+			ds[i] = a.pop().(TypeLit) // Adding backwards
+		}
 	}
-	typeDecls := make([]TypeLit, numDecls)
-	for i := numDecls - 1; i >= 0; i-- {
-		popped := a.pop()
-		fmt.Println("popped: ", popped)
-		typeDecls[i] = popped.(TypeLit) // Adding backwards
-	}
-	fmt.Println("numtds", typeDecls)
 
-	a.push(FGProgram{typeDecls, body})
+	a.push(FGProgram{ds, body})
 }
 
 // Children: 0=typ, 1=name, 2=typelit
 func (a *FGAdaptor) ExitType_decl(ctx *parser.Type_declContext) {
-	fmt.Println("td children", ctx.GetChildCount())
 	name := ctx.GetName().GetText()
 	td := a.pop().(TStruct)
 	td.typ = Type(name)
 	a.push(td)
-	fmt.Println("pused td: ", td)
 }
 
 // Children: 2=field_decls
 func (a *FGAdaptor) ExitStruct(ctx *parser.StructContext) {
-
-	fmt.Println("struct children: ", ctx.GetChildCount())
-	var numDecls int
-	if ctx.GetChildCount() <= 3 {
-		numDecls = 0
-	} else {
-		numDecls = (ctx.GetChild(2).GetChildCount() + 1) / 2 // e.g., fd ';' fd ';' fd
+	var elems []FieldDecl
+	if ctx.GetChildCount() > 3 {
+		nelems := (ctx.GetChild(2).GetChildCount() + 1) / 2 // e.g., fd ';' fd ';' fd
+		elems = make([]FieldDecl, nelems)
+		for i := nelems - 1; i >= 0; i-- { // N.B. ordering doesn't currently matter, stored in a map
+			fd := a.pop().(FieldDecl)
+			elems[i] = fd // Adding backwards
+		}
 	}
-	fmt.Println("td struct children", numDecls, ctx.GetChild(2).GetChildCount())
-	//fmt.Println("aaa: ", ctx.GetChild(2).GetChild(0), reflect.TypeOf(ctx.GetChild(2).GetChild(0)))
-	//fmt.Println("bbb: ", ctx.GetChild(2).GetChild(1), reflect.TypeOf(ctx.GetChild(2).GetChild(1)))
-	//elems := make(map[Name]Name)         // N.B. lost ordering -- fine?
-	elems := make([]FieldDecl, numDecls)
-	for i := numDecls - 1; i >= 0; i-- { // N.B. ordering doesn't currently matter, stored in a map
-		fd := a.pop().(FieldDecl)
-		elems[i] = fd // Adding backwards
-	}
-	a.push(TStruct{"^", elems})
-	fmt.Println("pused tstruct: ", TStruct{"^", elems})
+	a.push(TStruct{"^", elems}) // "^" to be overwritten in ExitType_decl
 }
 
 func (a *FGAdaptor) ExitField_decl(ctx *parser.Field_declContext) {
@@ -116,24 +80,31 @@ func (a *FGAdaptor) ExitVariable(ctx *parser.VariableContext) {
 // Children: 0=typ (*antlr.TerminalNodeImpl), 1='{', 2=exprs (*parser.ExprsContext), 3='}'
 // N.B. ExprsContext is a "helper" Context, actual exprs are its children
 func (a *FGAdaptor) ExitLit(ctx *parser.LitContext) {
-	typ := ctx.GetChild(0).(*antlr.TerminalNodeImpl)
-	name := typ.GetText()
-	ctx.GetArgs()
-
-	fmt.Println("lit children: ", ctx.GetChildCount())
-	var numExprs int
-	if ctx.GetChildCount() <= 3 {
-		numExprs = 0
-	} else {
-		numExprs = (ctx.GetChild(2).GetChildCount() + 1) / 2 // e.g., 'x' ',' 'y' ',' 'z'
+	typ := Type(ctx.GetTyp().GetText())
+	var es []Expr
+	if ctx.GetChildCount() > 3 {
+		numExprs := (ctx.GetChild(2).GetChildCount() + 1) / 2 // e.g., 'x' ',' 'y' ',' 'z'
+		es = make([]Expr, numExprs)
+		for i := numExprs - 1; i >= 0; i-- {
+			es[i] = a.pop().(Expr) // Adding backwards
+		}
 	}
-	es := make([]Expr, numExprs)
-	for i := numExprs - 1; i >= 0; i-- {
-		es[i] = a.pop().(Expr) // Adding backwards
-	}
-	a.push(StructLit{Type(name), es})
+	a.push(StructLit{typ, es})
 }
 
 func (a *FGAdaptor) ExitSelect(ctx *parser.SelectContext) {}
 
 func (a *FGAdaptor) ExitAssertion(ctx *parser.AssertionContext) {}
+
+func (a *FGAdaptor) push(i FGNode) {
+	a.stack = append(a.stack, i)
+}
+
+func (a *FGAdaptor) pop() FGNode {
+	if len(a.stack) < 1 {
+		panic("stack is empty unable to pop")
+	}
+	result := a.stack[len(a.stack)-1]
+	a.stack = a.stack[:len(a.stack)-1]
+	return result
+}
