@@ -37,8 +37,9 @@ type TypeLit interface {
 }
 
 type TStruct struct {
-	typ   Name
-	elems map[Name]Name // N.B. Unordered -- OK?
+	typ Name
+	//elems map[Name]Name // N.B. Unordered -- OK?
+	elems []FieldDecl
 }
 
 func (s TStruct) GetType() Name {
@@ -49,17 +50,15 @@ func (s TStruct) String() string {
 	var b strings.Builder
 	b.WriteString("type ")
 	b.WriteString(s.typ)
-	b.WriteString(" struct { ")
-	first := true
-	for f, t := range s.elems {
-		if first {
-			first = false
-		} else {
-			b.WriteString("; ")
-		}
-		b.WriteString(f)
+	b.WriteString(" struct {")
+	if len(s.elems) > 0 {
 		b.WriteString(" ")
-		b.WriteString(t)
+		b.WriteString(s.elems[0].String())
+		for _, v := range s.elems[1:] {
+			b.WriteString("; ")
+			b.WriteString(v.String())
+		}
+		b.WriteString(" ")
 	}
 	b.WriteString("}")
 	return b.String()
