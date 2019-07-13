@@ -10,8 +10,8 @@ type Env map[Name]Type
 func fields(ds []TypeLit, t_S Type) []FieldDecl {
 	for _, v := range ds {
 		s, ok := v.(TStruct)
-		if ok && s.typ == t_S {
-			return s.elems
+		if ok && s.t == t_S {
+			return s.fds
 		}
 	}
 	panic("Unknown type: " + t_S.String())
@@ -31,25 +31,25 @@ type FGNode interface {
 }
 
 type FGProgram struct {
-	decls []TypeLit
-	body  Expr
+	ds []TypeLit
+	e  Expr
 }
 
 func (p FGProgram) Ok() bool {
 	var gamma Env
-	p.body.Typing(p.decls, gamma)
+	p.e.Typing(p.ds, gamma)
 	return true
 }
 
 func (p FGProgram) String() string {
 	var b strings.Builder
 	b.WriteString("package main;\n")
-	for _, v := range p.decls {
+	for _, v := range p.ds {
 		b.WriteString(v.String())
 		b.WriteString(";\n")
 	}
 	b.WriteString("func main() { _ = ")
-	b.WriteString(p.body.String())
+	b.WriteString(p.e.String())
 	b.WriteString(" }")
 	return b.String()
 }
@@ -62,23 +62,23 @@ type TypeLit interface {
 }
 
 type TStruct struct {
-	typ   Type
-	elems []FieldDecl
+	t   Type
+	fds []FieldDecl
 }
 
 func (s TStruct) GetType() Type {
-	return s.typ
+	return s.t
 }
 
 func (s TStruct) String() string {
 	var b strings.Builder
 	b.WriteString("type ")
-	b.WriteString(s.typ.String())
+	b.WriteString(s.t.String())
 	b.WriteString(" struct {")
-	if len(s.elems) > 0 {
+	if len(s.fds) > 0 {
 		b.WriteString(" ")
-		b.WriteString(s.elems[0].String())
-		for _, v := range s.elems[1:] {
+		b.WriteString(s.fds[0].String())
+		for _, v := range s.fds[1:] {
 			b.WriteString("; ")
 			b.WriteString(v.String())
 		}
@@ -91,12 +91,12 @@ func (s TStruct) String() string {
 var _ TypeLit = TStruct{}
 
 type FieldDecl struct {
-	field Name
-	typ   Type
+	f Name
+	t Type
 }
 
 func (fd FieldDecl) String() string {
-	return fd.field + " " + fd.typ.String()
+	return fd.f + " " + fd.t.String()
 }
 
 var _ FGNode = FieldDecl{}
@@ -109,7 +109,7 @@ type Expr interface {
 }
 
 type Variable struct {
-	n Name
+	id Name
 }
 
 func (this Variable) Subs(m map[Variable]Expr) Expr {
@@ -121,11 +121,11 @@ func (this Variable) Subs(m map[Variable]Expr) Expr {
 }
 
 func (this Variable) Eval() Expr {
-	panic(this.n)
+	panic(this.id)
 }
 
 func (v Variable) Typing(ds []TypeLit, gamma Env) Type {
-	res, ok := gamma[v.n]
+	res, ok := gamma[v.id]
 	if !ok {
 		panic("Var not in env: " + v.String())
 	}
@@ -133,7 +133,7 @@ func (v Variable) Typing(ds []TypeLit, gamma Env) Type {
 }
 
 func (this Variable) String() string {
-	return this.n
+	return this.id
 }
 
 var _ Expr = Variable{}
@@ -161,7 +161,7 @@ func (s StructLit) Typing(ds []TypeLit, gamma Env) Type {
 	}
 	for i := 0; i < len(s.es); i++ {
 		t := s.es[i].Typing(ds, gamma)
-		u := fs[i].typ
+		u := fs[i].t
 		if !u.Impl(t) {
 			panic("Arg expr must impl field type: arg=" + t.String() + " field=" + u.String())
 		}

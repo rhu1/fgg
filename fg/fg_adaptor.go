@@ -27,7 +27,6 @@ func (a *FGAdaptor) Parse(input string) FGProgram {
 }
 
 func (a *FGAdaptor) ExitProgram(ctx *parser.ProgramContext) {
-
 	body := a.pop().(Expr)
 	var ds []TypeLit
 	if ctx.GetChildCount() > 13 {
@@ -45,7 +44,7 @@ func (a *FGAdaptor) ExitProgram(ctx *parser.ProgramContext) {
 func (a *FGAdaptor) ExitType_decl(ctx *parser.Type_declContext) {
 	name := ctx.GetName().GetText()
 	td := a.pop().(TStruct)
-	td.typ = Type(name)
+	td.t = Type(name)
 	a.push(td)
 }
 
