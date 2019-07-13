@@ -4,10 +4,80 @@ import "strings"
 
 type Name = string
 
+type FGNode interface {
+	String() string
+}
+
+type FGProgram struct {
+	decls []TypeLit
+	body  Expr
+}
+
+func (p FGProgram) String() string {
+	var b strings.Builder
+	b.WriteString("package main;\n")
+	for _, v := range p.decls {
+		b.WriteString(v.String())
+		b.WriteString("\n")
+	}
+	b.WriteString("func main() {\n")
+	b.WriteString("\t_ = ")
+	b.WriteString(p.body.String())
+	b.WriteString("\n")
+	b.WriteString("}")
+	return b.String()
+}
+
+var _ TypeLit = TStruct{}
+var _ FGNode = FieldDecl{}
+
+type TypeLit interface {
+	FGNode
+	GetType() Name
+}
+
+type TStruct struct {
+	typ   Name
+	elems map[Name]Name // N.B. Unordered -- OK?
+}
+
+func (s TStruct) GetType() Name {
+	return s.typ
+}
+
+func (s TStruct) String() string {
+	var b strings.Builder
+	b.WriteString("type ")
+	b.WriteString(s.typ)
+	b.WriteString(" struct { ")
+	first := true
+	for f, t := range s.elems {
+		if first {
+			first = false
+		} else {
+			b.WriteString("; ")
+		}
+		b.WriteString(f)
+		b.WriteString(" ")
+		b.WriteString(t)
+	}
+	b.WriteString("}")
+	return b.String()
+}
+
+type FieldDecl struct {
+	field Name
+	typ   Name
+}
+
+func (fd FieldDecl) String() string {
+	return fd.field + " " + fd.typ
+}
+
 type Expr interface {
+	FGNode
 	Subs(map[Variable]Expr) Expr
 	Eval() Expr
-	String() string
 }
 
 var _ Expr = Variable{}
@@ -56,8 +126,8 @@ func (this StructLit) String() string {
 			sb.WriteString(", ")
 			sb.WriteString(v.String())
 		}
-		sb.WriteString("}")
 	}
+	sb.WriteString("}")
 	return sb.String()
 }
 

@@ -26,15 +26,21 @@ var _ = strconv.Itoa
 func main() {
 	var adptr fg.FGAdaptor // i.e., a zero-value constructor? -- stack is empty and rest only needs methods?
 
+	//e := "t_S{}"
+	//e := "t_S{x}"
 	e := "t_S{x, y, t_S{z}}"
 
 	var b strings.Builder
 	b.WriteString("package main;\n")
+	b.WriteString("type t_S struct { }\n")
+	b.WriteString("type t_S struct { f t }\n")
+	b.WriteString("type t_S struct { f1 t; f2 t }\n")
 	b.WriteString("func main() {\n")
 	b.WriteString("\t_ = " + e + "\n")
 	b.WriteString("}")
+	prog := b.String()
 
-	ast := adptr.Parse(b.String())
+	ast := adptr.Parse(prog)
 
 	fmt.Println(ast)
 }
