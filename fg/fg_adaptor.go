@@ -17,13 +17,13 @@ type FGAdaptor struct {
 	stack []FGNode // Because Listener methods don't return...
 }
 
-func (a *FGAdaptor) Parse(input string) FGNode {
+func (a *FGAdaptor) Parse(input string) FGProgram {
 	is := antlr.NewInputStream(input)
 	lexer := parser.NewFGLexer(is)
 	stream := antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel)
 	p := parser.NewFGParser(stream)
 	antlr.ParseTreeWalkerDefault.Walk(a, p.Program())
-	return a.pop()
+	return a.pop().(FGProgram)
 }
 
 func (l *FGAdaptor) push(i FGNode) {
@@ -71,7 +71,7 @@ func (a *FGAdaptor) ExitType_decl(ctx *parser.Type_declContext) {
 	fmt.Println("td children", ctx.GetChildCount())
 	name := ctx.GetName().GetText()
 	td := a.pop().(TStruct)
-	td.typ = name
+	td.typ = Type(name)
 	a.push(td)
 	fmt.Println("pused td: ", td)
 }
@@ -101,7 +101,7 @@ func (a *FGAdaptor) ExitStruct(ctx *parser.StructContext) {
 
 func (a *FGAdaptor) ExitField_decl(ctx *parser.Field_declContext) {
 	field := ctx.GetField().GetText()
-	typ := ctx.GetTyp().GetText()
+	typ := Type(ctx.GetTyp().GetText())
 	a.push(FieldDecl{field, typ})
 }
 
@@ -131,7 +131,7 @@ func (a *FGAdaptor) ExitLit(ctx *parser.LitContext) {
 	for i := numExprs - 1; i >= 0; i-- {
 		es[i] = a.pop().(Expr) // Adding backwards
 	}
-	a.push(StructLit{name, es})
+	a.push(StructLit{Type(name), es})
 }
 
 func (a *FGAdaptor) ExitSelect(ctx *parser.SelectContext) {}

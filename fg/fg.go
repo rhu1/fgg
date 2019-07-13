@@ -1,8 +1,30 @@
 package fg
 
+import "fmt"
 import "strings"
 
 type Name = string
+type Type Name
+type Env map[Name]Type
+
+func fields(ds []TypeLit, t_S Type) []FieldDecl {
+	for _, v := range ds {
+		s, ok := v.(TStruct)
+		if ok && s.typ == t_S {
+			return s.elems
+		}
+	}
+	panic("Unknown type: " + t_S.String())
+}
+
+// t2 <: t1
+func (t1 Type) Impl(t2 Type) bool {
+	return true // TODO: need ~D param, methods aux
+}
+
+func (t Type) String() string {
+	return string(t)
+}
 
 type FGNode interface {
 	String() string
@@ -11,6 +33,12 @@ type FGNode interface {
 type FGProgram struct {
 	decls []TypeLit
 	body  Expr
+}
+
+func (p FGProgram) Ok() bool {
+	var gamma Env
+	p.body.Typing(p.decls, gamma)
+	return true
 }
 
 func (p FGProgram) String() string {
@@ -30,22 +58,22 @@ var _ FGNode = FGProgram{}
 
 type TypeLit interface {
 	FGNode
-	GetType() Name
+	GetType() Type
 }
 
 type TStruct struct {
-	typ   Name
+	typ   Type
 	elems []FieldDecl
 }
 
-func (s TStruct) GetType() Name {
+func (s TStruct) GetType() Type {
 	return s.typ
 }
 
 func (s TStruct) String() string {
 	var b strings.Builder
 	b.WriteString("type ")
-	b.WriteString(s.typ)
+	b.WriteString(s.typ.String())
 	b.WriteString(" struct {")
 	if len(s.elems) > 0 {
 		b.WriteString(" ")
@@ -64,11 +92,11 @@ var _ TypeLit = TStruct{}
 
 type FieldDecl struct {
 	field Name
-	typ   Name
+	typ   Type
 }
 
 func (fd FieldDecl) String() string {
-	return fd.field + " " + fd.typ
+	return fd.field + " " + fd.typ.String()
 }
 
 var _ FGNode = FieldDecl{}
@@ -77,6 +105,7 @@ type Expr interface {
 	FGNode
 	Subs(map[Variable]Expr) Expr
 	Eval() Expr
+	Typing(ds []TypeLit, gamma Env) Type
 }
 
 type Variable struct {
@@ -95,6 +124,14 @@ func (this Variable) Eval() Expr {
 	panic(this.n)
 }
 
+func (v Variable) Typing(ds []TypeLit, gamma Env) Type {
+	res, ok := gamma[v.n]
+	if !ok {
+		panic("Var not in env: " + v.String())
+	}
+	return res
+}
+
 func (this Variable) String() string {
 	return this.n
 }
@@ -102,7 +139,7 @@ func (this Variable) String() string {
 var _ Expr = Variable{}
 
 type StructLit struct {
-	t  Name
+	t  Type
 	es []Expr
 }
 
@@ -114,17 +151,29 @@ func (this StructLit) Eval() Expr {
 	return this
 }
 
-func (this StructLit) String() string {
-	var sb strings.Builder
-	sb.WriteString(this.t)
-	sb.WriteString("{")
-	if len(this.es) > 0 {
-		sb.WriteString(this.es[0].String())
-		for _, v := range this.es[1:] {
-			sb.WriteString(", ")
-			sb.WriteString(v.String())
+func (s StructLit) Typing(ds []TypeLit, gamma Env) Type {
+	fs := fields(ds, s.t)
+	if len(s.es) != len(fs) {
+		panic("Arity mismatch: found=" +
+			strings.Join(strings.Split(fmt.Sprint(s.es), " "), ", ") +
+			", expected=" +
+			strings.Join(strings.Split(fmt.Sprint(fs), " "), ", ")) // FIXME: bad split, " ", between f and t as well as fd's
+	}
+	for i := 0; i < len(s.es); i++ {
+		t := s.es[i].Typing(ds, gamma)
+		u := fs[i].typ
+		if !u.Impl(t) {
+			panic("Arg expr must impl field type: arg=" + t.String() + " field=" + u.String())
 		}
 	}
+	return s.t
+}
+
+func (this StructLit) String() string {
+	var sb strings.Builder
+	sb.WriteString(this.t.String())
+	sb.WriteString("{")
+	sb.WriteString(strings.Trim(strings.Join(strings.Split(fmt.Sprint(this.es), " "), ", "), "[]"))
 	sb.WriteString("}")
 	return sb.String()
 }

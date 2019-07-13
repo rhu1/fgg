@@ -23,22 +23,29 @@ import (
 var _ = reflect.TypeOf
 var _ = strconv.Itoa
 
+/* TODO
+- repeat type decl
+*/
+
 func main() {
 	var adptr fg.FGAdaptor // i.e., a zero-value constructor? -- stack is empty and rest only needs methods?
 
 	//e := "t_S{}"
-	//e := "t_S{x}"
-	e := "t_S{x, y, t_S{z}}"
+	e := "B{A{}}"
+	//e := "t_S{x, y, t_S{z}}"
 
 	var b strings.Builder
 	b.WriteString("package main;\n")
-	b.WriteString("type t_S struct { };\n")
-	b.WriteString("type t_S struct { f t };\n")
-	b.WriteString("type t_S struct { f1 t; f2 t };\n")
+	//b.WriteString("type t_S struct { };\n")
+	b.WriteString("type A struct { };\n")
+	b.WriteString("type B struct { f t };\n")
+	//b.WriteString("type t_S struct { f1 t; f2 t };\n")
 	b.WriteString("func main() { _ = " + e + "}")
 	prog := b.String()
 
 	ast := adptr.Parse(prog)
 
-	fmt.Println(ast)
+	fmt.Println("ast:\n", ast)
+
+	ast.Ok()
 }
