@@ -35,9 +35,7 @@ func main() {
 	b.WriteString("type t_S struct { };\n")
 	b.WriteString("type t_S struct { f t };\n")
 	b.WriteString("type t_S struct { f1 t; f2 t };\n")
-	b.WriteString("func main() {\n")
-	b.WriteString("\t_ = " + e + "\n")
-	b.WriteString("}")
+	b.WriteString("func main() { _ = " + e + "}")
 	prog := b.String()
 
 	ast := adptr.Parse(prog)

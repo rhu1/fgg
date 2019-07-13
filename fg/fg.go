@@ -18,13 +18,11 @@ func (p FGProgram) String() string {
 	b.WriteString("package main;\n")
 	for _, v := range p.decls {
 		b.WriteString(v.String())
-		b.WriteString("\n")
+		b.WriteString(";\n")
 	}
-	b.WriteString("func main() {\n")
-	b.WriteString("\t_ = ")
+	b.WriteString("func main() { _ = ")
 	b.WriteString(p.body.String())
-	b.WriteString("\n")
-	b.WriteString("}")
+	b.WriteString(" }")
 	return b.String()
 }
 
