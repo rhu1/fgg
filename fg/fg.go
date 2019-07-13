@@ -18,8 +18,8 @@ func fields(ds []TypeLit, t_S Type) []FieldDecl {
 }
 
 // t2 <: t1
-func (t1 Type) Impl(t2 Type) bool {
-	return true // TODO: need ~D param, methods aux
+func (t1 Type) Impl(ds []TypeLit, t2 Type) bool {
+	return true // TODO: meth ds, sigs, methods aux
 }
 
 func (t Type) String() string {
@@ -162,7 +162,7 @@ func (s StructLit) Typing(ds []TypeLit, gamma Env) Type {
 	for i := 0; i < len(s.es); i++ {
 		t := s.es[i].Typing(ds, gamma)
 		u := fs[i].t
-		if !u.Impl(t) {
+		if !u.Impl(ds, t) {
 			panic("Arg expr must impl field type: arg=" + t.String() + " field=" + u.String())
 		}
 	}
