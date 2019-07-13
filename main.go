@@ -32,9 +32,9 @@ func main() {
 
 	var b strings.Builder
 	b.WriteString("package main;\n")
-	b.WriteString("type t_S struct { }\n")
-	b.WriteString("type t_S struct { f t }\n")
-	b.WriteString("type t_S struct { f1 t; f2 t }\n")
+	b.WriteString("type t_S struct { };\n")
+	b.WriteString("type t_S struct { f t };\n")
+	b.WriteString("type t_S struct { f1 t; f2 t };\n")
 	b.WriteString("func main() {\n")
 	b.WriteString("\t_ = " + e + "\n")
 	b.WriteString("}")
