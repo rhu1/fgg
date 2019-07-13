@@ -7,6 +7,8 @@ grammar FG;
 
 // Keywords
 
+PACKAGE: 'package';
+MAIN: 'main';
 STRUCT: 'struct';
 INTERFACE: 'interface';
 FUNC: 'func';
@@ -27,7 +29,7 @@ fragment NAME_START  // LETTER
    ;
 
 NAME
-   : NAME_START (NAME_START | DIGIT)*
+   : NAME_START (NAME_START | DIGIT | '_')*
    ;
 
 fragment DIGIT
@@ -39,7 +41,9 @@ COMMENT:            '/*' .*? '*/'    -> channel(HIDDEN);
 LINE_COMMENT:       '//' ~[\r\n]*    -> channel(HIDDEN);
 
 // Rules
-start : top=expression EOF;
+start : top=program EOF;
+
+program : PACKAGE MAIN ';' FUNC MAIN '(' ')' '{' '_' '=' body=expression '}' ;
 
 expression
     : variable=NAME                            # Variable

@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"temp/antlr/antlr04/fg"
 )
@@ -25,7 +26,15 @@ var _ = strconv.Itoa
 func main() {
 	var adptr fg.FGAdaptor // i.e., a zero-value constructor? -- stack is empty and rest only needs methods?
 
-	ast := adptr.Parse("tS{x, y, tt{z}}")
+	e := "t_S{x, y, t_S{z}}"
+
+	var b strings.Builder
+	b.WriteString("package main;\n")
+	b.WriteString("func main() {\n")
+	b.WriteString("\t_ = " + e + "\n")
+	b.WriteString("}")
+
+	ast := adptr.Parse(b.String())
 
 	fmt.Println(ast)
 }
