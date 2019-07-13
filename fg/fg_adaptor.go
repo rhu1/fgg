@@ -59,7 +59,7 @@ func (a *FGAdaptor) ExitProgram(ctx *parser.ProgramContext) {
 	for i := numDecls - 1; i >= 0; i-- {
 		popped := a.pop()
 		fmt.Println("popped: ", popped)
-		typeDecls[numDecls-i-1] = popped.(TypeLit)
+		typeDecls[i] = popped.(TypeLit) // Adding backwards
 	}
 	fmt.Println("numtds", typeDecls)
 
@@ -93,7 +93,7 @@ func (a *FGAdaptor) ExitStruct(ctx *parser.StructContext) {
 	elems := make([]FieldDecl, numDecls)
 	for i := numDecls - 1; i >= 0; i-- { // N.B. ordering doesn't currently matter, stored in a map
 		fd := a.pop().(FieldDecl)
-		elems[numDecls-i-1] = fd
+		elems[i] = fd // Adding backwards
 	}
 	a.push(TStruct{"^", elems})
 	fmt.Println("pused tstruct: ", TStruct{"^", elems})
@@ -129,7 +129,7 @@ func (a *FGAdaptor) ExitLit(ctx *parser.LitContext) {
 	}
 	es := make([]Expr, numExprs)
 	for i := numExprs - 1; i >= 0; i-- {
-		es[numExprs-i-1] = a.pop().(Expr)
+		es[i] = a.pop().(Expr) // Adding backwards
 	}
 	a.push(StructLit{name, es})
 }
