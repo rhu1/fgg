@@ -12,6 +12,42 @@ import (
 	"temp/antlr/antlr04/fg"
 )
 
+/* Harness funcs */
+
+func parseAndCheckOk(prog string) {
+	var adptr fg.FGAdaptor
+	ast := adptr.Parse(true, prog)
+	ast.Ok()
+}
+
+func parseAndOkGood(t *testing.T, elems ...string) {
+	prog := fg.MakeFgProgram(elems...)
+	defer func() {
+		if r := recover(); r != nil {
+			t.Errorf("Unexpected panic: " + fmt.Sprintf("%v", r) + "\n" + prog)
+		}
+	}()
+	parseAndCheckOk(prog)
+}
+
+// N.B. do not use to check for bad *syntax* -- see below, "[Parser]" panic check
+func parseAndOkBad(t *testing.T, msg string, elems ...string) {
+	prog := fg.MakeFgProgram(elems...)
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("Expected panic, but none occurred: " + msg + "\n" +
+				prog)
+		} else {
+			rec := fmt.Sprintf("%v", r)
+			if strings.HasPrefix(rec, "[Parser]") {
+				t.Errorf("Unexpected panic: " + rec + "\n" + prog)
+			}
+			// TODO FIXME: check panic more specifically
+		}
+	}()
+	parseAndCheckOk(prog)
+}
+
 /* Syntax and typing */
 
 func Test001(t *testing.T) {
@@ -199,7 +235,7 @@ func Test011(t *testing.T) {
 	parseAndOkBad(t, "Cannot return a B as an A", A, Am1, B, e)
 }
 
-// Initial testing field selection
+// Initial testing for select
 func Test012(t *testing.T) {
 	A := "type A struct {}"
 	B := "type B struct { a A }"
@@ -221,42 +257,59 @@ func Test012c(t *testing.T) {
 	parseAndOkGood(t, A, B, e)
 }
 
+// Initial testing for call
+func Test013(t *testing.T) {
+	A := "type A struct {}"
+	A1m := "func (x0 A) m1() A { return x0 }"
+	e := "A{}.m1()"
+	parseAndOkGood(t, A, A1m, e)
+}
+
+func Test013b(t *testing.T) {
+	A := "type A struct {}"
+	A1m := "func (x0 A) m1() A { return x0.m1() }"
+	e := "A{}.m1()"
+	parseAndOkGood(t, A, A1m, e)
+}
+
+func Test013c(t *testing.T) {
+	A := "type A struct {}"
+	A1m := "func (x0 A) m1(x1 A) A { return x1 }"
+	e := "A{}.m1(A{})"
+	parseAndOkGood(t, A, A1m, e)
+}
+
+func Test013d(t *testing.T) {
+	fmt.Println("Source:")
+	A := "type A struct {}"
+	A1m := "func (x0 A) m1(x1 A) A { return x1.m1(x0) }"
+	e := "A{}.m1(A{}.m1(A{}))"
+	parseAndOkGood(t, A, A1m, e)
+}
+
+func Test013e(t *testing.T) {
+	A := "type A struct {}"
+	A1m := "func (x0 A) m1(x1 A) A { return x0 }"
+	e := "A{}.m1(A{}.m1())"
+	parseAndOkBad(t, "(Nested) m1 call missing arg", A, A1m, e)
+}
+
+func Test013f(t *testing.T) {
+	A := "type A struct {}"
+	A1m := "func (x0 A) m1(x1 A) A { return x0 }"
+	e := "A{}.m1(A{}.m1(A{}, A{}))"
+	parseAndOkBad(t, "(Nested) m1 call too many args", A, A1m, e)
+}
+
+func Test013g(t *testing.T) {
+	fmt.Println("Source:")
+	A := "type A struct {}"
+	B := "type B struct { a A }"
+	A1m := "func (x0 A) m1(x1 A) A { return x0 }"
+	e := "A{}.m1(A{}.m1(B{A{}}))"
+	parseAndOkBad(t, "(Nested) m1 call given a B, expecting an A", A, A1m, B, e)
+}
+
 /* Eval */
 
 //func TestEval001(t *testing.T) { }
-
-/* Harness funcs */
-
-func parseAndCheckOk(prog string) {
-	var adptr fg.FGAdaptor
-	ast := adptr.Parse(true, prog)
-	ast.Ok()
-}
-
-func parseAndOkGood(t *testing.T, elems ...string) {
-	prog := fg.MakeFgProgram(elems...)
-	defer func() {
-		if r := recover(); r != nil {
-			t.Errorf("Unexpected panic: " + fmt.Sprintf("%v", r) + "\n" + prog)
-		}
-	}()
-	parseAndCheckOk(prog)
-}
-
-// N.B. do not use to check for bad *syntax* -- see below, "[Parser]" panic check
-func parseAndOkBad(t *testing.T, msg string, elems ...string) {
-	prog := fg.MakeFgProgram(elems...)
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("Expected panic, but none occurred: " + msg + "\n" +
-				prog)
-		} else {
-			rec := fmt.Sprintf("%v", r)
-			if strings.HasPrefix(rec, "[Parser]") {
-				t.Errorf("Unexpected panic: " + rec + "\n" + prog)
-			}
-			// TODO FIXME: check panic more specifically
-		}
-	}()
-	parseAndCheckOk(prog)
-}
