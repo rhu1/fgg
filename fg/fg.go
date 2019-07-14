@@ -43,13 +43,18 @@ type TDecl interface {
 	GetType() Type // == Type(GetName())
 }
 
+type Spec interface {
+	FGNode
+	GetSigs() []Sig
+}
+
 type Sig struct {
 	m  Name
 	ps []ParamDecl
 	t  Type
 }
 
-var _ FGNode = Sig{}
+var _ Spec = Sig{}
 
 // !!! Sig in FG (also, Go spec) includes ~x, which breaks "impls"
 func (s0 Sig) EqExceptVars(s Sig) bool {
@@ -62,6 +67,10 @@ func (s0 Sig) EqExceptVars(s Sig) bool {
 		}
 	}
 	return s0.m == s.m && s0.t == s.t
+}
+
+func (s Sig) GetSigs() []Sig {
+	return []Sig{s}
 }
 
 func (s Sig) String() string {

@@ -97,7 +97,7 @@ func (p ParamDecl) String() string {
 	return p.x + " " + p.t.String()
 }
 
-type TStruct struct {
+type TStruct struct { // TODO: rename STypeLit
 	t   Type
 	fds []FieldDecl
 }
@@ -139,4 +139,37 @@ var _ FGNode = FieldDecl{}
 
 func (fd FieldDecl) String() string {
 	return fd.f + " " + fd.t.String()
+}
+
+type ITypeLit struct {
+	t  Type // Factor out embedded struct with STypeLit?  But constructor will need that struct?
+	ss []Spec
+}
+
+var _ TDecl = ITypeLit{}
+
+func (r ITypeLit) GetType() Type {
+	return r.t
+}
+
+func (r ITypeLit) GetName() Name {
+	return Name(r.t)
+}
+
+func (r ITypeLit) String() string {
+	var b strings.Builder
+	b.WriteString("type ")
+	b.WriteString(r.t.String())
+	b.WriteString(" interface {")
+	if len(r.ss) > 0 {
+		b.WriteString(" ")
+		b.WriteString(r.ss[0].String())
+		for _, v := range r.ss[1:] {
+			b.WriteString("; ")
+			b.WriteString(v.String())
+		}
+		b.WriteString(" ")
+	}
+	b.WriteString("}")
+	return b.String()
 }

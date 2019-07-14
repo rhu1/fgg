@@ -48,9 +48,17 @@ func (a *FGAdaptor) ExitProgram(ctx *parser.ProgramContext) {
 
 // Children: 1=name, 2=typeLit
 func (a *FGAdaptor) ExitTypeDecl(ctx *parser.TypeDeclContext) {
-	td := a.pop().(TStruct) // FIXME: interface type lit
-	td.t = Type(ctx.GetChild(1).(*antlr.TerminalNodeImpl).GetText())
-	a.push(td)
+	typ := Type(ctx.GetChild(1).(*antlr.TerminalNodeImpl).GetText())
+	td := a.pop()
+	if s, ok := td.(TStruct); ok { // N.B. s is a *copy* of td
+		s.t = typ
+		a.push(s)
+	} else if r, ok := td.(ITypeLit); ok {
+		r.t = typ
+		a.push(r)
+	} else {
+		panic("Unknown type decl: " + reflect.TypeOf(td).String())
+	}
 }
 
 func (a *FGAdaptor) ExitMethDecl(ctx *parser.MethDeclContext) {
@@ -65,22 +73,36 @@ func (a *FGAdaptor) ExitMethDecl(ctx *parser.MethDeclContext) {
 
 // Children: 2=fieldDecls
 func (a *FGAdaptor) ExitStructTypeLit(ctx *parser.StructTypeLitContext) {
-	var elems []FieldDecl
+	var fds []FieldDecl
 	if ctx.GetChildCount() > 3 {
-		nelems := (ctx.GetChild(2).GetChildCount() + 1) / 2 // e.g., fd ';' fd ';' fd
-		elems = make([]FieldDecl, nelems)
-		for i := nelems - 1; i >= 0; i-- { // N.B. ordering doesn't currently matter, stored in a map
+		nfds := (ctx.GetChild(2).GetChildCount() + 1) / 2 // e.g., fd ';' fd ';' fd
+		fds = make([]FieldDecl, nfds)
+		for i := nfds - 1; i >= 0; i-- { // N.B. ordering doesn't currently matter, stored in a map
 			fd := a.pop().(FieldDecl)
-			elems[i] = fd // Adding backwards
+			fds[i] = fd // Adding backwards
 		}
 	}
-	a.push(TStruct{"^", elems}) // "^" to be overwritten in ExitTypeDecl
+	a.push(TStruct{"^", fds}) // "^" to be overwritten in ExitTypeDecl
 }
 
 func (a *FGAdaptor) ExitFieldDecl(ctx *parser.FieldDeclContext) {
 	field := ctx.GetField().GetText()
 	typ := Type(ctx.GetTyp().GetText())
 	a.push(FieldDecl{field, typ})
+}
+
+// Cf. ExitStructTypeLit
+func (a *FGAdaptor) ExitInterfaceTypeLit(ctx *parser.InterfaceTypeLitContext) {
+	var ss []Spec
+	if ctx.GetChildCount() > 3 {
+		nss := (ctx.GetChild(2).GetChildCount() + 1) / 2 // e.g., fd ';' fd ';' fd
+		ss = make([]Spec, nss)
+		for i := nss - 1; i >= 0; i-- { // N.B. ordering doesn't currently matter, stored in a map
+			s := a.pop().(Spec)
+			ss[i] = s // Adding backwards
+		}
+	}
+	a.push(ITypeLit{"^", ss}) // "^" to be overwritten in ExitTypeDecl
 }
 
 /* Sigs, param decls */
