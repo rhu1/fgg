@@ -28,7 +28,7 @@ func IsStructType(ds []Decl, t Type) bool {
 }
 
 func IsInterfaceType(ds []Decl, t Type) bool {
-	return !IsStructType(ds, t)
+	return !IsStructType(ds, t) // FIXME: could be neither
 }
 
 // Go has no overloading, meth names are a unique key
@@ -41,8 +41,10 @@ func methods(ds []Decl, t Type) map[Name]MDecl {
 				res[m.m] = m
 			}
 		}
-	} else {
+	} else if IsInterfaceType(ds, t) {
 		panic("[TODO] interface types: " + t.String())
+	} else { // Perhaps redundant if all TDecl OK checked first
+		panic("Unknown type: " + t.String())
 	}
 	return res
 }
@@ -291,7 +293,7 @@ func (s StructLit) Typing(ds []Decl, gamma Env) Type {
 		t := s.es[i].Typing(ds, gamma)
 		u := fs[i].t
 		if !u.Impls(ds, t) {
-			panic("Arg expr must impl field type: arg=" + t.String() + " field=" + u.String())
+			panic("Arg expr must impl field type: arg=" + t.String() + ", field=" + u.String())
 		}
 	}
 	return s.t

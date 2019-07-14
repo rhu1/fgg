@@ -30,8 +30,8 @@ var _ = strconv.Itoa
 func main() {
 	var adptr fg.FGAdaptor
 
-	e := "A{}"
-	//e := "B{A{}}"
+	//e := "A{}"
+	e := "B{A{}}"
 	//e := "t_S{x, y, t_S{z}}"
 
 	var b strings.Builder
@@ -39,9 +39,12 @@ func main() {
 	//b.WriteString("type t_S struct { };\n")
 	b.WriteString("type A struct { };\n")
 	b.WriteString("func (x0 A) m1() A { return x0 };\n")
+	//b.WriteString("func (x0 A) m1() A { return A{} };\n")
 	b.WriteString("func (x0 A) m2(x1 A) A { return x1 };\n")
 	b.WriteString("func (x0 A) m3(x1 A, x2 A) A { return x2 };\n")
-	//b.WriteString("type B struct { f t };\n")
+	//b.WriteString("type B struct { f t };\n")  // TODO: unknown type
+	b.WriteString("type B struct { a A };\n")
+	//b.WriteString("type B struct { b B };\n")  // TODO: recursive struct
 	//b.WriteString("type t_S struct { f1 t; f2 t };\n")
 	b.WriteString("func main() { _ = " + e + "}")
 	prog := b.String()
@@ -49,7 +52,7 @@ func main() {
 	ast := adptr.Parse(prog)
 
 	fmt.Println("ast:")
-	fmt.Print(ast)
+	fmt.Println(ast)
 
 	ast.Ok()
 }
