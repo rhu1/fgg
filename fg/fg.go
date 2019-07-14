@@ -211,7 +211,7 @@ func (s StructLit) Typing(ds []Decl, gamma Env) Type {
 		}
 		panic("Arity mismatch: found=" +
 			strings.Join(strings.Split(fmt.Sprint(s.es), " "), ", ") +
-			", expected=" + tmp)
+			", expected=[" + tmp + "]")
 	}
 	for i := 0; i < len(s.es); i++ {
 		t := s.es[i].Typing(ds, gamma)
