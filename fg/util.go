@@ -1,10 +1,8 @@
 package fg
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
-	"testing"
 
 	"github.com/antlr/antlr4/runtime/Go/antlr"
 )
@@ -24,41 +22,6 @@ func MakeFgProgram(elems ...string) string {
 	}
 	b.WriteString("func main() { _ = " + elems[len(elems)-1] + " }")
 	return b.String()
-}
-
-// For testing
-func parseAndCheckOk(prog string) {
-	var adptr FGAdaptor
-	ast := adptr.Parse(true, prog)
-	ast.Ok()
-}
-
-func parseAndOkGood(t *testing.T, elems ...string) {
-	prog := MakeFgProgram(elems...)
-	defer func() {
-		if r := recover(); r != nil {
-			t.Errorf("Unexpected panic: " + fmt.Sprintf("%v", r) + "\n" + prog)
-		}
-	}()
-	parseAndCheckOk(prog)
-}
-
-// N.B. do not use to check for bad *syntax* -- see below, "[Parser]" panic check
-func parseAndOkBad(t *testing.T, msg string, elems ...string) {
-	prog := MakeFgProgram(elems...)
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("Expected panic, but none occurred: " + msg + "\n" +
-				prog)
-		} else {
-			rec := fmt.Sprintf("%v", r)
-			if strings.HasPrefix(rec, "[Parser]") {
-				t.Errorf("Unexpected panic: " + rec + "\n" + prog)
-			}
-			// TODO FIXME: check panic more specifically
-		}
-	}()
-	parseAndCheckOk(prog)
 }
 
 // Cf. https://stackoverflow.com/questions/51683104/how-to-catch-minor-errors

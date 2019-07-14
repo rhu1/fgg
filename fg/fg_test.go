@@ -2,11 +2,17 @@
 //$ go test temp/antlr/antlr04/fg
 //$ go test temp/antlr/antlr04/fg -run Test001
 
-package fg
+package fg_test
 
 import (
+	"fmt"
+	"strings"
 	"testing"
+
+	"temp/antlr/antlr04/fg"
 )
+
+/* Syntax and typing */
 
 func Test001(t *testing.T) {
 	A := "type A struct {}"
@@ -213,4 +219,44 @@ func Test012c(t *testing.T) {
 	B := "type B struct { a A }"
 	e := "B{B{A{}}.a}"
 	parseAndOkGood(t, A, B, e)
+}
+
+/* Eval */
+
+//func TestEval001(t *testing.T) { }
+
+/* Harness funcs */
+
+func parseAndCheckOk(prog string) {
+	var adptr fg.FGAdaptor
+	ast := adptr.Parse(true, prog)
+	ast.Ok()
+}
+
+func parseAndOkGood(t *testing.T, elems ...string) {
+	prog := fg.MakeFgProgram(elems...)
+	defer func() {
+		if r := recover(); r != nil {
+			t.Errorf("Unexpected panic: " + fmt.Sprintf("%v", r) + "\n" + prog)
+		}
+	}()
+	parseAndCheckOk(prog)
+}
+
+// N.B. do not use to check for bad *syntax* -- see below, "[Parser]" panic check
+func parseAndOkBad(t *testing.T, msg string, elems ...string) {
+	prog := fg.MakeFgProgram(elems...)
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("Expected panic, but none occurred: " + msg + "\n" +
+				prog)
+		} else {
+			rec := fmt.Sprintf("%v", r)
+			if strings.HasPrefix(rec, "[Parser]") {
+				t.Errorf("Unexpected panic: " + rec + "\n" + prog)
+			}
+			// TODO FIXME: check panic more specifically
+		}
+	}()
+	parseAndCheckOk(prog)
 }
