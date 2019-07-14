@@ -130,7 +130,10 @@ func (s Sig) String() string {
 type Expr interface {
 	FGNode
 	Subs(map[Variable]Expr) Expr
-	Eval() Expr
-	//IsPanic() bool
+	CanEval(ds []Decl) bool
+	Eval(ds []Decl) Expr
+	//IsPanic() bool  // TODO
 	Typing(ds []Decl, gamma Env) Type
+	// N.B. gamma should be effectively immutable (and ds)
+	// (No typing rule adds to gamma, except T-Func bootstrap)
 }
