@@ -49,7 +49,7 @@ func methods(ds []Decl, t Type) map[Name]MDecl {
 	return res
 }
 
-func body(ds []Decl, t_S Type, m Name) MDecl {
+func body(ds []Decl, t_S Type, m Name) MDecl { // TODO: x, ~x, e -- more convenient
 	for _, v := range ds {
 		md, ok := v.(MDecl)
 		if ok && md.t == t_S && md.m == m {
@@ -59,14 +59,14 @@ func body(ds []Decl, t_S Type, m Name) MDecl {
 	panic("Method not found: " + t_S.String() + "." + m)
 }
 
-// t <: t0
+// t0 <: t
 func (t0 Type) Impls(ds []Decl, t Type) bool {
-	if IsStructType(ds, t0) {
-		return IsStructType(ds, t) && t0 == t
+	if IsStructType(ds, t) {
+		return IsStructType(ds, t0) && t0 == t
 	}
 
-	m0 := methods(ds, t0) // t0 is a t_I
-	m := methods(ds, t)   // t may be any
+	m := methods(ds, t)   // t is a t_I
+	m0 := methods(ds, t0) // t0 may be any
 	for k, md := range m {
 		md0, ok := m0[k]
 		if !ok || md.String() != md0.String() { // CHECKME: String hack?
@@ -76,7 +76,7 @@ func (t0 Type) Impls(ds []Decl, t Type) bool {
 	return true
 }
 
-// !!! method signature including ~x breaks imple
+// !!! method sig including ~x breaks "impls" (cf. FG, also Go spec)
 func (m0 MDecl) Equals(m MDecl) bool {
 	return pEqWrtt(m0.recv, m.recv) && m0.m == m.m && psEqWrtts(m0.ps, m.ps) &&
 		m0.t == m.t && m0.e == m.e
@@ -111,10 +111,9 @@ type FGProgram struct {
 
 var _ FGNode = FGProgram{}
 
-func (p FGProgram) Ok() bool {
+func (p FGProgram) Ok() {
 	var gamma Env
 	p.e.Typing(p.ds, gamma)
-	return true
 }
 
 func (p FGProgram) String() string {
@@ -148,6 +147,19 @@ type MDecl struct {
 }
 
 var _ Decl = MDecl{}
+
+func (m MDecl) Ok(ds []Decl) {
+	env := make(map[Name]Type)
+	env[m.recv.x] = m.recv.t
+	for _, v := range m.ps {
+		env[v.x] = v.t
+	}
+	t := m.e.Typing(ds, env)
+	if !t.Impls(ds, m.t) {
+		panic("Method body type must implement declared return type: found=" + t +
+			", expected=" + m.t)
+	}
+}
 
 func (m MDecl) String() string {
 	var b strings.Builder
@@ -227,6 +239,7 @@ type Expr interface {
 	FGNode
 	Subs(map[Variable]Expr) Expr
 	Eval() Expr
+	//IsPanic() bool
 	Typing(ds []Decl, gamma Env) Type
 }
 
@@ -292,7 +305,7 @@ func (s StructLit) Typing(ds []Decl, gamma Env) Type {
 	for i := 0; i < len(s.es); i++ {
 		t := s.es[i].Typing(ds, gamma)
 		u := fs[i].t
-		if !u.Impls(ds, t) {
+		if !t.Impls(ds, u) {
 			panic("Arg expr must impl field type: arg=" + t.String() + ", field=" + u.String())
 		}
 	}
