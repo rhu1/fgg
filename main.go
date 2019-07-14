@@ -24,7 +24,7 @@ var _ = reflect.TypeOf
 var _ = strconv.Itoa
 
 /* TODO
-- repeat type decl
+- WF: repeat type decl
 */
 
 func main() {
