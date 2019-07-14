@@ -24,9 +24,7 @@ var _ = strconv.Itoa
 
 /* TODO
 - WF: repeat type decl
-*/
 
-func main() {
 	var adptr fg.FGAdaptor
 
 	//e := "A{}"
@@ -37,7 +35,10 @@ func main() {
 	//b.WriteString("type B struct { f t };\n")  // TODO: unknown type
 	//b.WriteString("type B struct { b B };\n")  // TODO: recursive struct
 	//b.WriteString("type t_S struct { f1 t; f2 t };\n")
+*/
 
+func main() {
+	fmt.Println("Source:")
 	A := "type A struct {}"
 	Am1 := "func (x0 A) m1() A { return x0 }"
 	Am2 := "func (x0 A) m2(x1 A) A { return x1 }"
@@ -45,13 +46,13 @@ func main() {
 	B := "type B struct { a A }"
 	e := "B{A{}}"
 	prog := fg.MakeFgProgram(A, Am1, Am2, Am3, B, e)
-	fmt.Println("source:")
 	fmt.Println(prog)
 
+	fmt.Println("\nParsing AST:")
+	var adptr fg.FGAdaptor
 	ast := adptr.Parse(prog)
-
-	fmt.Println("ast:")
 	fmt.Println(ast)
 
+	fmt.Println("\nChecking program OK:")
 	ast.Ok()
 }
