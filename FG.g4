@@ -39,17 +39,17 @@ LINE_COMMENT        : '//' ~[\r\n]*    -> channel(HIDDEN) ;
 
 program    : PACKAGE MAIN ';' decls? FUNC MAIN '(' ')' '{' '_' '=' expr '}' EOF ;
 decls      : ((typeDecl | methDecl) ';')+ ;
-typeDecl   : TYPE NAME typeLit ;
+typeDecl   : TYPE NAME typeLit ;  // TODO: tag id=NAME, better for adapting (vs., index constants)
 methDecl   : FUNC '(' paramDecl ')' sig '{' RETURN expr '}' ;
 typeLit    : STRUCT '{' fieldDecls? '}'             # StructTypeLit
            | INTERFACE '{' specs? '}'               # InterfaceTypeLit ;
 fieldDecls : fieldDecl (';' fieldDecl)* ;
-sig        : meth=NAME '(' params? ')' ret=NAME ;
 fieldDecl  : field=NAME typ=NAME ;
 specs      : spec (';' spec)* ;
 spec       : sig                                    # SigSpec
            | NAME                                   # InterfaceSpec
            ;
+sig        : meth=NAME '(' params? ')' ret=NAME ;
 params     : paramDecl (',' paramDecl)* ;
 paramDecl  : vari=NAME typ=NAME ;
 expr       : NAME                                   # Variable

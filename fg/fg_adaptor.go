@@ -31,6 +31,8 @@ func (a *FGAdaptor) Parse(strictParse bool, input string) FGProgram {
 	return a.pop().(FGProgram)
 }
 
+/* Programs, decls */
+
 func (a *FGAdaptor) ExitProgram(ctx *parser.ProgramContext) {
 	body := a.pop().(Expr)
 	var ds []Decl
@@ -44,9 +46,9 @@ func (a *FGAdaptor) ExitProgram(ctx *parser.ProgramContext) {
 	a.push(FGProgram{ds, body})
 }
 
-// Children: 0=typ, 1=name, 2=typelit
+// Children: 1=name, 2=typeLit
 func (a *FGAdaptor) ExitTypeDecl(ctx *parser.TypeDeclContext) {
-	td := a.pop().(TStruct)
+	td := a.pop().(TStruct) // FIXME: interface type lit
 	td.t = Type(ctx.GetChild(1).(*antlr.TerminalNodeImpl).GetText())
 	a.push(td)
 }
@@ -58,6 +60,30 @@ func (a *FGAdaptor) ExitMethDecl(ctx *parser.MethDeclContext) {
 	recv := a.pop().(ParamDecl)
 	a.push(MDecl{recv, sig.m, sig.ps, sig.t, e})
 }
+
+/* Type lits, field decls, specs */
+
+// Children: 2=fieldDecls
+func (a *FGAdaptor) ExitStructTypeLit(ctx *parser.StructTypeLitContext) {
+	var elems []FieldDecl
+	if ctx.GetChildCount() > 3 {
+		nelems := (ctx.GetChild(2).GetChildCount() + 1) / 2 // e.g., fd ';' fd ';' fd
+		elems = make([]FieldDecl, nelems)
+		for i := nelems - 1; i >= 0; i-- { // N.B. ordering doesn't currently matter, stored in a map
+			fd := a.pop().(FieldDecl)
+			elems[i] = fd // Adding backwards
+		}
+	}
+	a.push(TStruct{"^", elems}) // "^" to be overwritten in ExitTypeDecl
+}
+
+func (a *FGAdaptor) ExitFieldDecl(ctx *parser.FieldDeclContext) {
+	field := ctx.GetField().GetText()
+	typ := Type(ctx.GetTyp().GetText())
+	a.push(FieldDecl{field, typ})
+}
+
+/* Sigs, param decls */
 
 func (a *FGAdaptor) ExitSig(ctx *parser.SigContext) {
 	m := ctx.GetMeth().GetText()
@@ -74,36 +100,14 @@ func (a *FGAdaptor) ExitSig(ctx *parser.SigContext) {
 	a.push(Sig{m, ps, t})
 }
 
-// Children: 2=field_decls
-func (a *FGAdaptor) ExitStructTypeLit(ctx *parser.StructTypeLitContext) {
-	var elems []FieldDecl
-	if ctx.GetChildCount() > 3 {
-		nelems := (ctx.GetChild(2).GetChildCount() + 1) / 2 // e.g., fd ';' fd ';' fd
-		elems = make([]FieldDecl, nelems)
-		for i := nelems - 1; i >= 0; i-- { // N.B. ordering doesn't currently matter, stored in a map
-			fd := a.pop().(FieldDecl)
-			elems[i] = fd // Adding backwards
-		}
-	}
-	a.push(TStruct{"^", elems}) // "^" to be overwritten in ExitType_decl
-}
-
-func (a *FGAdaptor) ExitFieldDecl(ctx *parser.FieldDeclContext) {
-	field := ctx.GetField().GetText()
-	typ := Type(ctx.GetTyp().GetText())
-	a.push(FieldDecl{field, typ})
-}
-
-// Cf. ExitField_decl
+// Cf. ExitFieldDecl
 func (a *FGAdaptor) ExitParamDecl(ctx *parser.ParamDeclContext) {
 	x := ctx.GetVari().GetText()
 	t := Type(ctx.GetTyp().GetText())
 	a.push(ParamDecl{x, t})
 }
 
-func (a *FGAdaptor) EnterCall(ctx *parser.CallContext) {}
-
-func (a *FGAdaptor) ExitCall(ctx *parser.CallContext) {}
+/* Exprs */
 
 func (a *FGAdaptor) ExitVariable(ctx *parser.VariableContext) {
 	n := ctx.GetChild(0).(*antlr.TerminalNodeImpl)
@@ -127,6 +131,8 @@ func (a *FGAdaptor) ExitStructLit(ctx *parser.StructLitContext) {
 
 func (a *FGAdaptor) ExitSelect(ctx *parser.SelectContext) {}
 
+func (a *FGAdaptor) ExitCall(ctx *parser.CallContext) {}
+
 func (a *FGAdaptor) ExitAssert(ctx *parser.AssertContext) {}
 
 func (a *FGAdaptor) push(i FGNode) {
@@ -135,7 +141,7 @@ func (a *FGAdaptor) push(i FGNode) {
 
 func (a *FGAdaptor) pop() FGNode {
 	if len(a.stack) < 1 {
-		panic("stack is empty unable to pop")
+		panic("Stack is empty, unable to pop")
 	}
 	result := a.stack[len(a.stack)-1]
 	a.stack = a.stack[:len(a.stack)-1]
