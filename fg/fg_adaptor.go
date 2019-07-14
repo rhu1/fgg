@@ -48,25 +48,30 @@ func (a *FGAdaptor) ExitProgram(ctx *parser.ProgramContext) {
 func (a *FGAdaptor) ExitTypeDecl(ctx *parser.TypeDeclContext) {
 	td := a.pop().(TStruct)
 	td.t = Type(ctx.GetChild(1).(*antlr.TerminalNodeImpl).GetText())
-	fmt.Println("typedecl: ", td.t)
 	a.push(td)
 }
 
 func (a *FGAdaptor) ExitMethDecl(ctx *parser.MethDeclContext) {
-	m := ctx.GetMeth().GetText()
 	// Reverse order
 	e := a.pop().(Expr)
+	sig := a.pop().(Sig)
+	recv := a.pop().(ParamDecl)
+	a.push(MDecl{recv, sig.m, sig.ps, sig.t, e})
+}
+
+func (a *FGAdaptor) ExitSig(ctx *parser.SigContext) {
+	m := ctx.GetMeth().GetText()
+	// Reverse order
 	t := Type(ctx.GetRet().GetText())
 	var ps []ParamDecl
-	if ctx.GetChildCount() > 12 {
-		nps := (ctx.GetChild(6).GetChildCount() + 1) / 2 // e.g., pd ',' pd ',' pd
+	if ctx.GetChildCount() > 4 {
+		nps := (ctx.GetChild(2).GetChildCount() + 1) / 2 // e.g., pd ',' pd ',' pd
 		ps = make([]ParamDecl, nps)
 		for i := nps - 1; i >= 0; i-- {
 			ps[i] = a.pop().(ParamDecl) // Adding backwards
 		}
 	}
-	recv := a.pop().(ParamDecl)
-	a.push(MDecl{recv, m, ps, t, e})
+	a.push(Sig{m, ps, t})
 }
 
 // Children: 2=field_decls
@@ -102,7 +107,6 @@ func (a *FGAdaptor) ExitCall(ctx *parser.CallContext) {}
 
 func (a *FGAdaptor) ExitVariable(ctx *parser.VariableContext) {
 	n := ctx.GetChild(0).(*antlr.TerminalNodeImpl)
-	fmt.Println("variable: ", n)
 	a.push(Variable{n.GetText()})
 }
 
@@ -110,7 +114,6 @@ func (a *FGAdaptor) ExitVariable(ctx *parser.VariableContext) {
 // N.B. ExprsContext is a "helper" Context, actual exprs are its children
 func (a *FGAdaptor) ExitStructLit(ctx *parser.StructLitContext) {
 	typ := Type(ctx.GetChild(0).(*antlr.TerminalNodeImpl).GetText())
-	fmt.Println("structlit: ", typ)
 	var es []Expr
 	if ctx.GetChildCount() > 3 {
 		numExprs := (ctx.GetChild(2).GetChildCount() + 1) / 2 // e.g., 'x' ',' 'y' ',' 'z'

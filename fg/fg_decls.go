@@ -43,11 +43,7 @@ type MDecl struct {
 var _ Decl = MDecl{}
 
 func (m MDecl) ToSig() Sig {
-	ps := make([]Type, len(m.ps))
-	for i := 0; i < len(m.ps); i++ {
-		ps[i] = m.ps[i].t
-	}
-	return Sig{m.m, ps, m.t}
+	return Sig{m.m, m.ps, m.t}
 }
 
 func (m MDecl) Ok(ds []Decl) {

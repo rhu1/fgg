@@ -37,26 +37,27 @@ LINE_COMMENT : '//' ~[\r\n]*    -> channel(HIDDEN);
 // "plurals", e.g., decls, used for sequences: comes out as "helper" Context...
 // ...nodes that group up actual children underneath, makes adapting easier
 
-program : PACKAGE MAIN ';' decls? FUNC MAIN '(' ')' '{' '_' '=' expr '}' EOF ;
-
-decls     : ((typeDecl | methDecl) ';')+ ;
-typeDecl  : TYPE NAME typeLit ;
-methDecl  : FUNC '(' paramDecl ')' meth=NAME '(' params? ')' ret=NAME '{' RETURN expr '}' ;
-params    : paramDecl (',' paramDecl)* ;
-paramDecl : vari=NAME typ=NAME ;
-
-typeLit : STRUCT '{' fieldDecls? '}' # StructTypeLit ;
-        //| INTERFACE '{' specs? '}' # InterfaceTypeLit ;
-
+program    : PACKAGE MAIN ';' decls? FUNC MAIN '(' ')' '{' '_' '=' expr '}' EOF ;
+decls      : ((typeDecl | methDecl) ';')+ ;
+typeDecl   : TYPE NAME typeLit ;
+methDecl   : FUNC '(' paramDecl ')' sig '{' RETURN expr '}' ;
+typeLit    : STRUCT '{' fieldDecls? '}'             # StructTypeLit
+           | INTERFACE '{' specs? '}'               # InterfaceTypeLit ;
 fieldDecls : fieldDecl (';' fieldDecl)* ;
+sig        : meth=NAME '(' params? ')' ret=NAME ;
 fieldDecl  : field=NAME typ=NAME ;
-
-expr  : NAME                                   # Variable
-      | NAME '{' exprs? '}'                    # StructLit
-      | expr '.' field=NAME                    # Select
-      | recv=expr '.' NAME '(' args=exprs* ')' # Call
-      | expr '.' '(' NAME ')'                  # Assert
-      ;
+specs      : spec (';' spec)* ;
+spec       : sig                                    # SigSpec
+           | NAME                                   # InterfaceSpec
+           ;
+params     : paramDecl (',' paramDecl)* ;
+paramDecl  : vari=NAME typ=NAME ;
+expr       : NAME                                   # Variable
+           | NAME '{' exprs? '}'                    # StructLit
+           | expr '.' field=NAME                    # Select
+           | recv=expr '.' NAME '(' args=exprs* ')' # Call
+           | expr '.' '(' NAME ')'                  # Assert
+           ;
 exprs : expr (',' expr)* ;
 
 //meth_sig : meth=name '(' parms=formal* ')' ret=name # MethSig ;

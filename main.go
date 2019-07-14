@@ -27,11 +27,12 @@ var _ = strconv.Itoa
 func main() {
 	fmt.Println("Source:")
 	A := "type A struct {}"
+	Am1 := "func (x0 A) m1(x1 A) A { return x1 }"
 	/*B := "type B struct { a A }"
 	C := "type C struct { a A, b B }"
 	e := "C{A{}, B{A{}}}"*/
 	e := "A{}"
-	prog := fg.MakeFgProgram(A, e)
+	prog := fg.MakeFgProgram(A, Am1, e)
 	fmt.Println(prog)
 
 	fmt.Println("\nParsing AST:")
