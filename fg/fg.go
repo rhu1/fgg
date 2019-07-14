@@ -7,6 +7,7 @@ type Env map[Name]Type
 
 type Type Name
 
+// Pre: t0, t are known types
 // t0 <: t
 func (t0 Type) Impls(ds []Decl, t Type) bool {
 	if isStructType(ds, t) {
@@ -15,9 +16,9 @@ func (t0 Type) Impls(ds []Decl, t Type) bool {
 
 	m := methods(ds, t)   // t is a t_I
 	m0 := methods(ds, t0) // t0 may be any
-	for k, md := range m {
-		md0, ok := m0[k]
-		if !ok || !md.ToSig().EqExceptVars(md0.ToSig()) {
+	for k, s := range m {
+		s0, ok := m0[k]
+		if !ok || !s.EqExceptVars(s0) {
 			return false
 		}
 	}
@@ -26,6 +27,26 @@ func (t0 Type) Impls(ds []Decl, t Type) bool {
 
 func (t Type) String() string {
 	return string(t)
+}
+
+func isStructType(ds []Decl, t Type) bool {
+	for _, v := range ds {
+		d, ok := v.(TStruct)
+		if ok && d.t == t {
+			return true
+		}
+	}
+	return false
+}
+
+func isInterfaceType(ds []Decl, t Type) bool {
+	for _, v := range ds {
+		d, ok := v.(ITypeLit)
+		if ok && d.t == t {
+			return true
+		}
+	}
+	return false
 }
 
 // Base interface for all AST nodes

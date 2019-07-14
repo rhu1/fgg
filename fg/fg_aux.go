@@ -11,21 +11,46 @@ func fields(ds []Decl, t_S Type) []FieldDecl {
 }
 
 // Go has no overloading, meth names are a unique key
-func methods(ds []Decl, t Type) map[Name]MDecl {
-	res := make(map[Name]MDecl)
+func methods(ds []Decl, t Type) map[Name]Sig {
+	res := make(map[Name]Sig)
 	if isStructType(ds, t) {
 		for _, v := range ds {
 			m, ok := v.(MDecl)
 			if ok && m.t == t {
-				res[m.m] = m
+				res[m.m] = m.ToSig()
 			}
 		}
 	} else if isInterfaceType(ds, t) {
-		panic("[TODO] interface types: " + t.String())
+		td := getTDecl(ds, t).(ITypeLit)
+		for _, s := range td.ss {
+			for _, v := range s.GetSigs() {
+				res[v.m] = v
+			}
+		}
 	} else { // Perhaps redundant if all TDecl OK checked first
 		panic("Unknown type: " + t.String())
 	}
 	return res
+}
+
+/*func methDecl(ds []Decl, t Type, m Name) TDecl {
+	for _, v := range ds {
+		m, ok := v.(MDecl)
+		if ok && m.t == t {
+			return m
+		}
+	}
+	panic("Method not found: " + t)
+}*/
+
+func getTDecl(ds []Decl, t Type) TDecl {
+	for _, v := range ds {
+		td, ok := v.(TDecl)
+		if ok && td.GetType() == t {
+			return td
+		}
+	}
+	panic("Type not found: " + t)
 }
 
 func body(ds []Decl, t_S Type, m Name) (Name, []Name, Expr) {
@@ -40,18 +65,4 @@ func body(ds []Decl, t_S Type, m Name) (Name, []Name, Expr) {
 		}
 	}
 	panic("Method not found: " + t_S.String() + "." + m)
-}
-
-func isStructType(ds []Decl, t Type) bool {
-	for _, v := range ds {
-		d, ok := v.(TStruct)
-		if ok && d.t == t {
-			return true
-		}
-	}
-	return false
-}
-
-func isInterfaceType(ds []Decl, t Type) bool {
-	return !isStructType(ds, t) // FIXME: could be neither
 }
