@@ -30,7 +30,7 @@ func (a *FGAdaptor) ExitProgram(ctx *parser.ProgramContext) {
 	body := a.pop().(Expr)
 	var ds []Decl
 	if ctx.GetChildCount() > 13 {
-		nds := ctx.GetChild(3).GetChildCount() / 2 // e.g., decl ';' decl ';' decl ';'
+		nds := ctx.GetChild(3).GetChildCount() / 2 // e.g., decl ';' decl ';' decl ';' -- includes trailing ';'
 		ds = make([]Decl, nds)
 		for i := nds - 1; i >= 0; i-- {
 			ds[i] = a.pop().(Decl) // Adding backwards
