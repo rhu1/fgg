@@ -23,7 +23,7 @@ func methods(ds []Decl, t Type) map[Name]Sig {
 	} else if isInterfaceType(ds, t) {
 		td := getTDecl(ds, t).(ITypeLit)
 		for _, s := range td.ss {
-			for _, v := range s.GetSigs() {
+			for _, v := range s.GetSigs(ds) {
 				res[v.m] = v
 			}
 		}

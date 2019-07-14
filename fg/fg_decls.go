@@ -5,6 +5,7 @@
 
 package fg
 
+import "reflect"
 import "strings"
 
 type FGProgram struct {
@@ -15,6 +16,18 @@ type FGProgram struct {
 var _ FGNode = FGProgram{}
 
 func (p FGProgram) Ok() {
+	for _, v := range p.ds {
+		switch c := v.(type) {
+		case TDecl:
+			// TODO: e.g., unique type names, unique field names, unique method names
+			// N.B. omitted from submission version
+		case MDecl:
+			c.Ok(p.ds)
+		default:
+			panic("Unknown decl: " + reflect.TypeOf(v).String() + "\n\t" +
+				v.String())
+		}
+	}
 	var gamma Env
 	p.e.Typing(p.ds, gamma)
 }

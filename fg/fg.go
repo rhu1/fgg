@@ -1,11 +1,14 @@
 package fg
 
+import "reflect"
 import "strings"
 
-type Name = string
+type Name = string // Type alias (cf. definition)
 type Env map[Name]Type
 
-type Type Name
+type Type Name // Type definition (cf. alias)
+
+var _ Spec = Type("")
 
 // Pre: t0, t are known types
 // t0 <: t
@@ -23,6 +26,20 @@ func (t0 Type) Impls(ds []Decl, t Type) bool {
 		}
 	}
 	return true
+}
+
+// t_I is a Spec, but not t_S -- this aspect is currently "dynamically typed"
+func (t Type) GetSigs(ds []Decl) []Sig {
+	if !isInterfaceType(ds, t) { // isStructType would be more efficient
+		panic("Cannot use non-interface type as a Spec: " + t.String() +
+			" is a " + reflect.TypeOf(t).String())
+	}
+	td := getTDecl(ds, t).(ITypeLit)
+	var res []Sig
+	for _, s := range td.ss {
+		res = append(res, s.GetSigs(ds)...)
+	}
+	return res
 }
 
 func (t Type) String() string {
@@ -66,7 +83,7 @@ type TDecl interface {
 
 type Spec interface {
 	FGNode
-	GetSigs() []Sig
+	GetSigs(ds []Decl) []Sig
 }
 
 type Sig struct {
@@ -90,7 +107,7 @@ func (s0 Sig) EqExceptVars(s Sig) bool {
 	return s0.m == s.m && s0.t == s.t
 }
 
-func (s Sig) GetSigs() []Sig {
+func (s Sig) GetSigs(_ []Decl) []Sig {
 	return []Sig{s}
 }
 

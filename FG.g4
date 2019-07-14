@@ -2,7 +2,7 @@
 //$ antlr4 -Dlanguage=Go -o parser FG.g4
 
 // Cf. https://github.com/antlr/grammars-v4/blob/master/golang/Golang.g4
-// (This grammar is not based that one, for ref only)
+// (This grammar is not at all based on that one, mention for ref only)
 
 // FG.g4
 grammar FG;
@@ -21,12 +21,12 @@ TYPE      : 'type' ;
 
 /* Tokens */
 
-fragment LETTER     : ('a' .. 'z') | ('A' .. 'Z') ;
-fragment DIGIT      : ('0' .. '9') ;
-NAME                : LETTER (LETTER | DIGIT | '_')* ;
-WHITESPACE          : [ \r\n\t]+ -> skip ;
-COMMENT             : '/*' .*? '*/'    -> channel(HIDDEN) ;
-LINE_COMMENT        : '//' ~[\r\n]*    -> channel(HIDDEN) ;
+fragment LETTER : ('a' .. 'z') | ('A' .. 'Z') ;
+fragment DIGIT  : ('0' .. '9') ;
+NAME            : LETTER (LETTER | DIGIT | '_')* ;
+WHITESPACE      : [ \r\n\t]+ -> skip ;
+COMMENT         : '/*' .*? '*/' -> channel(HIDDEN) ;
+LINE_COMMENT    : '//' ~[\r\n]* -> channel(HIDDEN) ;
 
 
 /* Rules */

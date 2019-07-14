@@ -122,6 +122,11 @@ func (a *FGAdaptor) ExitSig(ctx *parser.SigContext) {
 	a.push(Sig{m, ps, t})
 }
 
+func (a *FGAdaptor) ExitInterfaceSpec(ctx *parser.InterfaceSpecContext) {
+	n := ctx.GetChild(0).(*antlr.TerminalNodeImpl)
+	a.push(Type(n.GetText()))
+}
+
 // Cf. ExitFieldDecl
 func (a *FGAdaptor) ExitParamDecl(ctx *parser.ParamDeclContext) {
 	x := ctx.GetVari().GetText()
