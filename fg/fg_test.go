@@ -26,3 +26,11 @@ func Test002b(t *testing.T) {
 	//parseAndOkBad(t, "type A not declared", "type A struct{}", "A{}")  // Testing parseAndOkBad
 	parseAndOkBad(t, "type A not declared", "A{}")
 }
+
+func Test003(t *testing.T) {
+	A := "type A struct {}"
+	B := "type B struct { a A }"
+	C := "type C struct { a A, b B }"
+	e := "C{A{}, B{A{}}}"
+	parseAndOkGood(t, A, B, C, e)
+}
