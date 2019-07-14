@@ -202,10 +202,16 @@ func (this StructLit) Eval() Expr {
 func (s StructLit) Typing(ds []Decl, gamma Env) Type {
 	fs := fields(ds, s.t)
 	if len(s.es) != len(fs) {
+		tmp := ""
+		if len(fs) > 0 {
+			tmp = fs[0].String()
+			for _, v := range fs[1:] {
+				tmp = tmp + ", " + v.String()
+			}
+		}
 		panic("Arity mismatch: found=" +
 			strings.Join(strings.Split(fmt.Sprint(s.es), " "), ", ") +
-			", expected=" +
-			strings.Join(strings.Split(fmt.Sprint(fs), " "), ", ")) // FIXME: bad split, " ", between f and t as well as fd's
+			", expected=" + tmp)
 	}
 	for i := 0; i < len(s.es); i++ {
 		t := s.es[i].Typing(ds, gamma)
