@@ -7,65 +7,57 @@
 grammar FG;
 
 
-// Keywords
+/* Keywords */
 
-PACKAGE: 'package';
-MAIN: 'main';
-STRUCT: 'struct';
-INTERFACE: 'interface';
-FUNC: 'func';
-RETURN: 'return';
-TYPE: 'type';
+FUNC      : 'func';
+INTERFACE : 'interface';
+MAIN      : 'main';
+PACKAGE   : 'package';
+RETURN    : 'return';
+STRUCT    : 'struct';
+TYPE      : 'type';
 
 
-// Tokens
+/* Tokens */
 
-fragment NAME_START  // LETTER
-   : ('a' .. 'z')
-   | ('A' .. 'Z')
-   /*| '+'
-   | '-'
-   | '*'
-   | '/'
-   | '.'*/
-   ;
+// i.e., LETTER
+fragment NAME_START : ('a' .. 'z') | ('A' .. 'Z') ;
+fragment DIGIT      : ('0' .. '9') ;
+NAME                : NAME_START (NAME_START | DIGIT | '_')* ;
 
-NAME
-   : NAME_START (NAME_START | DIGIT | '_')*
-   ;
+WHITESPACE   : [ \r\n\t]+ -> skip;
+COMMENT      : '/*' .*? '*/'    -> channel(HIDDEN);
+LINE_COMMENT : '//' ~[\r\n]*    -> channel(HIDDEN);
 
-fragment DIGIT
-   : ('0' .. '9')
-   ;
+/* Rules */
 
-WHITESPACE: [ \r\n\t]+ -> skip;
-COMMENT:            '/*' .*? '*/'    -> channel(HIDDEN);
-LINE_COMMENT:       '//' ~[\r\n]*    -> channel(HIDDEN);
+// Conventions:
+// "tag=" to distinguish repeat productions within a rule: comes out in field/getter names
+// "#tag" for cases within a rule: comes out as Context names (i.e., types)
+// "plurals", e.g., decls, used for sequences: comes out as "helper" Context...
+// ...nodes that group up actual children underneath, makes adapting easier
 
-// Rules
-program : PACKAGE MAIN ';' decls? FUNC MAIN '(' ')' '{' '_' '=' body=expression '}' EOF ;
+program : PACKAGE MAIN ';' decls? FUNC MAIN '(' ')' '{' '_' '=' expr '}' EOF ;
 
-decls : ((type_decl | meth_decl) ';')+ ;
-type_decl: TYPE name=NAME type_lit ;
-meth_decl: FUNC '(' paramdecl ')' meth=NAME '(' params? ')' ret=NAME '{' RETURN expression '}' ;
+decls     : ((typeDecl | methDecl) ';')+ ;
+typeDecl  : TYPE NAME typeLit ;
+methDecl  : FUNC '(' paramDecl ')' meth=NAME '(' params? ')' ret=NAME '{' RETURN expr '}' ;
+params    : paramDecl (',' paramDecl)* ;
+paramDecl : vari=NAME typ=NAME ;
 
-params : paramdecl (',' paramdecl)* ;
-paramdecl: vari=NAME typ=NAME ;
+typeLit : STRUCT '{' fieldDecls? '}' # StructTypeLit ;
+        //| INTERFACE '{' specs? '}' # InterfaceTypeLit ;
 
-type_lit : STRUCT '{' elems=field_decls? '}' # Struct;
+fieldDecls : fieldDecl (';' fieldDecl)* ;
+fieldDecl  : field=NAME typ=NAME ;
 
-field_decls : field_decl (';' field_decl)* ;  // Makes adapting easier, helper context with actual children below
-field_decl : field=NAME typ=NAME ;
-
-expression
-    : variable=NAME                            # Variable
-    | typ=NAME '{' args=exprs? '}'  # Lit
-    | expr=expression '.' field=NAME      # Select
-    | recv=expression '.' meth=NAME '(' args=exprs* ')'  # Call
-    | expr=expression '.' '(' typ=NAME ')'        # Assertion
-    ;
-
-exprs : expression (',' expression)* ;
+expr  : NAME                                   # Variable
+      | NAME '{' exprs? '}'                    # StructLit
+      | expr '.' field=NAME                    # Select
+      | recv=expr '.' NAME '(' args=exprs* ')' # Call
+      | expr '.' '(' NAME ')'                  # Assert
+      ;
+exprs : expr (',' expr)* ;
 
 //meth_sig : meth=name '(' parms=formal* ')' ret=name # MethSig ;
 

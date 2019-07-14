@@ -45,13 +45,14 @@ func (a *FGAdaptor) ExitProgram(ctx *parser.ProgramContext) {
 }
 
 // Children: 0=typ, 1=name, 2=typelit
-func (a *FGAdaptor) ExitType_decl(ctx *parser.Type_declContext) {
+func (a *FGAdaptor) ExitTypeDecl(ctx *parser.TypeDeclContext) {
 	td := a.pop().(TStruct)
-	td.t = Type(ctx.GetName().GetText())
+	td.t = Type(ctx.GetChild(1).(*antlr.TerminalNodeImpl).GetText())
+	fmt.Println("typedecl: ", td.t)
 	a.push(td)
 }
 
-func (a *FGAdaptor) ExitMeth_decl(ctx *parser.Meth_declContext) {
+func (a *FGAdaptor) ExitMethDecl(ctx *parser.MethDeclContext) {
 	m := ctx.GetMeth().GetText()
 	// Reverse order
 	e := a.pop().(Expr)
@@ -69,7 +70,7 @@ func (a *FGAdaptor) ExitMeth_decl(ctx *parser.Meth_declContext) {
 }
 
 // Children: 2=field_decls
-func (a *FGAdaptor) ExitStruct(ctx *parser.StructContext) {
+func (a *FGAdaptor) ExitStructTypeLit(ctx *parser.StructTypeLitContext) {
 	var elems []FieldDecl
 	if ctx.GetChildCount() > 3 {
 		nelems := (ctx.GetChild(2).GetChildCount() + 1) / 2 // e.g., fd ';' fd ';' fd
@@ -82,14 +83,14 @@ func (a *FGAdaptor) ExitStruct(ctx *parser.StructContext) {
 	a.push(TStruct{"^", elems}) // "^" to be overwritten in ExitType_decl
 }
 
-func (a *FGAdaptor) ExitField_decl(ctx *parser.Field_declContext) {
+func (a *FGAdaptor) ExitFieldDecl(ctx *parser.FieldDeclContext) {
 	field := ctx.GetField().GetText()
 	typ := Type(ctx.GetTyp().GetText())
 	a.push(FieldDecl{field, typ})
 }
 
 // Cf. ExitField_decl
-func (a *FGAdaptor) ExitParamdecl(ctx *parser.ParamdeclContext) {
+func (a *FGAdaptor) ExitParamDecl(ctx *parser.ParamDeclContext) {
 	x := ctx.GetVari().GetText()
 	t := Type(ctx.GetTyp().GetText())
 	a.push(ParamDecl{x, t})
@@ -100,13 +101,16 @@ func (a *FGAdaptor) EnterCall(ctx *parser.CallContext) {}
 func (a *FGAdaptor) ExitCall(ctx *parser.CallContext) {}
 
 func (a *FGAdaptor) ExitVariable(ctx *parser.VariableContext) {
-	a.push(Variable{ctx.GetVariable().GetText()})
+	n := ctx.GetChild(0).(*antlr.TerminalNodeImpl)
+	fmt.Println("variable: ", n)
+	a.push(Variable{n.GetText()})
 }
 
 // Children: 0=typ (*antlr.TerminalNodeImpl), 1='{', 2=exprs (*parser.ExprsContext), 3='}'
 // N.B. ExprsContext is a "helper" Context, actual exprs are its children
-func (a *FGAdaptor) ExitLit(ctx *parser.LitContext) {
-	typ := Type(ctx.GetTyp().GetText())
+func (a *FGAdaptor) ExitStructLit(ctx *parser.StructLitContext) {
+	typ := Type(ctx.GetChild(0).(*antlr.TerminalNodeImpl).GetText())
+	fmt.Println("structlit: ", typ)
 	var es []Expr
 	if ctx.GetChildCount() > 3 {
 		numExprs := (ctx.GetChild(2).GetChildCount() + 1) / 2 // e.g., 'x' ',' 'y' ',' 'z'
@@ -120,7 +124,7 @@ func (a *FGAdaptor) ExitLit(ctx *parser.LitContext) {
 
 func (a *FGAdaptor) ExitSelect(ctx *parser.SelectContext) {}
 
-func (a *FGAdaptor) ExitAssertion(ctx *parser.AssertionContext) {}
+func (a *FGAdaptor) ExitAssert(ctx *parser.AssertContext) {}
 
 func (a *FGAdaptor) push(i FGNode) {
 	a.stack = append(a.stack, i)
