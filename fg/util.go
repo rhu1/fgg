@@ -22,7 +22,7 @@ func MakeFgProgram(elems ...string) string {
 		b.WriteString(v)
 		b.WriteString(";\n")
 	}
-	b.WriteString("func main() { _ = " + elems[len(elems)-1] + "}")
+	b.WriteString("func main() { _ = " + elems[len(elems)-1] + " }")
 	return b.String()
 }
 

@@ -54,7 +54,7 @@ params     : paramDecl (',' paramDecl)* ;
 paramDecl  : vari=NAME typ=NAME ;
 expr       : NAME                                   # Variable
            | NAME '{' exprs? '}'                    # StructLit
-           | expr '.' field=NAME                    # Select
+           | expr '.' NAME                          # Select
            | recv=expr '.' NAME '(' args=exprs* ')' # Call
            | expr '.' '(' NAME ')'                  # Assert
            ;

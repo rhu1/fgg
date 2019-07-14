@@ -192,3 +192,25 @@ func Test011(t *testing.T) {
 	e := "B{A{}}"
 	parseAndOkBad(t, "Cannot return a B as an A", A, Am1, B, e)
 }
+
+// Initial testing field selection
+func Test012(t *testing.T) {
+	A := "type A struct {}"
+	B := "type B struct { a A }"
+	e := "B{A{}}.a"
+	parseAndOkGood(t, A, B, e)
+}
+
+func Test012b(t *testing.T) {
+	A := "type A struct {}"
+	B := "type B struct { a A }"
+	e := "B{A{}}.b"
+	parseAndOkBad(t, "B does not have a \"b\" field", A, B, e)
+}
+
+func Test012c(t *testing.T) {
+	A := "type A struct {}"
+	B := "type B struct { a A }"
+	e := "B{B{A{}}.a}"
+	parseAndOkGood(t, A, B, e)
+}

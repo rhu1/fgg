@@ -156,7 +156,11 @@ func (a *FGAdaptor) ExitStructLit(ctx *parser.StructLitContext) {
 	a.push(StructLit{typ, es})
 }
 
-func (a *FGAdaptor) ExitSelect(ctx *parser.SelectContext) {}
+func (a *FGAdaptor) ExitSelect(ctx *parser.SelectContext) {
+	e := a.pop().(Expr)
+	f := ctx.GetChild(2).(*antlr.TerminalNodeImpl).GetText()
+	a.push(Select{e, f})
+}
 
 func (a *FGAdaptor) ExitCall(ctx *parser.CallContext) {}
 
