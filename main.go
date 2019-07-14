@@ -15,7 +15,6 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
-	"strings"
 
 	"temp/antlr/antlr04/fg"
 )
@@ -45,7 +44,7 @@ func main() {
 	Am3 := "func (x0 A) m3(x1 A, x2 A) A { return x2 }"
 	B := "type B struct { a A }"
 	e := "B{A{}}"
-	prog := MakeFgProgram(A, Am1, Am2, Am3, B, e)
+	prog := fg.MakeFgProgram(A, Am1, Am2, Am3, B, e)
 	fmt.Println("source:")
 	fmt.Println(prog)
 
@@ -55,18 +54,4 @@ func main() {
 	fmt.Println(ast)
 
 	ast.Ok()
-}
-
-func MakeFgProgram(elems ...string) string {
-	if len(elems) == 0 {
-		panic("Bad empty args: must supply at least body expression for \"main\"")
-	}
-	var b strings.Builder
-	b.WriteString("package main;\n")
-	for _, v := range elems[:len(elems)-1] {
-		b.WriteString(v)
-		b.WriteString(";\n")
-	}
-	b.WriteString("func main() { _ = " + elems[len(elems)-1] + "}")
-	return b.String()
 }
