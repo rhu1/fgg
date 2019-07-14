@@ -58,7 +58,7 @@ func body(ds []Decl, t_S Type, m Name) MDecl {
 }
 
 // t <: t0
-func (t0 Type) Impl(ds []Decl, t Type) bool {
+func (t0 Type) Impls(ds []Decl, t Type) bool {
 	if IsStructType(ds, t0) {
 		return IsStructType(ds, t) && t0 == t
 	}
@@ -290,7 +290,7 @@ func (s StructLit) Typing(ds []Decl, gamma Env) Type {
 	for i := 0; i < len(s.es); i++ {
 		t := s.es[i].Typing(ds, gamma)
 		u := fs[i].t
-		if !u.Impl(ds, t) {
+		if !u.Impls(ds, t) {
 			panic("Arg expr must impl field type: arg=" + t.String() + " field=" + u.String())
 		}
 	}
