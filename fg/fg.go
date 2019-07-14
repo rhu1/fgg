@@ -162,16 +162,16 @@ type Variable struct {
 
 var _ Expr = Variable{}
 
-func (this Variable) Subs(m map[Variable]Expr) Expr {
-	res, ok := m[this]
+func (v Variable) Subs(m map[Variable]Expr) Expr {
+	res, ok := m[v]
 	if !ok {
-		panic("Unknown var: " + this.String())
+		panic("Unknown var: " + v.String())
 	}
 	return res
 }
 
-func (this Variable) Eval() Expr {
-	panic(this.id)
+func (v Variable) Eval() Expr {
+	panic(v.id)
 }
 
 func (v Variable) Typing(ds []Decl, gamma Env) Type {
@@ -182,8 +182,8 @@ func (v Variable) Typing(ds []Decl, gamma Env) Type {
 	return res
 }
 
-func (this Variable) String() string {
-	return this.id
+func (v Variable) String() string {
+	return v.id
 }
 
 type StructLit struct {
@@ -193,12 +193,12 @@ type StructLit struct {
 
 var _ Expr = StructLit{}
 
-func (this StructLit) Subs(m map[Variable]Expr) Expr {
-	return this
+func (s StructLit) Subs(m map[Variable]Expr) Expr {
+	return s
 }
 
-func (this StructLit) Eval() Expr {
-	return this
+func (s StructLit) Eval() Expr {
+	return s
 }
 
 func (s StructLit) Typing(ds []Decl, gamma Env) Type {
@@ -225,11 +225,11 @@ func (s StructLit) Typing(ds []Decl, gamma Env) Type {
 	return s.t
 }
 
-func (this StructLit) String() string {
+func (s StructLit) String() string {
 	var sb strings.Builder
-	sb.WriteString(this.t.String())
+	sb.WriteString(s.t.String())
 	sb.WriteString("{")
-	sb.WriteString(strings.Trim(strings.Join(strings.Split(fmt.Sprint(this.es), " "), ", "), "[]"))
+	sb.WriteString(strings.Trim(strings.Join(strings.Split(fmt.Sprint(s.es), " "), ", "), "[]"))
 	sb.WriteString("}")
 	return sb.String()
 }
