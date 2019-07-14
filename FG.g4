@@ -2,6 +2,7 @@
 //$ antlr4 -Dlanguage=Go -o parser FG.g4
 
 // Cf. https://github.com/antlr/grammars-v4/blob/master/golang/Golang.g4
+// (This grammar is not based that one, for ref only)
 
 // FG.g4
 grammar FG;
@@ -9,25 +10,24 @@ grammar FG;
 
 /* Keywords */
 
-FUNC      : 'func';
-INTERFACE : 'interface';
-MAIN      : 'main';
-PACKAGE   : 'package';
-RETURN    : 'return';
-STRUCT    : 'struct';
-TYPE      : 'type';
+FUNC      : 'func' ;
+INTERFACE : 'interface' ;
+MAIN      : 'main' ;
+PACKAGE   : 'package' ;
+RETURN    : 'return' ;
+STRUCT    : 'struct' ;
+TYPE      : 'type' ;
 
 
 /* Tokens */
 
-// i.e., LETTER
-fragment NAME_START : ('a' .. 'z') | ('A' .. 'Z') ;
+fragment LETTER     : ('a' .. 'z') | ('A' .. 'Z') ;
 fragment DIGIT      : ('0' .. '9') ;
-NAME                : NAME_START (NAME_START | DIGIT | '_')* ;
+NAME                : LETTER (LETTER | DIGIT | '_')* ;
+WHITESPACE          : [ \r\n\t]+ -> skip ;
+COMMENT             : '/*' .*? '*/'    -> channel(HIDDEN) ;
+LINE_COMMENT        : '//' ~[\r\n]*    -> channel(HIDDEN) ;
 
-WHITESPACE   : [ \r\n\t]+ -> skip;
-COMMENT      : '/*' .*? '*/'    -> channel(HIDDEN);
-LINE_COMMENT : '//' ~[\r\n]*    -> channel(HIDDEN);
 
 /* Rules */
 
@@ -35,7 +35,7 @@ LINE_COMMENT : '//' ~[\r\n]*    -> channel(HIDDEN);
 // "tag=" to distinguish repeat productions within a rule: comes out in field/getter names
 // "#tag" for cases within a rule: comes out as Context names (i.e., types)
 // "plurals", e.g., decls, used for sequences: comes out as "helper" Context...
-// ...nodes that group up actual children underneath, makes adapting easier
+// ...nodes that group up actual children underneath -- makes "adapting" easier
 
 program    : PACKAGE MAIN ';' decls? FUNC MAIN '(' ')' '{' '_' '=' expr '}' EOF ;
 decls      : ((typeDecl | methDecl) ';')+ ;
@@ -58,9 +58,5 @@ expr       : NAME                                   # Variable
            | recv=expr '.' NAME '(' args=exprs* ')' # Call
            | expr '.' '(' NAME ')'                  # Assert
            ;
-exprs : expr (',' expr)* ;
-
-//meth_sig : meth=name '(' parms=formal* ')' ret=name # MethSig ;
-
-//formal : var=name type=name # ParamDecl ;
+exprs      : expr (',' expr)* ;
 
