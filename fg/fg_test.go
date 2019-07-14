@@ -100,3 +100,48 @@ func Test005e(t *testing.T) {
 	e := "A{}"
 	parseAndOkGood(t, A, Am1, Am2, Am3, B, e)
 }
+
+func Test006(t *testing.T) {
+	Any := "type Any interface {}"
+	A := "type A struct {}"
+	Am1 := "func (x0 A) m1() Any { return x0 }"
+	e := "A{}"
+	parseAndOkGood(t, Any, A, Am1, e)
+}
+
+func Test007(t *testing.T) {
+	IA := "type IA interface { m1(a A) A }"
+	A := "type A struct {}"
+	B := "type B struct { f IA }"
+	Am1 := "func (x0 A) m1(a A) A { return x1 }"
+	e := "B{A{}}"
+	parseAndOkGood(t, IA, A, Am1, B, e)
+}
+
+func Test007b(t *testing.T) {
+	IA := "type IA interface { m1(a A) A }"
+	A := "type A struct {}"
+	B := "type B struct { f IA }"
+	Am1 := "func (x0 A) m2(a A) A { return x1 }"
+	e := "B{A{}}"
+	parseAndOkBad(t, "A is not an IA", IA, A, Am1, B, e)
+}
+
+func Test007c(t *testing.T) {
+	IA := "type IA interface { m1(a A) A }"
+	A := "type A struct {}"
+	B := "type B struct { f IA }"
+	Am1 := "func (x0 A) m1() A { return x0 }"
+	e := "B{A{}}"
+	parseAndOkBad(t, "A is not an IA", IA, A, Am1, B, e)
+}
+
+func Test007d(t *testing.T) {
+	Any := "type Any interface {}"
+	IA := "type IA interface { m1(a A) A }"
+	A := "type A struct {}"
+	B := "type B struct { f IA }"
+	Am1 := "func (x0 A) m1(a A) Any { return x0 }"
+	e := "B{A{}}"
+	parseAndOkBad(t, "A is not an IA", Any, IA, A, Am1, B, e)
+}
