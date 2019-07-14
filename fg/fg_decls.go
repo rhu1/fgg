@@ -110,22 +110,22 @@ func (p ParamDecl) String() string {
 	return p.x + " " + p.t.String()
 }
 
-type TStruct struct { // TODO: rename STypeLit
+type STypeLit struct { // TODO: rename STypeLit
 	t   Type
 	fds []FieldDecl
 }
 
-var _ TDecl = TStruct{}
+var _ TDecl = STypeLit{}
 
-func (s TStruct) GetType() Type {
+func (s STypeLit) GetType() Type {
 	return s.t
 }
 
-func (s TStruct) GetName() Name {
+func (s STypeLit) GetName() Name {
 	return Name(s.t)
 }
 
-func (s TStruct) String() string {
+func (s STypeLit) String() string {
 	var b strings.Builder
 	b.WriteString("type ")
 	b.WriteString(s.t.String())

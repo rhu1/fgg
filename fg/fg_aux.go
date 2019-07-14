@@ -2,7 +2,7 @@ package fg
 
 func fields(ds []Decl, t_S Type) []FieldDecl {
 	for _, v := range ds {
-		s, ok := v.(TStruct)
+		s, ok := v.(STypeLit)
 		if ok && s.t == t_S {
 			return s.fds
 		}

@@ -50,7 +50,7 @@ func (a *FGAdaptor) ExitProgram(ctx *parser.ProgramContext) {
 func (a *FGAdaptor) ExitTypeDecl(ctx *parser.TypeDeclContext) {
 	typ := Type(ctx.GetChild(1).(*antlr.TerminalNodeImpl).GetText())
 	td := a.pop()
-	if s, ok := td.(TStruct); ok { // N.B. s is a *copy* of td
+	if s, ok := td.(STypeLit); ok { // N.B. s is a *copy* of td
 		s.t = typ
 		a.push(s)
 	} else if r, ok := td.(ITypeLit); ok {
@@ -82,7 +82,7 @@ func (a *FGAdaptor) ExitStructTypeLit(ctx *parser.StructTypeLitContext) {
 			fds[i] = fd // Adding backwards
 		}
 	}
-	a.push(TStruct{"^", fds}) // "^" to be overwritten in ExitTypeDecl
+	a.push(STypeLit{"^", fds}) // "^" to be overwritten in ExitTypeDecl
 }
 
 func (a *FGAdaptor) ExitFieldDecl(ctx *parser.FieldDeclContext) {

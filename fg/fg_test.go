@@ -183,3 +183,12 @@ func Test010b(t *testing.T) {
 	e := "B{A{}}"
 	parseAndOkBad(t, "A is not an IA", Any, IA, A, Am1, B, e)
 }
+
+// Testing bad return
+func Test011(t *testing.T) {
+	A := "type A struct {}"
+	Am1 := "func (x0 A) m1() A { return B{A{}} }"
+	B := "type B struct { a A }"
+	e := "B{A{}}"
+	parseAndOkBad(t, "Cannot return a B as an A", A, Am1, B, e)
+}

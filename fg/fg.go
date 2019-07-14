@@ -48,7 +48,7 @@ func (t Type) String() string {
 
 func isStructType(ds []Decl, t Type) bool {
 	for _, v := range ds {
-		d, ok := v.(TStruct)
+		d, ok := v.(STypeLit)
 		if ok && d.t == t {
 			return true
 		}
