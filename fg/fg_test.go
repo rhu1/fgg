@@ -1,5 +1,6 @@
 //rhu@HZHL4 MINGW64 ~/code/go/src/temp/antlr/antlr04
 //$ go test temp/antlr/antlr04/fg
+//$ go test temp/antlr/antlr04/fg -run Test001
 
 package fg
 

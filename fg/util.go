@@ -85,7 +85,7 @@ func (s *StrictErrorStrategy) RecoverInline(recognizer antlr.Parser) antlr.Token
 	panic(message) // + fmt.Sprintf("%v", antlr.NewInputMisMatchException(recognizer)))
 }
 
-/*public class BailLexer : ...FGLexer
+/*public class BailLexer : ...FGLexer...
 {
     public BailLexer(ICharStream input) : base(input) { }
 
