@@ -96,7 +96,7 @@ func (m MDecl) String() string {
 	}
 	b.WriteString(") ")
 	b.WriteString(m.t.String())
-	b.WriteString("{ return ")
+	b.WriteString(" { return ")
 	b.WriteString(m.e.String())
 	b.WriteString(" }")
 	return b.String()
