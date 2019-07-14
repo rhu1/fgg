@@ -17,8 +17,8 @@ func fields(ds []Decl, t_S Type) []FieldDecl {
 	panic("Unknown type: " + t_S.String())
 }
 
-// t2 <: t1
-func (t1 Type) Impl(ds []Decl, t2 Type) bool {
+// t <: t0
+func (t0 Type) Impl(ds []Decl, t Type) bool {
 	return true // TODO: meth ds, sigs, methods aux
 }
 
