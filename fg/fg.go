@@ -156,8 +156,8 @@ func (m MDecl) Ok(ds []Decl) {
 	}
 	t := m.e.Typing(ds, env)
 	if !t.Impls(ds, m.t) {
-		panic("Method body type must implement declared return type: found=" + t +
-			", expected=" + m.t)
+		panic("Method body type must implement declared return type: found=" +
+			t.String() + ", expected=" + m.t.String() + "\n\t" + m.String())
 	}
 }
 
@@ -300,13 +300,14 @@ func (s StructLit) Typing(ds []Decl, gamma Env) Type {
 		}
 		panic("Arity mismatch: found=" +
 			strings.Join(strings.Split(fmt.Sprint(s.es), " "), ", ") +
-			", expected=[" + tmp + "]")
+			", expected=[" + tmp + "]" + "\n\t" + s.String())
 	}
 	for i := 0; i < len(s.es); i++ {
 		t := s.es[i].Typing(ds, gamma)
 		u := fs[i].t
 		if !t.Impls(ds, u) {
-			panic("Arg expr must impl field type: arg=" + t.String() + ", field=" + u.String())
+			panic("Arg expr must impl field type: arg=" + t.String() + ", field=" +
+				u.String() + "\n\t" + s.String())
 		}
 	}
 	return s.t
