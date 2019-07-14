@@ -46,14 +46,6 @@ func main() {
 /* TODO
 - WF: repeat type decl
 
-	var adptr fg.FGAdaptor
-
-	//e := "A{}"
-	//e := "t_S{x, y, t_S{z}}"
-
-	//b.WriteString("type t_S struct { };\n")
-	//b.WriteString("func (x0 A) m1() A { return A{} };\n")
 	//b.WriteString("type B struct { f t };\n")  // TODO: unknown type
 	//b.WriteString("type B struct { b B };\n")  // TODO: recursive struct
-	//b.WriteString("type t_S struct { f1 t; f2 t };\n")
 */
