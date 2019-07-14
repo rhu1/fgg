@@ -28,11 +28,11 @@ func methods(ds []Decl, t Type) map[Name]MDecl {
 	return res
 }
 
-func body(ds []Decl, t_S Type, m Name) MDecl { // TODO: x, ~x, e -- more convenient
+func body(ds []Decl, t_S Type, m Name) Sig {
 	for _, v := range ds {
 		md, ok := v.(MDecl)
 		if ok && md.t == t_S && md.m == m {
-			return md
+			return md.ToSig()
 		}
 	}
 	panic("Method not found: " + t_S.String() + "." + m)
