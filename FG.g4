@@ -43,10 +43,14 @@ COMMENT:            '/*' .*? '*/'    -> channel(HIDDEN);
 LINE_COMMENT:       '//' ~[\r\n]*    -> channel(HIDDEN);
 
 // Rules
-program : PACKAGE MAIN ';' type_decls? FUNC MAIN '(' ')' '{' '_' '=' body=expression '}' EOF ;
+program : PACKAGE MAIN ';' decls? FUNC MAIN '(' ')' '{' '_' '=' body=expression '}' EOF ;
 
-type_decls : (type_decl ';')+ ;
+decls : ((type_decl | meth_decl) ';')+ ;
 type_decl: TYPE name=NAME type_lit ;
+meth_decl: FUNC '(' paramdecl ')' meth=NAME '(' params? ')' ret=NAME '{' RETURN expression '}' ;
+
+params : paramdecl (',' paramdecl)* ;
+paramdecl: vari=NAME typ=NAME ;
 
 type_lit : STRUCT '{' elems=field_decls? '}' # Struct;
 

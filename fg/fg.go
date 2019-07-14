@@ -7,7 +7,7 @@ type Name = string
 type Type Name
 type Env map[Name]Type
 
-func fields(ds []TypeLit, t_S Type) []FieldDecl {
+func fields(ds []Decl, t_S Type) []FieldDecl {
 	for _, v := range ds {
 		s, ok := v.(TStruct)
 		if ok && s.t == t_S {
@@ -18,7 +18,7 @@ func fields(ds []TypeLit, t_S Type) []FieldDecl {
 }
 
 // t2 <: t1
-func (t1 Type) Impl(ds []TypeLit, t2 Type) bool {
+func (t1 Type) Impl(ds []Decl, t2 Type) bool {
 	return true // TODO: meth ds, sigs, methods aux
 }
 
@@ -31,9 +31,11 @@ type FGNode interface {
 }
 
 type FGProgram struct {
-	ds []TypeLit
+	ds []Decl
 	e  Expr
 }
+
+var _ FGNode = FGProgram{}
 
 func (p FGProgram) Ok() bool {
 	var gamma Env
@@ -54,17 +56,65 @@ func (p FGProgram) String() string {
 	return b.String()
 }
 
-var _ FGNode = FGProgram{}
-
-type TypeLit interface {
+type Decl interface {
 	FGNode
+}
+
+type TDecl interface {
+	Decl
 	GetType() Type
+}
+
+type MDecl struct {
+	recv ParamDecl
+	m    Name
+	ps   []ParamDecl
+	t    Type
+	e    Expr
+}
+
+var _ Decl = MDecl{}
+
+func (m MDecl) String() string {
+	var b strings.Builder
+	b.WriteString("func (")
+	b.WriteString(m.recv.String())
+	b.WriteString(") ")
+	b.WriteString(m.m)
+	b.WriteString("(")
+	if len(m.ps) > 0 {
+		b.WriteString(m.ps[0].String())
+		for _, v := range m.ps[1:] {
+			b.WriteString(", ")
+			b.WriteString(v.String())
+		}
+	}
+	b.WriteString(") ")
+	b.WriteString(m.t.String())
+	b.WriteString("{ return ")
+	b.WriteString(m.e.String())
+	b.WriteString(" }")
+	return b.String()
+}
+
+// Cf. FieldDecl
+type ParamDecl struct {
+	x Name
+	t Type
+}
+
+var _ FGNode = ParamDecl{}
+
+func (p ParamDecl) String() string {
+	return p.x + " " + p.t.String()
 }
 
 type TStruct struct {
 	t   Type
 	fds []FieldDecl
 }
+
+var _ TDecl = TStruct{}
 
 func (s TStruct) GetType() Type {
 	return s.t
@@ -88,24 +138,22 @@ func (s TStruct) String() string {
 	return b.String()
 }
 
-var _ TypeLit = TStruct{}
-
 type FieldDecl struct {
 	f Name
 	t Type
 }
 
+var _ FGNode = FieldDecl{}
+
 func (fd FieldDecl) String() string {
 	return fd.f + " " + fd.t.String()
 }
-
-var _ FGNode = FieldDecl{}
 
 type Expr interface {
 	FGNode
 	Subs(map[Variable]Expr) Expr
 	Eval() Expr
-	Typing(ds []TypeLit, gamma Env) Type
+	Typing(ds []Decl, gamma Env) Type
 }
 
 type Variable struct {
@@ -124,7 +172,7 @@ func (this Variable) Eval() Expr {
 	panic(this.id)
 }
 
-func (v Variable) Typing(ds []TypeLit, gamma Env) Type {
+func (v Variable) Typing(ds []Decl, gamma Env) Type {
 	res, ok := gamma[v.id]
 	if !ok {
 		panic("Var not in env: " + v.String())
@@ -151,7 +199,7 @@ func (this StructLit) Eval() Expr {
 	return this
 }
 
-func (s StructLit) Typing(ds []TypeLit, gamma Env) Type {
+func (s StructLit) Typing(ds []Decl, gamma Env) Type {
 	fs := fields(ds, s.t)
 	if len(s.es) != len(fs) {
 		panic("Arity mismatch: found=" +
