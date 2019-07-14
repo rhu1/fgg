@@ -310,6 +310,32 @@ func Test013g(t *testing.T) {
 	parseAndOkBad(t, "(Nested) m1 call given a B, expecting an A", A, A1m, B, e)
 }
 
+// Fixed bug in methods, md.t => md.recv.t
+func Test014(t *testing.T) {
+	fmt.Println("Source:")
+	A := "type A struct {}"
+	e := "A{}.m1()"
+	parseAndOkBad(t, "A has no method m1", A, e)
+}
+
+func Test015(t *testing.T) {
+	Any := "type Any interface {}"
+	A := "type A struct {}"
+	B := "type B struct { a A }"
+	A1m := "func (x0 A) m1(x1 Any) Any { return B{x0} }"
+	e := "A{}.m1(B{A{}})"
+	parseAndOkGood(t, Any, A, A1m, B, e)
+}
+
+func Test015b(t *testing.T) {
+	fmt.Println("Source:")
+	IA := "type IA interface { m0() A }"
+	A := "type A struct {}"
+	A1m := "func (x0 A) m1(x1 IA) A { return x0 }"
+	e := "A{}.m1(A{})"
+	parseAndOkBad(t, "A is a not an IA", IA, A, A1m, e)
+}
+
 /* Eval */
 
 //func TestEval001(t *testing.T) { }

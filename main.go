@@ -26,12 +26,11 @@ var _ = strconv.Itoa
 
 func main() {
 	fmt.Println("Source:")
-	Any := "type Any interface {}"
+	IA := "type IA interface { m0() A }"
 	A := "type A struct {}"
-	B := "type B struct { a A }"
-	A1m := "func (x0 A) m1(x1 Any) Any { return B{x0} }"
-	e := "A{}.m1(B{A{}})"
-	prog := fg.MakeFgProgram(Any, A, A1m, B, e)
+	A1m := "func (x0 A) m1(x1 IA) A { return x0 }"
+	e := "A{}.m1(A{})"
+	prog := fg.MakeFgProgram(IA, A, A1m, e)
 	fmt.Println(prog)
 
 	fmt.Println("\nParsing AST:")

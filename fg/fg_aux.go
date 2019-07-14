@@ -1,5 +1,9 @@
 package fg
 
+import "fmt"
+
+var _ = fmt.Errorf
+
 func fields(ds []Decl, t_S Type) []FieldDecl {
 	for _, v := range ds {
 		s, ok := v.(STypeLit)
@@ -15,9 +19,9 @@ func methods(ds []Decl, t Type) map[Name]Sig {
 	res := make(map[Name]Sig)
 	if isStructType(ds, t) {
 		for _, v := range ds {
-			m, ok := v.(MDecl)
-			if ok && m.t == t {
-				res[m.m] = m.ToSig()
+			md, ok := v.(MDecl)
+			if ok && md.recv.t == t {
+				res[md.m] = md.ToSig()
 			}
 		}
 	} else if isInterfaceType(ds, t) {

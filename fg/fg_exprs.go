@@ -248,7 +248,12 @@ func (c Call) Eval(ds []Decl) Expr {
 
 func (c Call) Typing(ds []Decl, gamma Env) Type {
 	t0 := c.e.Typing(ds, gamma)
-	s := methods(ds, t0)[c.m]
+	var s Sig
+	if tmp, ok := methods(ds, t0)[c.m]; !ok {
+		panic("Method not found: " + c.m + " in " + t0.String())
+	} else {
+		s = tmp
+	}
 	if len(c.args) != len(s.ps) {
 		tmp := "" // TODO: factor out with StructLit.Typing
 		if len(s.ps) > 0 {
