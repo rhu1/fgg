@@ -17,11 +17,16 @@ type FGAdaptor struct {
 	stack []FGNode // Because Listener methods don't return...
 }
 
-func (a *FGAdaptor) Parse(input string) FGProgram {
+// strictParse means panic upon any parsing error -- o/w error recovery is attempted
+func (a *FGAdaptor) Parse(strictParse bool, input string) FGProgram {
 	is := antlr.NewInputStream(input)
 	lexer := parser.NewFGLexer(is)
 	stream := antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel)
 	p := parser.NewFGParser(stream)
+	if strictParse { // https://stackoverflow.com/questions/51683104/how-to-catch-minor-errors
+		p.RemoveErrorListeners()
+		p.SetErrorHandler(&StrictErrorStrategy{})
+	}
 	antlr.ParseTreeWalkerDefault.Walk(a, p.Program())
 	return a.pop().(FGProgram)
 }

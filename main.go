@@ -40,17 +40,16 @@ var _ = strconv.Itoa
 func main() {
 	fmt.Println("Source:")
 	A := "type A struct {}"
-	Am1 := "func (x0 A) m1() A { return x0 }"
-	Am2 := "func (x0 A) m2(x1 A) A { return x1 }"
-	Am3 := "func (x0 A) m3(x1 A, x2 A) A { return x2 }"
 	B := "type B struct { a A }"
-	e := "B{A{}}"
-	prog := fg.MakeFgProgram(A, Am1, Am2, Am3, B, e)
+	C := "type C struct { a A, b B }"
+	e := "C{A{}, B{A{}}}"
+	prog := fg.MakeFgProgram(A, B, C, e)
 	fmt.Println(prog)
 
 	fmt.Println("\nParsing AST:")
 	var adptr fg.FGAdaptor
-	ast := adptr.Parse(prog)
+	strictParse := false
+	ast := adptr.Parse(strictParse, prog)
 	fmt.Println(ast)
 
 	fmt.Println("\nChecking program OK:")
