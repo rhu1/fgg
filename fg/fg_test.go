@@ -2,7 +2,7 @@
 //$ go test temp/antlr/antlr04/fg
 //$ go test temp/antlr/antlr04/fg -run Test001
 
-package fg_test
+package fg_test // Separate package, can test "API"
 
 import (
 	"fmt"

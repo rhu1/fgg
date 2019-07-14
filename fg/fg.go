@@ -130,7 +130,8 @@ func (s Sig) String() string {
 type Expr interface {
 	FGNode
 	Subs(map[Variable]Expr) Expr
-	CanEval(ds []Decl) bool
+	//CanEval(ds []Decl) bool // Should only panic if badly typed, o/w return false if stuck
+	//IsValue() bool
 	Eval(ds []Decl) Expr
 	//IsPanic() bool  // TODO
 	Typing(ds []Decl, gamma Env) Type

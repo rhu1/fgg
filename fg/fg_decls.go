@@ -60,6 +60,10 @@ func (m MDecl) ToSig() Sig {
 }
 
 func (m MDecl) Ok(ds []Decl) {
+	if !isStructType(ds, m.recv.t) {
+		panic("Receiver must be a struct type: not " + m.recv.t.String() +
+			"\n\t" + m.String())
+	}
 	env := make(map[Name]Type)
 	env[m.recv.x] = m.recv.t
 	for _, v := range m.ps {

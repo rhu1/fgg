@@ -22,9 +22,13 @@ func (v Variable) Subs(m map[Variable]Expr) Expr {
 	return res
 }
 
-func (v Variable) CanEval(ds []Decl) bool {
+/*func (v Variable) CanEval(ds []Decl) bool {
 	return false
-}
+}*/
+
+/*func (v Variable) IsValue() bool {
+	return false
+}*/
 
 func (v Variable) Eval(ds []Decl) Expr {
 	panic("Cannot evaluate free variable: " + v.id)
@@ -53,24 +57,32 @@ func (s StructLit) Subs(m map[Variable]Expr) Expr {
 	return s
 }
 
-func (s StructLit) CanEval(ds []Decl) bool {
+/*func (s StructLit) CanEval(ds []Decl) bool {
 	for _, v := range s.es {
 		if v.CanEval(ds) {
 			return true
 		}
 	}
 	return false
+}*/
+
+/*func (s StructLit) IsValue() bool {
+	return true
+}*/
+
+func isValue(e Expr) bool {
+	if _, ok := e.(StructLit); ok {
+		return true
+	}
+	return false
 }
 
 func (s StructLit) Eval(ds []Decl) Expr {
-	if !s.CanEval(ds) {
-		panic("Stuck: " + s.String())
-	}
 	done := false
 	es := make([]Expr, len(s.es))
 	for i := 0; i < len(s.es); i++ {
 		v := s.es[i]
-		if !done && v.CanEval(ds) {
+		if !done && !isValue(v) {
 			v = v.Eval(ds)
 			done = true
 		}
@@ -122,7 +134,7 @@ func (s Select) Subs(m map[Variable]Expr) Expr {
 	return Select{s.e.Subs(m), s.f}
 }
 
-func (s Select) CanEval(ds []Decl) bool {
+/*func (s Select) CanEval(ds []Decl) bool {
 	if _, ok := s.e.(StructLit); !ok {
 		return false
 	}
@@ -138,20 +150,21 @@ func (s Select) CanEval(ds []Decl) bool {
 		}
 		return false
 	}
-}
+}*/
 
 func (s Select) Eval(ds []Decl) Expr {
-	if !s.CanEval(ds) {
-		panic("Stuck: " + s.String())
+	if !isValue(s.e) {
+		e := s.e.Eval(ds)
+		return Select{e, s.f}
 	}
 	v := s.e.(StructLit)
-	td := getTDecl(ds, v.t).(STypeLit)
-	for i := 0; i < len(td.fds); i++ {
-		if td.fds[i].f == s.f {
+	fds := fields(ds, v.t)
+	for i := 0; i < len(fds); i++ {
+		if fds[i].f == s.f {
 			return v.es[i]
 		}
 	}
-	panic("Field not found: " + s.f + " in\n\t" + td.String())
+	panic("Field not found: " + s.f)
 }
 
 func (s Select) Typing(ds []Decl, gamma Env) Type {
@@ -172,23 +185,124 @@ func (s Select) String() string {
 	return s.e.String() + "." + s.f
 }
 
-/*
 type Call struct {
-	recv Expr
+	e    Expr
 	m    Name
 	args []Expr
 }
 
-func (c Call) Eval() Expr {
-
+func (c Call) Subs(m map[Variable]Expr) Expr {
+	e := c.e.Subs(m)
+	args := make([]Expr, len(c.args))
+	for i := 0; i < len(c.args); i++ {
+		args[i] = c.args[i].Subs(m)
+	}
+	return Call{e, c.m, args}
 }
 
+/*func (c Call) CanEval(ds []Decl) bool {
+	if c.e.CanEval(ds) {
+		return true
+	}
+	for _, v := range c.args {
+		if v.CanEval(ds) {
+			return true
+		}
+	}
+	// c.e and c.args cannot eval -- TODO: but not sure if good or bad
+	if s, ok := e.(StructLit); ok {
+		body(ds, s.t, c.m)
+		return true
+	}
+	return false
+}*/
+
+func (c Call) Eval(ds []Decl) Expr {
+	if !isValue(c.e) {
+		e := c.e.Eval(ds)
+		return Call{e, c.m, c.args}
+	}
+	args := make([]Expr, len(c.args))
+	done := false
+	for i := 0; i < len(c.args); i++ {
+		e := c.args[i]
+		if !done && !isValue(e) {
+			e = e.Eval(ds)
+			done = true
+		}
+		args[i] = e
+	}
+	if done {
+		return Call{c.e, c.m, args}
+	}
+	// c.e and c.args all values
+	s := c.e.(StructLit)
+	x0, xs, e := body(ds, s.t, c.m)
+	subs := make(map[Variable]Expr)
+	subs[Variable{x0}] = c.e
+	for i := 0; i < len(xs); i++ {
+		subs[Variable{xs[i]}] = c.args[i]
+	}
+	return e.Subs(subs) // N.B. slightly different to R-Call
+}
+
+func (c Call) Typing(ds []Decl, gamma Env) Type {
+	t0 := c.e.Typing(ds, gamma)
+	s := methods(ds, t0)[c.m]
+	if len(c.args) != len(s.ps) {
+		tmp := "" // TODO: factor out with StructLit.Typing
+		if len(s.ps) > 0 {
+			tmp = s.ps[0].String()
+			for _, v := range s.ps[1:] {
+				tmp = tmp + ", " + v.String()
+			}
+		}
+		panic("Arity mismatch: args=" +
+			strings.Join(strings.Split(fmt.Sprint(c.args), " "), ", ") + ", params=" +
+			tmp)
+	}
+	for i := 0; i < len(c.args); i++ {
+		t := c.args[i].Typing(ds, gamma)
+		if !t.Impls(ds, s.ps[i].t) {
+			panic("Arg expr type must implement param type: arg=" + t + ", param=" +
+				s.ps[i].t)
+		}
+	}
+	return s.t
+}
+
+func (c Call) String() string {
+	var b strings.Builder
+	b.WriteString(c.e.String())
+	b.WriteString(".")
+	b.WriteString(c.m)
+	b.WriteString("(")
+	if len(c.args) > 0 {
+		b.WriteString(c.args[0].String())
+		for _, v := range c.args[1:] {
+			b.WriteString(", ")
+			b.WriteString(v.String())
+		}
+	}
+	b.WriteString(")")
+	return b.String()
+}
+
+/*
 type Assert struct {
 	e Expr
 	t Name
 }
 
-func (a Assert) Eval() Expr {
+func (a Assert) Subs(m map[Variable]Expr) Expr {
+}
 
+func (a Assert) Eval(ds[]Decl) Expr {
+}
+
+func (a Assert) Typing(ds []Decl, gamma Env) Type {
+}
+
+func (a Assert) String() string {
 }
 */

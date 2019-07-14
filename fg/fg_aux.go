@@ -7,7 +7,7 @@ func fields(ds []Decl, t_S Type) []FieldDecl {
 			return s.fds
 		}
 	}
-	panic("Unknown type: " + t_S.String())
+	panic("Not a struct type: " + t_S.String())
 }
 
 // Go has no overloading, meth names are a unique key
@@ -33,16 +33,6 @@ func methods(ds []Decl, t Type) map[Name]Sig {
 	return res
 }
 
-/*func methDecl(ds []Decl, t Type, m Name) TDecl {
-	for _, v := range ds {
-		m, ok := v.(MDecl)
-		if ok && m.t == t {
-			return m
-		}
-	}
-	panic("Method not found: " + t)
-}*/
-
 func getTDecl(ds []Decl, t Type) TDecl {
 	for _, v := range ds {
 		td, ok := v.(TDecl)
@@ -61,8 +51,27 @@ func body(ds []Decl, t_S Type, m Name) (Name, []Name, Expr) {
 			for i := 0; i < len(md.ps); i++ {
 				xs[i] = md.ps[i].x
 			}
-			return md.m, xs, md.e
+			return md.recv.x, xs, md.e
 		}
 	}
 	panic("Method not found: " + t_S.String() + "." + m)
+}
+
+/*func getMDecl(ds []Decl, t Type, m Name) MDecl {
+	for _, v := range ds {
+		m, ok := v.(MDecl)
+		if ok && m.t == t {
+			return m
+		}
+	}
+	panic("Method not found: " + t)
+}*/
+
+// Post: Type is a t_S
+func typ(ds []Decl, s StructLit) Type {
+	t_S := s.t
+	if !isStructType(ds, t_S) {
+		panic("Non struct type found in struct lit: " + s.String())
+	}
+	return t_S
 }
