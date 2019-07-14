@@ -160,6 +160,8 @@ type Variable struct {
 	id Name
 }
 
+var _ Expr = Variable{}
+
 func (this Variable) Subs(m map[Variable]Expr) Expr {
 	res, ok := m[this]
 	if !ok {
@@ -184,12 +186,12 @@ func (this Variable) String() string {
 	return this.id
 }
 
-var _ Expr = Variable{}
-
 type StructLit struct {
 	t  Type
 	es []Expr
 }
+
+var _ Expr = StructLit{}
 
 func (this StructLit) Subs(m map[Variable]Expr) Expr {
 	return this
@@ -231,8 +233,6 @@ func (this StructLit) String() string {
 	sb.WriteString("}")
 	return sb.String()
 }
-
-var _ Expr = StructLit{}
 
 /*
 type Select struct {
