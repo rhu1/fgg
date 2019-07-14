@@ -147,9 +147,9 @@ func (a *FGAdaptor) ExitStructLit(ctx *parser.StructLitContext) {
 	typ := Type(ctx.GetChild(0).(*antlr.TerminalNodeImpl).GetText())
 	var es []Expr
 	if ctx.GetChildCount() > 3 {
-		numExprs := (ctx.GetChild(2).GetChildCount() + 1) / 2 // e.g., 'x' ',' 'y' ',' 'z'
-		es = make([]Expr, numExprs)
-		for i := numExprs - 1; i >= 0; i-- {
+		nes := (ctx.GetChild(2).GetChildCount() + 1) / 2 // e.g., 'x' ',' 'y' ',' 'z'
+		es = make([]Expr, nes)
+		for i := nes - 1; i >= 0; i-- {
 			es[i] = a.pop().(Expr) // Adding backwards
 		}
 	}
@@ -162,7 +162,19 @@ func (a *FGAdaptor) ExitSelect(ctx *parser.SelectContext) {
 	a.push(Select{e, f})
 }
 
-func (a *FGAdaptor) ExitCall(ctx *parser.CallContext) {}
+func (a *FGAdaptor) ExitCall(ctx *parser.CallContext) {
+	var args []Expr
+	if ctx.GetChildCount() > 5 {
+		nargs := (ctx.GetChild(4).GetChildCount() + 1) / 2 // e.g., e ',' e ',' e
+		args = make([]Expr, nargs)
+		for i := nargs - 1; i >= 0; i-- {
+			args[i] = a.pop().(Expr) // Adding backwards
+		}
+	}
+	m := ctx.GetChild(2).(*antlr.TerminalNodeImpl).GetText()
+	e := a.pop().(Expr)
+	a.push(Call{e, m, args})
+}
 
 func (a *FGAdaptor) ExitAssert(ctx *parser.AssertContext) {}
 
