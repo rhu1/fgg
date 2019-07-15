@@ -13,6 +13,9 @@ Grammar is here: https://github.com/rhu1/fgg/blob/master/FG.g4#L40.
 The ANTLR4 Runtime for Go is also needed:
 https://github.com/antlr/antlr4/blob/master/doc/go-target.md.
 
+A first HelloWorld run can be done by:
+go run github.com/rhu1/fgg -eval=10 fg/examples/hello.go
+
 Exiting tests are here:
 https://github.com/rhu1/fgg/blob/master/fg/fg_test.go#L51.  
 Mainly syntax/typing tests.  
