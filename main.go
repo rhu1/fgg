@@ -11,6 +11,8 @@
 
 // N.B. GoInstall installs to $CYGHOME/code/go/bin (not $WINHOME)
 
+//go:generate antlr4 -Dlanguage=Go -o parser FG.g4
+
 package main
 
 import (
