@@ -44,7 +44,7 @@ func methods(ds []Decl, t Type) map[Name]Sig {
 func body(ds []Decl, t_S Type, m Name) (Name, []Name, Expr) {
 	for _, v := range ds {
 		md, ok := v.(MDecl)
-		if ok && md.t == t_S && md.m == m {
+		if ok && md.recv.t == t_S && md.m == m {
 			xs := make([]Name, len(md.ps))
 			for i := 0; i < len(md.ps); i++ {
 				xs[i] = md.ps[i].x

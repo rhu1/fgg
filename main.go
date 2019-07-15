@@ -38,9 +38,10 @@ var _ = strconv.Itoa
 
 func makeInternalSrc() string {
 	A := "type A struct {}"
-	Am1 := "func (x0 A) m1() A { return x0.m1() }"
-	e := "A{}.m1()"
-	return fg.MakeFgProgram(A, Am1, e)
+	Am1 := "func (x0 A) m1() B { return B{x0} }"
+	B := "type B struct { a A }"
+	e := "A{}.m1().a"
+	return fg.MakeFgProgram(A, Am1, B, e)
 }
 
 // N.B. flags (e.g., -internal=true) must be supplied before any non-flag args
@@ -88,6 +89,7 @@ func main() {
 	for i := 1; i <= *evalPtr; i++ {
 		prog = prog.Eval()
 		fmt.Printf("%8d: %v\n", i, prog.GetExpr())
+		fmt.Println("Checking OK:")
 		prog.Ok()
 	}
 }
