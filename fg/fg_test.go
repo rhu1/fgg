@@ -26,7 +26,8 @@ func parseAndOkGood(t *testing.T, elems ...string) fg.FGProgram {
 	prog := fg.MakeFgProgram(elems...)
 	defer func() {
 		if r := recover(); r != nil {
-			t.Errorf("Unexpected panic: " + fmt.Sprintf("%v", r) + "\n" + prog)
+			t.Errorf("Unexpected panic: " + fmt.Sprintf("%v", r) + "\n" +
+				prog)
 		}
 	}()
 	return parseAndCheckOk(prog)
@@ -50,10 +51,31 @@ func parseAndOkBad(t *testing.T, msg string, elems ...string) fg.FGProgram {
 	return parseAndCheckOk(prog)
 }
 
+// Pre: parseAndOkGood
 func evalAndOkGood(t *testing.T, p fg.FGProgram, steps int) fg.FGProgram {
 	defer func() {
 		if r := recover(); r != nil {
-			t.Errorf("Unexpected panic: " + fmt.Sprintf("%v", r) + "\n" + p.String())
+			t.Errorf("Unexpected panic: " + fmt.Sprintf("%v", r) + "\n" +
+				p.String())
+		}
+	}()
+	allowStupid := true
+	for i := 0; i < steps; i++ {
+		p = p.Eval()
+		p.Ok(allowStupid)
+	}
+	return p
+}
+
+// Pre: parseAndOkGood
+func evalAndOkBad(t *testing.T, p fg.FGProgram, msg string, steps int) fg.FGProgram {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("Expected panic, but none occurred: " + msg + "\n" +
+				p.String())
+		} else {
+			// [Parser] panic should be already checked by parseAndOkGood
+			// TODO FIXME: check panic more specifically
 		}
 	}()
 	allowStupid := true
@@ -402,6 +424,16 @@ func TestEval004(t *testing.T) {
 	ToAny := "type ToAny struct { any Any }"
 	A := "type A struct {}"
 	e := "ToAny{A{}}.any.(A)"
+	prog := parseAndOkGood(t, Any, ToAny, A, e)
+	evalAndOkGood(t, prog, 2)
+}
+
+// Testing isValue on StructLit
+func TestEval005(t *testing.T) {
+	Any := "type Any interface {}"
+	ToAny := "type ToAny struct { any Any }"
+	A := "type A struct {}"
+	e := "ToAny{ToAny{ToAny{A{}}.any.(A)}}"
 	prog := parseAndOkGood(t, Any, ToAny, A, e)
 	evalAndOkGood(t, prog, 2)
 }

@@ -41,7 +41,7 @@ func makeInternalSrc() string {
 	Any := "type Any interface {}"
 	ToAny := "type ToAny struct { any Any }"
 	A := "type A struct {}"
-	e := "ToAny{A{}}.any.(A)"
+	e := "ToAny{ToAny{ToAny{A{}}.any.(A)}}"
 	return fg.MakeFgProgram(Any, ToAny, A, e)
 }
 

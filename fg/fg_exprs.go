@@ -303,7 +303,7 @@ func (a Assert) String() string {
 // Cf. checkErr
 func isValue(e Expr) bool {
 	if s, ok := e.(StructLit); ok {
-		for _, v := range s.es { // TODO: add test
+		for _, v := range s.es {
 			if !isValue(v) {
 				return false
 			}
