@@ -67,5 +67,6 @@ func (xs Cons) Member(x Eq) Bool { return x.Equal(xs.head).Cond(memberBr{xs,x}).
 /* Example code */
 
 func main() {
+	// Submission version was missing a "}"
 	_ =  Cons{TT{}, Cons{FF{}, Nil{}}}.Map(not{})
 }
