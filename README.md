@@ -6,7 +6,7 @@ Added type assertions, and some CL flag options (e.g., -eval=n,
 -inline="...").
 
 A first HelloWorld run can be done by:
-go run github.com/rhu1/fgg -eval=10 fg/examples/hello.go
+go run github.com/rhu1/fgg -eval=10 fg/examples/hello/hello.go
 
 20190714
 
