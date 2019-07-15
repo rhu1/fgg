@@ -18,6 +18,19 @@ type FGAdaptor struct {
 	stack []FGNode // Because Listener methods don't return...
 }
 
+func (a *FGAdaptor) push(n FGNode) {
+	a.stack = append(a.stack, n)
+}
+
+func (a *FGAdaptor) pop() FGNode {
+	if len(a.stack) < 1 {
+		panic("Stack is empty")
+	}
+	res := a.stack[len(a.stack)-1]
+	a.stack = a.stack[:len(a.stack)-1]
+	return res
+}
+
 // strictParse means panic upon any parsing error -- o/w error recovery is attempted
 func (a *FGAdaptor) Parse(strictParse bool, input string) FGProgram {
 	is := antlr.NewInputStream(input)
@@ -103,7 +116,7 @@ func (a *FGAdaptor) ExitFieldDecl(ctx *parser.FieldDeclContext) {
 	a.push(FieldDecl{field, typ})
 }
 
-/* #InterfaceTypeLit (typeLit), "specs", "sig" (#SigSpec, "spec"), #InterfaceSpec ("spec") */
+/* #InterfaceTypeLit (typeLit), "specs", #SigSpec ("spec"), #InterfaceSpec ("spec"), "sig" */
 
 // Cf. ExitStructTypeLit
 func (a *FGAdaptor) ExitInterfaceTypeLit(ctx *parser.InterfaceTypeLitContext) {
@@ -119,6 +132,15 @@ func (a *FGAdaptor) ExitInterfaceTypeLit(ctx *parser.InterfaceTypeLitContext) {
 	a.push(ITypeLit{"^", ss}) // "^" to be overwritten in ExitTypeDecl
 }
 
+func (a *FGAdaptor) ExitSigSpec(ctx *parser.SigSpecContext) {
+	// No action -- Sig is at a.stack.peek()
+}
+
+func (a *FGAdaptor) ExitInterfaceSpec(ctx *parser.InterfaceSpecContext) {
+	n := ctx.GetChild(0).(*antlr.TerminalNodeImpl)
+	a.push(Type(n.GetText()))
+}
+
 func (a *FGAdaptor) ExitSig(ctx *parser.SigContext) {
 	m := ctx.GetMeth().GetText()
 	// Reverse order
@@ -132,11 +154,6 @@ func (a *FGAdaptor) ExitSig(ctx *parser.SigContext) {
 		}
 	}
 	a.push(Sig{m, ps, t})
-}
-
-func (a *FGAdaptor) ExitInterfaceSpec(ctx *parser.InterfaceSpecContext) {
-	n := ctx.GetChild(0).(*antlr.TerminalNodeImpl)
-	a.push(Type(n.GetText()))
 }
 
 /* "expr": #Variable, #StructLit, #Select, #Call, #Assert */
@@ -183,17 +200,4 @@ func (a *FGAdaptor) ExitCall(ctx *parser.CallContext) {
 
 func (a *FGAdaptor) ExitAssert(ctx *parser.AssertContext) {
 	panic("[TODO] Type assertions: " + ctx.GetText() + "...")
-}
-
-func (a *FGAdaptor) push(i FGNode) {
-	a.stack = append(a.stack, i)
-}
-
-func (a *FGAdaptor) pop() FGNode {
-	if len(a.stack) < 1 {
-		panic("Stack is empty, unable to pop")
-	}
-	result := a.stack[len(a.stack)-1]
-	a.stack = a.stack[:len(a.stack)-1]
-	return result
 }
