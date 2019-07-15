@@ -135,6 +135,6 @@ type Expr interface {
 	Eval(ds []Decl) Expr
 	//IsPanic() bool  // TODO
 	Typing(ds []Decl, gamma Env) Type
-	// N.B. gamma should be effectively immutable (and ds)
+	// N.B. gamma should be effectively immutable (and ds, of course)
 	// (No typing rule adds to gamma, except T-Func bootstrap)
 }

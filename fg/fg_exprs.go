@@ -70,13 +70,6 @@ func (s StructLit) Subs(m map[Variable]Expr) Expr {
 	return true
 }*/
 
-func isValue(e Expr) bool {
-	if _, ok := e.(StructLit); ok {
-		return true
-	}
-	return false
-}
-
 func (s StructLit) Eval(ds []Decl) Expr {
 	done := false
 	es := make([]Expr, len(s.es))
@@ -311,3 +304,10 @@ func (a Assert) Typing(ds []Decl, gamma Env) Type {
 func (a Assert) String() string {
 }
 */
+
+func isValue(e Expr) bool {
+	if _, ok := e.(StructLit); ok {
+		return true
+	}
+	return false
+}
