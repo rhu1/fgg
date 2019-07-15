@@ -137,8 +137,8 @@ func (a *FGAdaptor) ExitSigSpec(ctx *parser.SigSpecContext) {
 }
 
 func (a *FGAdaptor) ExitInterfaceSpec(ctx *parser.InterfaceSpecContext) {
-	id := ctx.GetChild(0).(*antlr.TerminalNodeImpl)
-	a.push(Type(id.GetText()))
+	typ := Type(ctx.GetChild(0).(*antlr.TerminalNodeImpl).GetText())
+	a.push(typ)
 }
 
 func (a *FGAdaptor) ExitSig(ctx *parser.SigContext) {
@@ -159,8 +159,8 @@ func (a *FGAdaptor) ExitSig(ctx *parser.SigContext) {
 /* "expr": #Variable, #StructLit, #Select, #Call, #Assert */
 
 func (a *FGAdaptor) ExitVariable(ctx *parser.VariableContext) {
-	id := ctx.GetChild(0).(*antlr.TerminalNodeImpl)
-	a.push(Variable{Name(id.GetText())})
+	id := Name(ctx.GetChild(0).(*antlr.TerminalNodeImpl).GetText())
+	a.push(Variable{id})
 }
 
 // Children: 0=typ (*antlr.TerminalNodeImpl), 1='{', 2=exprs (*parser.ExprsContext), 3='}'
@@ -199,8 +199,7 @@ func (a *FGAdaptor) ExitCall(ctx *parser.CallContext) {
 }
 
 func (a *FGAdaptor) ExitAssert(ctx *parser.AssertContext) {
-	id := ctx.GetChild(3).(*antlr.TerminalNodeImpl)
-	typ := Type(id.GetText())
+	typ := Type(ctx.GetChild(3).(*antlr.TerminalNodeImpl).GetText())
 	e := a.pop().(Expr)
 	a.push(Assert{e, typ})
 }
