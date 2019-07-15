@@ -34,10 +34,15 @@ func (a *FGAdaptor) pop() FGNode {
 // strictParse means panic upon any parsing error -- o/w error recovery is attempted
 func (a *FGAdaptor) Parse(strictParse bool, input string) FGProgram {
 	is := antlr.NewInputStream(input)
-	lexer := parser.NewFGLexer(is)
+	var lexer antlr.Lexer
+	if strictParse { // https://stackoverflow.com/questions/51683104/how-to-catch-minor-errors
+		lexer = FGBailLexer{parser.NewFGLexer(is)} // FIXME: not working -- e.g., incr{1}, bad token
+	} else {
+		lexer = parser.NewFGLexer(is)
+	}
 	stream := antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel)
 	p := parser.NewFGParser(stream)
-	if strictParse { // https://stackoverflow.com/questions/51683104/how-to-catch-minor-errors
+	if strictParse {
 		p.RemoveErrorListeners()
 		p.SetErrorHandler(&StrictErrorStrategy{})
 	}

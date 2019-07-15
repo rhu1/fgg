@@ -389,6 +389,14 @@ func Test016b(t *testing.T) {
 	parseAndOkBad(t, "Stupid cast on A struct lit", A, e)
 }
 
+// FIXME: should be a parser panic (lexing error, bad token), but currently caught as a typing panic
+func Test017(t *testing.T) {
+	Any := "type Any interface {}"
+	ToAny := "type ToAny struct { any Any }"
+	e := "ToAny{1}"
+	parseAndOkBad(t, "Bad token, \"1\"", Any, ToAny, e)
+}
+
 /* Eval */
 
 // TODO: put these tests through actual Go and compare the results

@@ -40,9 +40,8 @@ var _ = strconv.Itoa
 func makeInternalSrc() string {
 	Any := "type Any interface {}"
 	ToAny := "type ToAny struct { any Any }"
-	A := "type A struct {}"
-	e := "ToAny{ToAny{ToAny{A{}}.any.(A)}}"
-	return fg.MakeFgProgram(Any, ToAny, A, e)
+	e := "ToAny{1}"
+	return fg.MakeFgProgram(Any, ToAny, e)
 }
 
 // N.B. flags (e.g., -internal=true) must be supplied before any non-flag args
