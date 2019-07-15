@@ -338,4 +338,6 @@ func Test015b(t *testing.T) {
 
 /* Eval */
 
+// TODO: put these tests through actual Go and compare the results
+
 //func TestEval001(t *testing.T) { }

@@ -2,7 +2,8 @@
 Mini prototype of FG/FGG/FGR in Go for quick testing.
 
 So far, there is an almost-done FG -- need to add type assertions, test
-evaluation, and more general testing.
+evaluation, and more general testing.  (Knocked it up during a bit of free
+time in the week end.)
 
 Parser is generated using ANTLR4.  
 CL incantation from repo root dir is: antlr4 -Dlanguage=Go -o parser FG --
