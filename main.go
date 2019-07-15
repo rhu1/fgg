@@ -3,9 +3,9 @@
 //$ cd $CYGHOME/code/go/src/github.com/antlr/antlr4
 //$ (git checkout -b antlr-go-runtime tags/4.7.1)  // Match antlr-4.7.1-complete.jar -- unnecessary
 
-//rhu@HZHL4 MINGW64 ~/code/go/src/temp/antlr/fgg
+//rhu@HZHL4 MINGW64 ~/code/go/src/github.com/rhu1/fgg
 //$ go install
-//$ /c/Users/rhu/code/go/bin/antlr01.exe
+//$ /c/Users/rhu/code/go/bin/fgg.exe
 // or
 //$ go run .
 
