@@ -248,6 +248,9 @@ func (c Call) Eval(ds []Decl) Expr {
 	for i := 0; i < len(xs); i++ {
 		subs[Variable{xs[i]}] = c.args[i]
 	}
+	for k, v := range subs {
+		fmt.Print(k.String(), " ", v.String(), " ")
+	}
 	return e.Subs(subs) // N.B. slightly different to R-Call
 }
 
