@@ -58,7 +58,11 @@ type StructLit struct {
 var _ Expr = StructLit{}
 
 func (s StructLit) Subs(m map[Variable]Expr) Expr {
-	return s
+	es := make([]Expr, len(s.es))
+	for i := 0; i < len(s.es); i++ {
+		es[i] = s.es[i].Subs(m)
+	}
+	return StructLit{s.t, es}
 }
 
 /*func (s StructLit) CanEval(ds []Decl) bool {
@@ -251,6 +255,7 @@ func (c Call) Eval(ds []Decl) Expr {
 	for k, v := range subs {
 		fmt.Print(k.String(), " ", v.String(), " ")
 	}
+	fmt.Println("\n", e.String(), " ", e.Subs(subs))
 	return e.Subs(subs) // N.B. slightly different to R-Call
 }
 

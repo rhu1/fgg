@@ -369,3 +369,12 @@ func TestEval002(t *testing.T) {
 	prog := parseAndOkGood(t, A, Am1, e)
 	evalAndOkGood(t, prog, 10)
 }
+
+func TestEval003(t *testing.T) {
+	A := "type A struct {}"
+	Am1 := "func (x0 A) m1() B { return B{x0} }"
+	B := "type B struct { a A }"
+	e := "A{}.m1().a"
+	prog := parseAndOkGood(t, A, Am1, B, e)
+	evalAndOkGood(t, prog, 2)
+}
