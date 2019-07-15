@@ -88,10 +88,10 @@ func main() {
 	}
 	fmt.Println("Eval steps:")
 	allowStupid = true
-	fmt.Printf("%8d: %v\n", 0, prog.GetExpr())
+	fmt.Printf("%6d: %v\n", 0, prog.GetExpr())
 	for i := 1; i <= *evalPtr; i++ {
 		prog = prog.Eval()
-		fmt.Printf("%8d: %v\n", i, prog.GetExpr())
+		fmt.Printf("%6d: %v\n", i, prog.GetExpr())
 		fmt.Println("Checking OK:")
 		prog.Ok(allowStupid)
 	}
