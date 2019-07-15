@@ -3,7 +3,7 @@
 //$ cd $CYGHOME/code/go/src/github.com/antlr/antlr4
 //$ (git checkout -b antlr-go-runtime tags/4.7.1)  // Match antlr-4.7.1-complete.jar -- unnecessary
 
-//rhu@HZHL4 MINGW64 ~/code/go/src/temp/antlr/antlr04
+//rhu@HZHL4 MINGW64 ~/code/go/src/temp/antlr/fgg
 //$ go install
 //$ /c/Users/rhu/code/go/bin/antlr01.exe
 // or
@@ -18,7 +18,7 @@ import (
 	"reflect"
 	"strconv"
 
-	"temp/antlr/antlr04/fg"
+	"github.com/rhu1/fgg/fg"
 )
 
 var _ = reflect.TypeOf

@@ -1,6 +1,6 @@
-//rhu@HZHL4 MINGW64 ~/code/go/src/temp/antlr/antlr04
-//$ go test temp/antlr/antlr04/fg
-//$ go test temp/antlr/antlr04/fg -run Test001
+//rhu@HZHL4 MINGW64 ~/code/go/src/github.com/rhu1/fgg
+//$ go test github.com/rhu1/fgg/fg
+//$ go test github.com/rhu1/fgg/fg -run Test001
 
 package fg_test // Separate package, can test "API"
 
@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"temp/antlr/antlr04/fg"
+	"github.com/rhu1/fgg/fg"
 )
 
 /* Harness funcs */
