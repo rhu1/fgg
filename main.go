@@ -1,17 +1,22 @@
-// Pre:
+// Pre (1): ANTLR4
+// (See go:generate below)
+
+// Pre (2): ANTLR4 Runtime for Go
 //$ go get github.com/antlr/antlr4/runtime/Go/antlr
+// Optional:
 //$ cd $CYGHOME/code/go/src/github.com/antlr/antlr4
-//$ (git checkout -b antlr-go-runtime tags/4.7.1)  // Match antlr-4.7.1-complete.jar -- unnecessary
+//$ git checkout -b antlr-go-runtime tags/4.7.1  // Match antlr-4.7.1-complete.jar -- but unnecessary
 
 //rhu@HZHL4 MINGW64 ~/code/go/src/github.com/rhu1/fgg
 //$ go run . tmp/scratch.go
-//$ go run . -inline="package main; type A struct {}; func main() { _ = A{}}"r
+//$ go run . -inline="package main; type A struct {}; func main() { _ = A{} }"
 // or
 //$ go install
 //$ /c/Users/rhu/code/go/bin/fgg.exe ...
 
 // N.B. GoInstall installs to $CYGHOME/code/go/bin (not $WINHOME)
 
+// Assuming "antlr4" alias for (e.g.): java -jar ~/code/java/lib/antlr-4.7.1-complete.jar
 //go:generate antlr4 -Dlanguage=Go -o parser FG.g4
 
 package main
