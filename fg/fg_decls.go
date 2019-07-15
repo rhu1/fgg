@@ -19,7 +19,9 @@ type FGProgram struct {
 var _ FGNode = FGProgram{}
 
 func (p FGProgram) Ok(allowStupid bool) {
-	fmt.Println("[Warning] Type decl OK not checked yet (e.g., distinct type/field/method names, etc.)")
+	if !allowStupid { // Hack, to print only "top-level" programs (not during Eval)
+		fmt.Println("[Warning] Type decl OK not checked yet (e.g., distinct type/field/method names, etc.)")
+	}
 	for _, v := range p.ds {
 		switch c := v.(type) {
 		case TDecl:

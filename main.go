@@ -9,7 +9,7 @@
 //$ git checkout -b antlr-go-runtime tags/4.7.1  // Match antlr-4.7.1-complete.jar -- but unnecessary
 
 //rhu@HZHL4 MINGW64 ~/code/go/src/github.com/rhu1/fgg
-//$ go run . tmp/scratch.go
+//$ go run . -eval=10 fg/examples/hello.go
 //$ go run . -inline="package main; type A struct {}; func main() { _ = A{} }"
 // or
 //$ go install
@@ -63,7 +63,7 @@ func main() {
 		if len(os.Args) < 2 {
 			fmt.Println("Input error: need a source .go file (or an -inline program)")
 		}
-		bs, err := ioutil.ReadFile(os.Args[1])
+		bs, err := ioutil.ReadFile(os.Args[len(os.Args)-1])
 		checkErr(err)
 		src = string(bs)
 	}
@@ -80,7 +80,6 @@ func main() {
 	if *evalPtr < 0 {
 		return
 	}
-
 	fmt.Println("\nEntering Eval loop:")
 	fmt.Println("Decls:")
 	for _, v := range prog.GetDecls() {
