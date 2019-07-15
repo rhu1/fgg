@@ -63,6 +63,7 @@ func (this memberBr) IfTT() Any { return TT{} };
 func (this memberBr) IfFF() Any { return this.xs.tail.Member(this.x) };
 func (xs Nil) Member(x Eq) Bool { return FF{} };
 func (xs Cons) Member(x Eq) Bool { return x.Equal(xs.head).Cond(memberBr{xs,x}).(Bool) };
+
 /* Example code */
 
 func main() {
