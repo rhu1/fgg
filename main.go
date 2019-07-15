@@ -38,9 +38,9 @@ var _ = strconv.Itoa
 
 func makeInternalSrc() string {
 	A := "type A struct {}"
-	B := "type B struct { a A }"
-	e := "B{A{}}.a"
-	return fg.MakeFgProgram(A, B, e)
+	Am1 := "func (x0 A) m1() A { return x0.m1() }"
+	e := "A{}.m1()"
+	return fg.MakeFgProgram(A, Am1, e)
 }
 
 // N.B. flags (e.g., -internal=true) must be supplied before any non-flag args

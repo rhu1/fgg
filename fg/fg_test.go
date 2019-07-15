@@ -14,24 +14,38 @@ import (
 
 /* Harness funcs */
 
-func parseAndCheckOk(prog string) {
+func parseAndCheckOk(prog string) fg.FGProgram {
 	var adptr fg.FGAdaptor
 	ast := adptr.Parse(true, prog)
 	ast.Ok()
+	return ast
 }
 
-func parseAndOkGood(t *testing.T, elems ...string) {
+func parseAndOkGood(t *testing.T, elems ...string) fg.FGProgram {
 	prog := fg.MakeFgProgram(elems...)
 	defer func() {
 		if r := recover(); r != nil {
 			t.Errorf("Unexpected panic: " + fmt.Sprintf("%v", r) + "\n" + prog)
 		}
 	}()
-	parseAndCheckOk(prog)
+	return parseAndCheckOk(prog)
+}
+
+func evalAndOkGood(t *testing.T, p fg.FGProgram, steps int) fg.FGProgram {
+	defer func() {
+		if r := recover(); r != nil {
+			t.Errorf("Unexpected panic: " + fmt.Sprintf("%v", r) + "\n" + p.String())
+		}
+	}()
+	for i := 0; i < steps; i++ {
+		p = p.Eval()
+		p.Ok()
+	}
+	return p
 }
 
 // N.B. do not use to check for bad *syntax* -- see below, "[Parser]" panic check
-func parseAndOkBad(t *testing.T, msg string, elems ...string) {
+func parseAndOkBad(t *testing.T, msg string, elems ...string) fg.FGProgram {
 	prog := fg.MakeFgProgram(elems...)
 	defer func() {
 		if r := recover(); r == nil {
@@ -45,7 +59,7 @@ func parseAndOkBad(t *testing.T, msg string, elems ...string) {
 			// TODO FIXME: check panic more specifically
 		}
 	}()
-	parseAndCheckOk(prog)
+	return parseAndCheckOk(prog)
 }
 
 /* Syntax and typing */
@@ -340,4 +354,18 @@ func Test015b(t *testing.T) {
 
 // TODO: put these tests through actual Go and compare the results
 
-//func TestEval001(t *testing.T) { }
+func TestEval001(t *testing.T) {
+	A := "type A struct {}"
+	B := "type B struct { a A }"
+	e := "B{A{}}.a"
+	prog := parseAndOkGood(t, A, B, e)
+	evalAndOkGood(t, prog, 1)
+}
+
+func TestEval002(t *testing.T) {
+	A := "type A struct {}"
+	Am1 := "func (x0 A) m1() A { return x0.m1() }"
+	e := "A{}.m1()"
+	prog := parseAndOkGood(t, A, Am1, e)
+	evalAndOkGood(t, prog, 10)
+}
