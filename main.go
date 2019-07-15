@@ -82,7 +82,7 @@ func main() {
 	fmt.Println("\nEntering Eval loop:")
 	fmt.Println("Decls:")
 	for _, v := range prog.GetDecls() {
-		fmt.Println("\t" + v.String())
+		fmt.Println("\t" + v.String() + ";")
 	}
 	fmt.Println("Eval steps:")
 	allowStupid = true
