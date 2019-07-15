@@ -46,6 +46,7 @@ func makeInternalSrc() string {
 	return fg.MakeFgProgram(A, Am1, Am2, Am3, B, e)
 }
 
+// N.B. flags (e.g., -internal=true) must be supplied before any non-flag args
 func main() {
 	strictParsePtr := flag.Bool("strict", true,
 		"Set strict parsing (panic on error, no recovery)")
@@ -59,8 +60,8 @@ func main() {
 	} else if *inlinePtr != "" { // Second priority, i.e., -inline overrules src file arg
 		src = *inlinePtr
 	} else {
-		if len(os.Args) != 2 {
-			fmt.Println("Incorrect number of args: need source go file (or an -inline program)")
+		if len(os.Args) < 2 {
+			fmt.Println("Input error: need source go file (or an -inline program)")
 		}
 		bs, err := ioutil.ReadFile(os.Args[1])
 		checkErr(err)
