@@ -19,10 +19,10 @@ type FGProgram struct {
 var _ FGNode = FGProgram{}
 
 func (p FGProgram) Ok() {
+	fmt.Println("[Warning] Type decl OK not checked yet (e.g., distinct type/field/method names, etc.)")
 	for _, v := range p.ds {
 		switch c := v.(type) {
 		case TDecl:
-			fmt.Println("[Warning] Type decl OK not checked yet (e.g., distinct type/field/method names, etc.)")
 			// TODO: e.g., unique type names, unique field names, unique method names
 			// N.B. omitted from submission version
 		case MDecl:
