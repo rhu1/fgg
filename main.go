@@ -61,7 +61,7 @@ func main() {
 		src = *inlinePtr
 	} else {
 		if len(os.Args) < 2 {
-			fmt.Println("Input error: need source go file (or an -inline program)")
+			fmt.Println("Input error: need a source .go file (or an -inline program)")
 		}
 		bs, err := ioutil.ReadFile(os.Args[1])
 		checkErr(err)
