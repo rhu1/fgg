@@ -97,5 +97,5 @@ type Expr interface {
 	//IsPanic() bool  // TODO
 	Typing(ds []Decl, gamma Env, allowStupid bool) Type
 	// N.B. gamma should be effectively immutable (and ds, of course)
-	// (No typing rule adds to gamma, except T-Func bootstrap)
+	// (No typing rule modifies gamma, except the T-Func bootstrap)
 }
