@@ -30,8 +30,8 @@ func main() {
 	fmt.Println("Source:")
 	IA := "type IA interface { m0() A }"
 	A := "type A struct {}"
-	A1m := "func (x0 A) m1(x1 IA) A { return x0 }"
-	e := "A{}.m1(A{})"
+	A1m := "func (x0 A) m1(x1 A, x2 A, x3 A) A { return x0 }"
+	e := "A{}.m1(A{}, A{})"
 	prog := fg.MakeFgProgram(IA, A, A1m, e)
 	fmt.Println(prog)
 

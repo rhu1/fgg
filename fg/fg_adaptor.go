@@ -69,7 +69,7 @@ func (a *FGAdaptor) ExitMethDecl(ctx *parser.MethDeclContext) {
 	a.push(MDecl{recv, sig.m, sig.ps, sig.t, e})
 }
 
-/* Type lits, field decls, specs */
+/* Struct type lits, field decls */
 
 // Children: 2=fieldDecls
 func (a *FGAdaptor) ExitStructTypeLit(ctx *parser.StructTypeLitContext) {
@@ -91,6 +91,8 @@ func (a *FGAdaptor) ExitFieldDecl(ctx *parser.FieldDeclContext) {
 	a.push(FieldDecl{field, typ})
 }
 
+/* Interface type lit, sigs, specs, param decls */
+
 // Cf. ExitStructTypeLit
 func (a *FGAdaptor) ExitInterfaceTypeLit(ctx *parser.InterfaceTypeLitContext) {
 	var ss []Spec
@@ -104,8 +106,6 @@ func (a *FGAdaptor) ExitInterfaceTypeLit(ctx *parser.InterfaceTypeLitContext) {
 	}
 	a.push(ITypeLit{"^", ss}) // "^" to be overwritten in ExitTypeDecl
 }
-
-/* Sigs, param decls */
 
 func (a *FGAdaptor) ExitSig(ctx *parser.SigContext) {
 	m := ctx.GetMeth().GetText()

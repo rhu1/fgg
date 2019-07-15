@@ -94,9 +94,9 @@ func (s StructLit) Typing(ds []Decl, gamma Env) Type {
 				tmp = tmp + ", " + v.String()
 			}
 		}
-		panic("Arity mismatch: found=" +
+		panic("Arity mismatch: args=" +
 			strings.Join(strings.Split(fmt.Sprint(s.es), " "), ", ") +
-			", expected=[" + tmp + "]" + "\n\t" + s.String())
+			", fields=[" + tmp + "]" + "\n\t" + s.String())
 	}
 	for i := 0; i < len(s.es); i++ {
 		t := s.es[i].Typing(ds, gamma)
@@ -242,7 +242,7 @@ func (c Call) Eval(ds []Decl) Expr {
 func (c Call) Typing(ds []Decl, gamma Env) Type {
 	t0 := c.e.Typing(ds, gamma)
 	var s Sig
-	if tmp, ok := methods(ds, t0)[c.m]; !ok {
+	if tmp, ok := methods(ds, t0)[c.m]; !ok { // !!! submission version had "methods(m)"
 		panic("Method not found: " + c.m + " in " + t0.String())
 	} else {
 		s = tmp
@@ -257,7 +257,7 @@ func (c Call) Typing(ds []Decl, gamma Env) Type {
 		}
 		panic("Arity mismatch: args=" +
 			strings.Join(strings.Split(fmt.Sprint(c.args), " "), ", ") + ", params=" +
-			tmp)
+			"[" + tmp + "]")
 	}
 	for i := 0; i < len(c.args); i++ {
 		t := c.args[i].Typing(ds, gamma)
