@@ -95,7 +95,7 @@ type Expr interface {
 	Subs(map[Variable]Expr) Expr
 	//CanEval(ds []Decl) bool // Should only panic if badly typed, o/w return false if stuck
 	//IsValue() bool
-	Eval(ds []Decl) Expr
+	Eval(ds []Decl) Expr // CHECKME: resulting Exprs are not "parsed" from source, OK?
 	//IsPanic() bool  // TODO
 	Typing(ds []Decl, gamma Env) Type
 	// N.B. gamma should be effectively immutable (and ds, of course)

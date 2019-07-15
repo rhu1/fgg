@@ -36,6 +36,21 @@ func (p FGProgram) Ok() {
 	p.e.Typing(p.ds, gamma)
 }
 
+// CHECKME: resulting FGProgram is not parsed from source, OK? -- cf. Expr.Eval
+// But doesn't affect FGPprogam.Ok() (i.e., Expr.Typing)
+func (p FGProgram) Eval() FGProgram {
+	e := p.e.Eval(p.ds)
+	return FGProgram{p.ds, e}
+}
+
+func (p FGProgram) GetDecls() []Decl {
+	return p.ds // Returns a copy?
+}
+
+func (p FGProgram) GetExpr() Expr {
+	return p.e
+}
+
 func (p FGProgram) String() string {
 	var b strings.Builder
 	b.WriteString("package main;\n")

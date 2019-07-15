@@ -116,7 +116,7 @@ func (a *FGAdaptor) ExitFieldDecl(ctx *parser.FieldDeclContext) {
 	a.push(FieldDecl{field, typ})
 }
 
-/* #InterfaceTypeLit (typeLit), "specs", #SigSpec ("spec"), #InterfaceSpec ("spec"), "sig" */
+/* #InterfaceTypeLit ("typeLit"), "specs", #SigSpec ("spec"), #InterfaceSpec ("spec"), "sig" */
 
 // Cf. ExitStructTypeLit
 func (a *FGAdaptor) ExitInterfaceTypeLit(ctx *parser.InterfaceTypeLitContext) {

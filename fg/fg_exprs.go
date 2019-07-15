@@ -85,7 +85,11 @@ func (s StructLit) Eval(ds []Decl) Expr {
 		}
 		es[i] = v
 	}
-	return StructLit{s.t, es}
+	if done {
+		return StructLit{s.t, es}
+	} else {
+		panic("Cannot reduce: " + s.String())
+	}
 }
 
 func (s StructLit) Typing(ds []Decl, gamma Env) Type {

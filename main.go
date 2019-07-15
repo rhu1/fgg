@@ -38,12 +38,9 @@ var _ = strconv.Itoa
 
 func makeInternalSrc() string {
 	A := "type A struct {}"
-	Am1 := "func (x0 A) m1() A { return x0 }"
-	Am2 := "func (x0 A) m2(x1 A) A { return x1 }"
-	Am3 := "func (x0 A) m3(x1 A, x2 A) A { return x2 }"
 	B := "type B struct { a A }"
-	e := "B{A{}}"
-	return fg.MakeFgProgram(A, Am1, Am2, Am3, B, e)
+	e := "B{A{}}.a"
+	return fg.MakeFgProgram(A, B, e)
 }
 
 // N.B. flags (e.g., -internal=true) must be supplied before any non-flag args
@@ -52,6 +49,7 @@ func main() {
 		"Set strict parsing (panic on error, no recovery)")
 	internalPtr := flag.Bool("internal", false, "Use \"internal\" input as source")
 	inlinePtr := flag.String("inline", "", "Use inline input as source")
+	evalPtr := flag.Int("eval", -1, "Number of steps to evaluate")
 	flag.Parse()
 
 	var src string
@@ -70,11 +68,28 @@ func main() {
 
 	fmt.Println("\nParsing AST:")
 	var adptr fg.FGAdaptor
-	ast := adptr.Parse(*strictParsePtr, src)
-	fmt.Println(ast)
+	prog := adptr.Parse(*strictParsePtr, src) // AST (FGProgram root)
+	fmt.Println(prog)
 
-	fmt.Println("\nChecking program OK:")
-	ast.Ok()
+	fmt.Println("\nChecking source program OK:")
+	prog.Ok()
+
+	if *evalPtr < 0 {
+		return
+	}
+
+	fmt.Println("\nEntering Eval loop:")
+	fmt.Println("Decls:")
+	for _, v := range prog.GetDecls() {
+		fmt.Println("\t" + v.String())
+	}
+	fmt.Println("Eval steps:")
+	fmt.Printf("%8d: %v\n", 0, prog.GetExpr())
+	for i := 1; i <= *evalPtr; i++ {
+		prog = prog.Eval()
+		fmt.Printf("%8d: %v\n", i, prog.GetExpr())
+		prog.Ok()
+	}
 }
 
 func checkErr(e error) {
