@@ -17,6 +17,8 @@ package main
 
 import (
 	"fmt"
+	"ioutil"
+	"os"
 	"reflect"
 	"strconv"
 
@@ -27,13 +29,16 @@ var _ = reflect.TypeOf
 var _ = strconv.Itoa
 
 func main() {
-	fmt.Println("Source:")
+	/*fmt.Println("Source:")
 	IA := "type IA interface { m0() A }"
 	A := "type A struct {}"
 	A1m := "func (x0 A) m1(x1 A, x2 A, x3 A) A { return x0 }"
 	e := "A{}.m1(A{}, A{})"
 	prog := fg.MakeFgProgram(IA, A, A1m, e)
-	fmt.Println(prog)
+	fmt.Println(prog)*/
+
+	prog, err := ioutil.ReadFile(os.Args[1])
+	checkErr(err)
 
 	fmt.Println("\nParsing AST:")
 	var adptr fg.FGAdaptor
@@ -43,6 +48,12 @@ func main() {
 
 	fmt.Println("\nChecking program OK:")
 	ast.Ok()
+}
+
+func checkErr(e error) {
+	if e != nil {
+		panic(e)
+	}
 }
 
 /* TODO
