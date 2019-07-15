@@ -4,10 +4,11 @@
 //$ (git checkout -b antlr-go-runtime tags/4.7.1)  // Match antlr-4.7.1-complete.jar -- unnecessary
 
 //rhu@HZHL4 MINGW64 ~/code/go/src/github.com/rhu1/fgg
-//$ go install
-//$ /c/Users/rhu/code/go/bin/fgg.exe
+//$ go run . tmp/scratch.go
+//$ go run . -inline="package main; type A struct {}; func main() { _ = A{}}"r
 // or
-//$ go run .
+//$ go install
+//$ /c/Users/rhu/code/go/bin/fgg.exe ...
 
 // N.B. GoInstall installs to $CYGHOME/code/go/bin (not $WINHOME)
 
@@ -16,8 +17,9 @@
 package main
 
 import (
+	"flag"
 	"fmt"
-	"ioutil"
+	"io/ioutil"
 	"os"
 	"reflect"
 	"strconv"
@@ -28,22 +30,40 @@ import (
 var _ = reflect.TypeOf
 var _ = strconv.Itoa
 
-func main() {
-	/*fmt.Println("Source:")
-	IA := "type IA interface { m0() A }"
+func makeInternalSrc() string {
 	A := "type A struct {}"
-	A1m := "func (x0 A) m1(x1 A, x2 A, x3 A) A { return x0 }"
-	e := "A{}.m1(A{}, A{})"
-	prog := fg.MakeFgProgram(IA, A, A1m, e)
-	fmt.Println(prog)*/
+	Am1 := "func (x0 A) m1() A { return x0 }"
+	Am2 := "func (x0 A) m2(x1 A) A { return x1 }"
+	Am3 := "func (x0 A) m3(x1 A, x2 A) A { return x2 }"
+	B := "type B struct { a A }"
+	e := "B{A{}}"
+	return fg.MakeFgProgram(A, Am1, Am2, Am3, B, e)
+}
 
-	prog, err := ioutil.ReadFile(os.Args[1])
-	checkErr(err)
+func main() {
+	strictParsePtr := flag.Bool("strict", true,
+		"Set strict parsing (panic on error, no recovery)")
+	internalPtr := flag.Bool("internal", false, "Use \"internal\" input as source")
+	inlinePtr := flag.String("inline", "", "Use inline input as source")
+	flag.Parse()
+
+	var src string
+	if *internalPtr { // First priority
+		src = makeInternalSrc()
+	} else if *inlinePtr != "" { // Second priority, i.e., -inline overrules src file arg
+		src = *inlinePtr
+	} else {
+		if len(os.Args) != 2 {
+			fmt.Println("Incorrect number of args: need source go file (or an -inline program)")
+		}
+		bs, err := ioutil.ReadFile(os.Args[1])
+		checkErr(err)
+		src = string(bs)
+	}
 
 	fmt.Println("\nParsing AST:")
 	var adptr fg.FGAdaptor
-	strictParse := false
-	ast := adptr.Parse(strictParse, prog)
+	ast := adptr.Parse(*strictParsePtr, src)
 	fmt.Println(ast)
 
 	fmt.Println("\nChecking program OK:")
