@@ -176,7 +176,9 @@ func (a *FGAdaptor) ExitCall(ctx *parser.CallContext) {
 	a.push(Call{e, m, args})
 }
 
-func (a *FGAdaptor) ExitAssert(ctx *parser.AssertContext) {}
+func (a *FGAdaptor) ExitAssert(ctx *parser.AssertContext) {
+	panic("[TODO] Type assertions: " + ctx.GetText() + "...")
+}
 
 func (a *FGAdaptor) push(i FGNode) {
 	a.stack = append(a.stack, i)

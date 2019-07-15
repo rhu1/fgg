@@ -34,8 +34,8 @@ LINE_COMMENT    : '//' ~[\r\n]* -> channel(HIDDEN) ;
 // Conventions:
 // "tag=" to distinguish repeat productions within a rule: comes out in field/getter names
 // "#tag" for cases within a rule: comes out as Context names (i.e., types)
-// "plurals", e.g., decls, used for sequences: comes out as "helper" Context...
-// ...nodes that group up actual children underneath -- makes "adapting" easier
+// "plurals", e.g., decls, used for sequences: comes out as "helper" Context..
+// ..nodes that group up actual children underneath -- makes "adapting" easier
 
 program    : PACKAGE MAIN ';' decls? FUNC MAIN '(' ')' '{' '_' '=' expr '}' EOF ;
 decls      : ((typeDecl | methDecl) ';')+ ;
