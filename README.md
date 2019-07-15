@@ -6,7 +6,7 @@ evaluation, and more general testing.
 
 Parser is generated using ANTLR4.  
 CL incantation from repo root dir is: antlr4 -Dlanguage=Go -o parser FG --
-where "antlr4" is, e.g., an alias for java -jar
+where "antlr4" is, e.g., an alias for: java -jar
 ~/code/java/lib/antlr-4.7.1-complete.jar (i.e., an ANTLR4 installation).  
 Grammar is here: https://github.com/rhu1/fgg/blob/master/FG.g4#L40. 
 The ANTLR4 Runtime for Go is also needed:
