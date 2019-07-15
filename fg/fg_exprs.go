@@ -1,6 +1,6 @@
 /*
  * This file contains defs for "concrete" syntax w.r.t. exprs.
- * Base (abstract) types, interfaces, etc. are in fg.go.
+ * Base ("abstract") types, interfaces, etc. are in fg.go.
  */
 
 package fg

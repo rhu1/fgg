@@ -12,6 +12,7 @@ import (
 var _ = fmt.Errorf
 var _ = reflect.Append
 
+// Convert ANTLR generated CST to an FGNode AST
 type FGAdaptor struct {
 	*parser.BaseFGListener
 	stack []FGNode // Because Listener methods don't return...
