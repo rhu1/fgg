@@ -8,6 +8,8 @@ package fg
 import "fmt"
 import "strings"
 
+/* Variable */
+
 type Variable struct {
 	id Name
 }
@@ -45,6 +47,8 @@ func (v Variable) Typing(ds []Decl, gamma Env) Type {
 func (v Variable) String() string {
 	return v.id
 }
+
+/* StructLit */
 
 type StructLit struct {
 	t  Type
@@ -118,6 +122,8 @@ func (s StructLit) String() string {
 	return sb.String()
 }
 
+/* Select */
+
 type Select struct {
 	e Expr
 	f Name
@@ -165,18 +171,20 @@ func (s Select) Typing(ds []Decl, gamma Env) Type {
 	if !isStructType(ds, t) {
 		panic("Illegal select on non-struct type expr: " + t)
 	}
-	td := getTDecl(ds, t).(STypeLit)
-	for _, v := range td.fds {
+	fds := fields(ds, t)
+	for _, v := range fds {
 		if v.f == s.f {
 			return v.t
 		}
 	}
-	panic("Field not found: " + s.f + " in\n\t" + td.String())
+	panic("Field not found: " + s.f + " in" + t.String())
 }
 
 func (s Select) String() string {
 	return s.e.String() + "." + s.f
 }
+
+/* Call */
 
 type Call struct {
 	e    Expr
@@ -285,6 +293,8 @@ func (c Call) String() string {
 	b.WriteString(")")
 	return b.String()
 }
+
+/* Assert */
 
 /*
 type Assert struct {

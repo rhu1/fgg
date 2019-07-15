@@ -31,13 +31,13 @@ func (a *FGAdaptor) Parse(strictParse bool, input string) FGProgram {
 	return a.pop().(FGProgram)
 }
 
-/* Programs, decls */
+/* "program", "decls" */
 
 func (a *FGAdaptor) ExitProgram(ctx *parser.ProgramContext) {
 	body := a.pop().(Expr)
 	var ds []Decl
 	if ctx.GetChildCount() > 13 {
-		nds := ctx.GetChild(3).GetChildCount() / 2 // e.g., decl ';' decl ';' decl ';' -- includes trailing ';'
+		nds := ctx.GetChild(3).GetChildCount() / 2 // (decl ';')+ -- i.e, includes trailing ';'
 		ds = make([]Decl, nds)
 		for i := nds - 1; i >= 0; i-- {
 			ds[i] = a.pop().(Decl) // Adding backwards
@@ -46,7 +46,9 @@ func (a *FGAdaptor) ExitProgram(ctx *parser.ProgramContext) {
 	a.push(FGProgram{ds, body})
 }
 
-// Children: 1=name, 2=typeLit
+/* "typeDecl" */
+
+// Children: 1=NAME, 2=typeLit
 func (a *FGAdaptor) ExitTypeDecl(ctx *parser.TypeDeclContext) {
 	typ := Type(ctx.GetChild(1).(*antlr.TerminalNodeImpl).GetText())
 	td := a.pop()
@@ -61,6 +63,8 @@ func (a *FGAdaptor) ExitTypeDecl(ctx *parser.TypeDeclContext) {
 	}
 }
 
+/* "methDecl", "paramDecl" */
+
 func (a *FGAdaptor) ExitMethDecl(ctx *parser.MethDeclContext) {
 	// Reverse order
 	e := a.pop().(Expr)
@@ -69,13 +73,20 @@ func (a *FGAdaptor) ExitMethDecl(ctx *parser.MethDeclContext) {
 	a.push(MDecl{recv, sig.m, sig.ps, sig.t, e})
 }
 
-/* Struct type lits, field decls */
+// Cf. ExitFieldDecl
+func (a *FGAdaptor) ExitParamDecl(ctx *parser.ParamDeclContext) {
+	x := ctx.GetVari().GetText()
+	t := Type(ctx.GetTyp().GetText())
+	a.push(ParamDecl{x, t})
+}
+
+/* #StructTypeLit ("typeLit"), "fieldDecls", "fieldDecl" */
 
 // Children: 2=fieldDecls
 func (a *FGAdaptor) ExitStructTypeLit(ctx *parser.StructTypeLitContext) {
 	var fds []FieldDecl
 	if ctx.GetChildCount() > 3 {
-		nfds := (ctx.GetChild(2).GetChildCount() + 1) / 2 // e.g., fd ';' fd ';' fd
+		nfds := (ctx.GetChild(2).GetChildCount() + 1) / 2 // fieldDecl (';' fieldDecl)*
 		fds = make([]FieldDecl, nfds)
 		for i := nfds - 1; i >= 0; i-- { // N.B. ordering doesn't currently matter, stored in a map
 			fd := a.pop().(FieldDecl)
@@ -91,7 +102,7 @@ func (a *FGAdaptor) ExitFieldDecl(ctx *parser.FieldDeclContext) {
 	a.push(FieldDecl{field, typ})
 }
 
-/* Interface type lit, sigs, specs, param decls */
+/* #InterfaceTypeLit (typeLit), "specs", "sig" (#SigSpec, "spec"), #InterfaceSpec ("spec") */
 
 // Cf. ExitStructTypeLit
 func (a *FGAdaptor) ExitInterfaceTypeLit(ctx *parser.InterfaceTypeLitContext) {
@@ -127,14 +138,7 @@ func (a *FGAdaptor) ExitInterfaceSpec(ctx *parser.InterfaceSpecContext) {
 	a.push(Type(n.GetText()))
 }
 
-// Cf. ExitFieldDecl
-func (a *FGAdaptor) ExitParamDecl(ctx *parser.ParamDeclContext) {
-	x := ctx.GetVari().GetText()
-	t := Type(ctx.GetTyp().GetText())
-	a.push(ParamDecl{x, t})
-}
-
-/* Exprs */
+/* "expr": #Variable, #StructLit, #Select, #Call, #Assert */
 
 func (a *FGAdaptor) ExitVariable(ctx *parser.VariableContext) {
 	n := ctx.GetChild(0).(*antlr.TerminalNodeImpl)

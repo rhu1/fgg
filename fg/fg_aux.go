@@ -4,6 +4,9 @@ import "fmt"
 
 var _ = fmt.Errorf
 
+/* fields(t_S), methods(t), body(t_S, m), type(v_S) */
+
+// Pre: t_S is a struct type
 func fields(ds []Decl, t_S Type) []FieldDecl {
 	for _, v := range ds {
 		s, ok := v.(STypeLit)
@@ -37,16 +40,7 @@ func methods(ds []Decl, t Type) map[Name]Sig {
 	return res
 }
 
-func getTDecl(ds []Decl, t Type) TDecl {
-	for _, v := range ds {
-		td, ok := v.(TDecl)
-		if ok && td.GetType() == t {
-			return td
-		}
-	}
-	panic("Type not found: " + t)
-}
-
+// Pre: t_S is a struct type
 func body(ds []Decl, t_S Type, m Name) (Name, []Name, Expr) {
 	for _, v := range ds {
 		md, ok := v.(MDecl)
@@ -61,21 +55,21 @@ func body(ds []Decl, t_S Type, m Name) (Name, []Name, Expr) {
 	panic("Method not found: " + t_S.String() + "." + m)
 }
 
-/*func getMDecl(ds []Decl, t Type, m Name) MDecl {
-	for _, v := range ds {
-		m, ok := v.(MDecl)
-		if ok && m.t == t {
-			return m
-		}
-	}
-	panic("Method not found: " + t)
-}*/
-
-// Post: Type is a t_S
+// Post: returns a struct type
 func typ(ds []Decl, s StructLit) Type {
 	t_S := s.t
 	if !isStructType(ds, t_S) {
 		panic("Non struct type found in struct lit: " + s.String())
 	}
 	return t_S
+}
+
+func getTDecl(ds []Decl, t Type) TDecl {
+	for _, v := range ds {
+		td, ok := v.(TDecl)
+		if ok && td.GetType() == t {
+			return td
+		}
+	}
+	panic("Type not found: " + t)
 }

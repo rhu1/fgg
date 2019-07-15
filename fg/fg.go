@@ -1,9 +1,11 @@
 package fg
 
 import "reflect"
-import "strings"
+
+/* Name, Env, Type */
 
 type Name = string // Type alias (cf. definition)
+
 type Env map[Name]Type
 
 type Type Name // Type definition (cf. alias)
@@ -66,6 +68,8 @@ func isInterfaceType(ds []Decl, t Type) bool {
 	return false
 }
 
+/* AST base intefaces: FGNode, Decl, TDecl, Spec, Expr */
+
 // Base interface for all AST nodes
 type FGNode interface {
 	String() string
@@ -84,47 +88,6 @@ type TDecl interface {
 type Spec interface {
 	FGNode
 	GetSigs(ds []Decl) []Sig
-}
-
-type Sig struct {
-	m  Name
-	ps []ParamDecl
-	t  Type
-}
-
-var _ Spec = Sig{}
-
-// !!! Sig in FG (also, Go spec) includes ~x, which breaks "impls"
-func (s0 Sig) EqExceptVars(s Sig) bool {
-	if len(s0.ps) != len(s.ps) {
-		return false
-	}
-	for i := 0; i < len(s0.ps); i++ {
-		if s0.ps[i].t != s.ps[i].t {
-			return false
-		}
-	}
-	return s0.m == s.m && s0.t == s.t
-}
-
-func (s Sig) GetSigs(_ []Decl) []Sig {
-	return []Sig{s}
-}
-
-func (s Sig) String() string {
-	var b strings.Builder
-	b.WriteString(s.m)
-	b.WriteString("(")
-	if len(s.ps) > 0 {
-		b.WriteString(s.ps[0].String())
-		for _, v := range s.ps[1:] {
-			b.WriteString(", ")
-			b.WriteString(v.String())
-		}
-	}
-	b.WriteString(") ")
-	b.WriteString(s.t.String())
-	return b.String()
 }
 
 type Expr interface {

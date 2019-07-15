@@ -8,6 +8,8 @@ package fg
 import "reflect"
 import "strings"
 
+/* Program */
+
 type FGProgram struct {
 	ds []Decl
 	e  Expr
@@ -44,6 +46,8 @@ func (p FGProgram) String() string {
 	b.WriteString(" }")
 	return b.String()
 }
+
+/* MDecl, ParamDecl */
 
 type MDecl struct {
 	recv ParamDecl
@@ -114,7 +118,9 @@ func (p ParamDecl) String() string {
 	return p.x + " " + p.t.String()
 }
 
-type STypeLit struct { // TODO: rename STypeLit
+/* STypeLit, FieldDecl */
+
+type STypeLit struct {
 	t   Type
 	fds []FieldDecl
 }
@@ -158,6 +164,8 @@ func (fd FieldDecl) String() string {
 	return fd.f + " " + fd.t.String()
 }
 
+/* ITypeLit, Sig */
+
 type ITypeLit struct {
 	t  Type // Factor out embedded struct with STypeLit?  But constructor will need that struct?
 	ss []Spec
@@ -188,5 +196,46 @@ func (r ITypeLit) String() string {
 		b.WriteString(" ")
 	}
 	b.WriteString("}")
+	return b.String()
+}
+
+type Sig struct {
+	m  Name
+	ps []ParamDecl
+	t  Type
+}
+
+var _ Spec = Sig{}
+
+// !!! Sig in FG (also, Go spec) includes ~x, which breaks "impls"
+func (s0 Sig) EqExceptVars(s Sig) bool {
+	if len(s0.ps) != len(s.ps) {
+		return false
+	}
+	for i := 0; i < len(s0.ps); i++ {
+		if s0.ps[i].t != s.ps[i].t {
+			return false
+		}
+	}
+	return s0.m == s.m && s0.t == s.t
+}
+
+func (s Sig) GetSigs(_ []Decl) []Sig {
+	return []Sig{s}
+}
+
+func (s Sig) String() string {
+	var b strings.Builder
+	b.WriteString(s.m)
+	b.WriteString("(")
+	if len(s.ps) > 0 {
+		b.WriteString(s.ps[0].String())
+		for _, v := range s.ps[1:] {
+			b.WriteString(", ")
+			b.WriteString(v.String())
+		}
+	}
+	b.WriteString(") ")
+	b.WriteString(s.t.String())
 	return b.String()
 }
