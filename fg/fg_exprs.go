@@ -6,6 +6,7 @@
 package fg
 
 import "fmt"
+import "reflect"
 import "strings"
 
 /* Variable */
@@ -71,6 +72,9 @@ func (s StructLit) Eval(ds []Decl) Expr {
 	if done {
 		return StructLit{s.t, es}
 	} else {
+		for _, v := range s.es {
+			fmt.Println("aaa: " + reflect.TypeOf(v).String() + "\n" + v.String())
+		}
 		panic("Cannot reduce: " + s.String())
 	}
 }
@@ -298,7 +302,12 @@ func (a Assert) String() string {
 
 // Cf. checkErr
 func isValue(e Expr) bool {
-	if _, ok := e.(StructLit); ok {
+	if s, ok := e.(StructLit); ok {
+		for _, v := range s.es { // TODO: add test
+			if !isValue(v) {
+				return false
+			}
+		}
 		return true
 	}
 	return false
