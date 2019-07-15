@@ -1,4 +1,5 @@
 // Pre (1): ANTLR4
+// E.g., antlr-4.7.1-complete.jar
 // (See go:generate below)
 
 // Pre (2): ANTLR4 Runtime for Go
