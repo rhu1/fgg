@@ -24,19 +24,11 @@ func (v Variable) Subs(m map[Variable]Expr) Expr {
 	return res
 }
 
-/*func (v Variable) CanEval(ds []Decl) bool {
-	return false
-}*/
-
-/*func (v Variable) IsValue() bool {
-	return false
-}*/
-
 func (v Variable) Eval(ds []Decl) Expr {
 	panic("Cannot evaluate free variable: " + v.id)
 }
 
-func (v Variable) Typing(ds []Decl, gamma Env) Type {
+func (v Variable) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
 	res, ok := gamma[v.id]
 	if !ok {
 		panic("Var not in env: " + v.String())
@@ -65,19 +57,6 @@ func (s StructLit) Subs(m map[Variable]Expr) Expr {
 	return StructLit{s.t, es}
 }
 
-/*func (s StructLit) CanEval(ds []Decl) bool {
-	for _, v := range s.es {
-		if v.CanEval(ds) {
-			return true
-		}
-	}
-	return false
-}*/
-
-/*func (s StructLit) IsValue() bool {
-	return true
-}*/
-
 func (s StructLit) Eval(ds []Decl) Expr {
 	done := false
 	es := make([]Expr, len(s.es))
@@ -96,7 +75,7 @@ func (s StructLit) Eval(ds []Decl) Expr {
 	}
 }
 
-func (s StructLit) Typing(ds []Decl, gamma Env) Type {
+func (s StructLit) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
 	fs := fields(ds, s.t)
 	if len(s.es) != len(fs) {
 		tmp := ""
@@ -111,7 +90,7 @@ func (s StructLit) Typing(ds []Decl, gamma Env) Type {
 			", fields=[" + tmp + "]" + "\n\t" + s.String())
 	}
 	for i := 0; i < len(s.es); i++ {
-		t := s.es[i].Typing(ds, gamma)
+		t := s.es[i].Typing(ds, gamma, allowStupid)
 		u := fs[i].t
 		if !t.Impls(ds, u) {
 			panic("Arg expr must impl field type: arg=" + t.String() + ", field=" +
@@ -141,24 +120,6 @@ func (s Select) Subs(m map[Variable]Expr) Expr {
 	return Select{s.e.Subs(m), s.f}
 }
 
-/*func (s Select) CanEval(ds []Decl) bool {
-	if _, ok := s.e.(StructLit); !ok {
-		return false
-	}
-	v := s.e.(StructLit)
-	td := getTDecl(ds, v.t)
-	if t_S, ok := td.(STypeLit); !ok { // Unnecessary?
-		return false
-	} else {
-		for i := 0; i < len(t_S.fds); i++ {
-			if t_S.fds[i].f == s.f {
-				return true
-			}
-		}
-		return false
-	}
-}*/
-
 func (s Select) Eval(ds []Decl) Expr {
 	if !isValue(s.e) {
 		e := s.e.Eval(ds)
@@ -174,8 +135,8 @@ func (s Select) Eval(ds []Decl) Expr {
 	panic("Field not found: " + s.f)
 }
 
-func (s Select) Typing(ds []Decl, gamma Env) Type {
-	t := s.e.Typing(ds, gamma)
+func (s Select) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
+	t := s.e.Typing(ds, gamma, allowStupid)
 	if !isStructType(ds, t) {
 		panic("Illegal select on non-struct type expr: " + t)
 	}
@@ -209,23 +170,6 @@ func (c Call) Subs(m map[Variable]Expr) Expr {
 	return Call{e, c.m, args}
 }
 
-/*func (c Call) CanEval(ds []Decl) bool {
-	if c.e.CanEval(ds) {
-		return true
-	}
-	for _, v := range c.args {
-		if v.CanEval(ds) {
-			return true
-		}
-	}
-	// c.e and c.args cannot eval -- TODO: but not sure if good or bad
-	if s, ok := e.(StructLit); ok {
-		body(ds, s.t, c.m)
-		return true
-	}
-	return false
-}*/
-
 func (c Call) Eval(ds []Decl) Expr {
 	if !isValue(c.e) {
 		e := c.e.Eval(ds)
@@ -246,7 +190,7 @@ func (c Call) Eval(ds []Decl) Expr {
 	}
 	// c.e and c.args all values
 	s := c.e.(StructLit)
-	x0, xs, e := body(ds, s.t, c.m)
+	x0, xs, e := body(ds, s.t, c.m) // panics if method not found
 	subs := make(map[Variable]Expr)
 	subs[Variable{x0}] = c.e
 	for i := 0; i < len(xs); i++ {
@@ -255,8 +199,8 @@ func (c Call) Eval(ds []Decl) Expr {
 	return e.Subs(subs) // N.B. slightly different to R-Call
 }
 
-func (c Call) Typing(ds []Decl, gamma Env) Type {
-	t0 := c.e.Typing(ds, gamma)
+func (c Call) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
+	t0 := c.e.Typing(ds, gamma, allowStupid)
 	var s Sig
 	if tmp, ok := methods(ds, t0)[c.m]; !ok { // !!! submission version had "methods(m)"
 		panic("Method not found: " + c.m + " in " + t0.String())
@@ -276,7 +220,7 @@ func (c Call) Typing(ds []Decl, gamma Env) Type {
 			"[" + tmp + "]")
 	}
 	for i := 0; i < len(c.args); i++ {
-		t := c.args[i].Typing(ds, gamma)
+		t := c.args[i].Typing(ds, gamma, allowStupid)
 		if !t.Impls(ds, s.ps[i].t) {
 			panic("Arg expr type must implement param type: arg=" + t + ", param=" +
 				s.ps[i].t)
@@ -304,25 +248,55 @@ func (c Call) String() string {
 
 /* Assert */
 
-/*
 type Assert struct {
 	e Expr
-	t Name
+	t Type
 }
 
 func (a Assert) Subs(m map[Variable]Expr) Expr {
+	return Assert{a.e.Subs(m), a.t}
 }
 
-func (a Assert) Eval(ds[]Decl) Expr {
+func (a Assert) Eval(ds []Decl) Expr {
+	if !isValue(a.e) {
+		return Assert{a.e.Eval(ds), a.t}
+	}
+	t_S := typ(ds, a.e.(StructLit)) // panics if StructLit.t is not a t_S
+	if t_S.Impls(ds, a.t) {
+		return a.e
+	}
+	panic("Cannot reduce: " + a.String())
 }
 
-func (a Assert) Typing(ds []Decl, gamma Env) Type {
+func (a Assert) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
+	t := a.e.Typing(ds, gamma, allowStupid)
+	if isStructType(ds, t) {
+		if allowStupid {
+			return a.t
+		} else {
+			panic("Expr must be an interface type (in a non-stupid context): found " +
+				t.String() + " for\n\t" + a.String())
+		}
+	}
+	// t is an interface type
+	if isInterfaceType(ds, a.t) {
+		return a.t // No further checks -- N.B., Robert said they are looking to refine this
+	}
+	// a.t is a struct type
+	if a.t.Impls(ds, t) {
+		return a.t
+	}
+	panic("Struct type assertion must implement expr type: asserted=" +
+		a.t.String() + ", expr=" + t.String())
 }
 
 func (a Assert) String() string {
+	return a.e.String() + ".(" + a.t.String() + ")"
 }
-*/
 
+/* Helper */
+
+// Cf. checkErr
 func isValue(e Expr) bool {
 	if _, ok := e.(StructLit); ok {
 		return true

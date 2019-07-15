@@ -18,7 +18,7 @@ type FGProgram struct {
 
 var _ FGNode = FGProgram{}
 
-func (p FGProgram) Ok() {
+func (p FGProgram) Ok(allowStupid bool) {
 	fmt.Println("[Warning] Type decl OK not checked yet (e.g., distinct type/field/method names, etc.)")
 	for _, v := range p.ds {
 		switch c := v.(type) {
@@ -33,7 +33,7 @@ func (p FGProgram) Ok() {
 		}
 	}
 	var gamma Env
-	p.e.Typing(p.ds, gamma)
+	p.e.Typing(p.ds, gamma, allowStupid)
 }
 
 // CHECKME: resulting FGProgram is not parsed from source, OK? -- cf. Expr.Eval
@@ -90,7 +90,8 @@ func (m MDecl) Ok(ds []Decl) {
 	for _, v := range m.ps {
 		env[v.x] = v.t
 	}
-	t := m.e.Typing(ds, env)
+	allowStupid := false
+	t := m.e.Typing(ds, env, allowStupid)
 	if !t.Impls(ds, m.t) {
 		panic("Method body type must implement declared return type: found=" +
 			t.String() + ", expected=" + m.t.String() + "\n\t" + m.String())

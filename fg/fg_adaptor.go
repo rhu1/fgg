@@ -111,7 +111,7 @@ func (a *FGAdaptor) ExitStructTypeLit(ctx *parser.StructTypeLitContext) {
 }
 
 func (a *FGAdaptor) ExitFieldDecl(ctx *parser.FieldDeclContext) {
-	field := ctx.GetField().GetText()
+	field := Name(ctx.GetField().GetText())
 	typ := Type(ctx.GetTyp().GetText())
 	a.push(FieldDecl{field, typ})
 }
@@ -137,8 +137,8 @@ func (a *FGAdaptor) ExitSigSpec(ctx *parser.SigSpecContext) {
 }
 
 func (a *FGAdaptor) ExitInterfaceSpec(ctx *parser.InterfaceSpecContext) {
-	n := ctx.GetChild(0).(*antlr.TerminalNodeImpl)
-	a.push(Type(n.GetText()))
+	id := ctx.GetChild(0).(*antlr.TerminalNodeImpl)
+	a.push(Type(id.GetText()))
 }
 
 func (a *FGAdaptor) ExitSig(ctx *parser.SigContext) {
@@ -159,8 +159,8 @@ func (a *FGAdaptor) ExitSig(ctx *parser.SigContext) {
 /* "expr": #Variable, #StructLit, #Select, #Call, #Assert */
 
 func (a *FGAdaptor) ExitVariable(ctx *parser.VariableContext) {
-	n := ctx.GetChild(0).(*antlr.TerminalNodeImpl)
-	a.push(Variable{n.GetText()})
+	id := ctx.GetChild(0).(*antlr.TerminalNodeImpl)
+	a.push(Variable{Name(id.GetText())})
 }
 
 // Children: 0=typ (*antlr.TerminalNodeImpl), 1='{', 2=exprs (*parser.ExprsContext), 3='}'
@@ -180,7 +180,7 @@ func (a *FGAdaptor) ExitStructLit(ctx *parser.StructLitContext) {
 
 func (a *FGAdaptor) ExitSelect(ctx *parser.SelectContext) {
 	e := a.pop().(Expr)
-	f := ctx.GetChild(2).(*antlr.TerminalNodeImpl).GetText()
+	f := Name(ctx.GetChild(2).(*antlr.TerminalNodeImpl).GetText())
 	a.push(Select{e, f})
 }
 
@@ -193,11 +193,14 @@ func (a *FGAdaptor) ExitCall(ctx *parser.CallContext) {
 			args[i] = a.pop().(Expr) // Adding backwards
 		}
 	}
-	m := ctx.GetChild(2).(*antlr.TerminalNodeImpl).GetText()
+	m := Name(ctx.GetChild(2).(*antlr.TerminalNodeImpl).GetText())
 	e := a.pop().(Expr)
 	a.push(Call{e, m, args})
 }
 
 func (a *FGAdaptor) ExitAssert(ctx *parser.AssertContext) {
-	panic("[TODO] Type assertions: " + ctx.GetText() + "...")
+	id := ctx.GetChild(3).(*antlr.TerminalNodeImpl)
+	typ := Type(id.GetText())
+	e := a.pop().(Expr)
+	a.push(Assert{e, typ})
 }

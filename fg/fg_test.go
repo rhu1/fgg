@@ -17,7 +17,8 @@ import (
 func parseAndCheckOk(prog string) fg.FGProgram {
 	var adptr fg.FGAdaptor
 	ast := adptr.Parse(true, prog)
-	ast.Ok()
+	allowStupid := false
+	ast.Ok(allowStupid)
 	return ast
 }
 
@@ -29,19 +30,6 @@ func parseAndOkGood(t *testing.T, elems ...string) fg.FGProgram {
 		}
 	}()
 	return parseAndCheckOk(prog)
-}
-
-func evalAndOkGood(t *testing.T, p fg.FGProgram, steps int) fg.FGProgram {
-	defer func() {
-		if r := recover(); r != nil {
-			t.Errorf("Unexpected panic: " + fmt.Sprintf("%v", r) + "\n" + p.String())
-		}
-	}()
-	for i := 0; i < steps; i++ {
-		p = p.Eval()
-		p.Ok()
-	}
-	return p
 }
 
 // N.B. do not use to check for bad *syntax* -- see below, "[Parser]" panic check
@@ -60,6 +48,20 @@ func parseAndOkBad(t *testing.T, msg string, elems ...string) fg.FGProgram {
 		}
 	}()
 	return parseAndCheckOk(prog)
+}
+
+func evalAndOkGood(t *testing.T, p fg.FGProgram, steps int) fg.FGProgram {
+	defer func() {
+		if r := recover(); r != nil {
+			t.Errorf("Unexpected panic: " + fmt.Sprintf("%v", r) + "\n" + p.String())
+		}
+	}()
+	allowStupid := true
+	for i := 0; i < steps; i++ {
+		p = p.Eval()
+		p.Ok(allowStupid)
+	}
+	return p
 }
 
 /* Syntax and typing */
@@ -350,6 +352,21 @@ func Test015b(t *testing.T) {
 	parseAndOkBad(t, "A is a not an IA", IA, A, A1m, e)
 }
 
+// Initial testing for assert
+func Test016(t *testing.T) {
+	Any := "type Any interface {}"
+	ToAny := "type ToAny struct { any Any }"
+	A := "type A struct {}"
+	e := "ToAny{A{}}.any.(A)"
+	parseAndOkGood(t, Any, ToAny, A, e)
+}
+
+func Test016b(t *testing.T) {
+	A := "type A struct {}"
+	e := "A{}.(A)"
+	parseAndOkBad(t, "Stupid cast on A struct lit", A, e)
+}
+
 /* Eval */
 
 // TODO: put these tests through actual Go and compare the results
@@ -376,5 +393,15 @@ func TestEval003(t *testing.T) {
 	B := "type B struct { a A }"
 	e := "A{}.m1().a"
 	prog := parseAndOkGood(t, A, Am1, B, e)
+	evalAndOkGood(t, prog, 2)
+}
+
+// Initial testing for assert -- Cf. Test016
+func TestEval004(t *testing.T) {
+	Any := "type Any interface {}"
+	ToAny := "type ToAny struct { any Any }"
+	A := "type A struct {}"
+	e := "ToAny{A{}}.any.(A)"
+	prog := parseAndOkGood(t, Any, ToAny, A, e)
 	evalAndOkGood(t, prog, 2)
 }

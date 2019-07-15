@@ -93,11 +93,9 @@ type Spec interface {
 type Expr interface {
 	FGNode
 	Subs(map[Variable]Expr) Expr
-	//CanEval(ds []Decl) bool // Should only panic if badly typed, o/w return false if stuck
-	//IsValue() bool
 	Eval(ds []Decl) Expr // CHECKME: resulting Exprs are not "parsed" from source, OK?
 	//IsPanic() bool  // TODO
-	Typing(ds []Decl, gamma Env) Type
+	Typing(ds []Decl, gamma Env, allowStupid bool) Type
 	// N.B. gamma should be effectively immutable (and ds, of course)
 	// (No typing rule adds to gamma, except T-Func bootstrap)
 }

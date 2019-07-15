@@ -36,12 +36,13 @@ import (
 var _ = reflect.TypeOf
 var _ = strconv.Itoa
 
+// For convenient quick testing -- via flag "-internal=true"
 func makeInternalSrc() string {
+	Any := "type Any interface {}"
+	ToAny := "type ToAny struct { any Any }"
 	A := "type A struct {}"
-	Am1 := "func (x0 A) m1() B { return B{x0} }"
-	B := "type B struct { a A }"
-	e := "A{}.m1().a"
-	return fg.MakeFgProgram(A, Am1, B, e)
+	e := "ToAny{A{}}.any.(A)"
+	return fg.MakeFgProgram(Any, ToAny, A, e)
 }
 
 // N.B. flags (e.g., -internal=true) must be supplied before any non-flag args
@@ -73,7 +74,8 @@ func main() {
 	fmt.Println(prog)
 
 	fmt.Println("\nChecking source program OK:")
-	prog.Ok()
+	allowStupid := false
+	prog.Ok(allowStupid)
 
 	if *evalPtr < 0 {
 		return
@@ -85,12 +87,13 @@ func main() {
 		fmt.Println("\t" + v.String())
 	}
 	fmt.Println("Eval steps:")
+	allowStupid = true
 	fmt.Printf("%8d: %v\n", 0, prog.GetExpr())
 	for i := 1; i <= *evalPtr; i++ {
 		prog = prog.Eval()
 		fmt.Printf("%8d: %v\n", i, prog.GetExpr())
 		fmt.Println("Checking OK:")
-		prog.Ok()
+		prog.Ok(allowStupid)
 	}
 }
 
