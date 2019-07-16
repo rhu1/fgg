@@ -9,6 +9,8 @@ import (
 	"github.com/rhu1/fgg/parser"
 )
 
+/* FG */
+
 // Pre: len(elems) > 1
 // elems[:len(elems)-1] -- type/meth decls
 // elems[len(elems)-1] -- "main" func body expression

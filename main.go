@@ -36,22 +36,20 @@ import (
 var _ = reflect.TypeOf
 var _ = strconv.Itoa
 
-// For convenient quick testing -- via flag "-internal=true"
-func makeInternalSrc() string {
-	Any := "type Any interface {}"
-	ToAny := "type ToAny struct { any Any }"
-	e := "ToAny{1}"
-	return fg.MakeFgProgram(Any, ToAny, e)
-}
+var verbose bool = false
 
 // N.B. flags (e.g., -internal=true) must be supplied before any non-flag args
 func main() {
-	strictParsePtr := flag.Bool("strict", true,
-		"Set strict parsing (panic on error, no recovery)")
+	evalPtr := flag.Int("eval", -1, "Number of steps to evaluate")
 	internalPtr := flag.Bool("internal", false, "Use \"internal\" input as source")
 	inlinePtr := flag.String("inline", "", "Use inline input as source")
-	evalPtr := flag.Int("eval", -1, "Number of steps to evaluate")
+	strictParsePtr := flag.Bool("strict", true,
+		"Set strict parsing (panic on error, no recovery)")
+	verbosePtr := flag.Bool("v", false,
+		"Set verbose printing")
 	flag.Parse()
+
+	verbose = *verbosePtr
 
 	var src string
 	if *internalPtr { // First priority
@@ -67,37 +65,53 @@ func main() {
 		src = string(bs)
 	}
 
-	fmt.Println("\nParsing AST:")
+	vPrintln("\nParsing AST:")
 	var adptr fg.FGAdaptor
 	prog := adptr.Parse(*strictParsePtr, src) // AST (FGProgram root)
-	fmt.Println(prog)
+	vPrintln(prog.String())
 
-	fmt.Println("\nChecking source program OK:")
+	vPrintln("\nChecking source program OK:")
 	allowStupid := false
 	prog.Ok(allowStupid)
 
 	if *evalPtr < 0 {
 		return
 	}
-	fmt.Println("\nEntering Eval loop:")
-	fmt.Println("Decls:")
+	vPrintln("\nEntering Eval loop:")
+	vPrintln("Decls:")
 	for _, v := range prog.GetDecls() {
-		fmt.Println("\t" + v.String() + ";")
+		vPrintln("\t" + v.String() + ";")
 	}
-	fmt.Println("Eval steps:")
+	vPrintln("Eval steps:")
 	allowStupid = true
-	fmt.Printf("%6d: %v\n", 0, prog.GetExpr())
+	vPrintln(fmt.Sprintf("%6d: %v", 0, prog.GetExpr()))
 	for i := 1; i <= *evalPtr; i++ {
 		prog = prog.Eval()
-		fmt.Printf("%6d: %v\n", i, prog.GetExpr())
-		fmt.Println("Checking OK:")
+		vPrintln(fmt.Sprintf("%6d: %v", i, prog.GetExpr()))
+		vPrintln("Checking OK:")
 		prog.Ok(allowStupid)
 	}
 }
 
+// For convenient quick testing -- via flag "-internal=true"
+func makeInternalSrc() string {
+	Any := "type Any interface {}"
+	ToAny := "type ToAny struct { any Any }"
+	e := "ToAny{1}"
+	return fg.MakeFgProgram(Any, ToAny, e)
+}
+
+/* Helpers */
+
 func checkErr(e error) {
 	if e != nil {
 		panic(e)
+	}
+}
+
+func vPrintln(x string) {
+	if verbose {
+		fmt.Println(x)
 	}
 }
 
