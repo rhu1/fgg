@@ -3,9 +3,9 @@
 20190716 Ray
 
 Added FG examples from the paper:
-https://github.com/rhu1/fgg/tree/master/fg/examples.
+https://github.com/rhu1/fgg/tree/master/fg/examples.  
 All working -- except for "whoopsie", as the check for "bad recursive struct
-decls" is not done yet.
+decls" is not done yet.  
 Example commands to run them are in comments at the top of each.
 
 Note: FG (or at least this implementation) requires mandatory ";" between all
@@ -18,7 +18,7 @@ of evenings, though I may not be able to do so immediately.
 20190715 Ray
 
 Added type assertions, and some CL flag options (e.g., -eval=n,
--inline="...").
+-inline="...").  
 N.B. flags must be given before any non-flag args.
 
 A first HelloWorld run can be done by:
