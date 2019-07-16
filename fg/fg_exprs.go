@@ -105,12 +105,20 @@ func (s StructLit) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
 }
 
 func (s StructLit) String() string {
-	var sb strings.Builder
-	sb.WriteString(s.t.String())
-	sb.WriteString("{")
-	sb.WriteString(strings.Trim(strings.Join(strings.Split(fmt.Sprint(s.es), " "), ", "), "[]"))
-	sb.WriteString("}")
-	return sb.String()
+	var b strings.Builder
+	b.WriteString(s.t.String())
+	b.WriteString("{")
+	//b.WriteString(strings.Trim(strings.Join(strings.Split(fmt.Sprint(s.es), " "), ", "), "[]"))
+	// ^ No: broken for nested structs
+	if len(s.es) > 0 {
+		b.WriteString(s.es[0].String())
+		for _, v := range s.es[1:] {
+			b.WriteString(", ")
+			b.WriteString(v.String())
+		}
+	}
+	b.WriteString("}")
+	return b.String()
 }
 
 /* Select */
