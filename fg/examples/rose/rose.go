@@ -1,4 +1,4 @@
-//$ go run github.com/rhu1/fgg -eval=3 fg/examples/rose/rose.go
+//$ go run github.com/rhu1/fgg -v -eval=3 fg/examples/rose/rose.go
 
 package main;
 

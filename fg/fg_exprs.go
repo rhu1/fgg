@@ -63,7 +63,7 @@ func (s StructLit) Eval(ds []Decl) Expr {
 	es := make([]Expr, len(s.es))
 	for i := 0; i < len(s.es); i++ {
 		v := s.es[i]
-		if !done && !isValue(v) {
+		if !done && !IsValue(v) {
 			v = v.Eval(ds)
 			done = true
 		}
@@ -125,7 +125,7 @@ func (s Select) Subs(m map[Variable]Expr) Expr {
 }
 
 func (s Select) Eval(ds []Decl) Expr {
-	if !isValue(s.e) {
+	if !IsValue(s.e) {
 		e := s.e.Eval(ds)
 		return Select{e, s.f}
 	}
@@ -175,7 +175,7 @@ func (c Call) Subs(m map[Variable]Expr) Expr {
 }
 
 func (c Call) Eval(ds []Decl) Expr {
-	if !isValue(c.e) {
+	if !IsValue(c.e) {
 		e := c.e.Eval(ds)
 		return Call{e, c.m, c.args}
 	}
@@ -183,7 +183,7 @@ func (c Call) Eval(ds []Decl) Expr {
 	done := false
 	for i := 0; i < len(c.args); i++ {
 		e := c.args[i]
-		if !done && !isValue(e) {
+		if !done && !IsValue(e) {
 			e = e.Eval(ds)
 			done = true
 		}
@@ -262,7 +262,7 @@ func (a Assert) Subs(m map[Variable]Expr) Expr {
 }
 
 func (a Assert) Eval(ds []Decl) Expr {
-	if !isValue(a.e) {
+	if !IsValue(a.e) {
 		return Assert{a.e.Eval(ds), a.t}
 	}
 	t_S := typ(ds, a.e.(StructLit)) // panics if StructLit.t is not a t_S
@@ -301,10 +301,10 @@ func (a Assert) String() string {
 /* Helper */
 
 // Cf. checkErr
-func isValue(e Expr) bool {
+func IsValue(e Expr) bool {
 	if s, ok := e.(StructLit); ok {
 		for _, v := range s.es {
-			if !isValue(v) {
+			if !IsValue(v) {
 				return false
 			}
 		}

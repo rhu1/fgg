@@ -1,4 +1,4 @@
-//$ go run github.com/rhu1/fgg -eval=13 fg/examples/map/map.go
+//$ go run github.com/rhu1/fgg -v -eval=13 fg/examples/map/map.go
 // Cf.
 //$ go run github.com/rhu1/fgg/fg/examples/map
 

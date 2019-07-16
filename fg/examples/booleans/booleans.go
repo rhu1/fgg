@@ -1,4 +1,4 @@
-//$ go run github.com/rhu1/fgg -eval=7 fg/examples/booleans/booleans.go
+//$ go run github.com/rhu1/fgg -v -eval=7 fg/examples/booleans/booleans.go
 // Cf.
 //$ go run github.com/rhu1/fgg/fg/examples/booleans
 
