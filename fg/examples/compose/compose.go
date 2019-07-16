@@ -1,4 +1,6 @@
 //$ go run github.com/rhu1/fgg -eval=46 fg/examples/compose/compose.go
+// Cf.
+//$ go run github.com/rhu1/fgg/fg/examples/compose
 
 package main;
 

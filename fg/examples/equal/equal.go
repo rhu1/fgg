@@ -1,4 +1,7 @@
 //$ go run github.com/rhu1/fgg -eval=3 fg/examples/equal/equal.go
+// Cf.
+// Cf.
+//$ go run github.com/rhu1/fgg/fg/examples/equals
 
 package main;
 
