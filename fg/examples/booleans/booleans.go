@@ -4,9 +4,10 @@
 
 package main;
 
-/* Base decls */
+/* Base decls: Any, Booleans */
 
 type Any interface{};
+
 type Eq interface {
 	Equal(that Any) Bool
 };
