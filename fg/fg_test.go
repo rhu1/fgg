@@ -61,7 +61,7 @@ func evalAndOkGood(t *testing.T, p fg.FGProgram, steps int) fg.FGProgram {
 	}()
 	allowStupid := true
 	for i := 0; i < steps; i++ {
-		p, _ = p.Eval()
+		p, _ = p.Eval() // CHECKME: check rule names as part of test?
 		p.Ok(allowStupid)
 	}
 	return p
