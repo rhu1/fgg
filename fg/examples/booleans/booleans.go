@@ -6,7 +6,7 @@ package main;
 
 /* Base decls: Any, Booleans */
 
-type Any interface{};
+type Any interface {};
 
 type Eq interface {
 	Equal(that Any) Bool

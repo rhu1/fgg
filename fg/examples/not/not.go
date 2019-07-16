@@ -1,10 +1,10 @@
-//$ go run github.com/rhu1/fgg -v -eval=13 fg/examples/map/map.go
+//$ go run github.com/rhu1/fgg -v -eval=4 fg/examples/not/not.go
 // Cf.
-//$ go run github.com/rhu1/fgg/fg/examples/map
+//$ go run github.com/rhu1/fgg/fg/examples/not
 
 package main;
 
-/* Base decls: Any, Booleans, Functions, Lists */
+/* Base decls: Any, Booleans, Functions */
 
 type Any interface {};
 
@@ -45,31 +45,8 @@ type compose struct {
 };
 func (this compose) Apply(x Any) Any { return this.g.Apply(this.f.Apply(x)) };
 
-/* Lists */
-
-type List interface {
-	Map(f Func) List;
-	Member(x Eq) Bool
-};
-type Nil struct {};
-type Cons struct {
-	head Any;
-	tail List
-};
-func (xs Nil) Map(f Func) List { return Nil{} };
-func (xs Cons) Map(f Func) List { return Cons{f.Apply(xs.head), xs.tail.Map(f)} };
-type memberBr struct {
-	xs Cons;
-	x Eq
-};
-func (this memberBr) IfTT() Any { return TT{} };
-func (this memberBr) IfFF() Any { return this.xs.tail.Member(this.x) };
-func (xs Nil) Member(x Eq) Bool { return FF{} };
-func (xs Cons) Member(x Eq) Bool { return x.Equal(xs.head).Cond(memberBr{xs,x}).(Bool) };
-
 /* Example code */
 
 func main() {
-	// Submission version was missing a "}"
-	_ =  Cons{TT{}, Cons{FF{}, Nil{}}}.Map(not{})
+	_ = not{}.Apply(TT{}).(Bool)
 }

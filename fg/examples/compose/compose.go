@@ -6,7 +6,7 @@ package main;
 
 /* Base decls: Any, Booleans, Nautrals, Functions, Lists */
 
-type Any interface{};
+type Any interface {};
 
 /* Booleans */
 
@@ -98,7 +98,9 @@ func (d D) Two() Nat { return D{}.One().Add(D{}.One()) };
 func (d D) Three() Nat { return D{}.Two().Add(D{}.One()) };
 
 func main() {
-	//compose{incr{1},incr{2}}.Apply(3).(Nat)
+	// Submission version: compose{incr{1},incr{2}}.Apply(3).(Nat)
 	//_ = compose{incr{Succ{Zero{}}},incr{Succ{Succ{Zero{}}}}}.Apply(Succ{Succ{Succ{Zero{}}}}).(Nat) // -eval=26
 	_ = compose{incr{D{}.One()},incr{D{}.Two()}}.Apply(D{}.Three()).(Nat) // -eval=46
+
+	// Also: _ = incr{2}.Apply(3).(Nat)
 }
