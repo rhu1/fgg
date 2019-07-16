@@ -1,4 +1,4 @@
-//$ go run github.com/rhu1/fgg -eval=26 fg/examples/compose/compose.go
+//$ go run github.com/rhu1/fgg -eval=46 fg/examples/compose/compose.go
 
 package main;
 
@@ -89,7 +89,13 @@ func (xs Cons) Member(x Eq) Bool { return x.Equal(xs.head).Cond(memberBr{xs,x}).
 
 /* Example code */
 
+type D struct {};
+func (d D) One() Nat { return Succ{Zero{}} };
+func (d D) Two() Nat { return D{}.One().Add(D{}.One()) };
+func (d D) Three() Nat { return D{}.Two().Add(D{}.One()) };
+
 func main() {
 	//compose{incr{1},incr{2}}.Apply(3).(Nat)
-	_ = compose{incr{Succ{Zero{}}},incr{Succ{Succ{Zero{}}}}}.Apply(Succ{Succ{Succ{Zero{}}}}).(Nat)
+	//_ = compose{incr{Succ{Zero{}}},incr{Succ{Succ{Zero{}}}}}.Apply(Succ{Succ{Succ{Zero{}}}}).(Nat) // -eval=26
+	_ = compose{incr{D{}.One()},incr{D{}.Two()}}.Apply(D{}.Three()).(Nat) // -eval=46
 }
