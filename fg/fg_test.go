@@ -445,3 +445,11 @@ func TestEval005(t *testing.T) {
 	prog := parseAndOkGood(t, Any, ToAny, A, e)
 	evalAndOkGood(t, prog, 2)
 }
+
+// //TODO:test -eval=-1 -- test is currently added as -eval=0
+func TestEval006(t *testing.T) {
+	A := "type A struct {}"
+	e := "A{}"
+	prog := parseAndOkGood(t, A, e)
+	evalAndOkGood(t, prog, 0)
+}
