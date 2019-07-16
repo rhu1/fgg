@@ -6,7 +6,6 @@
 package fg
 
 import "fmt"
-import "reflect"
 import "strings"
 
 /* Variable */
