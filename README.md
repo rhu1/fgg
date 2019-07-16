@@ -38,7 +38,7 @@ Grammar is here: https://github.com/rhu1/fgg/blob/master/FG.g4#L40.
 The ANTLR4 Runtime for Go is also needed:
 https://github.com/antlr/antlr4/blob/master/doc/go-target.md.
 
-Exiting tests are here:
+Existing tests are here:
 https://github.com/rhu1/fgg/blob/master/fg/fg_test.go#L51.  
 Mainly syntax/typing tests.  
 Can run them from CL by: go test github.com/rhu1/fgg/fg.
