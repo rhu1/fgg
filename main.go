@@ -8,9 +8,9 @@
 //$ cd $CYGHOME/code/go/src/github.com/antlr/antlr4
 //$ git checkout -b antlr-go-runtime tags/4.7.1  // Match antlr-4.7.1-complete.jar -- but unnecessary
 
-//rhu@HZHL4 MINGW64 ~/code/go/src/github.com/rhu1/fgg
-//$ go run . -eval=10 fg/examples/hello/hello.go
-//$ go run . -inline="package main; type A struct {}; func main() { _ = A{} }"
+//rhu@HZHL4 MINGW64 ~/code/go/src/
+//$ go run github.com/rhu1/fgg -eval=10 fg/examples/hello/hello.go
+//$ go run github.com/rhu1/fgg -inline="package main; type A struct {}; func main() { _ = A{} }"
 // or
 //$ go install
 //$ /c/Users/rhu/code/go/bin/fgg.exe ...

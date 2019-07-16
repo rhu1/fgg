@@ -9,8 +9,9 @@ decls" is not done yet.
 Example commands to run them are in comments at the top of each.
 
 Note: FG (or at least this implementation) requires mandatory ";" between all
-decls (e.g., types and methods, and also fields), to make the language
-white-space insensitive, unlike actual Go.
+decls (e.g., types and methods, and also fields).  
+This is to make it such that both (i) FG is white-space insensitive and (ii) every
+FG program is an actual Go program.
 
 Extension to FGG on top of the current codebase would probably take a couple
 of evenings, though I may not be able to do so immediately.
@@ -29,14 +30,14 @@ go run github.com/rhu1/fgg -eval=10 fg/examples/hello/hello.go
 Mini prototype of FG/FGG/FGR in Go for quick testing.
 
 So far, there is an almost-done FG -- need to add type assertions, test
-evaluation, and more general testing. 
+evaluation, and more general testing.  
 (Knocked it up during a bit of free time in the week end.)
 
 Parser is generated using ANTLR4.  
 CL incantation from repo root dir is: antlr4 -Dlanguage=Go -o parser FG --
 where "antlr4" is, e.g., an alias for: java -jar
 ~/code/java/lib/antlr-4.7.1-complete.jar (i.e., an ANTLR4 installation).  
-Grammar is here: https://github.com/rhu1/fgg/blob/master/FG.g4#L40. 
+Grammar is here: https://github.com/rhu1/fgg/blob/master/FG.g4#L40.  
 The ANTLR4 Runtime for Go is also needed:
 https://github.com/antlr/antlr4/blob/master/doc/go-target.md.
 
