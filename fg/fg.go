@@ -95,7 +95,7 @@ type Expr interface {
 	Subs(map[Variable]Expr) Expr
 
 	// CHECKME: resulting Exprs are not "parsed" from source, OK?
-	// string is the type name of the actual evaluated expr (within the eval context)
+	// string is the type name of the "actually evaluated" expr (within the eval context)
 	Eval(ds []Decl) (Expr, string)
 
 	//IsPanic() bool  // TODO "explicit" FG panic -- cf. underlying runtime panic
