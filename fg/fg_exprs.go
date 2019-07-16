@@ -72,9 +72,6 @@ func (s StructLit) Eval(ds []Decl) Expr {
 	if done {
 		return StructLit{s.t, es}
 	} else {
-		for _, v := range s.es {
-			fmt.Println("aaa: " + reflect.TypeOf(v).String() + "\n" + v.String())
-		}
 		panic("Cannot reduce: " + s.String())
 	}
 }
