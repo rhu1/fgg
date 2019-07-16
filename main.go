@@ -96,13 +96,14 @@ func eval(p fg.FGProgram, steps int) {
 		vPrintln("\t" + v.String() + ";")
 	}
 	vPrintln("Eval steps:")
-	vPrintln(fmt.Sprintf("%6d: %v", 0, p.GetExpr())) // Initial prog OK already checked
+	vPrintln(fmt.Sprintf("%6d: %8s %v", 0, "", p.GetExpr())) // Initial prog OK already checked
 
 	done := steps > EVAL_TO_VAL || // Ignore 'done' if num steps fixed (set true, for ||!done below)
 		fg.IsValue(p.GetExpr()) // O/w evaluate until a val -- here, check if init expr is already a val
+	var rule string
 	for i := 1; i <= steps || !done; i++ {
-		p = p.Eval()
-		vPrintln(fmt.Sprintf("%6d: %v", i, p.GetExpr()))
+		p, rule = p.Eval()
+		vPrintln(fmt.Sprintf("%6d: %8s %v", i, "["+rule+"]", p.GetExpr()))
 		vPrintln("Checking OK:") // N.B. doesn't check stupid casts, because above Eval call panics
 		p.Ok(allowStupid)
 		if !done && fg.IsValue(p.GetExpr()) {

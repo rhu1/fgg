@@ -24,7 +24,7 @@ func (v Variable) Subs(m map[Variable]Expr) Expr {
 	return res
 }
 
-func (v Variable) Eval(ds []Decl) Expr {
+func (v Variable) Eval(ds []Decl) (Expr, string) {
 	panic("Cannot evaluate free variable: " + v.id)
 }
 
@@ -57,19 +57,20 @@ func (s StructLit) Subs(m map[Variable]Expr) Expr {
 	return StructLit{s.t, es}
 }
 
-func (s StructLit) Eval(ds []Decl) Expr {
-	done := false
+func (s StructLit) Eval(ds []Decl) (Expr, string) {
 	es := make([]Expr, len(s.es))
+	done := false
+	var rule string
 	for i := 0; i < len(s.es); i++ {
 		v := s.es[i]
 		if !done && !IsValue(v) {
-			v = v.Eval(ds)
+			v, rule = v.Eval(ds)
 			done = true
 		}
 		es[i] = v
 	}
 	if done {
-		return StructLit{s.t, es}
+		return StructLit{s.t, es}, rule
 	} else {
 		panic("Cannot reduce: " + s.String())
 	}
@@ -128,16 +129,16 @@ func (s Select) Subs(m map[Variable]Expr) Expr {
 	return Select{s.e.Subs(m), s.f}
 }
 
-func (s Select) Eval(ds []Decl) Expr {
+func (s Select) Eval(ds []Decl) (Expr, string) {
 	if !IsValue(s.e) {
-		e := s.e.Eval(ds)
-		return Select{e, s.f}
+		e, rule := s.e.Eval(ds)
+		return Select{e, s.f}, rule
 	}
 	v := s.e.(StructLit)
 	fds := fields(ds, v.t)
 	for i := 0; i < len(fds); i++ {
 		if fds[i].f == s.f {
-			return v.es[i]
+			return v.es[i], "Select"
 		}
 	}
 	panic("Field not found: " + s.f)
@@ -178,23 +179,24 @@ func (c Call) Subs(m map[Variable]Expr) Expr {
 	return Call{e, c.m, args}
 }
 
-func (c Call) Eval(ds []Decl) Expr {
+func (c Call) Eval(ds []Decl) (Expr, string) {
 	if !IsValue(c.e) {
-		e := c.e.Eval(ds)
-		return Call{e, c.m, c.args}
+		e, rule := c.e.Eval(ds)
+		return Call{e, c.m, c.args}, rule
 	}
 	args := make([]Expr, len(c.args))
 	done := false
+	var rule string
 	for i := 0; i < len(c.args); i++ {
 		e := c.args[i]
 		if !done && !IsValue(e) {
-			e = e.Eval(ds)
+			e, rule = e.Eval(ds)
 			done = true
 		}
 		args[i] = e
 	}
 	if done {
-		return Call{c.e, c.m, args}
+		return Call{c.e, c.m, args}, rule
 	}
 	// c.e and c.args all values
 	s := c.e.(StructLit)
@@ -204,7 +206,7 @@ func (c Call) Eval(ds []Decl) Expr {
 	for i := 0; i < len(xs); i++ {
 		subs[Variable{xs[i]}] = c.args[i]
 	}
-	return e.Subs(subs) // N.B. slightly different to R-Call
+	return e.Subs(subs), "Call" // N.B. slightly different to R-Call
 }
 
 func (c Call) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
@@ -265,13 +267,14 @@ func (a Assert) Subs(m map[Variable]Expr) Expr {
 	return Assert{a.e.Subs(m), a.t}
 }
 
-func (a Assert) Eval(ds []Decl) Expr {
+func (a Assert) Eval(ds []Decl) (Expr, string) {
 	if !IsValue(a.e) {
-		return Assert{a.e.Eval(ds), a.t}
+		e, rule := a.e.Eval(ds)
+		return Assert{e, a.t}, rule
 	}
 	t_S := typ(ds, a.e.(StructLit)) // panics if StructLit.t is not a t_S
 	if t_S.Impls(ds, a.t) {
-		return a.e
+		return a.e, "Assert"
 	}
 	panic("Cannot reduce: " + a.String())
 }

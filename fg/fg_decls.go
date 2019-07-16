@@ -40,9 +40,9 @@ func (p FGProgram) Ok(allowStupid bool) {
 
 // CHECKME: resulting FGProgram is not parsed from source, OK? -- cf. Expr.Eval
 // But doesn't affect FGPprogam.Ok() (i.e., Expr.Typing)
-func (p FGProgram) Eval() FGProgram {
-	e := p.e.Eval(p.ds)
-	return FGProgram{p.ds, e}
+func (p FGProgram) Eval() (FGProgram, string) {
+	e, rule := p.e.Eval(p.ds)
+	return FGProgram{p.ds, e}, rule
 }
 
 func (p FGProgram) GetDecls() []Decl {

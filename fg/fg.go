@@ -93,9 +93,14 @@ type Spec interface {
 type Expr interface {
 	FGNode
 	Subs(map[Variable]Expr) Expr
-	Eval(ds []Decl) Expr // CHECKME: resulting Exprs are not "parsed" from source, OK?
-	//IsPanic() bool  // TODO
-	Typing(ds []Decl, gamma Env, allowStupid bool) Type
+
+	// CHECKME: resulting Exprs are not "parsed" from source, OK?
+	// string is the type name of the actual evaluated expr (within the eval context)
+	Eval(ds []Decl) (Expr, string)
+
+	//IsPanic() bool  // TODO "explicit" FG panic -- cf. underlying runtime panic
+
 	// N.B. gamma should be effectively immutable (and ds, of course)
 	// (No typing rule modifies gamma, except the T-Func bootstrap)
+	Typing(ds []Decl, gamma Env, allowStupid bool) Type
 }

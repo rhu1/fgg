@@ -61,7 +61,7 @@ func evalAndOkGood(t *testing.T, p fg.FGProgram, steps int) fg.FGProgram {
 	}()
 	allowStupid := true
 	for i := 0; i < steps; i++ {
-		p = p.Eval()
+		p, _ = p.Eval()
 		p.Ok(allowStupid)
 	}
 	return p
@@ -80,7 +80,7 @@ func evalAndOkBad(t *testing.T, p fg.FGProgram, msg string, steps int) fg.FGProg
 	}()
 	allowStupid := true
 	for i := 0; i < steps; i++ {
-		p = p.Eval()
+		p, _ = p.Eval()
 		p.Ok(allowStupid)
 	}
 	return p
