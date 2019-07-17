@@ -393,7 +393,7 @@ func Test016b(t *testing.T) {
 func Test017(t *testing.T) {
 	Any := "type Any interface {}"
 	ToAny := "type ToAny struct { any Any }"
-	e := "ToAny{1}"
+	e := "ToAny{1}" // ANTLR "warning token recognition error at: '1'" -- need to escalate to strict
 	parseAndOkBad(t, "Bad token, \"1\"", Any, ToAny, e)
 }
 
@@ -446,7 +446,7 @@ func TestEval005(t *testing.T) {
 	evalAndOkGood(t, prog, 2)
 }
 
-// //TODO:test -eval=-1 -- test is currently added as -eval=0
+// //TODO: test -eval=-1 -- test is currently added as -eval=0
 func TestEval006(t *testing.T) {
 	A := "type A struct {}"
 	e := "A{}"
