@@ -34,8 +34,8 @@ LINE_COMMENT    : '//' ~[\r\n]* -> channel(HIDDEN) ;
 // "plurals", e.g., decls, used for sequences: comes out as "helper" Context..
 // ..nodes that group up actual children underneath -- makes "adapting" easier
 
-typ        : NAME                 # TypeParam
-           | NAME '(' typs? ')'   # TypeName
+typ        : NAME                                   # TypeParam
+           | NAME '(' typs? ')'                     # TypeName
            ;
 typs       : typ (',' typ)*  ;
 typeFormal : TYPE typeForms? ;
