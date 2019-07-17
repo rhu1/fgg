@@ -206,7 +206,7 @@ func (c Call) Eval(ds []Decl) (Expr, string) {
 	for i := 0; i < len(xs); i++ {
 		subs[Variable{xs[i]}] = c.args[i]
 	}
-	return e.Subs(subs), "Call" // N.B. slightly different to R-Call
+	return e.Subs(subs), "Call" // N.B. single combined substitution map slightly different to R-Call
 }
 
 func (c Call) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
