@@ -1,5 +1,5 @@
 //rhu@HZHL4 MINGW64 ~/code/go/src/github.com/rhu1/fgg
-//$ antlr4 -Dlanguage=Go -o parser FG.g4
+//$ antlr4 -Dlanguage=Go -o parser/fg FG.g4
 
 // Cf. https://github.com/antlr/grammars-v4/blob/master/golang/Golang.g4
 // (This grammar is not at all based on that one, mention for ref only)

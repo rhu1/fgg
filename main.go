@@ -18,7 +18,7 @@
 // N.B. GoInstall installs to $CYGHOME/code/go/bin (not $WINHOME)
 
 // Assuming "antlr4" alias for (e.g.): java -jar ~/code/java/lib/antlr-4.7.1-complete.jar
-//go:generate antlr4 -Dlanguage=Go -o parser FG.g4
+//go:generate antlr4 -Dlanguage=Go -o parser/fg FG.g4
 
 package main
 

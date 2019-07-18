@@ -3,10 +3,8 @@ package fgg
 import (
 	"fmt"
 	"reflect"
-
 	//"github.com/antlr/antlr4/runtime/Go/antlr"
-
-	"github.com/rhu1/fgg/parser"
+	//"github.com/rhu1/fgg/parser/fgg"
 )
 
 var _ = fmt.Errorf
