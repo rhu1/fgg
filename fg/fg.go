@@ -92,7 +92,7 @@ type Spec interface {
 
 type Expr interface {
 	FGNode
-	Subs(map[Variable]Expr) Expr
+	Subs(subs map[Variable]Expr) Expr
 
 	// CHECKME: resulting Exprs are not "parsed" from source, OK?
 	// string is the type name of the "actually evaluated" expr (within the eval context)
