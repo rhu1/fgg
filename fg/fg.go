@@ -94,8 +94,8 @@ type Expr interface {
 	FGNode
 	Subs(subs map[Variable]Expr) Expr
 
-	// CHECKME: resulting Exprs are not "parsed" from source, OK?
 	// string is the type name of the "actually evaluated" expr (within the eval context)
+	// CHECKME: resulting Exprs are not "parsed" from source, OK?
 	Eval(ds []Decl) (Expr, string)
 
 	//IsPanic() bool  // TODO "explicit" FG panic -- cf. underlying runtime panic
