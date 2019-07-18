@@ -69,13 +69,33 @@ func (p FGGProgram) String() string {
 	return b.String()
 }
 
+/* Type formals */
+
+// Pre: len(as) == len(us)
+type TFormals struct {
+	as []TParam
+	us []Type
+}
+
+func (psi TFormals) String() string {
+	var b strings.Builder
+	if len(psi.as) > 0 {
+		b.WriteString(psi.as[0].String() + " " + psi.us[0].String())
+		for i := 1; i < len(psi.as); i++ {
+			b.WriteString(", " + psi.as[i].String() + " " + psi.us[i].String())
+		}
+	}
+	return b.String()
+}
+
 /* MDecl, ParamDecl */
 
 type MDecl struct {
 	recv ParamDecl
-	m    Name
+	m    Name // Refactor to embed Sig?
+	psi  TFormals
 	ps   []ParamDecl
-	t    Type
+	u    Type
 	e    Expr
 }
 
@@ -123,7 +143,7 @@ func (m MDecl) String() string {
 		}
 	}
 	b.WriteString(") ")
-	b.WriteString(m.t.String())
+	b.WriteString(m.u.String())
 	b.WriteString(" { return ")
 	b.WriteString(m.e.String())
 	b.WriteString(" }")
@@ -133,19 +153,20 @@ func (m MDecl) String() string {
 // Cf. FieldDecl
 type ParamDecl struct {
 	x Name
-	t Type
+	u Type
 }
 
 var _ FGGNode = ParamDecl{}
 
 func (p ParamDecl) String() string {
-	return p.x + " " + p.t.String()
+	return p.x + " " + p.u.String()
 }
 
 /* STypeLit, FieldDecl */
 
 type STypeLit struct {
 	t   Type
+	psi TFormals
 	fds []FieldDecl
 }
 
@@ -156,7 +177,7 @@ func (s STypeLit) GetType() Type {
 }
 
 func (s STypeLit) GetName() Name {
-	return Name(s.t)
+	return Name(s.t.(TName).t)
 }
 
 func (s STypeLit) String() string {
@@ -179,13 +200,13 @@ func (s STypeLit) String() string {
 
 type FieldDecl struct {
 	f Name
-	t Type
+	u Type
 }
 
 var _ FGGNode = FieldDecl{}
 
 func (fd FieldDecl) String() string {
-	return fd.f + " " + fd.t.String()
+	return fd.f + " " + fd.u.String()
 }
 
 /*/* ITypeLit, Sig * /
@@ -226,6 +247,7 @@ func (r ITypeLit) String() string {
 
 /*type Sig struct {
 	m  Name
+	//TODO: TFormals
 	ps []ParamDecl
 	t  Type
 }

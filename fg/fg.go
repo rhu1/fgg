@@ -2,11 +2,11 @@ package fg
 
 import "reflect"
 
-/* Name, Env, Type */
+/* Name, Context, Type */
 
 type Name = string // Type alias (cf. definition)
 
-type Env map[Name]Type
+type Env map[Name]Type // TODO: should be Variable rather than Name -- though Variable is an Expr
 
 type Type Name // Type definition (cf. alias)
 

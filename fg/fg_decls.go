@@ -70,7 +70,7 @@ func (p FGProgram) String() string {
 
 type MDecl struct {
 	recv ParamDecl
-	m    Name
+	m    Name // Not embedding Sig because Sig doesn't take xs
 	ps   []ParamDecl
 	t    Type
 	e    Expr

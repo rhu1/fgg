@@ -3,24 +3,26 @@ package fgg
 import (
 	"fmt"
 	"reflect"
+
 	//"github.com/antlr/antlr4/runtime/Go/antlr"
-	//"github.com/rhu1/fgg/parser/fgg"
+
+	"github.com/rhu1/fgg/parser/fgg"
 )
 
 var _ = fmt.Errorf
 var _ = reflect.Append
 
 // Convert ANTLR generated CST to an FGNode AST
-type FGAdaptor struct {
-	*parser.BaseFGListener
+type FGGAdaptor struct {
+	*parser.BaseFGGListener
 	stack []FGGNode // Because Listener methods don't return...
 }
 
-func (a *FGAdaptor) push(n FGGNode) {
+func (a *FGGAdaptor) push(n FGGNode) {
 	a.stack = append(a.stack, n)
 }
 
-func (a *FGAdaptor) pop() FGGNode {
+func (a *FGGAdaptor) pop() FGGNode {
 	if len(a.stack) < 1 {
 		panic("Stack is empty")
 	}

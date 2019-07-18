@@ -104,7 +104,7 @@ func eval(p fg.FGProgram, steps int) {
 	for i := 1; i <= steps || !done; i++ {
 		p, rule = p.Eval()
 		vPrintln(fmt.Sprintf("%6d: %8s %v", i, "["+rule+"]", p.GetExpr()))
-		vPrintln("Checking OK:")
+		vPrintln("Checking OK:") // TODO: maybe disable by default, enable by flag
 		p.Ok(allowStupid)
 		if !done && fg.IsValue(p.GetExpr()) {
 			done = true
