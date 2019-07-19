@@ -1,3 +1,4 @@
-parser
+parser/fg
+parser/fgg
 *.swp
 sess.vim
