@@ -11,11 +11,15 @@ type Name = string
 
 type Type interface {
 	//Subs(map[TParam]Type)
-	//Impls()
+	Impls(ds []Decl, delta TEnv, u Type) bool
 	String() string
 }
 
 type TParam Name
+
+func (u0 TParam) Impls(ds []Decl, delta TEnv, u Type) bool {
+	return u0 == u || u0.Impls(ds, delta, bounds(delta, u))
+}
 
 func (a TParam) String() string {
 	return string(a)
@@ -24,6 +28,10 @@ func (a TParam) String() string {
 type TName struct {
 	t    Name
 	typs []TName
+}
+
+func (u0 TName) Impls(ds []Decl, delta TEnv, u Type) bool {
+	return true // TODO FIXME
 }
 
 func (t TName) String() string {
@@ -62,4 +70,8 @@ type TDecl interface {
 
 type Expr interface {
 	FGGNode
+	Subs(subs map[Variable]Expr) Expr
+	Eval(ds []Decl) (Expr, string)
+	// Like gamma, delta is effectively immutable
+	Typing(ds []Decl, delta TEnv, gamma Env, allowStupid bool) Type
 }

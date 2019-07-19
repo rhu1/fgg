@@ -205,6 +205,10 @@ type FieldDecl struct {
 
 var _ FGGNode = FieldDecl{}
 
+func (fd FieldDecl) Subs(subs map[TParam]Type) FieldDecl {
+	return fd // FIXME TODO
+}
+
 func (fd FieldDecl) String() string {
 	return fd.f + " " + fd.u.String()
 }
