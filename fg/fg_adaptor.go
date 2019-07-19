@@ -87,9 +87,9 @@ func (a *FGAdaptor) ExitTypeDecl(ctx *parser.TypeDeclContext) {
 func (a *FGAdaptor) ExitMethDecl(ctx *parser.MethDeclContext) {
 	// Reverse order
 	e := a.pop().(Expr)
-	sig := a.pop().(Sig)
+	g := a.pop().(Sig)
 	recv := a.pop().(ParamDecl)
-	a.push(MDecl{recv, sig.m, sig.ps, sig.t, e})
+	a.push(MDecl{recv, g.m, g.ps, g.t, e})
 }
 
 // Cf. ExitFieldDecl

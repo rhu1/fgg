@@ -66,6 +66,52 @@ func (p FGProgram) String() string {
 	return b.String()
 }
 
+/* STypeLit, FieldDecl */
+
+type STypeLit struct {
+	t   Type
+	fds []FieldDecl
+}
+
+var _ TDecl = STypeLit{}
+
+func (s STypeLit) GetType() Type {
+	return s.t
+}
+
+func (s STypeLit) GetName() Name {
+	return Name(s.t)
+}
+
+func (s STypeLit) String() string {
+	var b strings.Builder
+	b.WriteString("type ")
+	b.WriteString(s.t.String())
+	b.WriteString(" struct {")
+	if len(s.fds) > 0 {
+		b.WriteString(" ")
+		b.WriteString(s.fds[0].String())
+		for _, v := range s.fds[1:] {
+			b.WriteString("; ")
+			b.WriteString(v.String())
+		}
+		b.WriteString(" ")
+	}
+	b.WriteString("}")
+	return b.String()
+}
+
+type FieldDecl struct {
+	f Name
+	t Type
+}
+
+var _ FGNode = FieldDecl{}
+
+func (fd FieldDecl) String() string {
+	return fd.f + " " + fd.t.String()
+}
+
 /* MDecl, ParamDecl */
 
 type MDecl struct {
@@ -138,52 +184,6 @@ func (p ParamDecl) String() string {
 	return p.x + " " + p.t.String()
 }
 
-/* STypeLit, FieldDecl */
-
-type STypeLit struct {
-	t   Type
-	fds []FieldDecl
-}
-
-var _ TDecl = STypeLit{}
-
-func (s STypeLit) GetType() Type {
-	return s.t
-}
-
-func (s STypeLit) GetName() Name {
-	return Name(s.t)
-}
-
-func (s STypeLit) String() string {
-	var b strings.Builder
-	b.WriteString("type ")
-	b.WriteString(s.t.String())
-	b.WriteString(" struct {")
-	if len(s.fds) > 0 {
-		b.WriteString(" ")
-		b.WriteString(s.fds[0].String())
-		for _, v := range s.fds[1:] {
-			b.WriteString("; ")
-			b.WriteString(v.String())
-		}
-		b.WriteString(" ")
-	}
-	b.WriteString("}")
-	return b.String()
-}
-
-type FieldDecl struct {
-	f Name
-	t Type
-}
-
-var _ FGNode = FieldDecl{}
-
-func (fd FieldDecl) String() string {
-	return fd.f + " " + fd.t.String()
-}
-
 /* ITypeLit, Sig */
 
 type ITypeLit struct {
@@ -193,23 +193,23 @@ type ITypeLit struct {
 
 var _ TDecl = ITypeLit{}
 
-func (r ITypeLit) GetType() Type {
-	return r.t
+func (c ITypeLit) GetType() Type {
+	return c.t
 }
 
-func (r ITypeLit) GetName() Name {
-	return Name(r.t)
+func (c ITypeLit) GetName() Name {
+	return Name(c.t)
 }
 
-func (r ITypeLit) String() string {
+func (c ITypeLit) String() string {
 	var b strings.Builder
 	b.WriteString("type ")
-	b.WriteString(r.t.String())
+	b.WriteString(c.t.String())
 	b.WriteString(" interface {")
-	if len(r.ss) > 0 {
+	if len(c.ss) > 0 {
 		b.WriteString(" ")
-		b.WriteString(r.ss[0].String())
-		for _, v := range r.ss[1:] {
+		b.WriteString(c.ss[0].String())
+		for _, v := range c.ss[1:] {
 			b.WriteString("; ")
 			b.WriteString(v.String())
 		}
@@ -228,34 +228,34 @@ type Sig struct {
 var _ Spec = Sig{}
 
 // !!! Sig in FG (also, Go spec) includes ~x, which breaks "impls"
-func (s0 Sig) EqExceptVars(s Sig) bool {
-	if len(s0.ps) != len(s.ps) {
+func (g0 Sig) EqExceptVars(g Sig) bool {
+	if len(g0.ps) != len(g.ps) {
 		return false
 	}
-	for i := 0; i < len(s0.ps); i++ {
-		if s0.ps[i].t != s.ps[i].t {
+	for i := 0; i < len(g0.ps); i++ {
+		if g0.ps[i].t != g.ps[i].t {
 			return false
 		}
 	}
-	return s0.m == s.m && s0.t == s.t
+	return g0.m == g.m && g0.t == g.t
 }
 
-func (s Sig) GetSigs(_ []Decl) []Sig {
-	return []Sig{s}
+func (g Sig) GetSigs(_ []Decl) []Sig {
+	return []Sig{g}
 }
 
-func (s Sig) String() string {
+func (g Sig) String() string {
 	var b strings.Builder
-	b.WriteString(s.m)
+	b.WriteString(g.m)
 	b.WriteString("(")
-	if len(s.ps) > 0 {
-		b.WriteString(s.ps[0].String())
-		for _, v := range s.ps[1:] {
+	if len(g.ps) > 0 {
+		b.WriteString(g.ps[0].String())
+		for _, v := range g.ps[1:] {
 			b.WriteString(", ")
 			b.WriteString(v.String())
 		}
 	}
 	b.WriteString(") ")
-	b.WriteString(s.t.String())
+	b.WriteString(g.t.String())
 	return b.String()
 }

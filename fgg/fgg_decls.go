@@ -79,6 +79,7 @@ type TFormals struct {
 
 func (psi TFormals) String() string {
 	var b strings.Builder
+	b.WriteString("type ")
 	if len(psi.as) > 0 {
 		b.WriteString(psi.as[0].String() + " " + psi.us[0].String())
 		for i := 1; i < len(psi.as); i++ {
@@ -86,6 +87,57 @@ func (psi TFormals) String() string {
 		}
 	}
 	return b.String()
+}
+
+/* STypeLit, FieldDecl */
+
+type STypeLit struct {
+	t   Name
+	psi TFormals
+	fds []FieldDecl
+}
+
+var _ TDecl = STypeLit{}
+
+/*func (s STypeLit) GetType() Type {
+	return s.t
+}*/
+
+func (s STypeLit) GetName() Name {
+	return s.t
+}
+
+func (s STypeLit) String() string {
+	var b strings.Builder
+	b.WriteString("type ")
+	b.WriteString(string(s.t))
+	b.WriteString(" struct {")
+	if len(s.fds) > 0 {
+		b.WriteString(" ")
+		b.WriteString(s.fds[0].String())
+		for _, v := range s.fds[1:] {
+			b.WriteString("; ")
+			b.WriteString(v.String())
+		}
+		b.WriteString(" ")
+	}
+	b.WriteString("}")
+	return b.String()
+}
+
+type FieldDecl struct {
+	f Name
+	u Type
+}
+
+var _ FGGNode = FieldDecl{}
+
+func (fd FieldDecl) Subs(subs map[TParam]Type) FieldDecl {
+	return fd // FIXME TODO
+}
+
+func (fd FieldDecl) String() string {
+	return fd.f + " " + fd.u.String()
 }
 
 /* MDecl, ParamDecl */
@@ -160,57 +212,6 @@ var _ FGGNode = ParamDecl{}
 
 func (p ParamDecl) String() string {
 	return p.x + " " + p.u.String()
-}
-
-/* STypeLit, FieldDecl */
-
-type STypeLit struct {
-	t   Type
-	psi TFormals
-	fds []FieldDecl
-}
-
-var _ TDecl = STypeLit{}
-
-func (s STypeLit) GetType() Type {
-	return s.t
-}
-
-func (s STypeLit) GetName() Name {
-	return Name(s.t.(TName).t)
-}
-
-func (s STypeLit) String() string {
-	var b strings.Builder
-	b.WriteString("type ")
-	b.WriteString(s.t.String())
-	b.WriteString(" struct {")
-	if len(s.fds) > 0 {
-		b.WriteString(" ")
-		b.WriteString(s.fds[0].String())
-		for _, v := range s.fds[1:] {
-			b.WriteString("; ")
-			b.WriteString(v.String())
-		}
-		b.WriteString(" ")
-	}
-	b.WriteString("}")
-	return b.String()
-}
-
-type FieldDecl struct {
-	f Name
-	u Type
-}
-
-var _ FGGNode = FieldDecl{}
-
-func (fd FieldDecl) Subs(subs map[TParam]Type) FieldDecl {
-	return fd // FIXME TODO
-}
-
-func (fd FieldDecl) String() string {
-	return fd.f + " " + fd.u.String()
 }
 
 /*/* ITypeLit, Sig * /

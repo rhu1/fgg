@@ -13,20 +13,27 @@ func bounds(delta TEnv, u Type) Type {
 	return u
 }
 
-// Pre: u_S is a TName
-func fields(ds []Decl, u_S Type) []FieldDecl {
-	for _, v := range ds {
-		s, ok := v.(STypeLit)
-		if ok && s.t == u_S {
-			subs := make(map[TParam]Type) // TODO FIXME: use s.psi to do subs
-			fds := make([]FieldDecl, len(s.fds))
-			for i := 0; i < len(s.fds); i++ {
-				fds[i] = s.fds[i].Subs(subs)
-			}
-			return fds
-		}
+/*func SCheckErr(msg string) {
+	if e != nil {
+		panic(msg)
 	}
-	panic("Not a struct type: " + u_S.String())
+}*/
+
+// Pre: len(s.psi.as) == len (u_S.typs), where s is the STypeLit decl for u_S.t
+func fields(ds []Decl, u_S TName) []FieldDecl {
+	s, ok := getTDecl(ds, u_S.t).(STypeLit)
+	if !ok {
+		panic("Not a struct type: " + u_S.String())
+	}
+	subs := make(map[TParam]Type) // TODO FIXME: use s.psi to do subs
+	for i := 0; i < len(s.psi.as); i++ {
+		subs[s.psi.as[i]] = u_S.typs[i]
+	}
+	fds := make([]FieldDecl, len(s.fds))
+	for i := 0; i < len(s.fds); i++ {
+		fds[i] = s.fds[i].Subs(subs)
+	}
+	return fds
 }
 
 /*
@@ -76,14 +83,14 @@ func typ(ds []Decl, s StructLit) Type {
 	}
 	return t_S
 }
+*/
 
-func getTDecl(ds []Decl, t Type) TDecl {
+func getTDecl(ds []Decl, t Name) TDecl {
 	for _, v := range ds {
 		td, ok := v.(TDecl)
-		if ok && td.GetType() == t {
+		if ok && td.GetName() == t {
 			return td
 		}
 	}
 	panic("Type not found: " + t)
 }
-*/

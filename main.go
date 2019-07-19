@@ -123,6 +123,7 @@ func makeInternalSrc() string {
 
 /* Helpers */
 
+// ECheckErr
 func checkErr(e error) {
 	if e != nil {
 		panic(e)

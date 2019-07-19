@@ -211,17 +211,17 @@ func (c Call) Eval(ds []Decl) (Expr, string) {
 
 func (c Call) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
 	t0 := c.e.Typing(ds, gamma, allowStupid)
-	var s Sig
+	var g Sig
 	if tmp, ok := methods(ds, t0)[c.m]; !ok { // !!! submission version had "methods(m)"
 		panic("Method not found: " + c.m + " in " + t0.String())
 	} else {
-		s = tmp
+		g = tmp
 	}
-	if len(c.args) != len(s.ps) {
+	if len(c.args) != len(g.ps) {
 		tmp := "" // TODO: factor out with StructLit.Typing
-		if len(s.ps) > 0 {
-			tmp = s.ps[0].String()
-			for _, v := range s.ps[1:] {
+		if len(g.ps) > 0 {
+			tmp = g.ps[0].String()
+			for _, v := range g.ps[1:] {
 				tmp = tmp + ", " + v.String()
 			}
 		}
@@ -231,12 +231,12 @@ func (c Call) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
 	}
 	for i := 0; i < len(c.args); i++ {
 		t := c.args[i].Typing(ds, gamma, allowStupid)
-		if !t.Impls(ds, s.ps[i].t) {
+		if !t.Impls(ds, g.ps[i].t) {
 			panic("Arg expr type must implement param type: arg=" + t + ", param=" +
-				s.ps[i].t)
+				g.ps[i].t)
 		}
 	}
-	return s.t
+	return g.t
 }
 
 func (c Call) String() string {

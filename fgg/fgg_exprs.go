@@ -46,7 +46,7 @@ func (v Variable) String() string {
 /* StructLit */
 
 type StructLit struct {
-	t  Type // u is a TName, and u.(TName).t is a t_S
+	u  Type // u is a TName, and u.(TName).t is a t_S
 	es []Expr
 }
 
@@ -57,7 +57,7 @@ func (s StructLit) Subs(m map[Variable]Expr) Expr {
 	for i := 0; i < len(s.es); i++ {
 		es[i] = s.es[i].Subs(m)
 	}
-	return StructLit{s.t, es}
+	return StructLit{s.u, es}
 }
 
 func (s StructLit) Eval(ds []Decl) (Expr, string) {
@@ -73,14 +73,15 @@ func (s StructLit) Eval(ds []Decl) (Expr, string) {
 		es[i] = v
 	}
 	if done {
-		return StructLit{s.t, es}, rule
+		return StructLit{s.u, es}, rule
 	} else {
 		panic("Cannot reduce: " + s.String())
 	}
 }
 
-func (s StructLit) Typing(ds []Decl, delta TEnv, gamma Env, allowStupid bool) Type {
-	fs := fields(ds, s.t)
+func (s StructLit) Typing(ds []Decl, delta TEnv, gamma Env,
+	allowStupid bool) Type {
+	fs := fields(ds, s.u.(TName))
 	if len(s.es) != len(fs) {
 		tmp := ""
 		if len(fs) > 0 {
@@ -101,12 +102,12 @@ func (s StructLit) Typing(ds []Decl, delta TEnv, gamma Env, allowStupid bool) Ty
 				r.String() + "\n\t" + s.String())
 		}
 	}
-	return s.t
+	return s.u
 }
 
 func (s StructLit) String() string {
 	var b strings.Builder
-	b.WriteString(s.t.String())
+	b.WriteString(s.u.String())
 	b.WriteString("{")
 	//b.WriteString(strings.Trim(strings.Join(strings.Split(fmt.Sprint(s.es), " "), ", "), "[]"))
 	// ^ No: broken for nested structs

@@ -88,6 +88,8 @@ func evalAndOkBad(t *testing.T, p fg.FGProgram, msg string, steps int) fg.FGProg
 
 /* Syntax and typing */
 
+// TOOD: make translation to FGG and compare results to -fgg
+
 func Test001(t *testing.T) {
 	A := "type A struct {}"
 	Am1 := "func (x0 A) m1() A { return x0 }"
@@ -400,6 +402,7 @@ func Test017(t *testing.T) {
 /* Eval */
 
 // TODO: put these tests through actual Go and compare the results
+// TOOD: and make translation to FGG and compare results to -fgg
 
 func TestEval001(t *testing.T) {
 	A := "type A struct {}"

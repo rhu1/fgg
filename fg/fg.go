@@ -19,11 +19,11 @@ func (t0 Type) Impls(ds []Decl, t Type) bool {
 		return isStructType(ds, t0) && t0 == t
 	}
 
-	ss := methods(ds, t)   // t is a t_I
-	ss0 := methods(ds, t0) // t0 may be any
-	for k, s := range ss {
-		s0, ok := ss0[k]
-		if !ok || !s.EqExceptVars(s0) {
+	gs := methods(ds, t)   // t is a t_I
+	gs0 := methods(ds, t0) // t0 may be any
+	for k, g := range gs {
+		g0, ok := gs0[k]
+		if !ok || !g.EqExceptVars(g0) {
 			return false
 		}
 	}

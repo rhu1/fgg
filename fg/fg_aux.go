@@ -8,20 +8,18 @@ var _ = fmt.Errorf
 
 // Pre: t_S is a struct type
 func fields(ds []Decl, t_S Type) []FieldDecl {
-	for _, v := range ds {
-		s, ok := v.(STypeLit)
-		if ok && s.t == t_S {
-			return s.fds
-		}
+	s, ok := getTDecl(ds, t_S).(STypeLit)
+	if !ok {
+		panic("Not a struct type: " + t_S.String())
 	}
-	panic("Not a struct type: " + t_S.String())
+	return s.fds
 }
 
 // Go has no overloading, meth names are a unique key
 func methods(ds []Decl, t Type) map[Name]Sig {
 	res := make(map[Name]Sig)
 	if isStructType(ds, t) {
-		for _, v := range ds {
+		for _, v := range ds { // Factor out getMDecl?
 			md, ok := v.(MDecl)
 			if ok && md.recv.t == t {
 				res[md.m] = md.ToSig()
