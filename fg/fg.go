@@ -48,26 +48,6 @@ func (t Type) String() string {
 	return string(t)
 }
 
-func isStructType(ds []Decl, t Type) bool {
-	for _, v := range ds {
-		d, ok := v.(STypeLit)
-		if ok && d.t == t {
-			return true
-		}
-	}
-	return false
-}
-
-func isInterfaceType(ds []Decl, t Type) bool {
-	for _, v := range ds {
-		d, ok := v.(ITypeLit)
-		if ok && d.t == t {
-			return true
-		}
-	}
-	return false
-}
-
 /* AST base intefaces: FGNode, Decl, TDecl, Spec, Expr */
 
 // Base interface for all AST nodes
@@ -103,4 +83,26 @@ type Expr interface {
 	// N.B. gamma should be effectively immutable (and ds, of course)
 	// (No typing rule modifies gamma, except the T-Func bootstrap)
 	Typing(ds []Decl, gamma Env, allowStupid bool) Type
+}
+
+/* Helpers */
+
+func isStructType(ds []Decl, t Type) bool {
+	for _, v := range ds {
+		d, ok := v.(STypeLit)
+		if ok && d.t == t {
+			return true
+		}
+	}
+	return false
+}
+
+func isInterfaceType(ds []Decl, t Type) bool {
+	for _, v := range ds {
+		d, ok := v.(ITypeLit)
+		if ok && d.t == t {
+			return true
+		}
+	}
+	return false
 }

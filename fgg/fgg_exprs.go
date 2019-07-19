@@ -19,34 +19,35 @@ type Variable struct {
 
 var _ Expr = Variable{}
 
-func (v Variable) Subs(m map[Variable]Expr) Expr {
-	res, ok := m[v]
+func (x Variable) Subs(m map[Variable]Expr) Expr {
+	res, ok := m[x]
 	if !ok {
-		panic("Unknown var: " + v.String())
+		panic("Unknown var: " + x.String())
 	}
 	return res
 }
 
-func (v Variable) Eval(ds []Decl) (Expr, string) {
-	panic("Cannot evaluate free variable: " + v.id)
+func (x Variable) Eval(ds []Decl) (Expr, string) {
+	panic("Cannot evaluate free variable: " + x.id)
 }
 
-func (v Variable) Typing(ds []Decl, delta TEnv, gamma Env, allowStupid bool) Type {
-	res, ok := gamma[v]
+func (x Variable) Typing(ds []Decl, delta TEnv, gamma Env,
+	allowStupid bool) Type {
+	res, ok := gamma[x]
 	if !ok {
-		panic("Var not in env: " + v.String())
+		panic("Var not in env: " + x.String())
 	}
 	return res
 }
 
-func (v Variable) String() string {
-	return v.id
+func (x Variable) String() string {
+	return x.id
 }
 
 /* StructLit */
 
 type StructLit struct {
-	u  Type // u is a TName, and u.(TName).t is a t_S
+	u  Type // FIXME: u is a TName (where u.(TName).t is a t_S)
 	es []Expr
 }
 
@@ -83,23 +84,21 @@ func (s StructLit) Typing(ds []Decl, delta TEnv, gamma Env,
 	allowStupid bool) Type {
 	fs := fields(ds, s.u.(TName))
 	if len(s.es) != len(fs) {
-		tmp := ""
-		if len(fs) > 0 {
-			tmp = fs[0].String()
-			for _, v := range fs[1:] {
-				tmp = tmp + ", " + v.String()
-			}
-		}
-		panic("Arity mismatch: args=" +
-			strings.Join(strings.Split(fmt.Sprint(s.es), " "), ", ") +
-			", fields=[" + tmp + "]" + "\n\t" + s.String())
+		var b strings.Builder
+		b.WriteString("Arity mismatch: args=[")
+		writeExprs(&b, s.es)
+		b.WriteString("], fields=[")
+		writeFieldDecls(&b, fs)
+		b.WriteString("]\n\t")
+		b.WriteString(s.String())
+		panic(b.String())
 	}
 	for i := 0; i < len(s.es); i++ {
 		u := s.es[i].Typing(ds, delta, gamma, allowStupid)
 		r := fs[i].u
 		if !u.Impls(ds, delta, r) {
-			panic("Arg expr must impl field type: arg=" + u.String() + ", field=" +
-				r.String() + "\n\t" + s.String())
+			panic("Arg expr must implement field type: arg=" + u.String() +
+				", field=" + r.String() + "\n\t" + s.String())
 		}
 	}
 	return s.u
@@ -109,20 +108,12 @@ func (s StructLit) String() string {
 	var b strings.Builder
 	b.WriteString(s.u.String())
 	b.WriteString("{")
-	//b.WriteString(strings.Trim(strings.Join(strings.Split(fmt.Sprint(s.es), " "), ", "), "[]"))
-	// ^ No: broken for nested structs
-	if len(s.es) > 0 {
-		b.WriteString(s.es[0].String())
-		for _, v := range s.es[1:] {
-			b.WriteString(", ")
-			b.WriteString(v.String())
-		}
-	}
+	writeExprs(&b, s.es)
 	b.WriteString("}")
 	return b.String()
 }
 
-/* Helper */
+/* Aux, helpers */
 
 // Cf. checkErr
 func IsValue(e Expr) bool {
@@ -135,4 +126,13 @@ func IsValue(e Expr) bool {
 		return true
 	}
 	return false
+}
+
+func writeExprs(b *strings.Builder, es []Expr) {
+	if len(es) > 0 {
+		b.WriteString(es[0].String())
+		for _, v := range es[1:] {
+			b.WriteString(", " + v.String())
+		}
+	}
 }

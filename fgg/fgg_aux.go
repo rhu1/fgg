@@ -8,9 +8,11 @@ var _ = fmt.Errorf
 
 func bounds(delta TEnv, u Type) Type {
 	if a, ok := u.(TParam); ok {
-		return delta[a]
+		if res, ok := delta[a]; ok {
+			return res
+		}
 	}
-	return u
+	return u // CHECKME: includes when TParam 'a' not in delta, correct?
 }
 
 /*func SCheckErr(msg string) {
@@ -26,8 +28,8 @@ func fields(ds []Decl, u_S TName) []FieldDecl {
 		panic("Not a struct type: " + u_S.String())
 	}
 	subs := make(map[TParam]Type) // TODO FIXME: use s.psi to do subs
-	for i := 0; i < len(s.psi.as); i++ {
-		subs[s.psi.as[i]] = u_S.typs[i]
+	for i := 0; i < len(s.psi.tfs); i++ {
+		subs[s.psi.tfs[i].a] = u_S.us[i]
 	}
 	fds := make([]FieldDecl, len(s.fds))
 	for i := 0; i < len(s.fds); i++ {
@@ -36,30 +38,39 @@ func fields(ds []Decl, u_S TName) []FieldDecl {
 	return fds
 }
 
-/*
 // Go has no overloading, meth names are a unique key
-func methods(ds []Decl, t Type) map[Name]Sig {
+func methods(ds []Decl, u Type) map[Name]Sig {
 	res := make(map[Name]Sig)
-	if isStructType(ds, t) {
+	if isStructType(ds, u) {
 		for _, v := range ds {
 			md, ok := v.(MDecl)
-			if ok && md.recv.t == t {
-				res[md.m] = md.ToSig()
+			if ok && isStructType(ds, TName{md.t_recv, []Type{}}) { // FIXME HACK: TName
+				//sd := md.recv.u.(TName)
+				u1 := u.(TName)
+				if md.t_recv == u1.t {
+					subs := make(map[TParam]Type)
+					for i := 0; i < len(md.psi_recv.tfs); i++ {
+						subs[md.psi_recv.tfs[i].a] = u1.us[i]
+					}
+					res[md.m] = md.ToSig().Subs(subs)
+				}
 			}
 		}
-	} else if isInterfaceType(ds, t) {
-		td := getTDecl(ds, t).(ITypeLit)
+	} else if isInterfaceType(ds, u) {
+		/*td := getTDecl(ds, t).(ITypeLit)
 		for _, s := range td.ss {
 			for _, v := range s.GetSigs(ds) {
 				res[v.m] = v
 			}
-		}
+		}*/
+		panic("[TODO]: ")
 	} else { // Perhaps redundant if all TDecl OK checked first
-		panic("Unknown type: " + t.String())
+		panic("Unknown type: " + u.String())
 	}
 	return res
 }
 
+/*
 // Pre: t_S is a struct type
 func body(ds []Decl, t_S Type, m Name) (Name, []Name, Expr) {
 	for _, v := range ds {

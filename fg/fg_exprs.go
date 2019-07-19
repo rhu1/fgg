@@ -5,7 +5,6 @@
 
 package fg
 
-import "fmt"
 import "strings"
 
 /* Variable */
@@ -16,28 +15,28 @@ type Variable struct {
 
 var _ Expr = Variable{}
 
-func (v Variable) Subs(m map[Variable]Expr) Expr {
-	res, ok := m[v]
+func (x Variable) Subs(subs map[Variable]Expr) Expr {
+	res, ok := subs[x]
 	if !ok {
-		panic("Unknown var: " + v.String())
+		panic("Unknown var: " + x.String())
 	}
 	return res
 }
 
-func (v Variable) Eval(ds []Decl) (Expr, string) {
-	panic("Cannot evaluate free variable: " + v.id)
+func (x Variable) Eval(ds []Decl) (Expr, string) {
+	panic("Cannot evaluate free variable: " + x.id)
 }
 
-func (v Variable) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
-	res, ok := gamma[v.id]
+func (x Variable) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
+	res, ok := gamma[x.id]
 	if !ok {
-		panic("Var not in env: " + v.String())
+		panic("Var not in env: " + x.String())
 	}
 	return res
 }
 
-func (v Variable) String() string {
-	return v.id
+func (x Variable) String() string {
+	return x.id
 }
 
 /* StructLit */
@@ -49,10 +48,10 @@ type StructLit struct {
 
 var _ Expr = StructLit{}
 
-func (s StructLit) Subs(m map[Variable]Expr) Expr {
+func (s StructLit) Subs(subs map[Variable]Expr) Expr {
 	es := make([]Expr, len(s.es))
 	for i := 0; i < len(s.es); i++ {
-		es[i] = s.es[i].Subs(m)
+		es[i] = s.es[i].Subs(subs)
 	}
 	return StructLit{s.t, es}
 }
@@ -79,23 +78,21 @@ func (s StructLit) Eval(ds []Decl) (Expr, string) {
 func (s StructLit) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
 	fs := fields(ds, s.t)
 	if len(s.es) != len(fs) {
-		tmp := ""
-		if len(fs) > 0 {
-			tmp = fs[0].String()
-			for _, v := range fs[1:] {
-				tmp = tmp + ", " + v.String()
-			}
-		}
-		panic("Arity mismatch: args=" +
-			strings.Join(strings.Split(fmt.Sprint(s.es), " "), ", ") +
-			", fields=[" + tmp + "]" + "\n\t" + s.String())
+		var b strings.Builder
+		b.WriteString("Arity mismatch: args=[")
+		writeExprs(&b, s.es)
+		b.WriteString("], fields=[")
+		writeFieldDecls(&b, fs)
+		b.WriteString("]\n\t")
+		b.WriteString(s.String())
+		panic(b.String())
 	}
 	for i := 0; i < len(s.es); i++ {
 		t := s.es[i].Typing(ds, gamma, allowStupid)
 		u := fs[i].t
 		if !t.Impls(ds, u) {
-			panic("Arg expr must impl field type: arg=" + t.String() + ", field=" +
-				u.String() + "\n\t" + s.String())
+			panic("Arg expr must implement field type: arg=" + t.String() +
+				", field=" + u.String() + "\n\t" + s.String())
 		}
 	}
 	return s.t
@@ -107,13 +104,7 @@ func (s StructLit) String() string {
 	b.WriteString("{")
 	//b.WriteString(strings.Trim(strings.Join(strings.Split(fmt.Sprint(s.es), " "), ", "), "[]"))
 	// ^ No: broken for nested structs
-	if len(s.es) > 0 {
-		b.WriteString(s.es[0].String())
-		for _, v := range s.es[1:] {
-			b.WriteString(", ")
-			b.WriteString(v.String())
-		}
-	}
+	writeExprs(&b, s.es)
 	b.WriteString("}")
 	return b.String()
 }
@@ -125,8 +116,8 @@ type Select struct {
 	f Name
 }
 
-func (s Select) Subs(m map[Variable]Expr) Expr {
-	return Select{s.e.Subs(m), s.f}
+func (s Select) Subs(subs map[Variable]Expr) Expr {
+	return Select{s.e.Subs(subs), s.f}
 }
 
 func (s Select) Eval(ds []Decl) (Expr, string) {
@@ -170,11 +161,11 @@ type Call struct {
 	args []Expr
 }
 
-func (c Call) Subs(m map[Variable]Expr) Expr {
-	e := c.e.Subs(m)
+func (c Call) Subs(subs map[Variable]Expr) Expr {
+	e := c.e.Subs(subs)
 	args := make([]Expr, len(c.args))
 	for i := 0; i < len(c.args); i++ {
-		args[i] = c.args[i].Subs(m)
+		args[i] = c.args[i].Subs(subs)
 	}
 	return Call{e, c.m, args}
 }
@@ -217,23 +208,20 @@ func (c Call) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
 	} else {
 		g = tmp
 	}
-	if len(c.args) != len(g.ps) {
-		tmp := "" // TODO: factor out with StructLit.Typing
-		if len(g.ps) > 0 {
-			tmp = g.ps[0].String()
-			for _, v := range g.ps[1:] {
-				tmp = tmp + ", " + v.String()
-			}
-		}
-		panic("Arity mismatch: args=" +
-			strings.Join(strings.Split(fmt.Sprint(c.args), " "), ", ") + ", params=" +
-			"[" + tmp + "]")
+	if len(c.args) != len(g.pds) {
+		var b strings.Builder
+		b.WriteString("Arity mismatch: args=[")
+		writeExprs(&b, c.args)
+		b.WriteString("], params=[")
+		writeParamDecls(&b, g.pds)
+		b.WriteString("]")
+		panic(b.String())
 	}
 	for i := 0; i < len(c.args); i++ {
 		t := c.args[i].Typing(ds, gamma, allowStupid)
-		if !t.Impls(ds, g.ps[i].t) {
+		if !t.Impls(ds, g.pds[i].t) {
 			panic("Arg expr type must implement param type: arg=" + t + ", param=" +
-				g.ps[i].t)
+				g.pds[i].t)
 		}
 	}
 	return g.t
@@ -245,13 +233,7 @@ func (c Call) String() string {
 	b.WriteString(".")
 	b.WriteString(c.m)
 	b.WriteString("(")
-	if len(c.args) > 0 {
-		b.WriteString(c.args[0].String())
-		for _, v := range c.args[1:] {
-			b.WriteString(", ")
-			b.WriteString(v.String())
-		}
-	}
+	writeExprs(&b, c.args)
 	b.WriteString(")")
 	return b.String()
 }
@@ -263,8 +245,8 @@ type Assert struct {
 	t Type
 }
 
-func (a Assert) Subs(m map[Variable]Expr) Expr {
-	return Assert{a.e.Subs(m), a.t}
+func (a Assert) Subs(subs map[Variable]Expr) Expr {
+	return Assert{a.e.Subs(subs), a.t}
 }
 
 func (a Assert) Eval(ds []Decl) (Expr, string) {
@@ -305,7 +287,7 @@ func (a Assert) String() string {
 	return a.e.String() + ".(" + a.t.String() + ")"
 }
 
-/* Helper */
+/* Aux, helpers */
 
 // Cf. checkErr
 func IsValue(e Expr) bool {
@@ -318,4 +300,14 @@ func IsValue(e Expr) bool {
 		return true
 	}
 	return false
+}
+
+func writeExprs(b *strings.Builder, es []Expr) {
+	if len(es) > 0 {
+		b.WriteString(es[0].String())
+		for _, v := range es[1:] {
+			b.WriteString(", ")
+			b.WriteString(v.String())
+		}
+	}
 }

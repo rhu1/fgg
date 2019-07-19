@@ -34,34 +34,34 @@ LINE_COMMENT    : '//' ~[\r\n]* -> channel(HIDDEN) ;
 // "plurals", e.g., decls, used for sequences: comes out as "helper" Context..
 // ..nodes that group up actual children underneath -- makes "adapting" easier
 
-typ        : NAME                                   # TypeParam
-           | NAME '(' typs? ')'                     # TypeName
-           ;
-typs       : typ (',' typ)*  ;
-typeFormal : TYPE typeForms? ;
-typeForms  : typeForm (',' typeForm)* ;
-typeForm   : NAME typ ;
-
-program    : PACKAGE MAIN ';' decls? FUNC MAIN '(' ')' '{' '_' '=' expr '}' EOF ;
-decls      : ((typeDecl | methDecl) ';')+ ;
-typeDecl   : TYPE NAME typeLit ;  // TODO: tag id=NAME, better for adapting (vs., index constants)
-methDecl   : FUNC '(' paramDecl ')' sig '{' RETURN expr '}' ;
-typeLit    : STRUCT '{' fieldDecls? '}'             # StructTypeLit
-           | INTERFACE '{' specs? '}'               # InterfaceTypeLit ;
-fieldDecls : fieldDecl (';' fieldDecl)* ;
-fieldDecl  : field=NAME typ ;
-specs      : spec (';' spec)* ;
-spec       : sig                                    # SigSpec
-           | typ                                    # InterfaceSpec
-           ;
-sig        : meth=NAME '(' params? ')' ret=typ ;  // TODO: meth-tparams
-params     : paramDecl (',' paramDecl)* ;
-paramDecl  : vari=NAME typ ;
-expr       : NAME                                   # Variable
-           | typ '{' exprs? '}'                     # StructLit
-           | expr '.' NAME                          # Select
-           | recv=expr '.' NAME '(' args=exprs? ')' # Call  // TODO: meth-targs
-           | expr '.' '(' typ ')'                   # Assert
-           ;
-exprs      : expr (',' expr)* ;
+typ         : NAME                                   # TypeParam
+            | NAME '(' typs? ')'                     # TypeName
+            ;
+typs        : typ (',' typ)*  ;
+typeFormals : TYPE typeFDecls? ;
+typeFDecls  : typeFDecl (',' typeFDecl)* ;
+typeFDecl   : NAME typ ;  // CHECKME: #TypeName ?
+program     : PACKAGE MAIN ';' decls? FUNC MAIN '(' ')' '{' '_' '=' expr '}' EOF
+            ;
+decls       : ((typeDecl | methDecl) ';')+ ;
+typeDecl    : TYPE NAME typeFormals typeLit ;  // TODO: tag id=NAME, better for adapting (vs., index constants)
+methDecl    : FUNC '(' paramDecl ')' sig '{' RETURN expr '}' ;
+typeLit     : STRUCT '{' fieldDecls? '}'             # StructTypeLit
+            | INTERFACE '{' specs? '}'               # InterfaceTypeLit ;
+fieldDecls  : fieldDecl (';' fieldDecl)* ;
+fieldDecl   : field=NAME typ ;
+specs       : spec (';' spec)* ;
+spec        : sig                                    # SigSpec
+            | typ                                    # InterfaceSpec
+            ;
+sig         : meth=NAME '(' params? ')' ret=typ ;  // TODO: meth-tparams
+params      : paramDecl (',' paramDecl)* ;
+paramDecl   : vari=NAME typ ;
+expr        : NAME                                   # Variable
+            | typ '{' exprs? '}'                     # StructLit  // typ is #TypeName, \tau_S
+            | expr '.' NAME                          # Select
+            | recv=expr '.' NAME '(' args=exprs? ')' # Call  // TODO: meth-targs
+            | expr '.' '(' typ ')'                   # Assert
+            ;
+exprs       : expr (',' expr)* ;
 

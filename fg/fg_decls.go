@@ -90,11 +90,7 @@ func (s STypeLit) String() string {
 	b.WriteString(" struct {")
 	if len(s.fds) > 0 {
 		b.WriteString(" ")
-		b.WriteString(s.fds[0].String())
-		for _, v := range s.fds[1:] {
-			b.WriteString("; ")
-			b.WriteString(v.String())
-		}
+		writeFieldDecls(&b, s.fds)
 		b.WriteString(" ")
 	}
 	b.WriteString("}")
@@ -117,57 +113,51 @@ func (fd FieldDecl) String() string {
 type MDecl struct {
 	recv ParamDecl
 	m    Name // Not embedding Sig because Sig doesn't take xs
-	ps   []ParamDecl
+	pds  []ParamDecl
 	t    Type
 	e    Expr
 }
 
 var _ Decl = MDecl{}
 
-func (m MDecl) ToSig() Sig {
-	return Sig{m.m, m.ps, m.t}
+func (md MDecl) ToSig() Sig {
+	return Sig{md.m, md.pds, md.t}
 }
 
-func (m MDecl) Ok(ds []Decl) {
-	if !isStructType(ds, m.recv.t) {
-		panic("Receiver must be a struct type: not " + m.recv.t.String() +
-			"\n\t" + m.String())
+func (md MDecl) Ok(ds []Decl) {
+	if !isStructType(ds, md.recv.t) {
+		panic("Receiver must be a struct type: not " + md.recv.t.String() +
+			"\n\t" + md.String())
 	}
 	env := make(map[Name]Type)
-	env[m.recv.x] = m.recv.t
-	for _, v := range m.ps {
+	env[md.recv.x] = md.recv.t
+	for _, v := range md.pds {
 		env[v.x] = v.t
 	}
 	allowStupid := false
-	t := m.e.Typing(ds, env, allowStupid)
-	if !t.Impls(ds, m.t) {
+	t := md.e.Typing(ds, env, allowStupid)
+	if !t.Impls(ds, md.t) {
 		panic("Method body type must implement declared return type: found=" +
-			t.String() + ", expected=" + m.t.String() + "\n\t" + m.String())
+			t.String() + ", expected=" + md.t.String() + "\n\t" + md.String())
 	}
 }
 
-func (m MDecl) GetName() Name {
-	return m.m
+func (md MDecl) GetName() Name {
+	return md.m
 }
 
-func (m MDecl) String() string {
+func (md MDecl) String() string {
 	var b strings.Builder
 	b.WriteString("func (")
-	b.WriteString(m.recv.String())
+	b.WriteString(md.recv.String())
 	b.WriteString(") ")
-	b.WriteString(m.m)
+	b.WriteString(md.m)
 	b.WriteString("(")
-	if len(m.ps) > 0 {
-		b.WriteString(m.ps[0].String())
-		for _, v := range m.ps[1:] {
-			b.WriteString(", ")
-			b.WriteString(v.String())
-		}
-	}
+	writeParamDecls(&b, md.pds)
 	b.WriteString(") ")
-	b.WriteString(m.t.String())
+	b.WriteString(md.t.String())
 	b.WriteString(" { return ")
-	b.WriteString(m.e.String())
+	b.WriteString(md.e.String())
 	b.WriteString(" }")
 	return b.String()
 }
@@ -180,8 +170,8 @@ type ParamDecl struct {
 
 var _ FGNode = ParamDecl{}
 
-func (p ParamDecl) String() string {
-	return p.x + " " + p.t.String()
+func (pd ParamDecl) String() string {
+	return pd.x + " " + pd.t.String()
 }
 
 /* ITypeLit, Sig */
@@ -220,20 +210,20 @@ func (c ITypeLit) String() string {
 }
 
 type Sig struct {
-	m  Name
-	ps []ParamDecl
-	t  Type
+	m   Name
+	pds []ParamDecl
+	t   Type
 }
 
 var _ Spec = Sig{}
 
-// !!! Sig in FG (also, Go spec) includes ~x, which breaks "impls"
+// !!! Sig in FG (also, Go spec) includes ~x, which naively breaks "impls"
 func (g0 Sig) EqExceptVars(g Sig) bool {
-	if len(g0.ps) != len(g.ps) {
+	if len(g0.pds) != len(g.pds) {
 		return false
 	}
-	for i := 0; i < len(g0.ps); i++ {
-		if g0.ps[i].t != g.ps[i].t {
+	for i := 0; i < len(g0.pds); i++ {
+		if g0.pds[i].t != g.pds[i].t {
 			return false
 		}
 	}
@@ -248,14 +238,29 @@ func (g Sig) String() string {
 	var b strings.Builder
 	b.WriteString(g.m)
 	b.WriteString("(")
-	if len(g.ps) > 0 {
-		b.WriteString(g.ps[0].String())
-		for _, v := range g.ps[1:] {
-			b.WriteString(", ")
-			b.WriteString(v.String())
-		}
-	}
+	writeParamDecls(&b, g.pds)
 	b.WriteString(") ")
 	b.WriteString(g.t.String())
 	return b.String()
+}
+
+/* Helpers */
+
+// Doesn't include "(...)" -- slightly more convenient for debug messages
+func writeFieldDecls(b *strings.Builder, fds []FieldDecl) {
+	if len(fds) > 0 {
+		b.WriteString(fds[0].String())
+		for _, v := range fds[1:] {
+			b.WriteString("; " + v.String())
+		}
+	}
+}
+
+func writeParamDecls(b *strings.Builder, pds []ParamDecl) {
+	if len(pds) > 0 {
+		b.WriteString(pds[0].String())
+		for _, v := range pds[1:] {
+			b.WriteString(", " + v.String())
+		}
+	}
 }

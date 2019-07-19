@@ -31,6 +31,7 @@ import (
 	"strconv"
 
 	"github.com/rhu1/fgg/fg"
+	"github.com/rhu1/fgg/fgg"
 )
 
 var _ = reflect.TypeOf
@@ -45,16 +46,19 @@ var verbose bool = false
 func main() {
 	evalPtr := flag.Int("eval", NO_EVAL,
 		"-steps=n, evaluate n (>=0) steps; or -steps=-1, evaluate to value (or panic)")
+	fgPtr := flag.Bool("fg", false, "-fg=false, interpret input as FG (defaults to true if neither -fg/-fgg set)")
+	fggPtr := flag.Bool("fgg", false, "-fgg=true, interpret input as FGG")
 	internalPtr := flag.Bool("internal", false,
 		"-internal=true, use \"internal\" input as source")
 	inlinePtr := flag.String("inline", "",
 		"-inline=true, use inline input as source")
 	strictParsePtr := flag.Bool("strict", true,
 		"-strict=false, disable strict parsing (attempt recovery on parsing errors)")
-	verbosePtr := flag.Bool("v", false,
-		"-v=true, enable verbose printing")
+	verbosePtr := flag.Bool("v", false, "-v=true, enable verbose printing")
 	flag.Parse()
-
+	if !*fgPtr && !*fggPtr {
+		*fgPtr = true
+	}
 	verbose = *verbosePtr
 
 	var src string
@@ -71,24 +75,47 @@ func main() {
 		src = string(bs)
 	}
 
+	if *fgPtr {
+		fgInterp(src, *strictParsePtr, *evalPtr)
+	} else if *fggPtr {
+		fggInterp(src, *strictParsePtr, *evalPtr)
+	}
+}
+
+func fgInterp(src string, strict bool, eval int) {
 	vPrintln("\nParsing AST:")
 	var adptr fg.FGAdaptor
-	prog := adptr.Parse(*strictParsePtr, src) // AST (FGProgram root)
+	prog := adptr.Parse(strict, src) // AST (FGProgram root)
 	vPrintln(prog.String())
 
 	vPrintln("\nChecking source program OK:")
 	allowStupid := false
 	prog.Ok(allowStupid)
 
-	if *evalPtr > NO_EVAL {
-		eval(prog, *evalPtr)
+	if eval > NO_EVAL {
+		fgEval(prog, eval)
 	}
+}
+
+func fggInterp(src string, strict bool, eval int) {
+	vPrintln("\nParsing AST:")
+	var adptr fgg.FGGAdaptor
+	prog := adptr.Parse(strict, src) // AST (FGProgram root)
+	vPrintln(prog.String())
+
+	/*vPrintln("\nChecking source program OK:")
+	allowStupid := false
+	prog.Ok(allowStupid)
+
+	if eval > NO_EVAL {
+		eval(prog, eval)
+	}*/
 }
 
 // N.B. currently FG panic comes out implicitly as an underlying run-time panic
 // TODO: add explicit FG panics
 // If steps == EVAL_TO_VAL, then eval to value
-func eval(p fg.FGProgram, steps int) {
+func fgEval(p fg.FGProgram, steps int) {
 	allowStupid := true
 	vPrintln("\nEntering Eval loop:")
 	vPrintln("Decls:")

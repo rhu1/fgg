@@ -7,6 +7,7 @@ import (
 	"github.com/antlr/antlr4/runtime/Go/antlr"
 
 	"github.com/rhu1/fgg/parser/fg"
+	"github.com/rhu1/fgg/parser/util"
 )
 
 var _ = fmt.Errorf
@@ -44,13 +45,13 @@ func (a *FGAdaptor) Parse(strictParse bool, input string) FGProgram {
 	p := parser.NewFGParser(stream)
 	if strictParse {
 		p.RemoveErrorListeners()
-		p.SetErrorHandler(&StrictErrorStrategy{})
+		p.SetErrorHandler(&util.StrictErrorStrategy{})
 	}
 	antlr.ParseTreeWalkerDefault.Walk(a, p.Program())
 	return a.pop().(FGProgram)
 }
 
-/* "program", "decls" */
+/* "program" */
 
 func (a *FGAdaptor) ExitProgram(ctx *parser.ProgramContext) {
 	body := a.pop().(Expr)
@@ -69,14 +70,14 @@ func (a *FGAdaptor) ExitProgram(ctx *parser.ProgramContext) {
 
 // Children: 1=NAME, 2=typeLit
 func (a *FGAdaptor) ExitTypeDecl(ctx *parser.TypeDeclContext) {
-	typ := Type(ctx.GetChild(1).(*antlr.TerminalNodeImpl).GetText())
-	td := a.pop()
+	t := Type(ctx.GetChild(1).(*antlr.TerminalNodeImpl).GetText())
+	td := a.pop().(TDecl)
 	if s, ok := td.(STypeLit); ok { // N.B. s is a *copy* of td
-		s.t = typ
+		s.t = t
 		a.push(s)
-	} else if r, ok := td.(ITypeLit); ok {
-		r.t = typ
-		a.push(r)
+	} else if c, ok := td.(ITypeLit); ok {
+		c.t = t
+		a.push(c)
 	} else {
 		panic("Unknown type decl: " + reflect.TypeOf(td).String())
 	}
@@ -89,7 +90,7 @@ func (a *FGAdaptor) ExitMethDecl(ctx *parser.MethDeclContext) {
 	e := a.pop().(Expr)
 	g := a.pop().(Sig)
 	recv := a.pop().(ParamDecl)
-	a.push(MDecl{recv, g.m, g.ps, g.t, e})
+	a.push(MDecl{recv, g.m, g.pds, g.t, e})
 }
 
 // Cf. ExitFieldDecl
@@ -107,7 +108,7 @@ func (a *FGAdaptor) ExitStructTypeLit(ctx *parser.StructTypeLitContext) {
 	if ctx.GetChildCount() > 3 {
 		nfds := (ctx.GetChild(2).GetChildCount() + 1) / 2 // fieldDecl (';' fieldDecl)*
 		fds = make([]FieldDecl, nfds)
-		for i := nfds - 1; i >= 0; i-- { // N.B. ordering doesn't currently matter, stored in a map
+		for i := nfds - 1; i >= 0; i-- {
 			fd := a.pop().(FieldDecl)
 			fds[i] = fd // Adding backwards
 		}
@@ -116,9 +117,9 @@ func (a *FGAdaptor) ExitStructTypeLit(ctx *parser.StructTypeLitContext) {
 }
 
 func (a *FGAdaptor) ExitFieldDecl(ctx *parser.FieldDeclContext) {
-	field := Name(ctx.GetField().GetText())
-	typ := Type(ctx.GetTyp().GetText())
-	a.push(FieldDecl{field, typ})
+	f := Name(ctx.GetField().GetText())
+	t := Type(ctx.GetTyp().GetText())
+	a.push(FieldDecl{f, t})
 }
 
 /* #InterfaceTypeLit ("typeLit"), "specs", #SigSpec ("spec"), #InterfaceSpec ("spec"), "sig" */
@@ -127,9 +128,9 @@ func (a *FGAdaptor) ExitFieldDecl(ctx *parser.FieldDeclContext) {
 func (a *FGAdaptor) ExitInterfaceTypeLit(ctx *parser.InterfaceTypeLitContext) {
 	var ss []Spec
 	if ctx.GetChildCount() > 3 {
-		nss := (ctx.GetChild(2).GetChildCount() + 1) / 2 // e.g., fd ';' fd ';' fd
+		nss := (ctx.GetChild(2).GetChildCount() + 1) / 2 // e.g., s ';' s ';' s
 		ss = make([]Spec, nss)
-		for i := nss - 1; i >= 0; i-- { // N.B. ordering doesn't currently matter, stored in a map
+		for i := nss - 1; i >= 0; i-- {
 			s := a.pop().(Spec)
 			ss[i] = s // Adding backwards
 		}
@@ -142,8 +143,8 @@ func (a *FGAdaptor) ExitSigSpec(ctx *parser.SigSpecContext) {
 }
 
 func (a *FGAdaptor) ExitInterfaceSpec(ctx *parser.InterfaceSpecContext) {
-	typ := Type(ctx.GetChild(0).(*antlr.TerminalNodeImpl).GetText())
-	a.push(typ)
+	t := Type(ctx.GetChild(0).(*antlr.TerminalNodeImpl).GetText())
+	a.push(t)
 }
 
 func (a *FGAdaptor) ExitSig(ctx *parser.SigContext) {
@@ -171,7 +172,7 @@ func (a *FGAdaptor) ExitVariable(ctx *parser.VariableContext) {
 // Children: 0=typ (*antlr.TerminalNodeImpl), 1='{', 2=exprs (*parser.ExprsContext), 3='}'
 // N.B. ExprsContext is a "helper" Context, actual exprs are its children
 func (a *FGAdaptor) ExitStructLit(ctx *parser.StructLitContext) {
-	typ := Type(ctx.GetChild(0).(*antlr.TerminalNodeImpl).GetText())
+	t := Type(ctx.GetChild(0).(*antlr.TerminalNodeImpl).GetText())
 	var es []Expr
 	if ctx.GetChildCount() > 3 {
 		nes := (ctx.GetChild(2).GetChildCount() + 1) / 2 // e.g., 'x' ',' 'y' ',' 'z'
@@ -180,7 +181,7 @@ func (a *FGAdaptor) ExitStructLit(ctx *parser.StructLitContext) {
 			es[i] = a.pop().(Expr) // Adding backwards
 		}
 	}
-	a.push(StructLit{typ, es})
+	a.push(StructLit{t, es})
 }
 
 func (a *FGAdaptor) ExitSelect(ctx *parser.SelectContext) {
@@ -204,7 +205,7 @@ func (a *FGAdaptor) ExitCall(ctx *parser.CallContext) {
 }
 
 func (a *FGAdaptor) ExitAssert(ctx *parser.AssertContext) {
-	typ := Type(ctx.GetChild(3).(*antlr.TerminalNodeImpl).GetText())
+	t := Type(ctx.GetChild(3).(*antlr.TerminalNodeImpl).GetText())
 	e := a.pop().(Expr)
-	a.push(Assert{e, typ})
+	a.push(Assert{e, t})
 }

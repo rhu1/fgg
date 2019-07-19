@@ -9,11 +9,8 @@ import (
 	"github.com/rhu1/fgg/parser/fg"
 )
 
-/* FG */
-
 // Pre: len(elems) > 1
-// elems[:len(elems)-1] -- type/meth decls
-// elems[len(elems)-1] -- "main" func body expression
+// Pre: elems[:len(elems)-1] -- type/meth decls; elems[len(elems)-1] -- "main" func body expression
 func MakeFgProgram(elems ...string) string {
 	if len(elems) == 0 {
 		panic("Bad empty args: must supply at least body expression for \"main\"")

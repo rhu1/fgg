@@ -43,9 +43,9 @@ func body(ds []Decl, t_S Type, m Name) (Name, []Name, Expr) {
 	for _, v := range ds {
 		md, ok := v.(MDecl)
 		if ok && md.recv.t == t_S && md.m == m {
-			xs := make([]Name, len(md.ps))
-			for i := 0; i < len(md.ps); i++ {
-				xs[i] = md.ps[i].x
+			xs := make([]Name, len(md.pds))
+			for i := 0; i < len(md.pds); i++ {
+				xs[i] = md.pds[i].x
 			}
 			return md.recv.x, xs, md.e
 		}
