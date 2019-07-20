@@ -33,7 +33,7 @@ func (x Variable) Eval(ds []Decl) (Expr, string) {
 
 func (x Variable) Typing(ds []Decl, delta TEnv, gamma Env,
 	allowStupid bool) Type {
-	res, ok := gamma[x]
+	res, ok := gamma[x.id]
 	if !ok {
 		panic("Var not in env: " + x.String())
 	}
@@ -47,7 +47,7 @@ func (x Variable) String() string {
 /* StructLit */
 
 type StructLit struct {
-	u  Type // FIXME: u is a TName (where u.(TName).t is a t_S)
+	u  TName // u.t is a t_S
 	es []Expr
 }
 
@@ -82,7 +82,8 @@ func (s StructLit) Eval(ds []Decl) (Expr, string) {
 
 func (s StructLit) Typing(ds []Decl, delta TEnv, gamma Env,
 	allowStupid bool) Type {
-	fs := fields(ds, s.u.(TName))
+	s.u.Ok(ds, delta)
+	fs := fields(ds, s.u)
 	if len(s.es) != len(fs) {
 		var b strings.Builder
 		b.WriteString("Arity mismatch: args=[")

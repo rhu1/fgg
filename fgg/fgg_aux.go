@@ -41,10 +41,10 @@ func fields(ds []Decl, u_S TName) []FieldDecl {
 // Go has no overloading, meth names are a unique key
 func methods(ds []Decl, u Type) map[Name]Sig {
 	res := make(map[Name]Sig)
-	if isStructType(ds, u) {
+	if isStructTName(ds, u) {
 		for _, v := range ds {
 			md, ok := v.(MDecl)
-			if ok && isStructType(ds, TName{md.t_recv, []Type{}}) { // FIXME HACK: TName
+			if ok && isStructType(ds, md.t_recv) {
 				//sd := md.recv.u.(TName)
 				u1 := u.(TName)
 				if md.t_recv == u1.t {
@@ -56,14 +56,13 @@ func methods(ds []Decl, u Type) map[Name]Sig {
 				}
 			}
 		}
-	} else if isInterfaceType(ds, u) {
-		/*td := getTDecl(ds, t).(ITypeLit)
+	} else if isInterfaceTName(ds, u) { // N.B. u is a TName, \tau_I (not a TParam)
+		td := getTDecl(ds, u.(TName).t).(ITypeLit)
 		for _, s := range td.ss {
 			for _, v := range s.GetSigs(ds) {
 				res[v.m] = v
 			}
-		}*/
-		panic("[TODO]: ")
+		}
 	} else { // Perhaps redundant if all TDecl OK checked first
 		panic("Unknown type: " + u.String())
 	}

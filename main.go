@@ -42,6 +42,10 @@ var NO_EVAL = -2     // Must be < EVAL_TO_VAL
 
 var verbose bool = false
 
+// Gotchas:
+// type B(type a Any) struct { f a }; // Any parsed as a TParam -- currently not permitted
+// type IA(type ) interface { m1() };  // m1() parsed as a TName (an invalid Spec) -- N.B. ret missing anyway
+
 // N.B. flags (e.g., -internal=true) must be supplied before any non-flag args
 func main() {
 	evalPtr := flag.Int("eval", NO_EVAL,
@@ -76,13 +80,13 @@ func main() {
 	}
 
 	if *fgPtr {
-		fgInterp(src, *strictParsePtr, *evalPtr)
+		interpFg(src, *strictParsePtr, *evalPtr)
 	} else if *fggPtr {
-		fggInterp(src, *strictParsePtr, *evalPtr)
+		interpFgg(src, *strictParsePtr, *evalPtr)
 	}
 }
 
-func fgInterp(src string, strict bool, eval int) {
+func interpFg(src string, strict bool, eval int) {
 	vPrintln("\nParsing AST:")
 	var adptr fg.FGAdaptor
 	prog := adptr.Parse(strict, src) // AST (FGProgram root)
@@ -93,21 +97,21 @@ func fgInterp(src string, strict bool, eval int) {
 	prog.Ok(allowStupid)
 
 	if eval > NO_EVAL {
-		fgEval(prog, eval)
+		evalFg(prog, eval)
 	}
 }
 
-func fggInterp(src string, strict bool, eval int) {
+func interpFgg(src string, strict bool, eval int) {
 	vPrintln("\nParsing AST:")
 	var adptr fgg.FGGAdaptor
 	prog := adptr.Parse(strict, src) // AST (FGProgram root)
 	vPrintln(prog.String())
 
-	/*vPrintln("\nChecking source program OK:")
+	vPrintln("\nChecking source program OK:")
 	allowStupid := false
 	prog.Ok(allowStupid)
 
-	if eval > NO_EVAL {
+	/*if eval > NO_EVAL {
 		eval(prog, eval)
 	}*/
 }
@@ -115,7 +119,7 @@ func fggInterp(src string, strict bool, eval int) {
 // N.B. currently FG panic comes out implicitly as an underlying run-time panic
 // TODO: add explicit FG panics
 // If steps == EVAL_TO_VAL, then eval to value
-func fgEval(p fg.FGProgram, steps int) {
+func evalFg(p fg.FGProgram, steps int) {
 	allowStupid := true
 	vPrintln("\nEntering Eval loop:")
 	vPrintln("Decls:")

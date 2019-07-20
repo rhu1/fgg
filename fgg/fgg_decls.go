@@ -21,27 +21,29 @@ type FGGProgram struct {
 
 var _ FGGNode = FGGProgram{}
 
-/*func (p FGGProgram) Ok(allowStupid bool) {
+func (p FGGProgram) Ok(allowStupid bool) {
 	if !allowStupid { // Hack, to print only "top-level" programs (not during Eval)
-		fmt.Println("[Warning] Type decl OK not checked yet (e.g., distinct type/field/method names, etc.)")
+		fmt.Println("[Warning] Type lit OK (\"T ok\") not fully implemented yet " +
+			"(e.g., distinct type/field/method names, etc.)")
 	}
 	for _, v := range p.ds {
-		switch c := v.(type) {
+		switch d := v.(type) {
 		case TDecl:
-			// TODO: e.g., unique type names, unique field names, unique method names
-			// N.B. omitted from submission version
+			d.Ok(p.ds)
 		case MDecl:
-			c.Ok(p.ds)
+			d.Ok(p.ds)
 		default:
 			panic("Unknown decl: " + reflect.TypeOf(v).String() + "\n\t" +
 				v.String())
 		}
 	}
+	// Empty envs for main
+	var delta TEnv
 	var gamma Env
-	p.e.Typing(p.ds, gamma, allowStupid)
+	p.e.Typing(p.ds, delta, gamma, allowStupid)
 }
 
-// CHECKME: resulting FGGProgram is not parsed from source, OK? -- cf. Expr.Eval
+/*// CHECKME: resulting FGGProgram is not parsed from source, OK? -- cf. Expr.Eval
 // But doesn't affect FGPprogam.Ok() (i.e., Expr.Typing)
 func (p FGGProgram) Eval() (FGGProgram, string) {
 	e, rule := p.e.Eval(p.ds)
@@ -75,6 +77,14 @@ func (p FGGProgram) String() string {
 // Wrapper for []TFormal (cf. e.g., FieldDecl), only because of "(type ...)" syntax
 type TFormals struct {
 	tfs []TFormal
+}
+
+func (psi TFormals) ToTEnv() TEnv {
+	delta := make(map[TParam]Type)
+	for _, v := range psi.tfs {
+		delta[v.a] = v.u
+	}
+	return delta
 }
 
 func (psi TFormals) String() string {
@@ -112,12 +122,16 @@ type STypeLit struct {
 
 var _ TDecl = STypeLit{}
 
-/*func (s STypeLit) GetType() Type {
-	return s.t
-}*/
+func (s STypeLit) Ok(ds []Decl) {
+	TDeclOk(ds, s)
+}
 
 func (s STypeLit) GetName() Name {
 	return s.t
+}
+
+func (s STypeLit) GetTFormals() TFormals {
+	return s.psi
 }
 
 func (s STypeLit) String() string {
@@ -143,7 +157,7 @@ type FieldDecl struct {
 var _ FGGNode = FieldDecl{}
 
 func (fd FieldDecl) Subs(subs map[TParam]Type) FieldDecl {
-	return fd // FIXME TODO
+	return FieldDecl{fd.f, fd.u.Subs(subs)}
 }
 
 func (fd FieldDecl) String() string {
@@ -153,8 +167,7 @@ func (fd FieldDecl) String() string {
 /* MDecl, ParamDecl */
 
 type MDecl struct {
-	//recv ParamDecl
-	x_recv   Name
+	x_recv   Name // CHECKME: better to be Variable?  (etc. for other such Names)
 	t_recv   Name // N.B. t_S
 	psi_recv TFormals
 	m        Name // Refactor to embed Sig?
@@ -170,24 +183,39 @@ func (md MDecl) ToSig() Sig {
 	return Sig{md.m, md.psi, md.pds, md.u}
 }
 
-/*
-func (m MDecl) Ok(ds []Decl) {
-	if !isStructType(ds, m.recv.t) {
-		panic("Receiver must be a struct type: not " + m.recv.t.String() +
-			"\n\t" + m.String())
+func (md MDecl) Ok(ds []Decl) {
+	if !isStructType(ds, md.t_recv) {
+		panic("Receiver must be a struct type: not " + md.t_recv +
+			"\n\t" + md.String())
 	}
-	env := make(map[Name]Type)
-	env[m.recv.x] = m.recv.t
-	for _, v := range m.ps {
-		env[v.x] = v.t
+	delta := md.psi_recv.ToTEnv()
+	for _, v := range md.psi_recv.tfs {
+		v.u.Ok(ds, delta)
+	}
+	delta1 := md.psi.ToTEnv()
+	for k, v := range delta {
+		delta1[k] = v
+	}
+	for _, v := range md.psi.tfs {
+		v.u.Ok(ds, delta1)
+	}
+
+	gamma := make(map[Name]Type)
+	as := make([]Type, len(md.psi_recv.tfs)) // !!! submission version, x:t_S(a) => x:t_S(~a)
+	for i := 0; i < len(md.psi_recv.tfs); i++ {
+		as[i] = md.psi_recv.tfs[i].a
+	}
+	gamma[md.x_recv] = TName{md.t_recv, as} // CHECKME: can we give the bounds directly here instead of 'as'?
+	for _, v := range md.pds {
+		gamma[v.x] = v.u
 	}
 	allowStupid := false
-	t := m.e.Typing(ds, env, allowStupid)
-	if !t.Impls(ds, m.t) {
+	u := md.e.Typing(ds, delta1, gamma, allowStupid)
+	if !u.Impls(ds, delta1, md.u) {
 		panic("Method body type must implement declared return type: found=" +
-			t.String() + ", expected=" + m.t.String() + "\n\t" + m.String())
+			u.String() + ", expected=" + md.u.String() + "\n\t" + md.String())
 	}
-}*/
+}
 
 func (md MDecl) GetName() Name {
 	return md.m
@@ -225,32 +253,40 @@ func (pd ParamDecl) String() string {
 	return pd.x + " " + pd.u.String()
 }
 
-/*/* ITypeLit, Sig * /
+/* ITypeLit, Sig */
 
 type ITypeLit struct {
-	t  Type // Factor out embedded struct with STypeLit?  But constructor will need that struct?
-	ss []Spec
+	t   Name
+	psi TFormals
+	ss  []Spec
 }
 
 var _ TDecl = ITypeLit{}
 
-func (r ITypeLit) GetType() Type {
-	return r.t
+func (c ITypeLit) Ok(ds []Decl) {
+	TDeclOk(ds, c)
+	// TODO FIXME: check Sigs OK?  e.g., "type IA(type ) interface { m1(type )() Any };" while missing Any
+	// In general, also missing checks for, e.g., unique type/field/method names -- cf., TDeclOk
 }
 
-func (r ITypeLit) GetName() Name {
-	return Name(r.t)
+func (c ITypeLit) GetName() Name {
+	return c.t
 }
 
-func (r ITypeLit) String() string {
+func (c ITypeLit) GetTFormals() TFormals {
+	return c.psi
+}
+
+func (c ITypeLit) String() string {
 	var b strings.Builder
 	b.WriteString("type ")
-	b.WriteString(r.t.String())
+	b.WriteString(string(c.t))
+	b.WriteString(c.psi.String())
 	b.WriteString(" interface {")
-	if len(r.ss) > 0 {
+	if len(c.ss) > 0 {
 		b.WriteString(" ")
-		b.WriteString(r.ss[0].String())
-		for _, v := range r.ss[1:] {
+		b.WriteString(c.ss[0].String())
+		for _, v := range c.ss[1:] {
 			b.WriteString("; ")
 			b.WriteString(v.String())
 		}
@@ -259,13 +295,12 @@ func (r ITypeLit) String() string {
 	b.WriteString("}")
 	return b.String()
 }
-*/
 
 type Sig struct {
 	m   Name
 	psi TFormals
 	pds []ParamDecl
-	t   Type
+	u   Type
 }
 
 var _ Spec = Sig{}
@@ -281,8 +316,8 @@ func (g Sig) Subs(subs map[TParam]Type) Sig {
 		pd := g.pds[i]
 		ps[i] = ParamDecl{pd.x, pd.u.Subs(subs)}
 	}
-	t := g.t.Subs(subs)
-	return Sig{g.m, TFormals{tfs}, ps, t}
+	u := g.u.Subs(subs)
+	return Sig{g.m, TFormals{tfs}, ps, u}
 }
 
 // !!! Sig in FGG includes ~a and ~x, which naively breaks "impls"
@@ -300,7 +335,7 @@ func (g0 Sig) EqExceptTParamsAndVars(g Sig) bool {
 			return false
 		}
 	}
-	return g0.m == g.m && g0.t == g.t
+	return g0.m == g.m && g0.u.Equals(g.u)
 }
 
 func (g Sig) GetSigs(_ []Decl) []Sig {
@@ -314,11 +349,27 @@ func (g Sig) String() string {
 	b.WriteString("(")
 	writeParamDecls(&b, g.pds)
 	b.WriteString(") ")
-	b.WriteString(g.t.String())
+	b.WriteString(g.u.String())
 	return b.String()
 }
 
-/* Helpers */
+/* Aux, helpers */
+
+func TDeclOk(ds []Decl, td TDecl) {
+	psi := td.GetTFormals()
+	delta := psi.ToTEnv()
+	for _, v := range psi.tfs {
+		u, ok := v.u.(TName)
+		if !ok {
+			panic("Upper bound must be of the form \"t_I(...)\": not " + v.u.String())
+		}
+		if !isInterfaceTName(ds, u) { // CHECKME: subsumes above TName check (looks for \tau_S)
+			panic("Upper bound must be an interface type: not " + u.String())
+		}
+		u.Ok(ds, delta) // !!! T-Type, t_i => t_I
+	}
+	// TODO: Check, e.g., unique type/field/method names -- cf., FGGProgram.OK [Warning]
+}
 
 // Doesn't include "(...)" -- slightly more convenient for debug messages
 func writeFieldDecls(b *strings.Builder, fds []FieldDecl) {

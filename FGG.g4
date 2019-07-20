@@ -29,32 +29,34 @@ LINE_COMMENT    : '//' ~[\r\n]* -> channel(HIDDEN) ;
 /* Rules */
 
 // Conventions:
-// "tag=" to distinguish repeat productions within a rule: comes out in field/getter names
-// "#tag" for cases within a rule: comes out as Context names (i.e., types)
-// "plurals", e.g., decls, used for sequences: comes out as "helper" Context..
-// ..nodes that group up actual children underneath -- makes "adapting" easier
+// "tag=" to distinguish repeat productions within a rule: comes out in
+// field/getter names.
+// "#tag" for cases within a rule: comes out as Context names (i.e., types).
+// "plurals", e.g., decls, used for sequences: comes out as "helper" Contexts,
+// nodes that group up actual children underneath -- makes "adapting" easier.
 
 typ         : NAME                                   # TypeParam
             | NAME '(' typs? ')'                     # TypeName
             ;
 typs        : typ (',' typ)*  ;
-typeFormals : TYPE typeFDecls? ;
+typeFormals : '(' TYPE typeFDecls? ')' ; // Refactored "(...)" into here
 typeFDecls  : typeFDecl (',' typeFDecl)* ;
 typeFDecl   : NAME typ ;  // CHECKME: #TypeName ?
 program     : PACKAGE MAIN ';' decls? FUNC MAIN '(' ')' '{' '_' '=' expr '}' EOF
             ;
 decls       : ((typeDecl | methDecl) ';')+ ;
 typeDecl    : TYPE NAME typeFormals typeLit ;  // TODO: tag id=NAME, better for adapting (vs., index constants)
-methDecl    : FUNC '(' paramDecl ')' sig '{' RETURN expr '}' ;
+methDecl    : FUNC '(' recv=NAME typn=NAME typeFormals ')' sig '{'
+                  RETURN expr '}' ;
 typeLit     : STRUCT '{' fieldDecls? '}'             # StructTypeLit
             | INTERFACE '{' specs? '}'               # InterfaceTypeLit ;
 fieldDecls  : fieldDecl (';' fieldDecl)* ;
 fieldDecl   : field=NAME typ ;
 specs       : spec (';' spec)* ;
 spec        : sig                                    # SigSpec
-            | typ                                    # InterfaceSpec
+            | typ                                    # InterfaceSpec  // Must be a #TypeName, \tau_I -- refactor?
             ;
-sig         : meth=NAME '(' params? ')' ret=typ ;  // TODO: meth-tparams
+sig         : meth=NAME typeFormals '(' params? ')' typ ;
 params      : paramDecl (',' paramDecl)* ;
 paramDecl   : vari=NAME typ ;
 expr        : NAME                                   # Variable

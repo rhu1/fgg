@@ -73,8 +73,8 @@ func (a *FGGAdaptor) ExitTypeName(ctx *parser.TypeNameContext) {
 
 func (a *FGGAdaptor) ExitTypeFormals(ctx *parser.TypeFormalsContext) {
 	var tfs []TFormal
-	if ctx.GetChildCount() > 2 {
-		ntfs := (ctx.GetChild(1).GetChildCount() + 1) / 2 // e.g., tf ',' tf ',' tf
+	if ctx.GetChildCount() > 3 {
+		ntfs := (ctx.GetChild(2).GetChildCount() + 1) / 2 // e.g., tf ',' tf ',' tf
 		tfs = make([]TFormal, ntfs)
 		for i := ntfs - 1; i >= 0; i-- {
 			tfs[i] = a.pop().(TFormal) // Adding backwards
@@ -84,8 +84,8 @@ func (a *FGGAdaptor) ExitTypeFormals(ctx *parser.TypeFormalsContext) {
 }
 
 func (a *FGGAdaptor) ExitTypeFDecl(ctx *parser.TypeFDeclContext) {
-	u := a.pop().(Type) // CHECKME: TName? (\tau_I)
-	b := a.pop().(TParam)
+	u := a.pop().(Type)                                              // CHECKME: TName? (\tau_I)
+	b := TParam(ctx.GetChild(0).(*antlr.TerminalNodeImpl).GetText()) // Not pop().(TParam) -- BNF asks for NAME
 	a.push(TFormal{b, u})
 }
 
@@ -116,10 +116,10 @@ func (a *FGGAdaptor) ExitTypeDecl(ctx *parser.TypeDeclContext) {
 		s.t = t
 		s.psi = psi
 		a.push(s)
-		/*} else if c, ok := td.(ITypeLit); ok {
+	} else if c, ok := td.(ITypeLit); ok {
 		c.t = t
 		c.psi = psi
-		a.push(c)*/
+		a.push(c)
 	} else {
 		panic("Unknown type decl: " + reflect.TypeOf(td).String())
 	}
@@ -146,6 +146,65 @@ func (a *FGGAdaptor) ExitFieldDecl(ctx *parser.FieldDeclContext) {
 	//typ := Type(ctx.GetChild(1).GetText())
 	u := a.pop().(Type)
 	a.push(FieldDecl{f, u})
+}
+
+/* "methDecl", "paramDecl" */
+
+func (a *FGGAdaptor) ExitMethDecl(ctx *parser.MethDeclContext) {
+	// Reverse order
+	e := a.pop().(Expr)
+	g := a.pop().(Sig)
+	psi := a.pop().(TFormals)
+	t := Name(ctx.GetTypn().GetText())
+	recv := Name(ctx.GetRecv().GetText())
+	a.push(MDecl{recv, t, psi, g.m, g.psi, g.pds, g.u, e})
+}
+
+// Cf. ExitFieldDecl
+func (a *FGGAdaptor) ExitParamDecl(ctx *parser.ParamDeclContext) {
+	x := ctx.GetVari().GetText()
+	u := a.pop().(Type)
+	a.push(ParamDecl{x, u})
+}
+
+/* #InterfaceTypeLit ("typeLit"), "specs", #SigSpec ("spec"), #InterfaceSpec ("spec"), "sig" */
+
+// Cf. ExitStructTypeLit
+func (a *FGGAdaptor) ExitInterfaceTypeLit(ctx *parser.InterfaceTypeLitContext) {
+	var ss []Spec
+	if ctx.GetChildCount() > 3 {
+		nss := (ctx.GetChild(2).GetChildCount() + 1) / 2 // e.g., s ';' s ';' s
+		ss = make([]Spec, nss)
+		for i := nss - 1; i >= 0; i-- {
+			s := a.pop().(Spec)
+			ss[i] = s // Adding backwards
+		}
+	}
+	a.push(ITypeLit{"^", TFormals{}, ss}) // "^" and TFormals{} to be overwritten in ExitTypeDecl
+}
+
+func (a *FGGAdaptor) ExitSigSpec(ctx *parser.SigSpecContext) {
+	// No action -- Sig is at a.stack[len(a.stack)-1]
+}
+
+func (a *FGGAdaptor) ExitInterfaceSpec(ctx *parser.InterfaceSpecContext) {
+	a.push(a.pop().(TName)) // Check TName (should specifically be a \tau_I) -- CHECKME: enforce in BNF?
+}
+
+func (a *FGGAdaptor) ExitSig(ctx *parser.SigContext) {
+	m := ctx.GetMeth().GetText()
+	// Reverse order
+	t := a.pop().(Type)
+	var pds []ParamDecl
+	if ctx.GetChildCount() > 4 {
+		npds := (ctx.GetChild(2).GetChildCount() + 1) / 2 // e.g., pd ',' pd ',' pd
+		pds = make([]ParamDecl, npds)
+		for i := npds - 1; i >= 0; i-- {
+			pds[i] = a.pop().(ParamDecl) // Adding backwards
+		}
+	}
+	psi := a.pop().(TFormals)
+	a.push(Sig{m, psi, pds, t})
 }
 
 /* "expr": #Variable, #StructLit, #Select, #Call, #Assert */

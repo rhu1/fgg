@@ -33,7 +33,7 @@ func parseAndOkGood(t *testing.T, elems ...string) fg.FGProgram {
 	return parseAndCheckOk(prog)
 }
 
-// N.B. do not use to check for bad *syntax* -- see below, "[Parser]" panic check
+// N.B. do not use to check for bad *syntax* -- see the "[Parser]" panic check
 func parseAndOkBad(t *testing.T, msg string, elems ...string) fg.FGProgram {
 	prog := fg.MakeFgProgram(elems...)
 	defer func() {

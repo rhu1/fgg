@@ -20,21 +20,22 @@ var _ FGNode = FGProgram{}
 
 func (p FGProgram) Ok(allowStupid bool) {
 	if !allowStupid { // Hack, to print only "top-level" programs (not during Eval)
-		fmt.Println("[Warning] Type decl OK not checked yet (e.g., distinct type/field/method names, etc.)")
+		fmt.Println("[Warning] Type decl OK not checked yet " +
+			"(e.g., distinct type/field/method names, etc.)")
 	}
 	for _, v := range p.ds {
-		switch c := v.(type) {
+		switch d := v.(type) {
 		case TDecl:
-			// TODO: e.g., unique type names, unique field names, unique method names
+			// TODO: Check, e.g., unique type/field/method names -- cf., above [Warning]
 			// N.B. omitted from submission version
 		case MDecl:
-			c.Ok(p.ds)
+			d.Ok(p.ds)
 		default:
 			panic("Unknown decl: " + reflect.TypeOf(v).String() + "\n\t" +
 				v.String())
 		}
 	}
-	var gamma Env
+	var gamma Env // Empty env for main
 	p.e.Typing(p.ds, gamma, allowStupid)
 }
 
@@ -164,7 +165,7 @@ func (md MDecl) String() string {
 
 // Cf. FieldDecl
 type ParamDecl struct {
-	x Name
+	x Name // CHECKME: Variable? (also Env key)
 	t Type
 }
 

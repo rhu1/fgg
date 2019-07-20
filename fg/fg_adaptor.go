@@ -83,23 +83,6 @@ func (a *FGAdaptor) ExitTypeDecl(ctx *parser.TypeDeclContext) {
 	}
 }
 
-/* "methDecl", "paramDecl" */
-
-func (a *FGAdaptor) ExitMethDecl(ctx *parser.MethDeclContext) {
-	// Reverse order
-	e := a.pop().(Expr)
-	g := a.pop().(Sig)
-	recv := a.pop().(ParamDecl)
-	a.push(MDecl{recv, g.m, g.pds, g.t, e})
-}
-
-// Cf. ExitFieldDecl
-func (a *FGAdaptor) ExitParamDecl(ctx *parser.ParamDeclContext) {
-	x := ctx.GetVari().GetText()
-	t := Type(ctx.GetTyp().GetText())
-	a.push(ParamDecl{x, t})
-}
-
 /* #StructTypeLit ("typeLit"), "fieldDecls", "fieldDecl" */
 
 // Children: 2=fieldDecls
@@ -122,6 +105,23 @@ func (a *FGAdaptor) ExitFieldDecl(ctx *parser.FieldDeclContext) {
 	a.push(FieldDecl{f, t})
 }
 
+/* "methDecl", "paramDecl" */
+
+func (a *FGAdaptor) ExitMethDecl(ctx *parser.MethDeclContext) {
+	// Reverse order
+	e := a.pop().(Expr)
+	g := a.pop().(Sig)
+	recv := a.pop().(ParamDecl)
+	a.push(MDecl{recv, g.m, g.pds, g.t, e})
+}
+
+// Cf. ExitFieldDecl
+func (a *FGAdaptor) ExitParamDecl(ctx *parser.ParamDeclContext) {
+	x := ctx.GetVari().GetText()
+	t := Type(ctx.GetTyp().GetText())
+	a.push(ParamDecl{x, t})
+}
+
 /* #InterfaceTypeLit ("typeLit"), "specs", #SigSpec ("spec"), #InterfaceSpec ("spec"), "sig" */
 
 // Cf. ExitStructTypeLit
@@ -139,7 +139,7 @@ func (a *FGAdaptor) ExitInterfaceTypeLit(ctx *parser.InterfaceTypeLitContext) {
 }
 
 func (a *FGAdaptor) ExitSigSpec(ctx *parser.SigSpecContext) {
-	// No action -- Sig is at a.stack.peek()
+	// No action -- Sig is at a.stack[len(a.stack)-1]
 }
 
 func (a *FGAdaptor) ExitInterfaceSpec(ctx *parser.InterfaceSpecContext) {
@@ -151,15 +151,15 @@ func (a *FGAdaptor) ExitSig(ctx *parser.SigContext) {
 	m := ctx.GetMeth().GetText()
 	// Reverse order
 	t := Type(ctx.GetRet().GetText())
-	var ps []ParamDecl
+	var pds []ParamDecl
 	if ctx.GetChildCount() > 4 {
-		nps := (ctx.GetChild(2).GetChildCount() + 1) / 2 // e.g., pd ',' pd ',' pd
-		ps = make([]ParamDecl, nps)
-		for i := nps - 1; i >= 0; i-- {
-			ps[i] = a.pop().(ParamDecl) // Adding backwards
+		npds := (ctx.GetChild(2).GetChildCount() + 1) / 2 // e.g., pd ',' pd ',' pd
+		pds = make([]ParamDecl, npds)
+		for i := npds - 1; i >= 0; i-- {
+			pds[i] = a.pop().(ParamDecl) // Adding backwards
 		}
 	}
-	a.push(Sig{m, ps, t})
+	a.push(Sig{m, pds, t})
 }
 
 /* "expr": #Variable, #StructLit, #Select, #Call, #Assert */
