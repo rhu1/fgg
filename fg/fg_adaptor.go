@@ -192,7 +192,7 @@ func (a *FGAdaptor) ExitSelect(ctx *parser.SelectContext) {
 
 func (a *FGAdaptor) ExitCall(ctx *parser.CallContext) {
 	var args []Expr
-	if ctx.GetChildCount() > 5 {
+	if ctx.GetChildCount() > 5 { // TODO: refactor as ctx.GetArgs() != nil -- and child-count-checks elsewhere
 		nargs := (ctx.GetChild(4).GetChildCount() + 1) / 2 // e.g., e ',' e ',' e
 		args = make([]Expr, nargs)
 		for i := nargs - 1; i >= 0; i-- {

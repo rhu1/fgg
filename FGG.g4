@@ -59,11 +59,11 @@ spec        : sig                                    # SigSpec
 sig         : meth=NAME typeFormals '(' params? ')' typ ;
 params      : paramDecl (',' paramDecl)* ;
 paramDecl   : vari=NAME typ ;
-expr        : NAME                                   # Variable
-            | typ '{' exprs? '}'                     # StructLit  // typ is #TypeName, \tau_S
-            | expr '.' NAME                          # Select
-            | recv=expr '.' NAME '(' args=exprs? ')' # Call  // TODO: meth-targs
-            | expr '.' '(' typ ')'                   # Assert
+expr        : NAME                                                 # Variable
+            | typ '{' exprs? '}' /* typ is #TypeName, \tau_S */    # StructLit
+            | expr '.' NAME                                        # Select
+            | recv=expr '.' NAME '(' targs=typs? ')' '(' args=exprs? ')' # Call
+            | expr '.' '(' typ ')'                                 # Assert
             ;
 exprs       : expr (',' expr)* ;
 

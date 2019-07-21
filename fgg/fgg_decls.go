@@ -79,6 +79,18 @@ type TFormals struct {
 	tfs []TFormal
 }
 
+func (psi TFormals) Ok(ds []Decl) {
+	for _, v := range psi.tfs {
+		u, ok := v.u.(TName)
+		if !ok {
+			panic("Upper bound must be of the form \"t_I(type ...)\": not " + v.u.String())
+		}
+		if !isInterfaceTName(ds, u) { // CHECKME: subsumes above TName check (looks for \tau_S)
+			panic("Upper bound must be an interface type: not " + u.String())
+		}
+	}
+}
+
 func (psi TFormals) ToTEnv() TEnv {
 	delta := make(map[TParam]Type)
 	for _, v := range psi.tfs {
@@ -188,10 +200,14 @@ func (md MDecl) Ok(ds []Decl) {
 		panic("Receiver must be a struct type: not " + md.t_recv +
 			"\n\t" + md.String())
 	}
+	md.psi_recv.Ok(ds)
+	md.psi.Ok(ds)
+
 	delta := md.psi_recv.ToTEnv()
 	for _, v := range md.psi_recv.tfs {
 		v.u.Ok(ds, delta)
 	}
+
 	delta1 := md.psi.ToTEnv()
 	for k, v := range delta {
 		delta1[k] = v
@@ -265,7 +281,12 @@ var _ TDecl = ITypeLit{}
 
 func (c ITypeLit) Ok(ds []Decl) {
 	TDeclOk(ds, c)
-	// TODO FIXME: check Sigs OK?  e.g., "type IA(type ) interface { m1(type )() Any };" while missing Any
+	for _, v := range c.ss {
+		// TODO: check Sigs OK?  e.g., "type IA(type ) interface { m1(type )() Any };" while missing Any
+		if g, ok := v.(Sig); ok {
+			g.Ok(ds)
+		}
+	}
 	// In general, also missing checks for, e.g., unique type/field/method names -- cf., TDeclOk
 }
 
@@ -320,26 +341,31 @@ func (g Sig) Subs(subs map[TParam]Type) Sig {
 	return Sig{g.m, TFormals{tfs}, ps, u}
 }
 
+func (g Sig) Ok(ds []Decl) {
+	g.psi.Ok(ds)
+	// TODO: check distinct param names, etc. -- N.B. interface may not be *used* (so may not be checked else where)
+}
+
+func (g Sig) GetSigs(_ []Decl) []Sig {
+	return []Sig{g}
+}
+
 // !!! Sig in FGG includes ~a and ~x, which naively breaks "impls"
 func (g0 Sig) EqExceptTParamsAndVars(g Sig) bool {
 	if len(g0.psi.tfs) != len(g.psi.tfs) || len(g0.pds) != len(g.pds) {
 		return false
 	}
 	for i := 0; i < len(g0.psi.tfs); i++ {
-		if g0.psi.tfs[i].u != g.psi.tfs[i].u {
+		if !g0.psi.tfs[i].u.Equals(g.psi.tfs[i].u) {
 			return false
 		}
 	}
 	for i := 0; i < len(g0.pds); i++ {
-		if g0.pds[i].u != g.pds[i].u {
+		if !g0.pds[i].u.Equals(g.pds[i].u) {
 			return false
 		}
 	}
 	return g0.m == g.m && g0.u.Equals(g.u)
-}
-
-func (g Sig) GetSigs(_ []Decl) []Sig {
-	return []Sig{g}
 }
 
 func (g Sig) String() string {
@@ -357,16 +383,11 @@ func (g Sig) String() string {
 
 func TDeclOk(ds []Decl, td TDecl) {
 	psi := td.GetTFormals()
+	psi.Ok(ds)
 	delta := psi.ToTEnv()
 	for _, v := range psi.tfs {
-		u, ok := v.u.(TName)
-		if !ok {
-			panic("Upper bound must be of the form \"t_I(...)\": not " + v.u.String())
-		}
-		if !isInterfaceTName(ds, u) { // CHECKME: subsumes above TName check (looks for \tau_S)
-			panic("Upper bound must be an interface type: not " + u.String())
-		}
-		u.Ok(ds, delta) // !!! T-Type, t_i => t_I
+		u, _ := v.u.(TName) // \tau_I, checked by psi.Ok
+		u.Ok(ds, delta)     // !!! Submission version T-Type, t_i => t_I
 	}
 	// TODO: Check, e.g., unique type/field/method names -- cf., FGGProgram.OK [Warning]
 }

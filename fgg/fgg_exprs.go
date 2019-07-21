@@ -27,6 +27,10 @@ func (x Variable) Subs(m map[Variable]Expr) Expr {
 	return res
 }
 
+func (x Variable) TSubs(subs map[TParam]Type) Expr {
+	return x
+}
+
 func (x Variable) Eval(ds []Decl) (Expr, string) {
 	panic("Cannot evaluate free variable: " + x.id)
 }
@@ -53,12 +57,20 @@ type StructLit struct {
 
 var _ Expr = StructLit{}
 
-func (s StructLit) Subs(m map[Variable]Expr) Expr {
+func (s StructLit) Subs(subs map[Variable]Expr) Expr {
 	es := make([]Expr, len(s.es))
 	for i := 0; i < len(s.es); i++ {
-		es[i] = s.es[i].Subs(m)
+		es[i] = s.es[i].Subs(subs)
 	}
 	return StructLit{s.u, es}
+}
+
+func (s StructLit) TSubs(subs map[TParam]Type) Expr {
+	es := make([]Expr, len(s.es))
+	for i := 0; i < len(s.es); i++ {
+		es[i] = s.es[i].TSubs(subs)
+	}
+	return StructLit{s.u.Subs(subs).(TName), es}
 }
 
 func (s StructLit) Eval(ds []Decl) (Expr, string) {
@@ -125,6 +137,10 @@ func (s Select) Subs(subs map[Variable]Expr) Expr {
 	return Select{s.e.Subs(subs), s.f}
 }
 
+func (s Select) TSubs(subs map[TParam]Type) Expr {
+	return Select{s.e.TSubs(subs), s.f}
+}
+
 func (s Select) Eval(ds []Decl) (Expr, string) {
 	if !IsValue(s.e) {
 		e, rule := s.e.Eval(ds)
@@ -157,6 +173,128 @@ func (s Select) Typing(ds []Decl, delta TEnv, gamma Env,
 
 func (s Select) String() string {
 	return s.e.String() + "." + s.f
+}
+
+/* Call */
+
+type Call struct {
+	e     Expr
+	m     Name
+	targs []Type
+	args  []Expr
+}
+
+func (c Call) Subs(subs map[Variable]Expr) Expr {
+	e := c.e.Subs(subs)
+	args := make([]Expr, len(c.args))
+	for i := 0; i < len(c.args); i++ {
+		args[i] = c.args[i].Subs(subs)
+	}
+	return Call{e, c.m, c.targs, args}
+}
+
+func (c Call) TSubs(subs map[TParam]Type) Expr {
+	targs := make([]Type, len(c.targs))
+	for i := 0; i < len(c.targs); i++ {
+		targs[i] = c.targs[i].Subs(subs)
+	}
+	args := make([]Expr, len(c.args))
+	for i := 0; i < len(c.args); i++ {
+		args[i] = c.args[i].TSubs(subs)
+	}
+	return Call{c.e.TSubs(subs), c.m, targs, args}
+}
+
+func (c Call) Eval(ds []Decl) (Expr, string) {
+	if !IsValue(c.e) {
+		e, rule := c.e.Eval(ds)
+		return Call{e, c.m, c.targs, c.args}, rule
+	}
+	args := make([]Expr, len(c.args))
+	done := false
+	var rule string
+	for i := 0; i < len(c.args); i++ {
+		e := c.args[i]
+		if !done && !IsValue(e) {
+			e, rule = e.Eval(ds)
+			done = true
+		}
+		args[i] = e
+	}
+	if done {
+		return Call{c.e, c.m, c.targs, args}, rule
+	}
+	// c.e and c.args all values
+	s := c.e.(StructLit)
+	x0, xs, e := body(ds, s.u, c.m, c.targs) // panics if method not found
+	subs := make(map[Variable]Expr)
+	subs[Variable{x0}] = c.e
+	for i := 0; i < len(xs); i++ {
+		subs[Variable{xs[i]}] = c.args[i]
+	}
+	return e.Subs(subs), "Call" // N.B. single combined substitution map slightly different to R-Call
+}
+
+func (c Call) Typing(ds []Decl, delta TEnv, gamma Env, allowStupid bool) Type {
+	u0 := c.e.Typing(ds, delta, gamma, allowStupid)
+	var g Sig
+	if tmp, ok := methods(ds, bounds(delta, u0))[c.m]; !ok { // !!! submission version had "methods(m)"
+		panic("Method not found: " + c.m + " in " + u0.String())
+	} else {
+		g = tmp
+	}
+	if len(c.targs) != len(g.psi.tfs) {
+		var b strings.Builder
+		b.WriteString("Arity mismatch: type actuals=[")
+		writeTypes(&b, c.targs)
+		b.WriteString("], formals=[")
+		b.WriteString(g.psi.String())
+		b.WriteString("]")
+		panic(b.String())
+	}
+	if len(c.args) != len(g.pds) {
+		var b strings.Builder
+		b.WriteString("Arity mismatch: args=[")
+		writeExprs(&b, c.args)
+		b.WriteString("], params=[")
+		writeParamDecls(&b, g.pds)
+		b.WriteString("]")
+		panic(b.String())
+	}
+	subs := make(map[TParam]Type) // CHECKME: applying this subs vs. adding to a new delta?
+	for i := 0; i < len(c.targs); i++ {
+		subs[g.psi.tfs[i].a] = c.targs[i]
+	}
+	for i := 0; i < len(c.targs); i++ {
+		u := g.psi.tfs[i].u.Subs(subs)
+		if !c.targs[i].Impls(ds, delta, u) {
+			panic("Type actual must implement type formal: actual=" +
+				c.targs[i].String() + ", param=" + u.String())
+		}
+	}
+	for i := 0; i < len(c.args); i++ {
+		// CHECKME: submission version's notation, (~\tau :> ~\rho)[subs], slightly unclear
+		u_a := c.args[i].Typing(ds, delta, gamma, allowStupid).Subs(subs)
+		u_p := g.pds[i].u.Subs(subs)
+		if !u_a.Impls(ds, delta, u_p) {
+			panic("Arg expr type must implement param type: arg=" + u_a.String() +
+				", param=" + u_p.String())
+		}
+	}
+	return g.u
+}
+
+func (c Call) String() string {
+	var b strings.Builder
+	b.WriteString(c.e.String())
+	b.WriteString(".")
+	b.WriteString(c.m)
+	b.WriteString("(")
+	writeTypes(&b, c.targs)
+	b.WriteString(")(")
+	writeExprs(&b, c.args)
+	b.WriteString(")")
+	return b.String()
 }
 
 /* Aux, helpers */

@@ -187,7 +187,6 @@ type Decl interface {
 
 type TDecl interface {
 	Decl
-	//GetType() Type // == Type(GetName())
 	GetTFormals() TFormals
 }
 
@@ -199,6 +198,7 @@ type Spec interface {
 type Expr interface {
 	FGGNode
 	Subs(subs map[Variable]Expr) Expr
+	TSubs(subs map[TParam]Type) Expr
 	Eval(ds []Decl) (Expr, string)
 	// Like gamma, delta is effectively immutable
 	Typing(ds []Decl, delta TEnv, gamma Env, allowStupid bool) Type

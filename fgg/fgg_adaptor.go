@@ -235,3 +235,27 @@ func (a *FGGAdaptor) ExitSelect(ctx *parser.SelectContext) {
 	f := Name(ctx.GetChild(2).(*antlr.TerminalNodeImpl).GetText())
 	a.push(Select{e, f})
 }
+
+func (a *FGGAdaptor) ExitCall(ctx *parser.CallContext) {
+	targCs := ctx.GetTargs()
+	var targs []Type
+	if targCs != nil {
+		ntargs := (targCs.GetChildCount() + 1) / 2 // e.g., t ',' t ',' t
+		targs = make([]Type, ntargs)
+		for i := ntargs - 1; i >= 0; i-- {
+			targs[i] = a.pop().(Type) // Adding backwards
+		}
+	}
+	argCs := ctx.GetArgs()
+	var args []Expr
+	if argCs != nil {
+		nargs := (argCs.GetChildCount() + 1) / 2 // e.g., e ',' e ',' e
+		args = make([]Expr, nargs)
+		for i := nargs - 1; i >= 0; i-- {
+			args[i] = a.pop().(Expr) // Adding backwards
+		}
+	}
+	m := Name(ctx.GetChild(2).(*antlr.TerminalNodeImpl).GetText())
+	e := a.pop().(Expr)
+	a.push(Call{e, m, targs, args})
+}

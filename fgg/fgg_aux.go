@@ -69,31 +69,37 @@ func methods(ds []Decl, u Type) map[Name]Sig {
 	return res
 }
 
-/*
 // Pre: t_S is a struct type
-func body(ds []Decl, t_S Type, m Name) (Name, []Name, Expr) {
+// Submission version, m(~\rho) informal notation
+func body(ds []Decl, u_S TName, m Name, targs []Type) (Name, []Name, Expr) {
 	for _, v := range ds {
 		md, ok := v.(MDecl)
-		if ok && md.recv.t == t_S && md.m == m {
-			xs := make([]Name, len(md.ps))
-			for i := 0; i < len(md.ps); i++ {
-				xs[i] = md.ps[i].x
+		if ok && md.t_recv == u_S.t && md.m == m {
+			xs := make([]Name, len(md.pds))
+			for i := 0; i < len(md.pds); i++ {
+				xs[i] = md.pds[i].x
 			}
-			return md.recv.x, xs, md.e
+			subs := make(map[TParam]Type)
+			for i := 0; i < len(md.psi_recv.tfs); i++ {
+				subs[md.psi_recv.tfs[i].a] = u_S.us[i]
+			}
+			for i := 0; i < len(md.psi.tfs); i++ {
+				subs[md.psi.tfs[i].a] = targs[i]
+			}
+			return md.x_recv, xs, md.e.TSubs(subs)
 		}
 	}
-	panic("Method not found: " + t_S.String() + "." + m)
+	panic("Method not found: " + u_S.String() + "." + m)
 }
 
 // Post: returns a struct type
-func typ(ds []Decl, s StructLit) Type {
-	t_S := s.t
-	if !isStructType(ds, t_S) {
-		panic("Non struct type found in struct lit: " + s.String())
+func typ(ds []Decl, v StructLit) Type {
+	u_S := v.u
+	if !isStructTName(ds, u_S) {
+		panic("Non struct type found in struct lit: " + v.String())
 	}
-	return t_S
+	return u_S
 }
-*/
 
 func getTDecl(ds []Decl, t Name) TDecl {
 	for _, v := range ds {

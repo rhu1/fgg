@@ -109,7 +109,7 @@ func Test001b(t *testing.T) {
 	A1 := "type A1(type ) struct {}"
 	B := "type B(type a Any()) struct { f a }"
 	e := "B(A()){A1(){}}"
-	parseAndOkBad(t, "A1 is not an A", Any, A, A1, B, e)
+	parseAndOkBad(t, "A1() is not an A()", Any, A, A1, B, e)
 }
 
 // Testing StructLit typing, t_S OK
@@ -127,7 +127,7 @@ func Test002b(t *testing.T) {
 	A := "type A(type ) struct {}"
 	B := "type B(type a IA()) struct { f a }"
 	e := "B(A()){A(){}}"
-	parseAndOkBad(t, "A is not an A1", IA, A, B, e)
+	parseAndOkBad(t, "A() is not an A1()", IA, A, B, e)
 }
 
 // Testing fields (and t-args subs)
@@ -150,10 +150,10 @@ func Test003b(t *testing.T) {
 	A1 := "type A1(type ) struct { }"
 	B := "type B(type a IA()) struct { f a }"
 	e := "B(A()){A1(){}}"
-	parseAndOkBad(t, "A1 is not an A", Any, IA, A, Am1, A1, B, e)
+	parseAndOkBad(t, "A1() is not an A()", Any, IA, A, Am1, A1, B, e)
 }
 
-// Testing select on parameterised struct
+// Initial testing for select on parameterised struct
 func Test004(t *testing.T) {
 	Any := "type Any(type ) interface {}"
 	A := "type A(type ) struct { fA Any() }"
@@ -172,6 +172,56 @@ func Test004b(t *testing.T) {
 	B := "type B(type a Any()) struct { fB a }"
 	e := "B(A1()){A1(){}}.fB.fA"
 	parseAndOkBad(t, "A1 has no field fA", Any, A, Am1, A1, B, e)
+}
+
+// Initial testing for call
+func Test005(t *testing.T) {
+	A := "type A(type ) struct {}"
+	Am1 := "func (x0 A(type )) m1(type )() A() { return x0 }"
+	e := "A(){}.m1()()"
+	parseAndOkGood(t, A, Am1, e)
+}
+
+func Test006(t *testing.T) {
+	IA := "type IA(type ) interface { m1(type a IA())() A() }"
+	A := "type A(type ) struct {}"
+	e := "A(){}"
+	parseAndOkGood(t, IA, A, e)
+}
+
+func Test006b(t *testing.T) {
+	IA := "type IA(type ) interface { m1(type a A())() A() }"
+	A := "type A(type ) struct {}"
+	e := "A(){}"
+	parseAndOkBad(t, "A() invalid upper bound", IA, A, e)
+}
+
+func Test007(t *testing.T) {
+	Any := "type Any(type ) interface {}"
+	IA := "type IA(type ) interface { m1(type a IA())() A() }"
+	A := "type A(type ) struct {}"
+	Am1 := "func (x0 A(type )) m1(type a IA())() A() { return x0 }"
+	A1 := "type A1(type ) struct {}"
+	e := "A(){}.m1(A())()"
+	parseAndOkGood(t, Any, IA, A, Am1, A1, e)
+}
+func Test007b(t *testing.T) {
+	Any := "type Any(type ) interface {}"
+	IA := "type IA(type ) interface { m1(type a IA())() A() }"
+	A := "type A(type ) struct {}"
+	Am1 := "func (x0 A(type )) m1(type a IA())() A() { return x0 }"
+	A1 := "type A1(type ) struct {}"
+	e := "A(){}.m1()()"
+	parseAndOkBad(t, "Missing type actual", Any, IA, A, Am1, A1, e)
+}
+func Test007c(t *testing.T) {
+	Any := "type Any(type ) interface {}"
+	IA := "type IA(type ) interface { m1(type a IA())() A() }"
+	A := "type A(type ) struct {}"
+	Am1 := "func (x0 A(type )) m1(type a IA())() A() { return x0 }"
+	A1 := "type A1(type ) struct {}"
+	e := "A(){}.m1(A1())()"
+	parseAndOkBad(t, "A1() is not an IA()", Any, IA, A, Am1, A1, e)
 }
 
 /* Eval */
