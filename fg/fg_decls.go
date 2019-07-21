@@ -28,6 +28,7 @@ func (p FGProgram) Ok(allowStupid bool) {
 		case TDecl:
 			// TODO: Check, e.g., unique type/field/method names -- cf., above [Warning]
 			// N.B. omitted from submission version
+			// (call isDistinctDecl(d, p.ds))
 		case MDecl:
 			d.Ok(p.ds)
 		default:
@@ -37,6 +38,25 @@ func (p FGProgram) Ok(allowStupid bool) {
 	}
 	var gamma Env // Empty env for main
 	p.e.Typing(p.ds, gamma, allowStupid)
+}
+
+func isDistinctDecl(decl Decl, ds []Decl) bool {
+	var count int
+	for _, d := range ds {
+		switch d := d.(type) {
+		case TDecl:
+			// checks that type-name is unique regardless of definition
+			if td, ok := decl.(TDecl); ok && d.GetName() == td.GetName() {
+				count++
+			}
+		case MDecl:
+			// checks that (method-type, method-name) is unique
+			if md, ok := decl.(MDecl); ok && d.t.String() == md.t.String() && d.GetName() == md.GetName() {
+				count++
+			}
+		}
+	}
+	return count == 1
 }
 
 // CHECKME: resulting FGProgram is not parsed from source, OK? -- cf. Expr.Eval
