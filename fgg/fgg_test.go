@@ -153,6 +153,27 @@ func Test003b(t *testing.T) {
 	parseAndOkBad(t, "A1 is not an A", Any, IA, A, Am1, A1, B, e)
 }
 
+// Testing select on parameterised struct
+func Test004(t *testing.T) {
+	Any := "type Any(type ) interface {}"
+	A := "type A(type ) struct { fA Any() }"
+	Am1 := "func (x0 A(type )) m1(type )() Any() { return x0 }"
+	A1 := "type A1(type ) struct { }"
+	B := "type B(type a Any()) struct { fB a }"
+	e := "B(A()){A(){A1(){}}}.fB.fA"
+	parseAndOkGood(t, Any, A, Am1, A1, B, e)
+}
+
+func Test004b(t *testing.T) {
+	Any := "type Any(type ) interface {}"
+	A := "type A(type ) struct { fA Any() }"
+	Am1 := "func (x0 A(type )) m1(type )() Any() { return x0 }"
+	A1 := "type A1(type ) struct { }"
+	B := "type B(type a Any()) struct { fB a }"
+	e := "B(A1()){A1(){}}.fB.fA"
+	parseAndOkBad(t, "A1 has no field fA", Any, A, Am1, A1, B, e)
+}
+
 /* Eval */
 
 // TOOD: classify FG-compatible subset compare results to -fg

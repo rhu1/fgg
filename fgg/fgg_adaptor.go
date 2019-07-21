@@ -228,3 +228,10 @@ func (a *FGGAdaptor) ExitStructLit(ctx *parser.StructLitContext) {
 	u := a.pop().(TName) // N.B. \tau_S, means "of the form t_S(~\tau)" (so a TName) -- i.e., not \alpha
 	a.push(StructLit{u, es})
 }
+
+// Same as Fg
+func (a *FGGAdaptor) ExitSelect(ctx *parser.SelectContext) {
+	e := a.pop().(Expr)
+	f := Name(ctx.GetChild(2).(*antlr.TerminalNodeImpl).GetText())
+	a.push(Select{e, f})
+}

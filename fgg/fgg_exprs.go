@@ -114,6 +114,51 @@ func (s StructLit) String() string {
 	return b.String()
 }
 
+/* Select */
+
+type Select struct {
+	e Expr
+	f Name
+}
+
+func (s Select) Subs(subs map[Variable]Expr) Expr {
+	return Select{s.e.Subs(subs), s.f}
+}
+
+func (s Select) Eval(ds []Decl) (Expr, string) {
+	if !IsValue(s.e) {
+		e, rule := s.e.Eval(ds)
+		return Select{e, s.f}, rule
+	}
+	v := s.e.(StructLit)
+	fds := fields(ds, v.u)
+	for i := 0; i < len(fds); i++ {
+		if fds[i].f == s.f {
+			return v.es[i], "Select"
+		}
+	}
+	panic("Field not found: " + s.f)
+}
+
+func (s Select) Typing(ds []Decl, delta TEnv, gamma Env,
+	allowStupid bool) Type {
+	u := s.e.Typing(ds, delta, gamma, allowStupid)
+	if !isStructTName(ds, u) {
+		panic("Illegal select on non-struct type expr: " + u.String())
+	}
+	fds := fields(ds, u.(TName))
+	for _, v := range fds {
+		if v.f == s.f {
+			return v.u
+		}
+	}
+	panic("Field not found: " + s.f + " in" + u.String())
+}
+
+func (s Select) String() string {
+	return s.e.String() + "." + s.f
+}
+
 /* Aux, helpers */
 
 // Cf. checkErr

@@ -243,7 +243,7 @@ func (md MDecl) String() string {
 
 // Cf. FieldDecl
 type ParamDecl struct {
-	x Name
+	x Name // CHECKME: Variable?
 	u Type
 }
 

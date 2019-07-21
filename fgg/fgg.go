@@ -101,7 +101,7 @@ func (u0 TName) Ok(ds []Decl, delta TEnv) {
 		subs[psi.tfs[i].a] = u0.us[i]
 	}
 	for i := 0; i < len(psi.tfs); i++ {
-		actual := psi.tfs[i].a.Subs(subs)
+		actual := psi.tfs[i].a.Subs(subs) // CHECKME: submission version T-Named, subs applied to Delta?
 		formal := psi.tfs[i].u.Subs(subs)
 		if !actual.Impls(ds, delta, formal) { // tfs[i].u is a \tau_I, checked by TDecl.Ok
 			panic("Type actual must implement type formal: actual=" + actual.String() +
