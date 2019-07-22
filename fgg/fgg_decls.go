@@ -325,7 +325,7 @@ type Sig struct {
 var _ Spec = Sig{}
 
 // TODO: rename TSubs
-func (g Sig) Subs(subs map[TParam]Type) Sig {
+func (g Sig) TSubs(subs map[TParam]Type) Sig {
 	tfs := make([]TFormal, len(g.psi.tfs))
 	for i := 0; i < len(g.psi.tfs); i++ {
 		tf := g.psi.tfs[i]

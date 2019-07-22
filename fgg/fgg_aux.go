@@ -51,7 +51,7 @@ func methods(ds []Decl, u Type) map[Name]Sig {
 					/*for i := 0; i < len(md.psi.tfs); i++ { // CHECKME: because TParam.TSubs will panic o/w -- refactor?
 						subs[md.psi.tfs[i].a] = md.psi.tfs[i].a
 					}*/
-					res[md.m] = md.ToSig().Subs(subs)
+					res[md.m] = md.ToSig().TSubs(subs)
 				}
 			}
 		}
@@ -68,7 +68,7 @@ func methods(ds []Decl, u Type) map[Name]Sig {
 			}*/
 			switch c := s.(type) {
 			case Sig:
-				res[c.m] = c.Subs(subs)
+				res[c.m] = c.TSubs(subs)
 			case TName: // Embedded u_I
 				for k, v := range methods(ds, c.TSubs(subs)) { // CHECKME: can this cycle indefinitely? (cf. submission version)
 					res[k] = v

@@ -401,6 +401,7 @@ func Test017(t *testing.T) {
 
 /* Eval */
 
+// TODO: run all the above Good tests using -eval=-1
 // TODO: put these tests through actual Go and compare the results
 // TOOD: and make translation to FGG and compare results to -fgg
 
