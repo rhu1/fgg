@@ -5,6 +5,9 @@ package main;
 /* Base decls: Any, Booleans */
 
 type Any(type ) interface {};
+
+/* Booleans */
+
 type Eq(type a Any()) interface { Equal(type )(that a) Bool() };
 type Bool(type ) interface {
 	Not(type )() Bool();

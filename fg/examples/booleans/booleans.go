@@ -8,6 +8,8 @@ package main;
 
 type Any interface {};
 
+/* Booleans */
+
 type Eq interface {
 	Equal(that Any) Bool
 };

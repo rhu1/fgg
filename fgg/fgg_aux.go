@@ -7,6 +7,7 @@ var _ = fmt.Errorf
 
 /* bounds(delta, u), fields(u_S), methods(u), body(u_S, m), type(v_S) */
 
+// CHECKME: does bounds ever need to work recursively? i.e., can an upperbound be a TParam?
 func bounds(delta TEnv, u Type) Type {
 	if a, ok := u.(TParam); ok {
 		if res, ok := delta[a]; ok {

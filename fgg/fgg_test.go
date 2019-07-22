@@ -332,6 +332,16 @@ func Test0013(t *testing.T) {
 	parseAndOkGood(t, Any, A, B, Bm, e)
 }
 
+// Testing u <: a, i.e., upper is open type param
+func Test0014(t *testing.T) {
+	Any := "type Any(type ) interface {}"
+	A := "type A(type ) struct {}"
+	B := "type B(type a Any()) struct { f a }"
+	Bm := "func (x0 B(type )) m(type a Any())() a { return A(){} }"
+	e := "B(A()){A(){}}.m(B(A()))(B(A()){A(){}}).f" // Eval would break type preservation
+	parseAndOkBad(t, Any, A, B, Bm, e)
+}
+
 /* Eval */
 
 // TOOD: classify FG-compatible subset compare results to -fg

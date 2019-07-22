@@ -146,7 +146,7 @@ func (s Select) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
 			return v.t
 		}
 	}
-	panic("Field not found: " + s.f + " in" + t.String())
+	panic("Field not found: " + s.f + " in " + t.String())
 }
 
 func (s Select) String() string {

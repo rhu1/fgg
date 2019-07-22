@@ -168,7 +168,7 @@ func (s Select) Typing(ds []Decl, delta TEnv, gamma Env,
 			return v.u
 		}
 	}
-	panic("Field not found: " + s.f + " in" + u.String())
+	panic("Field not found: " + s.f + " in " + u.String())
 }
 
 func (s Select) String() string {
@@ -280,7 +280,7 @@ func (c Call) Typing(ds []Decl, delta TEnv, gamma Env, allowStupid bool) Type {
 		u_p := g.pds[i].u.TSubs(subs)
 		if !u_a.Impls(ds, delta, u_p) {
 			panic("Arg expr type must implement param type: arg=" + u_a.String() +
-				", param=" + u_p.String())
+				", param=" + u_p.String() + "\n\t" + c.String())
 		}
 	}
 	return g.u.TSubs(subs) // subs necessary, c.psi info (i.e., bounds) will be "lost" after leaving this context

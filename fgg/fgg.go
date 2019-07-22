@@ -79,10 +79,12 @@ func (u0 TName) Impls(ds []Decl, delta TEnv, u Type) bool {
 	if isStructTName(ds, u) {
 		return isStructTName(ds, u0) && u0.Equals(u) // Asks equality of nested TParam
 	}
+	if _, ok := u.(TParam); ok { // e.g., fgg_test.go, Test014
+		panic("Type name does not implement open type param: found=" + u0.String() + ", expected=" + u.String())
+	}
 
 	gs := methods(ds, u)   // u is a t_I
 	gs0 := methods(ds, u0) // t0 may be any
-
 	for k, g := range gs {
 		g0, ok := gs0[k]
 		if ok {
