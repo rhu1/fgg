@@ -1,4 +1,4 @@
-//$ go run github.com/rhu1/fgg -fgg -eval=-1 -v fgg/examples/booleans/booleans.fgg
+//$ go run github.com/rhu1/fgg -fgg -eval=-1 -v fgg/examples/popl20/booleans/booleans.fgg
 
 package main;
 
@@ -45,7 +45,8 @@ func (x0 t(type )) m(type )(x1 t()) t() { return x1 };
 
 type Ex(type ) struct {};
 func (d Ex(type )) example(type )(b Bool(), x t(), y t()) t() {
-	return b.Cond(t())(exampleBr(){x, y}).m()(t(){})  // Main example, no type assertion
+	return b.Cond(t())(exampleBr(){x, y}) // Main example, no type assertion
+			.m()(t(){}) // Extra
 };
 func main() {
 	_ = Ex(){}.example()(TT(){}, t(){}, t(){})

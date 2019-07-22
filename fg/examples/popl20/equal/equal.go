@@ -1,11 +1,12 @@
-//$ go run github.com/rhu1/fgg -v -eval=3 fg/examples/rose/rose.go
+//$ go run github.com/rhu1/fgg -v -eval=3 fg/examples/popl20/equal/equal.go
+// Cf.
+// Cf.
+//$ go run github.com/rhu1/fgg/fg/examples/popl20/equals
 
 package main;
 
-type RoseByAnotherName interface {};
-
 type I1 interface { Equal(that Any) Bool };
-type I2 interface { Equal(that RoseByAnotherName) Bool };
+type I2 interface { Equal(n Any) Bool };
 
 type T struct {};
 func (t T) Equal(foo Any) Bool { return Bool{} };

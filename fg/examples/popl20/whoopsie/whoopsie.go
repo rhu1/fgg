@@ -1,4 +1,4 @@
-//$ go run github.com/rhu1/fgg -v fg/examples/whoopsie/whoopsie.go
+//$ go run github.com/rhu1/fgg -v fg/examples/popl20/whoopsie/whoopsie.go
 
 // TODO FIXME FG: error not checked yet
 // FIXME GO: bad Go program blocks, e.g., guru

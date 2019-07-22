@@ -1,10 +1,10 @@
-//$ go run github.com/rhu1/fgg -v -eval=30 fg/examples/incr/incr.go
+//$ go run github.com/rhu1/fgg -v -eval=13 fg/examples/popl20/map/map.go
 // Cf.
-//$ go run github.com/rhu1/fgg/fg/examples/incr
+//$ go run github.com/rhu1/fgg/fg/examples/popl20/map
 
 package main;
 
-/* Base decls: Any, Booleans, Nautrals, Functions, Lists */
+/* Base decls: Any, Booleans, Functions, Lists */
 
 type Any interface {};
 
@@ -32,34 +32,11 @@ func (this FF) Equal(that Any) Bool { return that.(Bool).Not() };
 func (this TT) Cond(br Branches) Any { return br.IfTT() };
 func (this FF) Cond(br Branches) Any { return br.IfFF() };
 
-/* Naturals */
-
-type Nat interface {
-	Add(n Nat) Nat;
-	Equal(n Any) Bool;
-	equalZero() Bool;
-	equalSucc(m Nat) Bool
-};
-type Zero struct {};
-type Succ struct {pred Nat};
-func (m Zero) Add (n Nat) Nat { return n };
-func (m Succ) Add (n Nat) Nat { return Succ{m.pred.Add(n)} };
-func (m Zero) Equal(n Any) Bool { return n.(Nat).equalZero() };
-func (m Succ) Equal(n Any) Bool { return n.(Nat).equalSucc(m.pred) };
-func (n Zero) equalZero() Bool { return TT{} };
-func (n Succ) equalZero() Bool { return FF{} };
-func (n Zero) equalSucc(m Nat) Bool { return FF{} };
-func (n Succ) equalSucc(m Nat) Bool { return m.Equal(n.pred) };
-
 /* Functions */
 
 type Func interface {
 	Apply(x Any) Any
 };
-type incr struct {
-	n Nat
-};
-func (this incr) Apply(x Any) Any { return x.(Nat).Add(this.n) };
 type not struct {};
 func (this not) Apply(x Any) Any { return x.(Bool).Not() };
 type compose struct {
@@ -92,12 +69,8 @@ func (xs Cons) Member(x Eq) Bool { return x.Equal(xs.head).Cond(memberBr{xs,x}).
 
 /* Example code */
 
-type D struct {};
-func (d D) One() Nat { return Succ{Zero{}} };
-func (d D) Two() Nat { return D{}.One().Add(D{}.One()) };
-func (d D) Three() Nat { return D{}.Two().Add(D{}.One()) };
-
 func main() {
-	// Submission version: incr{2}.Apply(3).(Nat)
-	_ = incr{D{}.Two()}.Apply(D{}.Three()).(Nat)
+	// Submission version was missing a "}"
+	_ =  Cons{TT{}, Cons{FF{}, Nil{}}}.Map(not{}) // Main example
+			.(Cons).head.(Bool).Not() // Extra, assertion necessary
 }

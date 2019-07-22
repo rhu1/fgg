@@ -1,6 +1,6 @@
-//$ go run github.com/rhu1/fgg -v -eval=7 fg/examples/booleans/booleans.go
+//$ go run github.com/rhu1/fgg -v -eval=7 fg/examples/popl20/booleans/booleans.go
 // Cf.
-//$ go run github.com/rhu1/fgg/fg/examples/booleans
+//$ go run github.com/rhu1/fgg/fg/examples/popl20/booleans
 
 package main;
 
@@ -50,7 +50,8 @@ func (x0 t) m(x1 t) t { return x1 };
 
 type Ex struct {};
 func (d Ex) example(b Bool, x t, y t) t {
-	return b.Cond(exampleBr{x,y}).(t).m(t{})  // Main example, .(t)
+	return b.Cond(exampleBr{x,y}).(t). // Main example, .(t)
+			m(t{}) // Extra
 };
 func main() {
 	_ = Ex{}.example(TT{}, t{}, t{})

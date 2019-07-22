@@ -1,6 +1,6 @@
-//$ go run github.com/rhu1/fgg -v -eval=4 fg/examples/not/not.go
+//$ go run github.com/rhu1/fgg -v -eval=4 fg/examples/popl20/not/not.go
 // Cf.
-//$ go run github.com/rhu1/fgg/fg/examples/not
+//$ go run github.com/rhu1/fgg/fg/examples/popl20/not
 
 package main;
 

@@ -1,0 +1,78 @@
+//$ go run github.com/rhu1/fgg -fgg -eval=-1 -v fgg/examples/popl20/map/map.fgg
+
+package main;
+
+/* Base decls: Any, Booleans, Nautrals, Functions, Lists */
+
+type Any(type ) interface {};
+type ToAny(type ) struct { any Any() };
+
+/* Booleans */
+
+type Eq(type a Any()) interface { Equal(type )(that a) Bool() };
+type Bool(type ) interface {
+	Not(type )() Bool();
+	Equal(type )(that Bool()) Bool();
+	Cond(type a Any())(br Branches(a)) a
+};
+type Branches(type a Any()) interface {
+	IfTT(type )() a;
+	IfFF(type )() a
+};
+type TT(type ) struct {};
+type FF(type ) struct {};
+func (this TT(type )) Not(type )() Bool() { return FF(){} };
+func (this FF(type )) Not(type )() Bool() { return TT(){} };
+func (this TT(type )) Equal(type )(that Bool()) Bool() { return that };
+func (this FF(type )) Equal(type )(that Bool()) Bool() { return that.Not()() };
+func (this TT(type )) Cond(type a Any())(br Branches(a)) a { return br.IfTT()() };
+func (this FF(type )) Cond(type a Any())(br Branches(a)) a { return br.IfFF()() };
+
+/* Functions */
+
+type Func(type a Any(), b Any()) interface {
+	Apply(type )(x a) b
+};
+type not(type ) struct {};
+func (this not(type )) Apply(type )(x Bool()) Bool() { return x.Not()() };
+type compose(type a Any(), b Any(), c Any()) struct {
+	f Func(a, b);
+	g Func(b, c)
+};
+func (this compose(type a Any(), b Any(), c Any())) Apply(type )(x a) c {
+	return this.g.Apply()(this.f.Apply()(x))
+};
+
+/* Lists */
+
+type List(type a Eq(a)) interface {
+	Map(type b Eq(b))(f Func(a, b)) List(b);
+	Member(type )(x a) Bool()
+};
+type Nil(type a Eq(a)) struct {};
+type Cons(type a Eq(a)) struct {
+	head a;
+	tail List(a)
+};
+func (xs Nil(type a Eq(a))) Map(type b Eq(b))(f Func(a, b)) List(b) {
+	return Nil(b){}
+};
+func (xs Cons(type a Eq(a))) Map(type b Eq(b))(f Func(a, b)) List(b) {
+	return Cons(b){f.Apply()(xs.head), xs.tail.Map(b)(f)}
+};
+type memberBr(type b Eq(b)) struct {
+	xs List(b);
+	x b
+};
+func (this memberBr(type a Eq(a))) IfTT(type )() Bool() { return TT(){} };
+func (this memberBr(type a Eq(a))) IfFF(type )() Bool() { return this.xs.Member()(this.x) };
+func (xs Nil(type a Eq(a))) Member(type )(x a) Bool() { return FF(){} };
+func (xs Cons(type a Eq(a))) Member(type )(x a) Bool() { return x.Equal()(xs.head).Cond(Bool())(memberBr(a){xs, x}) };
+
+/* Example code */
+
+func main() {
+	// Submission version was missing a "}"
+	_ =  Cons(Bool()){TT(){}, Cons(Bool()){FF(){}, Nil(Bool()){}}}.Map(Bool())(not(){}) // Main example
+			.(Cons(Bool())).head.Not()() // Extra, assertion not necessary
+}

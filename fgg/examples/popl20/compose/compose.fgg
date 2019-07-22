@@ -1,4 +1,4 @@
-//$ go run github.com/rhu1/fgg -fgg -eval=-1 -v fgg/examples/compose/compose.fgg
+//$ go run github.com/rhu1/fgg -fgg -eval=-1 -v fgg/examples/popl20/compose/compose.fgg
 
 package main;
 
@@ -91,8 +91,6 @@ func (this memberBr(type a Eq(a))) IfTT(type )() Bool() { return TT(){} };
 func (this memberBr(type a Eq(a))) IfFF(type )() Bool() { return this.xs.Member()(this.x) };
 func (xs Nil(type a Eq(a))) Member(type )(x a) Bool() { return FF(){} };
 func (xs Cons(type a Eq(a))) Member(type )(x a) Bool() { return x.Equal()(xs.head).Cond(Bool())(memberBr(a){xs, x}) };
-
-//CHECKME: func (this memberBr(type a Eq(a))) IfTT(type )() a { return ToAny(){TT(){}}.any.(a) };
 
 /* Example code */
 

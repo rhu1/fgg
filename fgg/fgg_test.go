@@ -51,7 +51,7 @@ func parseAndOkBad(t *testing.T, msg string, elems ...string) fgg.FGGProgram {
 	return parseAndCheckOk(prog)
 }
 
-/*
+//*
 // Pre: parseAndOkGood
 func evalAndOkGood(t *testing.T, p fgg.FGGProgram, steps int) fgg.FGGProgram {
 	defer func() {
@@ -86,7 +86,6 @@ func evalAndOkBad(t *testing.T, p fgg.FGGProgram, msg string, steps int) fgg.FGG
 	}
 	return p
 }
-*/
 
 /* Syntax and typing */
 
@@ -338,10 +337,21 @@ func Test0014(t *testing.T) {
 	A := "type A(type ) struct {}"
 	B := "type B(type a Any()) struct { f a }"
 	Bm := "func (x0 B(type )) m(type a Any())() a { return A(){} }"
-	e := "B(A()){A(){}}.m(B(A()))(B(A()){A(){}}).f" // Eval would break type preservation
+	e := "B(A()){A(){}}.m(B(A()))(B(A()){A(){}}).f" // Eval would break type preservation, see TestEval001
 	parseAndOkBad(t, Any, A, B, Bm, e)
 }
 
 /* Eval */
+
+func TestEval001(t *testing.T) {
+	Any := "type Any(type ) interface {}"
+	ToAny := "type ToAny(type ) struct { any Any() }"
+	A := "type A(type ) struct {}"
+	B := "type B(type a Any()) struct { f a }"
+	Bm := "func (x0 B(type )) m(type a Any())(x1 a) a { return ToAny(){A(){}}.any.(a) }"
+	e := "B(A()){A(){}}.m(B(A()))(B(A()){A(){}}).f"
+	prog := parseAndOkGood(t, Any, ToAny, A, B, Bm, e)
+	evalAndOkBad(t, prog, "Cannot caast A() to B(A())", 3)
+}
 
 // TOOD: classify FG-compatible subset compare results to -fg
