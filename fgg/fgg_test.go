@@ -205,6 +205,7 @@ func Test007(t *testing.T) {
 	e := "A(){}.m1(A())()"
 	parseAndOkGood(t, Any, IA, A, Am1, A1, e)
 }
+
 func Test007b(t *testing.T) {
 	Any := "type Any(type ) interface {}"
 	IA := "type IA(type ) interface { m1(type a IA())() A() }"
@@ -214,6 +215,7 @@ func Test007b(t *testing.T) {
 	e := "A(){}.m1()()"
 	parseAndOkBad(t, "Missing type actual", Any, IA, A, Am1, A1, e)
 }
+
 func Test007c(t *testing.T) {
 	Any := "type Any(type ) interface {}"
 	IA := "type IA(type ) interface { m1(type a IA())() A() }"
@@ -222,6 +224,112 @@ func Test007c(t *testing.T) {
 	A1 := "type A1(type ) struct {}"
 	e := "A(){}.m1(A1())()"
 	parseAndOkBad(t, "A1() is not an IA()", Any, IA, A, Am1, A1, e)
+}
+
+func Test007d(t *testing.T) {
+	Any := "type Any(type ) interface {}"
+	IA := "type IA(type ) interface { m1(type a IA())() IA() }"
+	A := "type A(type ) struct {}"
+	Am1 := "func (x0 A(type )) m1(type a IA())() IA() { return x0 }"
+	A1 := "type A1(type ) struct {}"
+	e := "A(){}.m1(A())()"
+	parseAndOkGood(t, Any, IA, A, Am1, A1, e)
+}
+
+// Testing Sig parsing
+func Test008(t *testing.T) {
+	IA := "type IA(type ) interface { m1(type a IA())() IA() }"
+	A := "type A(type ) struct {}"
+	Am1 := "func (x0 A(type )) m1(type a IA())() IA() { return x0 }"
+	B := "type B(type a IA()) struct {}"
+	Bm2 := "func (x0 B(type a IA())) m2(type )(x1 a) B(a) { return x0 }"
+	e := "A(){}"
+	parseAndOkGood(t, IA, A, Am1, B, Bm2, e)
+}
+
+// Testing calls on parameterised struct
+func Test009(t *testing.T) {
+	Any := "type Any(type ) interface {}"
+	IA := "type IA(type ) interface { m1(type a IA())() IA() }"
+	A := "type A(type ) struct {}"
+	Am1 := "func (x0 A(type )) m1(type a IA())() IA() { return x0 }"
+	B := "type B(type a IA()) struct {}"
+	Bm2 := "func (x0 B(type a IA())) m2(type )(x1 a) B(a) { return x0 }"
+	e := "B(A()){}.m2()(A(){})"
+	parseAndOkGood(t, Any, IA, A, Am1, B, Bm2, e)
+}
+
+func Test009b(t *testing.T) {
+	Any := "type Any(type ) interface {}"
+	IA := "type IA(type ) interface { m1(type a IA())() IA() }"
+	A := "type A(type ) struct {}"
+	Am1 := "func (x0 A(type )) m1(type a IA())() IA() { return x0 }"
+	A1 := "type A1(type ) struct {}"
+	B := "type B(type a IA()) struct {}"
+	Bm2 := "func (x0 B(type a IA())) m2(type )(x1 a) B(a) { return x0 }"
+	e := "B(A()){}.m2()(A1(){})"
+	parseAndOkBad(t, "A1() is not an A()", Any, IA, A, Am1, A1, B, Bm2, e)
+}
+
+// Initial test for generic type assertion
+func Test0010(t *testing.T) {
+	Any := "type Any(type ) interface {}"
+	ToAny := "type ToAny(type ) struct { any Any() }"
+	IA := "type IA(type ) interface { m1(type a IA())() IA() }"
+	A := "type A(type ) struct {}"
+	Am1 := "func (x0 A(type )) m1(type a IA())() IA() { return x0 }"
+	B := "type B(type a IA()) struct {}"
+	Bm2 := "func (x0 B(type a IA())) m2(type )(x1 a) Any() { return x1 }" // Unnecessary
+	e := "ToAny(){B(A()){}}.any.(B(A()))"
+	parseAndOkGood(t, Any, ToAny, IA, A, Am1, B, Bm2, e)
+}
+
+func Test0011(t *testing.T) {
+	IA := "type IA(type ) interface { m1(type a IA())() IA() }"
+	ToIA := "type ToIA(type ) struct { upcast IA() }"
+	A := "type A(type ) struct {}"
+	Am1 := "func (x0 A(type )) m1(type a IA())() IA() { return x0 }"
+	e := "ToIA(){A(){}}.upcast.(A())"
+	parseAndOkGood(t, IA, ToIA, A, Am1, e)
+}
+
+func Test0011b(t *testing.T) {
+	IA := "type IA(type ) interface { m1(type a IA())() IA() }"
+	ToIA := "type ToIA(type ) struct { upcast IA() }"
+	A := "type A(type ) struct {}"
+	Am1 := "func (x0 A(type )) m1(type a IA())() IA() { return x0 }"
+	A1 := "type A1(type ) struct {}"
+	e := "ToIA(){A(){}}.upcast.(A1())"
+	parseAndOkBad(t, "A1() is not an IA", IA, ToIA, A, Am1, A1, e)
+}
+
+func Test0011c(t *testing.T) {
+	Any := "type Any(type ) interface {}"
+	ToAny := "type ToAny(type ) struct { any Any() }"
+	B := "type B(type ) struct {}"
+	Bm3 := "func (x0 B(type )) m3(type b Any())(x1 b) Any() { return x1 }"
+	e := "ToAny(){B(){}}"
+	parseAndOkGood(t, Any, ToAny, B, Bm3, e)
+}
+
+// Testing parsing for Call with both targ and arg
+func Test0012(t *testing.T) {
+	Any := "type Any(type ) interface {}"
+	A := "type A(type ) struct {}"
+	B := "type B(type ) struct {}"
+	Bm := "func (x0 B(type )) m(type a Any())(x1 a) a { return x1 }"
+	e := "B(){}.m(A())(A(){})"
+	parseAndOkGood(t, Any, A, B, Bm, e)
+}
+
+// Testing Call typing, meth-tparam TSubs of result
+func Test0013(t *testing.T) {
+	Any := "type Any(type ) interface {}"
+	A := "type A(type ) struct {}"
+	B := "type B(type a Any()) struct { f a }"
+	Bm := "func (x0 B(type )) m(type a Any())(x1 a) a { return x1 }"
+	e := "B(A()){A(){}}.m(B(A()))(B(A()){A(){}}).f"
+	parseAndOkGood(t, Any, A, B, Bm, e)
 }
 
 /* Eval */

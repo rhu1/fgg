@@ -101,6 +101,7 @@ func interpFg(src string, strict bool, eval int) {
 	}
 }
 
+// TODO: factor out with above
 func interpFgg(src string, strict bool, eval int) {
 	vPrintln("\nParsing AST:")
 	var adptr fgg.FGGAdaptor
@@ -111,9 +112,9 @@ func interpFgg(src string, strict bool, eval int) {
 	allowStupid := false
 	prog.Ok(allowStupid)
 
-	/*if eval > NO_EVAL {
-		eval(prog, eval)
-	}*/
+	if eval > NO_EVAL {
+		evalFgg(prog, eval)
+	}
 }
 
 // N.B. currently FG panic comes out implicitly as an underlying run-time panic
@@ -138,6 +139,32 @@ func evalFg(p fg.FGProgram, steps int) {
 		vPrintln("Checking OK:") // TODO: maybe disable by default, enable by flag
 		p.Ok(allowStupid)
 		if !done && fg.IsValue(p.GetExpr()) {
+			done = true
+		}
+	}
+	fmt.Println(p.GetExpr().String()) // Final result
+}
+
+// TODO: factor out with above
+func evalFgg(p fgg.FGGProgram, steps int) {
+	allowStupid := true
+	vPrintln("\nEntering Eval loop:")
+	vPrintln("Decls:")
+	for _, v := range p.GetDecls() {
+		vPrintln("\t" + v.String() + ";")
+	}
+	vPrintln("Eval steps:")
+	vPrintln(fmt.Sprintf("%6d: %8s %v", 0, "", p.GetExpr())) // Initial prog OK already checked
+
+	done := steps > EVAL_TO_VAL || // Ignore 'done' if num steps fixed (set true, for ||!done below)
+		fgg.IsValue(p.GetExpr()) // O/w evaluate until a val -- here, check if init expr is already a val
+	var rule string
+	for i := 1; i <= steps || !done; i++ {
+		p, rule = p.Eval()
+		vPrintln(fmt.Sprintf("%6d: %8s %v", i, "["+rule+"]", p.GetExpr()))
+		vPrintln("Checking OK:") // TODO: maybe disable by default, enable by flag
+		p.Ok(allowStupid)
+		if !done && fgg.IsValue(p.GetExpr()) {
 			done = true
 		}
 	}

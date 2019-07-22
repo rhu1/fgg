@@ -43,8 +43,6 @@ func (p FGGProgram) Ok(allowStupid bool) {
 	p.e.Typing(p.ds, delta, gamma, allowStupid)
 }
 
-/*// CHECKME: resulting FGGProgram is not parsed from source, OK? -- cf. Expr.Eval
-// But doesn't affect FGPprogam.Ok() (i.e., Expr.Typing)
 func (p FGGProgram) Eval() (FGGProgram, string) {
 	e, rule := p.e.Eval(p.ds)
 	return FGGProgram{p.ds, e}, rule
@@ -56,7 +54,7 @@ func (p FGGProgram) GetDecls() []Decl {
 
 func (p FGGProgram) GetExpr() Expr {
 	return p.e
-}*/
+}
 
 func (p FGGProgram) String() string {
 	var b strings.Builder
@@ -169,7 +167,7 @@ type FieldDecl struct {
 var _ FGGNode = FieldDecl{}
 
 func (fd FieldDecl) Subs(subs map[TParam]Type) FieldDecl {
-	return FieldDecl{fd.f, fd.u.Subs(subs)}
+	return FieldDecl{fd.f, fd.u.TSubs(subs)}
 }
 
 func (fd FieldDecl) String() string {
@@ -326,18 +324,19 @@ type Sig struct {
 
 var _ Spec = Sig{}
 
+// TODO: rename TSubs
 func (g Sig) Subs(subs map[TParam]Type) Sig {
 	tfs := make([]TFormal, len(g.psi.tfs))
 	for i := 0; i < len(g.psi.tfs); i++ {
 		tf := g.psi.tfs[i]
-		tfs[i] = TFormal{tf.a, tf.u.Subs(subs)}
+		tfs[i] = TFormal{tf.a, tf.u.TSubs(subs)}
 	}
 	ps := make([]ParamDecl, len(g.pds))
 	for i := 0; i < len(ps); i++ {
 		pd := g.pds[i]
-		ps[i] = ParamDecl{pd.x, pd.u.Subs(subs)}
+		ps[i] = ParamDecl{pd.x, pd.u.TSubs(subs)}
 	}
-	u := g.u.Subs(subs)
+	u := g.u.TSubs(subs)
 	return Sig{g.m, TFormals{tfs}, ps, u}
 }
 

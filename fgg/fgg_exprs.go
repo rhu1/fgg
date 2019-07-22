@@ -70,7 +70,7 @@ func (s StructLit) TSubs(subs map[TParam]Type) Expr {
 	for i := 0; i < len(s.es); i++ {
 		es[i] = s.es[i].TSubs(subs)
 	}
-	return StructLit{s.u.Subs(subs).(TName), es}
+	return StructLit{s.u.TSubs(subs).(TName), es}
 }
 
 func (s StructLit) Eval(ds []Decl) (Expr, string) {
@@ -196,7 +196,7 @@ func (c Call) Subs(subs map[Variable]Expr) Expr {
 func (c Call) TSubs(subs map[TParam]Type) Expr {
 	targs := make([]Type, len(c.targs))
 	for i := 0; i < len(c.targs); i++ {
-		targs[i] = c.targs[i].Subs(subs)
+		targs[i] = c.targs[i].TSubs(subs)
 	}
 	args := make([]Expr, len(c.args))
 	for i := 0; i < len(c.args); i++ {
@@ -249,7 +249,8 @@ func (c Call) Typing(ds []Decl, delta TEnv, gamma Env, allowStupid bool) Type {
 		writeTypes(&b, c.targs)
 		b.WriteString("], formals=[")
 		b.WriteString(g.psi.String())
-		b.WriteString("]")
+		b.WriteString("]\n\t")
+		b.WriteString(c.String())
 		panic(b.String())
 	}
 	if len(c.args) != len(g.pds) {
@@ -258,7 +259,8 @@ func (c Call) Typing(ds []Decl, delta TEnv, gamma Env, allowStupid bool) Type {
 		writeExprs(&b, c.args)
 		b.WriteString("], params=[")
 		writeParamDecls(&b, g.pds)
-		b.WriteString("]")
+		b.WriteString("]\n\t")
+		b.WriteString(c.String())
 		panic(b.String())
 	}
 	subs := make(map[TParam]Type) // CHECKME: applying this subs vs. adding to a new delta?
@@ -266,7 +268,7 @@ func (c Call) Typing(ds []Decl, delta TEnv, gamma Env, allowStupid bool) Type {
 		subs[g.psi.tfs[i].a] = c.targs[i]
 	}
 	for i := 0; i < len(c.targs); i++ {
-		u := g.psi.tfs[i].u.Subs(subs)
+		u := g.psi.tfs[i].u.TSubs(subs)
 		if !c.targs[i].Impls(ds, delta, u) {
 			panic("Type actual must implement type formal: actual=" +
 				c.targs[i].String() + ", param=" + u.String())
@@ -274,14 +276,14 @@ func (c Call) Typing(ds []Decl, delta TEnv, gamma Env, allowStupid bool) Type {
 	}
 	for i := 0; i < len(c.args); i++ {
 		// CHECKME: submission version's notation, (~\tau :> ~\rho)[subs], slightly unclear
-		u_a := c.args[i].Typing(ds, delta, gamma, allowStupid).Subs(subs)
-		u_p := g.pds[i].u.Subs(subs)
+		u_a := c.args[i].Typing(ds, delta, gamma, allowStupid).TSubs(subs)
+		u_p := g.pds[i].u.TSubs(subs)
 		if !u_a.Impls(ds, delta, u_p) {
 			panic("Arg expr type must implement param type: arg=" + u_a.String() +
 				", param=" + u_p.String())
 		}
 	}
-	return g.u
+	return g.u.TSubs(subs) // subs necessary, c.psi info (i.e., bounds) will be "lost" after leaving this context
 }
 
 func (c Call) String() string {
@@ -295,6 +297,59 @@ func (c Call) String() string {
 	writeExprs(&b, c.args)
 	b.WriteString(")")
 	return b.String()
+}
+
+/* Assert */
+
+type Assert struct {
+	e Expr
+	u Type
+}
+
+func (a Assert) Subs(subs map[Variable]Expr) Expr {
+	return Assert{a.e.Subs(subs), a.u}
+}
+
+func (a Assert) TSubs(subs map[TParam]Type) Expr {
+	return Assert{a.e.TSubs(subs), a.u.TSubs(subs)}
+}
+
+func (a Assert) Eval(ds []Decl) (Expr, string) {
+	if !IsValue(a.e) {
+		e, rule := a.e.Eval(ds)
+		return Assert{e, a.u}, rule
+	}
+	u_S := typ(ds, a.e.(StructLit))                // panics if StructLit.u is not a TName u_S
+	if u_S.Impls(ds, make(map[TParam]Type), a.u) { // Empty Delta -- not super clear in submission version
+		return a.e, "Assert"
+	}
+	panic("Cannot reduce: " + a.String())
+}
+
+func (a Assert) Typing(ds []Decl, delta TEnv, gamma Env, allowStupid bool) Type {
+	u := a.e.Typing(ds, delta, gamma, allowStupid)
+	if isStructTName(ds, u) {
+		if allowStupid {
+			return a.u
+		} else {
+			panic("Expr must be an interface type (in a non-stupid context): found " +
+				u.String() + " for\n\t" + a.String())
+		}
+	}
+	// u is a TParam or an interface type TName
+	if _, ok := a.u.(TParam); ok || isInterfaceTName(ds, a.u) {
+		return a.u // No further checks -- N.B., Robert said they are looking to refine this
+	}
+	// a.u is a struct type TName
+	if a.u.Impls(ds, delta, u) {
+		return a.u
+	}
+	panic("Struct type assertion must implement expr type: asserted=" +
+		a.u.String() + ", expr=" + u.String())
+}
+
+func (a Assert) String() string {
+	return a.e.String() + ".(" + a.u.String() + ")"
 }
 
 /* Aux, helpers */

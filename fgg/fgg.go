@@ -12,7 +12,7 @@ var _ = reflect.Append
 type Name = string
 
 type Type interface {
-	Subs(subs map[TParam]Type) Type
+	TSubs(subs map[TParam]Type) Type
 	Impls(ds []Decl, delta TEnv, u Type) bool
 	Ok(ds []Decl, delta TEnv)
 	Equals(u Type) bool
@@ -23,17 +23,23 @@ type TParam Name
 
 var _ Type = TParam("")
 
-func (a TParam) Subs(subs map[TParam]Type) Type {
+func (a TParam) TSubs(subs map[TParam]Type) Type {
 	res, ok := subs[a]
 	if !ok {
-		panic("Unknown param: " + a.String())
+		//panic("Unknown param: " + a.String())
+		return a // CHECKME: ok? -- see TSubs in methods aux, w.r.t. meth-tparams that aren't in the subs map
+		// Cf. Variable.Subs?
 	}
 	return res
 }
 
 // u0 <: u
 func (a TParam) Impls(ds []Decl, delta TEnv, u Type) bool {
-	return a == u || a.Impls(ds, delta, bounds(delta, u))
+	if a1, ok := u.(TParam); ok {
+		return a == a1
+	} else {
+		return bounds(delta, a).Impls(ds, delta, u)
+	}
 }
 
 func (a TParam) Ok(ds []Decl, delta TEnv) {
@@ -60,10 +66,10 @@ type TName struct {
 
 var _ Type = TName{}
 
-func (u0 TName) Subs(subs map[TParam]Type) Type {
+func (u0 TName) TSubs(subs map[TParam]Type) Type {
 	us := make([]Type, len(u0.us))
 	for i := 0; i < len(us); i++ {
-		us[i] = u0.us[i].Subs(subs)
+		us[i] = u0.us[i].TSubs(subs)
 	}
 	return TName{u0.t, us}
 }
@@ -76,8 +82,11 @@ func (u0 TName) Impls(ds []Decl, delta TEnv, u Type) bool {
 
 	gs := methods(ds, u)   // u is a t_I
 	gs0 := methods(ds, u0) // t0 may be any
+
 	for k, g := range gs {
 		g0, ok := gs0[k]
+		if ok {
+		}
 		if !ok || !g.EqExceptTParamsAndVars(g0) {
 			return false
 		}
@@ -94,6 +103,8 @@ func (u0 TName) Ok(ds []Decl, delta TEnv) {
 		b.WriteString(psi.String())
 		b.WriteString(" actuals=")
 		writeTypes(&b, u0.us)
+		b.WriteString("\n\t")
+		b.WriteString(u0.String())
 		panic(b.String())
 	}
 	subs := make(map[TParam]Type)
@@ -101,8 +112,8 @@ func (u0 TName) Ok(ds []Decl, delta TEnv) {
 		subs[psi.tfs[i].a] = u0.us[i]
 	}
 	for i := 0; i < len(psi.tfs); i++ {
-		actual := psi.tfs[i].a.Subs(subs) // CHECKME: submission version T-Named, subs applied to Delta?
-		formal := psi.tfs[i].u.Subs(subs)
+		actual := psi.tfs[i].a.TSubs(subs) // CHECKME: submission version T-Named, subs applied to Delta?
+		formal := psi.tfs[i].u.TSubs(subs)
 		if !actual.Impls(ds, delta, formal) { // tfs[i].u is a \tau_I, checked by TDecl.Ok
 			panic("Type actual must implement type formal: actual=" + actual.String() +
 				" formal=" + formal.String())

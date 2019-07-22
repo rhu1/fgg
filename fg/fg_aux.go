@@ -28,7 +28,7 @@ func methods(ds []Decl, t Type) map[Name]Sig {
 	} else if isInterfaceType(ds, t) {
 		td := getTDecl(ds, t).(ITypeLit)
 		for _, s := range td.ss {
-			for _, v := range s.GetSigs(ds) {
+			for _, v := range s.GetSigs(ds) { // CHECKME: can this cycle indefinitely? (cf. submission version, recursive "methods")
 				res[v.m] = v
 			}
 		}

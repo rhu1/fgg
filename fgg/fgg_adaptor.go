@@ -196,8 +196,8 @@ func (a *FGGAdaptor) ExitSig(ctx *parser.SigContext) {
 	// Reverse order
 	t := a.pop().(Type)
 	var pds []ParamDecl
-	if ctx.GetChildCount() > 4 {
-		npds := (ctx.GetChild(2).GetChildCount() + 1) / 2 // e.g., pd ',' pd ',' pd
+	if ctx.GetChildCount() > 5 {
+		npds := (ctx.GetChild(3).GetChildCount() + 1) / 2 // e.g., pd ',' pd ',' pd
 		pds = make([]ParamDecl, npds)
 		for i := npds - 1; i >= 0; i-- {
 			pds[i] = a.pop().(ParamDecl) // Adding backwards
@@ -237,15 +237,6 @@ func (a *FGGAdaptor) ExitSelect(ctx *parser.SelectContext) {
 }
 
 func (a *FGGAdaptor) ExitCall(ctx *parser.CallContext) {
-	targCs := ctx.GetTargs()
-	var targs []Type
-	if targCs != nil {
-		ntargs := (targCs.GetChildCount() + 1) / 2 // e.g., t ',' t ',' t
-		targs = make([]Type, ntargs)
-		for i := ntargs - 1; i >= 0; i-- {
-			targs[i] = a.pop().(Type) // Adding backwards
-		}
-	}
 	argCs := ctx.GetArgs()
 	var args []Expr
 	if argCs != nil {
@@ -255,7 +246,22 @@ func (a *FGGAdaptor) ExitCall(ctx *parser.CallContext) {
 			args[i] = a.pop().(Expr) // Adding backwards
 		}
 	}
+	targCs := ctx.GetTargs()
+	var targs []Type
+	if targCs != nil {
+		ntargs := (targCs.GetChildCount() + 1) / 2 // e.g., t ',' t ',' t
+		targs = make([]Type, ntargs)
+		for i := ntargs - 1; i >= 0; i-- {
+			targs[i] = a.pop().(Type) // Adding backwards
+		}
+	}
 	m := Name(ctx.GetChild(2).(*antlr.TerminalNodeImpl).GetText())
 	e := a.pop().(Expr)
 	a.push(Call{e, m, targs, args})
+}
+
+func (a *FGGAdaptor) ExitAssert(ctx *parser.AssertContext) {
+	u := a.pop().(Type)
+	e := a.pop().(Expr)
+	a.push(Assert{e, u})
 }

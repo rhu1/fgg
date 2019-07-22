@@ -44,11 +44,11 @@ func (this exampleBr) IfFF() Any {
 };
 
 type t struct { };
-func (x0 t) m(x1 t) Any { return x1 };
+func (x0 t) m(x1 t) t { return x1 };
 
 type Ex struct {};
 func (d Ex) example(b Bool, x t, y t) t {
-	return b.Cond(exampleBr{x,y}).(t)  // As written in the paper
+	return b.Cond(exampleBr{x,y}).(t).m(t{})  // Main example, .(t)
 };
 func main() {
 	_ = Ex{}.example(TT{}, t{}, t{})
