@@ -136,7 +136,7 @@ type MDecl struct {
 	recv ParamDecl
 	m    Name // Not embedding Sig because Sig doesn't take xs
 	pds  []ParamDecl
-	t    Type
+	t    Type // Return
 	e    Expr
 }
 

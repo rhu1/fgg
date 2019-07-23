@@ -183,7 +183,7 @@ type MDecl struct {
 	m        Name // Refactor to embed Sig?
 	psi      TFormals
 	pds      []ParamDecl
-	u        Type
+	u        Type // Return
 	e        Expr
 }
 
