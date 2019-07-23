@@ -1,4 +1,34 @@
-# fgg
+# fgg -- CHANGELOG
+
+(TODO: an actual README)
+
+
+20190723 Ray
+
+Added initial version of FGG, with examples from the paper.
+
+To generate parser: antlr4 -Dlanguage=Go -o parser/fgg parser/FGG.g4  
+(Or use go generate -- or simply copy all contents of parser/pregen/fgg into
+parser/fgg.)  
+Note: I moved the .g4 files inside the parser directory.
+
+Warning: I did not implement any sugar (and don't intend to) -- all FGG must
+be written strictly according to the formal grammar.  
+(Unlike all the examples in the paper.)
+
+First run (e.g.): go run github.com/rhu1/fgg -v -fgg -inline="package main;
+type A(type ) struct {}; func main() { _ = A(){} }"  
+Note: need the -fgg flag.  (-fg is still the implicit default.)
+
+To run an existing example (e.g.): go run github.com/rhu1/fgg -fgg -eval=-1 -v
+fgg/examples/popl20/compose/compose.fgg
+
+To run tests: go test github.com/rhu1/fgg/fgg
+
+Examples are here: https://github.com/rhu1/fgg/tree/master/fgg/examples
+
+Have started a naive monomorphisation routine -- WIP.
+
 
 20190716 Ray
 
@@ -19,6 +49,7 @@ value, or panic) CL flags.
 Extension to FGG on top of the current codebase would probably take a couple
 of evenings, though I may not be able to do so immediately.
 
+
 20190715 Ray
 
 Added type assertions, and some CL flag options (e.g., -eval=n,
@@ -27,6 +58,7 @@ N.B. flags must be given before any non-flag args.
 
 A first HelloWorld run can be done by:
 go run github.com/rhu1/fgg -eval=10 -v fg/examples/hello/hello.go
+
 
 20190714 Ray
 
