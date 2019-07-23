@@ -1,4 +1,4 @@
-//$ go run github.com/rhu1/fgg -v -eval=10 fg/examples/hello/example.go
+//$ go run github.com/rhu1/fgg -v -eval=10 fg/examples/hello/hello.go
 // Cf.
 //$ go run github.com/rhu1/fgg/fg/examples/hello
 
@@ -7,8 +7,8 @@
 // So the ';' are mandatory -- cannot replace by newlines (as in actual Go).
 // (Newlines and other whitespace may be freely added, though.)
 package main;
-type A struct{};
-func (x0 A) m() A { return x0.m() };
+type Hello struct{};
+func (x0 Hello) world() Hello { return x0.world() };
 func main() {
-	_ = A{}.m()
+	_ = Hello{}.world()
 }
