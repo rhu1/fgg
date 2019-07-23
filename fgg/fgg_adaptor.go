@@ -225,6 +225,7 @@ func (a *FGGAdaptor) ExitStructLit(ctx *parser.StructLitContext) {
 			es[i] = a.pop().(Expr) // Adding backwards
 		}
 	}
+	// If targs omitted, following will fail attempting to cast the non-param name parsed as a TParam
 	u := a.pop().(TName) // N.B. \tau_S, means "of the form t_S(~\tau)" (so a TName) -- i.e., not \alpha
 	a.push(StructLit{u, es})
 }
