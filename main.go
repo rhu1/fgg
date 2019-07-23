@@ -45,6 +45,7 @@ var verbose bool = false
 
 // FGG gotchas:
 // type B(type a Any) struct { f a }; // Any parsed as a TParam -- currently not permitted
+// Node(Nat){...} // fgg.FGGNode (Nat) is fgg.TParam, not fgg.TName
 // type IA(type ) interface { m1() };  // m1() parsed as a TName (an invalid Spec) -- N.B. ret missing anyway
 
 // N.B. flags (e.g., -internal=true) must be supplied before any non-flag args
@@ -102,7 +103,7 @@ func interpFg(src string, strict bool, eval int) {
 	}
 }
 
-// TODO: factor out with above
+// TODO: factor out with above -- make a base Program/Expr interfaces with Ok/Eval/etc
 func interpFgg(src string, strict bool, eval int) {
 	vPrintln("\nParsing AST:")
 	var adptr fgg.FGGAdaptor
