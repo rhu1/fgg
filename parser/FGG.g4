@@ -20,7 +20,7 @@ TYPE      : 'type' ;
 
 fragment LETTER : ('a' .. 'z') | ('A' .. 'Z') ;
 fragment DIGIT  : ('0' .. '9') ;
-NAME            : LETTER (LETTER | DIGIT | '_')* ;
+NAME            : (LETTER | '_') (LETTER | '_' | DIGIT)* ;
 WHITESPACE      : [ \r\n\t]+ -> skip ;
 COMMENT         : '/*' .*? '*/' -> channel(HIDDEN) ;
 LINE_COMMENT    : '//' ~[\r\n]* -> channel(HIDDEN) ;
