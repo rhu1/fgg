@@ -1,0 +1,12 @@
+//$ go run github.com/rhu1/fgg -fgg -v -eval=10 fgg/examples/hello/hello.fgg
+
+// N.B. FGG (or at least this implementation) is intended to be white-space *insensitive*.
+// (E.g., this program could be written all on one line.)
+// So the ';' are mandatory -- cannot replace by newlines (as in actual Go).
+// (Newlines and other whitespace may be freely added, though.)
+package main;
+type Hello(type ) struct{};
+func (x0 Hello(type )) world(type )() Hello() { return x0.world()() };
+func main() {
+	_ = Hello(){}.world()()
+}
