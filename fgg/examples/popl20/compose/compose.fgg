@@ -95,11 +95,11 @@ func (xs Cons(type a Eq(a))) Member(type )(x a) Bool() { return x.Equal()(xs.hea
 /* Example code */
 
 type D(type ) struct {};
-func (d D(type )) One(type )() Nat() { return Succ(){Zero(){}} };
-func (d D(type )) Two(type )() Nat() { return D(){}.One()().Add()(D(){}.One()()) };
-func (d D(type )) Three(type )() Nat() { return D(){}.Two()().Add()(D(){}.One()()) };
+func (d D(type )) _1(type )() Nat() { return Succ(){Zero(){}} };
+func (d D(type )) _2(type )() Nat() { return D(){}._1()().Add()(D(){}._1()()) };
+func (d D(type )) _3(type )() Nat() { return D(){}._2()().Add()(D(){}._1()()) };
 
 func main() {
-	_ = compose(Nat(), Nat(), Nat()){incr(){D(){}.One()()}, incr(){D(){}.Two()()}}.
-			Apply()(D(){}.Three()()) 
+	_ = compose(Nat(), Nat(), Nat()){incr(){D(){}._1()()}, incr(){D(){}._2()()}}.
+			Apply()(D(){}._3()()) 
 }

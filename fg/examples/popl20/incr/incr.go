@@ -93,11 +93,11 @@ func (xs Cons) Member(x Eq) Bool { return x.Equal(xs.head).Cond(memberBr{xs,x}).
 /* Example code */
 
 type D struct {};
-func (d D) One() Nat { return Succ{Zero{}} };
-func (d D) Two() Nat { return D{}.One().Add(D{}.One()) };
-func (d D) Three() Nat { return D{}.Two().Add(D{}.One()) };
+func (d D) _1() Nat { return Succ{Zero{}} };
+func (d D) _2() Nat { return D{}._1().Add(D{}._1()) };
+func (d D) _3() Nat { return D{}._2().Add(D{}._1()) };
 
 func main() {
 	// Submission version: incr{2}.Apply(3).(Nat)
-	_ = incr{D{}.Two()}.Apply(D{}.Three()).(Nat)
+	_ = incr{D{}._2()}.Apply(D{}._3()).(Nat)
 }
