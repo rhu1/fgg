@@ -102,7 +102,7 @@ func interpFg(src string, strict bool, eval int) {
 	}
 }
 
-// TODO: factor out with above
+// TODO: factor out with above -- make a base Program/Expr interfaces with Ok/Eval/etc
 func interpFgg(src string, strict bool, eval int) {
 	vPrintln("\nParsing AST:")
 	var adptr fgg.FGGAdaptor
