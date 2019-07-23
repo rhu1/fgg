@@ -62,7 +62,7 @@ type Decl interface {
 
 type TDecl interface {
 	Decl
-	GetType() Type // == Type(GetName())
+	GetType() Type // In FG, GetType() == Type(GetName())
 }
 
 type Spec interface {

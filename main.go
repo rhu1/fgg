@@ -43,7 +43,7 @@ var NO_EVAL = -2     // Must be < EVAL_TO_VAL
 
 var verbose bool = false
 
-// Gotchas:
+// FGG gotchas:
 // type B(type a Any) struct { f a }; // Any parsed as a TParam -- currently not permitted
 // type IA(type ) interface { m1() };  // m1() parsed as a TName (an invalid Spec) -- N.B. ret missing anyway
 

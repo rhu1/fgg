@@ -19,7 +19,7 @@ type FGProgram struct {
 var _ FGNode = FGProgram{}
 
 func (p FGProgram) Ok(allowStupid bool) {
-	if !allowStupid { // Hack, to print only "top-level" programs (not during Eval)
+	if !allowStupid { // Hack, to print the following only for "top-level" programs (not during Eval)
 		fmt.Println("[Warning] Type decl OK not checked yet " +
 			"(e.g., distinct type/field/method names, etc.)")
 	}
@@ -40,17 +40,18 @@ func (p FGProgram) Ok(allowStupid bool) {
 	p.e.Typing(p.ds, gamma, allowStupid)
 }
 
+// Possibly refactor aspects of this and related as "Decl.Wf()" -- the parts of "Ok()" omitted from the paper
 func isDistinctDecl(decl Decl, ds []Decl) bool {
 	var count int
 	for _, d := range ds {
 		switch d := d.(type) {
 		case TDecl:
-			// checks that type-name is unique regardless of definition
+			// checks that type-name is unique regardless of definition  // Refactor as a single global pass (use a temp map), or into a TDecl.Wf()
 			if td, ok := decl.(TDecl); ok && d.GetName() == td.GetName() {
 				count++
 			}
 		case MDecl:
-			// checks that (method-type, method-name) is unique
+			// checks that (method-type, method-name) is unique  // RH: CHECKME: this would allow (bad) "return overloading"?
 			if md, ok := decl.(MDecl); ok && d.t.String() == md.t.String() && d.GetName() == md.GetName() {
 				count++
 			}
