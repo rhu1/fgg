@@ -198,6 +198,7 @@ type Decl = base.Decl
 type TDecl interface {
 	Decl
 	GetTFormals() TFormals
+	//TSubs(subs map[TParam]Type) // For monomorph (Type is a TName)
 }
 
 type Spec interface {

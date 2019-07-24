@@ -42,6 +42,7 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/rhu1/fgg/base"
 	"github.com/rhu1/fgg/fg"
@@ -59,16 +60,19 @@ var verbose bool = false
 func main() {
 	// N.B. flags (e.g., -internal=true) must be supplied before any non-flag args
 	evalPtr := flag.Int("eval", NO_EVAL,
-		"-steps=n, evaluate n (>=0) steps; or -steps=-1, evaluate to value (or panic)")
+		"-eval=n, evaluate n (>=0) steps; or -steps=-1, evaluate to value (or panic)")
+	compilePtr := flag.String("compile", "",
+		"-compile=\"out.go\", [WIP] monomorphise FGG source to FG (ignored if -fgg not set);"+
+			" specify \"--\" to print to stdout")
 	fgPtr := flag.Bool("fg", false,
 		"-fg=false, interpret input as FG (defaults to true if neither -fg/-fgg set)")
 	fggPtr := flag.Bool("fgg", false, "-fgg=true, interpret input as FGG")
 	internalPtr := flag.Bool("internal", false,
 		"-internal=true, use \"internal\" input as source")
 	inlinePtr := flag.String("inline", "",
-		"-inline=true, use inline input as source")
+		"-inline=\"[FG/FGG src]\", use inline input as source")
 	monomPtr := flag.Bool("monom", false,
-		"-monom=true, [WIP] monomorphise FGG source (ignored if -fgg not set)")
+		"-monom=true, [WIP] monomorphise FGG source using formal notation (ignored if -fgg not set)")
 	strictParsePtr := flag.Bool("strict", true,
 		"-strict=false, disable strict parsing (attempt recovery on parsing errors)")
 	verbosePtr := flag.Bool("v", false, "-v=true, enable verbose printing")
@@ -94,14 +98,16 @@ func main() {
 
 	if *fgPtr {
 		var a fg.FGAdaptor
-		interp(&a, src, *strictParsePtr, *evalPtr, false)
+		interp(&a, src, *strictParsePtr, *evalPtr, false, "")
 	} else if *fggPtr {
 		var a fgg.FGGAdaptor
-		interp(&a, src, *strictParsePtr, *evalPtr, *monomPtr)
+		interp(&a, src, *strictParsePtr, *evalPtr, *monomPtr, *compilePtr)
 	}
 }
 
-func interp(a base.Adaptor, src string, strict bool, steps int, monom bool) {
+// Pre: monom==true || compile != "" => -fgg is set
+func interp(a base.Adaptor, src string, strict bool, steps int, monom bool,
+	compile string) {
 	vPrintln("\nParsing AST:")
 	prog := a.Parse(strict, src) // AST (FGProgram root)
 	vPrintln(prog.String())
@@ -114,19 +120,38 @@ func interp(a base.Adaptor, src string, strict bool, steps int, monom bool) {
 		eval(prog, steps)
 	}
 
-	if monom {
-		vPrintln("\nMonomorphising: [Warning] WIP [Warning]")
-		var gamma fgg.ClosedEnv
+	if monom || compile != "" {
+		/*var gamma fgg.ClosedEnv
 		omega := make(fgg.WMap)
 		fgg.MakeWMap(prog.GetDecls(), gamma, prog.GetExpr().(fgg.Expr), omega)
 		for _, v := range omega {
 			vPrintln(v.GetTName().String() + " |-> " + string(v.GetMonomId()))
-			gs := v.GetParameterisedSigs()
+			gs := fgg.GetParameterisedSigs(v)
 			if len(gs) > 0 {
 				vPrintln("Instantiations of parameterised methods: (i.e., those that had \"additional method params\")")
 				for _, g := range gs {
 					vPrintln("\t" + g.String())
 				}
+			}
+		}*/
+		p_mono := fgg.Monomorph(prog.(fgg.FGGProgram)) // TODO: reformat (e.g., "<...>") to make an actual FG program
+		if monom {
+			vPrintln("\nMonomorphising, formal notation: [Warning] WIP [Warning]")
+			vPrintln(p_mono.String())
+		}
+		if compile != "" {
+			vPrintln("\nMonomorphising, FG output: [Warning] WIP [Warning]")
+			out := p_mono.String()
+			out = strings.Replace(out, ",,", "", -1)
+			out = strings.Replace(out, "<", "", -1)
+			out = strings.Replace(out, ">", "", -1)
+			if compile == "--" {
+				vPrintln(out)
+			} else {
+				vPrintln("Writing output to: " + compile)
+				d1 := []byte(out)
+				err := ioutil.WriteFile(compile, d1, 0644)
+				checkErr(err)
 			}
 		}
 	}

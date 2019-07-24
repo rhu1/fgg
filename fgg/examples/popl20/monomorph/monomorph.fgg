@@ -26,7 +26,7 @@ type Succ(type ) struct { pred Nat() };
 func (m Zero(type )) Add(type )(n Nat()) Nat() { return n };
 func (m Succ(type )) Add(type )(n Nat()) Nat() { return Succ(){m.pred.Add()(n)} };
 
-/* */
+/* Functions */
 
 type Func(type a Any(), b Any()) interface { Apply(type )(x a) b };
 
@@ -35,6 +35,8 @@ func (this incr(type )) Apply(type )(x Nat()) Nat() { return x.Add()(this.n) };
 
 type not(type ) struct {};
 func (this not(type )) Apply(type )(x Bool()) Bool() { return x.Not()() };
+
+/* Lists */
 
 type List(type a Any()) interface {
 	Map(type b Any())(f Func(a,b)) List(b)
@@ -48,6 +50,8 @@ func (xs Nil(type a Any())) Map(type b Any())(f Func(a,b)) List(b) {
 func (xs Cons(type a Any())) Map(type b Any())(f Func(a,b)) List(b) {
 	return Cons(b){f.Apply()(xs.head), xs.tail.Map(b)(f)}
 };
+
+/* Example code */
 
 type Pair(type a Any(), b Any()) struct { Fst a; Snd b };
 

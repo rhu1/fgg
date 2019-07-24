@@ -1,44 +1,242 @@
 package fgg
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 
 	"github.com/rhu1/fgg/fg"
 )
 
+var _ = fmt.Errorf
+
 /* Naive monomorph -- !!WIP!! */
 
-//func Monomorph(p FGGProgram) fg.FGProgram { /* TODO */ }
+type ClosedEnv map[Name]TName // Pre: forall TName, isClosed
+
+// TODO: reformat (e.g., "<...>") to make an actual FG program
+func Monomorph(p FGGProgram) fg.FGProgram {
+	var gamma ClosedEnv
+	omega := make(WMap)
+	MakeWMap(p.GetDecls(), gamma, p.GetExpr().(Expr), omega) // Builds omega
+
+	e := monomExpr(omega, p.e) // Do first, to populate omega -- (unnecessary?)
+	var ds []Decl
+	for _, v := range p.ds {
+		switch d := v.(type) {
+		case TDecl:
+			t := d.GetName()
+			for k1, v1 := range omega {
+				if k1.t == t {
+					ds = append(ds, monomTDecl(p.ds, omega, d, v1))
+				}
+			}
+		case MDecl:
+			for k1, v1 := range omega {
+				if k1.t == d.t_recv {
+					//ds = append(ds, monomMDecl(omega, d, v1)...)  // Not allowed
+					for _, v := range monomMDecl(p.ds, omega, d, v1) {
+						ds = append(ds, v)
+					}
+				}
+			}
+		default:
+			panic("Unknown Decl kind: " + reflect.TypeOf(d).String() +
+				"\n\t" + d.String())
+		}
+	}
+	return fg.NewFGProgram(ds, e)
+}
+
+// Pre: wv represents an instantiation of the `td` type
+func monomTDecl(ds []Decl, omega WMap, td TDecl, wv WVal) fg.TDecl {
+	subs := make(map[TParam]Type) // Type is a TName
+	psi := td.GetTFormals()
+	for i := 0; i < len(psi.tfs); i++ {
+		subs[psi.tfs[i].a] = wv.u.us[i]
+	}
+	switch d := td.(type) {
+	case STypeLit:
+		fds := make([]fg.FieldDecl, len(d.fds))
+		for i := 0; i < len(d.fds); i++ {
+			tmp := d.fds[i]
+			u := tmp.u.TSubs(subs).(TName) // "Inlined" substitution actions here -- cf. TDecl.TSubs
+			fds[i] = fg.NewFieldDecl(tmp.f, omega[toWKey(u)].id)
+		}
+		return fg.NewSTypeLit(wv.id, fds)
+	case ITypeLit:
+		var ss []fg.Spec
+		for _, v := range d.ss {
+			switch s := v.(type) {
+			case Sig:
+				if len(s.psi.tfs) == 0 {
+					pds := make([]fg.ParamDecl, len(s.pds))
+					for i := 0; i < len(s.pds); i++ {
+						tmp := s.pds[i]
+						u_p := tmp.u.TSubs(subs).(TName)
+						pds[i] = fg.NewParamDecl(tmp.x, omega[toWKey(u_p)].id)
+					}
+					u := s.u.TSubs(subs).(TName)
+					ss = append(ss, fg.NewSig(s.m, pds, omega[toWKey(u)].id))
+				} else {
+					/*for _, v := range wv.gs {  // Subsumed by below?
+						if v.g.GetMethName() == s.m {
+							ss = append(ss, v.g)
+						}
+					}*/
+					// forall u_S s.t. u_S <: wv.u, collect targs for all mono(u_S)
+					empty := make(TEnv)
+					targs := make(map[string][]Type)
+					for _, v := range omega {
+						if isStructType(ds, v.u.t) && v.u.Impls(ds, empty, wv.u) {
+							for _, v1 := range v.gs {
+								if len(v1.targs) > 0 {
+									hash := ""
+									for _, v2 := range v1.targs {
+										hash = hash + v2.String()
+									}
+									targs[hash] = v1.targs
+								}
+							}
+						}
+					}
+					for _, v := range targs {
+						subs1 := make(map[TParam]Type)
+						for k1, v1 := range subs {
+							subs1[k1] = v1
+						}
+						for i := 0; i < len(v); i++ {
+							subs1[s.psi.tfs[i].a] = v[i]
+						}
+						pds := make([]fg.ParamDecl, len(s.pds))
+						for i := 0; i < len(s.pds); i++ {
+							tmp := s.pds[i]
+							u_p := tmp.u.TSubs(subs1).(TName)
+							pds[i] = fg.NewParamDecl(tmp.x, omega[toWKey(u_p)].id)
+						}
+						u := s.u.TSubs(subs1).(TName)
+						g1 := fg.NewSig(getMonomMethName(omega, s.m, v), pds,
+							omega[toWKey(u)].id)
+						ss = append(ss, g1)
+					}
+				}
+			case TName:
+				ss = append(ss, omega[toWKey(s)].id)
+			default:
+				panic("Unknown Spec kind: " + reflect.TypeOf(v).String() +
+					"\n\t" + v.String())
+			}
+		}
+		return fg.NewITypeLit(wv.id, ss)
+	default:
+		panic("Unknown TDecl kind: " + reflect.TypeOf(d).String() +
+			"\n\t" + d.String())
+	}
+}
+
+// Pre: wv represents an instantiation of `md.t_recv`
+func monomMDecl(ds []Decl, omega WMap, md MDecl, wv WVal) (res []fg.MDecl) {
+	subs := make(map[TParam]Type) // Type is a TName
+	for i := 0; i < len(md.psi_recv.tfs); i++ {
+		subs[md.psi_recv.tfs[i].a] = wv.u.us[i]
+	}
+	recv := fg.NewParamDecl(md.x_recv, wv.id)
+	if len(md.psi.tfs) == 0 {
+		pds := make([]fg.ParamDecl, len(md.pds))
+		for i := 0; i < len(md.pds); i++ {
+			tmp := md.pds[i]
+			u := tmp.u.TSubs(subs).(TName) // "Inlined" substitution actions here -- cf. TDecl.TSubs
+			pds[i] = fg.NewParamDecl(tmp.x, omega[toWKey(u)].id)
+		}
+		t := omega[toWKey(md.u.TSubs(subs).(TName))].id
+		e := monomExpr(omega, md.e.TSubs(subs))
+		res = append(res, fg.NewMDecl(recv, md.m, pds, t, e))
+	} else {
+		empty := make(TEnv)
+		targs := make(map[string][]Type)
+		// forall u_I s.t. wv.u <: u_I, forall u_S s.t. u_S <: u_I, collect targs for all mono(u_S)
+		for _, v := range omega {
+			if isInterfaceTName(ds, v.u) && wv.u.Impls(ds, empty, v.u) {
+				for _, v1 := range omega {
+					if isStructTName(ds, v1.u) && v1.u.Impls(ds, empty, v.u) {
+						for _, v2 := range v1.gs {
+							if len(v2.targs) > 0 {
+								hash := ""
+								for _, v3 := range v2.targs {
+									hash = hash + v3.String()
+								}
+								targs[hash] = v2.targs
+							}
+						}
+					}
+				}
+			}
+		}
+		for _, v := range targs {
+			subs1 := make(map[TParam]Type)
+			for k1, v1 := range subs {
+				subs1[k1] = v1
+			}
+			for i := 0; i < len(v); i++ {
+				subs1[md.psi.tfs[i].a] = v[i]
+			}
+			recv := fg.NewParamDecl(md.x_recv, wv.id)
+			pds := make([]fg.ParamDecl, len(md.pds))
+			for i := 0; i < len(md.pds); i++ {
+				tmp := md.pds[i]
+				u_p := tmp.u.TSubs(subs1).(TName)
+				pds[i] = fg.NewParamDecl(tmp.x, omega[toWKey(u_p)].id)
+			}
+			u := md.u.TSubs(subs1).(TName)
+			e := monomExpr(omega, md.e.TSubs(subs1))
+			md1 := fg.NewMDecl(recv, getMonomMethName(omega, md.m, v), pds,
+				omega[toWKey(u)].id, e)
+			res = append(res, md1)
+		}
+	}
+	return res
+}
+
+func monomExpr(omega WMap, e Expr) fg.Expr {
+	switch e1 := e.(type) {
+	case Variable:
+		return fg.NewVariable(e1.id)
+	case StructLit:
+		es := make([]fg.Expr, len(e1.es))
+		for i := 0; i < len(e1.es); i++ {
+			es[i] = monomExpr(omega, e1.es[i])
+		}
+		return fg.NewStructLit(omega[toWKey(e1.u)].id, es)
+	case Select:
+		return fg.NewSelect(monomExpr(omega, e1.e), e1.f)
+	case Call:
+		e2 := monomExpr(omega, e1.e)
+		var m Name
+		if len(e1.targs) == 0 {
+			m = e1.m
+		} else {
+			m = getMonomMethName(omega, e1.m, e1.targs)
+		}
+		es := make([]fg.Expr, len(e1.args))
+		for i := 0; i < len(e1.args); i++ {
+			es[i] = monomExpr(omega, e1.args[i])
+		}
+		return fg.NewCall(e2, m, es)
+	case Assert:
+		return fg.NewAssert(monomExpr(omega, e1.e),
+			omega[toWKey(e1.u.(TName))].id)
+	default:
+		panic("Unknown Expr kind: " + reflect.TypeOf(e).String() + "\n\t" +
+			e.String())
+	}
+}
 
 type WMap map[WKey]WVal
 type WEnv map[TParam]Type // Pre: Type is closed
 
 type WKey struct {
 	t    Name
-	hash string // Hack
-}
-
-type WVal struct {
-	u   TName                 // Pre: isClosed(u)
-	id  fg.Type               // Monomorph identifier
-	mds map[string]SigRetPair // HACK: string key is SigRetPair.g.String()
-}
-
-func (wv WVal) GetTName() TName {
-	return wv.u
-}
-
-func (wv WVal) GetMonomId() fg.Type {
-	return wv.id
-}
-
-func (wv WVal) GetParameterisedSigs() []fg.Sig {
-	var res []fg.Sig
-	for _, v := range wv.mds {
-		res = append(res, v.g)
-	}
-	return res
+	hash string // Hack, represents a closed TName
 }
 
 // Pre: isClosed(u)
@@ -53,20 +251,36 @@ func toWKey(u TName) WKey {
 	return WKey{u.t, hash}
 }
 
+type WVal struct {
+	u  TName              // Pre: isClosed(u)
+	id fg.Type            // Monomorph identifier
+	gs map[string]MonoSig // Only records methods with "additional params" // HACK: string key is MonoSig.g.String()
+}
+
+func (wv WVal) GetTName() TName {
+	return wv.u
+}
+
+func (wv WVal) GetMonomId() fg.Type {
+	return wv.id
+}
+
 func toMonomId(u TName) fg.Type {
 	res := u.String()
+	res = strings.Replace(res, ",", ",,", -1)
 	res = strings.Replace(res, "(", "<", -1)
 	res = strings.Replace(res, ")", ">", -1)
 	res = strings.Replace(res, " ", "", -1)
 	return fg.Type(res)
 }
 
-type SigRetPair struct {
-	g fg.Sig
-	u TName // The "actual" return type -- cf. "declared" return type, g.u
+type MonoSig struct {
+	g     fg.Sig
+	targs []Type // "Additional method type actuals" that give 'g'
+	u     TName  // The "actual" return type -- cf. "declared" return type
+	// "Actual" return type means the (static) type of body 'e' of the source..
+	// ..method under targs (and the TEnv of the parent TDecl instance)
 }
-
-type ClosedEnv map[Name]TName // Pre: forall TName, isClosed
 
 // CHECKME: "whole-program" approach starting from the "main" Expr means monom
 // may still work in the presence of irregular types and polymorphic
@@ -118,18 +332,18 @@ func MakeWMap(ds []Decl, gamma ClosedEnv, e Expr, omega WMap) (res TName) {
 				}
 				g = g.TSubs(subs)
 				hash := g.String()
-				mds := omega[toWKey(u0)].mds // Pre: MakeWMap above ensures u0 in omega
+				mds := omega[toWKey(u0)].gs // Pre: MakeWMap above ensures u0 in omega
 				if tmp, ok := mds[hash]; ok {
 					res = tmp.u
 				} else {
 					_, todo1 := visitSig(ds, u0, g, e1.targs, omega)
 					todo = append(todo, todo1...)
+					m := getMonomMethName(omega, g.m, e1.targs)
 					var pds []fg.ParamDecl
 					for _, v := range g.pds {
 						pds = append(pds, fg.NewParamDecl(v.x, toMonomId(v.u.(TName))))
 					}
-					mds[hash] = SigRetPair{fg.NewSig(g.m, pds, toMonomId(g.u.(TName))),
-						res}
+					mds[hash] = MonoSig{fg.NewSig(m, pds, toMonomId(g.u.(TName))), e1.targs, res}
 				}
 			}
 		}
@@ -141,7 +355,8 @@ func MakeWMap(ds []Decl, gamma ClosedEnv, e Expr, omega WMap) (res TName) {
 		MakeWMap(ds, gamma, e1.e, omega)
 		res = e1.u.(TName) // Factor out
 	default:
-		panic("Unknown Expr kind: " + reflect.TypeOf(e).String())
+		panic("Unknown Expr kind: " + reflect.TypeOf(e).String() + "\n\t" +
+			e.String())
 	}
 
 	var empty []Type
@@ -170,7 +385,7 @@ func addTypeToWMap(u TName, omega WMap) bool {
 	if _, ok := omega[wk]; ok {
 		return false
 	}
-	omega[wk] = WVal{u, toMonomId(u), make(map[string]SigRetPair)}
+	omega[wk] = WVal{u, toMonomId(u), make(map[string]MonoSig)}
 	return true
 }
 
@@ -180,14 +395,14 @@ func visitSig(ds []Decl, u0 TName, g Sig, targs []Type, omega WMap) (res TName,
 	u_ret := g.u.(TName) // Closed, since u0 closed and no meth-params
 	wk1 := toWKey(u_ret)
 	if _, ok := omega[wk1]; !ok {
-		omega[wk1] = WVal{u_ret, toMonomId(u_ret), make(map[string]SigRetPair)}
+		omega[wk1] = WVal{u_ret, toMonomId(u_ret), make(map[string]MonoSig)}
 		todo = append(todo, u_ret)
 	}
 	for _, v := range g.pds {
 		u_p := v.u.(TName)
 		wk2 := toWKey(u_p)
 		if _, ok := omega[wk2]; !ok {
-			omega[wk2] = WVal{u_p, toMonomId(u_p), make(map[string]SigRetPair)}
+			omega[wk2] = WVal{u_p, toMonomId(u_p), make(map[string]MonoSig)}
 			todo = append(todo, u_ret)
 		}
 	}
@@ -219,6 +434,24 @@ func isClosed(u TName) bool {
 	return true
 }
 
+// Pre: len(targs) > 0
+func getMonomMethName(omega WMap, m Name, targs []Type) Name {
+	res := m + "<" + string(omega[toWKey(targs[0].(TName))].id)
+	for _, v := range targs[1:] {
+		res = res + "," + string(omega[toWKey(v.(TName))].id)
+	}
+	res = res + ">"
+	return Name(res)
+}
+
+func GetParameterisedSigs(wv WVal) []fg.Sig {
+	var res []fg.Sig
+	for _, v := range wv.gs {
+		res = append(res, v.g)
+	}
+	return res
+}
+
 /* IGNORE */
 
 /*
@@ -226,14 +459,14 @@ func isClosed(u TName) bool {
 	u_ret := v.u.(TName) // Closed, since u closed and no meth-params
 	key1 := toWKey(u_ret)
 	if _, ok := omega[key1]; !ok {
-		omega[key1] = WVal{u_ret, toMonomId(u_ret), make(map[string]SigRetPair)}
+		omega[key1] = WVal{u_ret, toMonomId(u_ret), make(map[string]MonoSig)}
 		todo = append(todo, u_ret)
 	}
 	for i := 0; i < len(v.pds); i++ {
 		u_p := v.pds[i].u.(TName)
 		key2 := toWKey(u_p)
 		if _, ok := omega[key2]; !ok {
-			omega[key2] = WVal{u_p, toMonomId(u_p), make(map[string]SigRetPair)}
+			omega[key2] = WVal{u_p, toMonomId(u_p), make(map[string]MonoSig)}
 			todo = append(todo, u_ret)
 		}
 	}

@@ -11,6 +11,48 @@ import "strings"
 
 import "github.com/rhu1/fgg/base"
 
+/* "Exported" constructors for fgg (monomorph) */
+
+func NewFGProgram(ds []Decl, e Expr) FGProgram {
+	return FGProgram{ds, e}
+}
+
+func NewSTypeLit(t Type, fds []FieldDecl) STypeLit {
+	return STypeLit{t, fds}
+}
+
+func NewFieldDecl(f Name, t Type) FieldDecl {
+	return FieldDecl{f, t}
+}
+
+func NewMDecl(recv ParamDecl, m Name, pds []ParamDecl, t Type, e Expr) MDecl {
+	return MDecl{recv, m, pds, t, e}
+}
+
+func NewParamDecl(x Name, t Type) ParamDecl { // For fgg_util.MakeWMap
+	return ParamDecl{x, t}
+}
+
+func NewITypeLit(t Type, ss []Spec) ITypeLit {
+	return ITypeLit{t, ss}
+}
+
+func NewSig(m Name, pds []ParamDecl, t Type) Sig { // For fgg_util.MakeWMap
+	return Sig{m, pds, t}
+}
+
+func (g Sig) GetMethName() Name {
+	return g.m
+}
+
+func (g Sig) GetParamDecls() []ParamDecl {
+	return g.pds
+}
+
+func (g Sig) GetReturn() Type {
+	return g.t
+}
+
 /* Program */
 
 type FGProgram struct {
@@ -192,10 +234,6 @@ type ParamDecl struct {
 
 var _ FGNode = ParamDecl{}
 
-func NewParamDecl(x Name, t Type) ParamDecl { // For fgg_util.MakeWMap
-	return ParamDecl{x, t}
-}
-
 func (pd ParamDecl) String() string {
 	return pd.x + " " + pd.t.String()
 }
@@ -246,10 +284,6 @@ type Sig struct {
 }
 
 var _ Spec = Sig{}
-
-func NewSig(m Name, pds []ParamDecl, t Type) Sig { // For fgg_util.MakeWMap
-	return Sig{m, pds, t}
-}
 
 // !!! Sig in FG (also, Go spec) includes ~x, which naively breaks "impls"
 func (g0 Sig) EqExceptVars(g Sig) bool {
