@@ -338,6 +338,21 @@ func Test017(t *testing.T) {
 	parseAndOkBad(t, "Bad token, \"1\"", Any, ToAny, e)
 }
 
+// Testing OK check for multiple declarations of a type/method name
+func Test018(t *testing.T) {
+	A := "type A struct {}"
+	e := "A{}"
+	parseAndOkBad(t, "Multiple declarations of type name 'A'", A, A, e)
+}
+
+func Test018b(t *testing.T) {
+	A := "type A struct {}"
+	Am := "func (x0 A) m() A { return x0 }"
+	e := "A{}"
+	parseAndOkBad(t, "Multiple declarations of method name 'm' for receiver A",
+		A, Am, Am, e)
+}
+
 /* Eval */
 
 // TODO: run all the above Good tests using -eval=-1

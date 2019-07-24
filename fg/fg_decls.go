@@ -26,14 +26,28 @@ func (p FGProgram) Ok(allowStupid bool) {
 		fmt.Println("[Warning] Type decl OK not checked yet " +
 			"(e.g., distinct type/field/method names, etc.)")
 	}
+	tds := make(map[Type]TDecl)
+	mds := make(map[string]MDecl) // Hack, string = string(md.recv.t) + "." + md.GetName()
 	for _, v := range p.ds {
 		switch d := v.(type) {
 		case TDecl:
 			// TODO: Check, e.g., unique type/field/method names -- cf., above [Warning]
-			// N.B. omitted from submission version
-			// (call isDistinctDecl(d, p.ds))
+			// N.B. checks also omitted from submission version
+			t := Type(d.GetName())
+			if _, ok := tds[t]; ok {
+				panic("Multiple declarations of type name: " + string(t) + "\n\t" +
+					d.String())
+			}
+			tds[t] = d
 		case MDecl:
 			d.Ok(p.ds)
+			n := d.GetName()
+			hash := string(d.recv.t) + "." + n
+			if _, ok := mds[hash]; ok {
+				panic("Multiple declarations for receiver " + string(d.recv.t) +
+					" of the method name: " + n + "\n\t" + d.String())
+			}
+			mds[hash] = d
 		default:
 			panic("Unknown decl: " + reflect.TypeOf(v).String() + "\n\t" +
 				v.String())
@@ -41,26 +55,6 @@ func (p FGProgram) Ok(allowStupid bool) {
 	}
 	var gamma Env // Empty env for main
 	p.e.Typing(p.ds, gamma, allowStupid)
-}
-
-// Possibly refactor aspects of this and related as "Decl.Wf()" -- the parts of "Ok()" omitted from the paper
-func isDistinctDecl(decl Decl, ds []Decl) bool {
-	var count int
-	for _, d := range ds {
-		switch d := d.(type) {
-		case TDecl:
-			// checks that type-name is unique regardless of definition  // Refactor as a single global pass (use a temp map), or into a TDecl.Wf()
-			if td, ok := decl.(TDecl); ok && d.GetName() == td.GetName() {
-				count++
-			}
-		case MDecl:
-			// checks that (method-type, method-name) is unique  // RH: CHECKME: this would allow (bad) "return overloading"?
-			if md, ok := decl.(MDecl); ok && d.t.String() == md.t.String() && d.GetName() == md.GetName() {
-				count++
-			}
-		}
-	}
-	return count == 1
 }
 
 // CHECKME: resulting FGProgram is not parsed from source, OK? -- cf. Expr.Eval
@@ -304,3 +298,31 @@ func writeParamDecls(b *strings.Builder, pds []ParamDecl) {
 		}
 	}
 }
+
+/* Old */
+
+//*/
+
+// RH: Possibly refactor aspects of this and related as "Decl.Wf()" -- the parts of "Ok()" omitted from the paper
+func isDistinctDecl(decl Decl, ds []Decl) bool {
+	var count int
+	for _, d := range ds {
+		switch d := d.(type) {
+		case TDecl:
+			// checks that type-name is unique regardless of definition
+			// RH: Refactor as a single global pass (use a temp map), or into a TDecl.Wf() -- done: currently integrated into FGProgram.Ok for now (to avoid a second iteration)
+			if td, ok := decl.(TDecl); ok && d.GetName() == td.GetName() {
+				count++
+			}
+		case MDecl:
+			// checks that (method-type, method-name) is unique
+			// RH: CHECKME: this would allow (bad) "return overloading"? -- note, d.t is the method return type
+			if md, ok := decl.(MDecl); ok && d.t.String() == md.t.String() && d.GetName() == md.GetName() {
+				count++
+			}
+		}
+	}
+	return count == 1
+}
+
+//*/
