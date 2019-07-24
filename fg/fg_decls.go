@@ -9,6 +9,8 @@ import "fmt"
 import "reflect"
 import "strings"
 
+import "github.com/rhu1/fgg/base"
+
 /* Program */
 
 type FGProgram struct {
@@ -17,6 +19,7 @@ type FGProgram struct {
 }
 
 var _ FGNode = FGProgram{}
+var _ base.Program = FGProgram{}
 
 func (p FGProgram) Ok(allowStupid bool) {
 	if !allowStupid { // Hack, to print the following only for "top-level" programs (not during Eval)
@@ -62,16 +65,16 @@ func isDistinctDecl(decl Decl, ds []Decl) bool {
 
 // CHECKME: resulting FGProgram is not parsed from source, OK? -- cf. Expr.Eval
 // But doesn't affect FGPprogam.Ok() (i.e., Expr.Typing)
-func (p FGProgram) Eval() (FGProgram, string) {
+func (p FGProgram) Eval() (base.Program, string) {
 	e, rule := p.e.Eval(p.ds)
-	return FGProgram{p.ds, e}, rule
+	return FGProgram{p.ds, e.(Expr)}, rule
 }
 
 func (p FGProgram) GetDecls() []Decl {
 	return p.ds // Returns a copy?
 }
 
-func (p FGProgram) GetExpr() Expr {
+func (p FGProgram) GetExpr() base.Expr {
 	return p.e
 }
 
@@ -96,6 +99,10 @@ type STypeLit struct {
 }
 
 var _ TDecl = STypeLit{}
+
+func (s STypeLit) Ok(ds []Decl) {
+	// TODO
+}
 
 func (s STypeLit) GetType() Type {
 	return s.t
@@ -192,6 +199,10 @@ type ParamDecl struct {
 
 var _ FGNode = ParamDecl{}
 
+func NewParamDecl(x Name, t Type) ParamDecl { // For fgg_util.MakeWMap
+	return ParamDecl{x, t}
+}
+
 func (pd ParamDecl) String() string {
 	return pd.x + " " + pd.t.String()
 }
@@ -204,6 +215,10 @@ type ITypeLit struct {
 }
 
 var _ TDecl = ITypeLit{}
+
+func (c ITypeLit) Ok(ds []Decl) {
+	// TODO
+}
 
 func (c ITypeLit) GetType() Type {
 	return c.t
@@ -238,6 +253,10 @@ type Sig struct {
 }
 
 var _ Spec = Sig{}
+
+func NewSig(m Name, pds []ParamDecl, t Type) Sig { // For fgg_util.MakeWMap
+	return Sig{m, pds, t}
+}
 
 // !!! Sig in FG (also, Go spec) includes ~x, which naively breaks "impls"
 func (g0 Sig) EqExceptVars(g Sig) bool {

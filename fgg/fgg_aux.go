@@ -23,7 +23,7 @@ func fields(ds []Decl, u_S TName) []FieldDecl {
 	if !ok {
 		panic("Not a struct type: " + u_S.String())
 	}
-	subs := make(map[TParam]Type) // TODO FIXME: use s.psi to do subs
+	subs := make(map[TParam]Type)
 	for i := 0; i < len(s.psi.tfs); i++ {
 		subs[s.psi.tfs[i].a] = u_S.us[i]
 	}

@@ -6,6 +6,7 @@ import (
 
 	"github.com/antlr/antlr4/runtime/Go/antlr"
 
+	"github.com/rhu1/fgg/base"
 	"github.com/rhu1/fgg/parser/fg"
 	"github.com/rhu1/fgg/parser/util"
 )
@@ -18,6 +19,8 @@ type FGAdaptor struct {
 	*parser.BaseFGListener
 	stack []FGNode // Because Listener methods don't return...
 }
+
+var _ base.Adaptor = &FGAdaptor{}
 
 func (a *FGAdaptor) push(n FGNode) {
 	a.stack = append(a.stack, n)
@@ -33,7 +36,7 @@ func (a *FGAdaptor) pop() FGNode {
 }
 
 // strictParse means panic upon any parsing error -- o/w error recovery is attempted
-func (a *FGAdaptor) Parse(strictParse bool, input string) FGProgram {
+func (a *FGAdaptor) Parse(strictParse bool, input string) base.Program {
 	is := antlr.NewInputStream(input)
 	var lexer antlr.Lexer
 	if strictParse { // https://stackoverflow.com/questions/51683104/how-to-catch-minor-errors

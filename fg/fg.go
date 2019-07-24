@@ -2,9 +2,11 @@ package fg
 
 import "reflect"
 
+import "github.com/rhu1/fgg/base"
+
 /* Name, Context, Type */
 
-type Name = string // Type alias (cf. definition)
+type Name = base.Name // TODO: tidy up refactoring, due to introducing base
 
 type Env map[Name]Type // TODO: should be Variable rather than Name -- though Variable is an Expr
 
@@ -50,15 +52,9 @@ func (t Type) String() string {
 
 /* AST base intefaces: FGNode, Decl, TDecl, Spec, Expr */
 
-// Base interface for all AST nodes
-type FGNode interface {
-	String() string
-}
-
-type Decl interface {
-	FGNode
-	GetName() Name
-}
+// TODO: tidy up refactoring, due to introducing base
+type FGNode = base.AstNode
+type Decl = base.Decl
 
 type TDecl interface {
 	Decl
@@ -71,18 +67,18 @@ type Spec interface {
 }
 
 type Expr interface {
-	FGNode
+	base.Expr // Using the same name "Expr", maybe rename this type to FGExpr
 	Subs(subs map[Variable]Expr) Expr
+
+	// N.B. gamma should be effectively immutable (and ds, of course)
+	// (No typing rule modifies gamma, except the T-Func bootstrap)
+	Typing(ds []Decl, gamma Env, allowStupid bool) Type
 
 	// string is the type name of the "actually evaluated" expr (within the eval context)
 	// CHECKME: resulting Exprs are not "parsed" from source, OK?
 	Eval(ds []Decl) (Expr, string)
 
 	//IsPanic() bool  // TODO "explicit" FG panic -- cf. underlying runtime panic
-
-	// N.B. gamma should be effectively immutable (and ds, of course)
-	// (No typing rule modifies gamma, except the T-Func bootstrap)
-	Typing(ds []Decl, gamma Env, allowStupid bool) Type
 }
 
 /* Helpers */

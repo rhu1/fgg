@@ -9,6 +9,8 @@ import "fmt"
 import "reflect"
 import "strings"
 
+import "github.com/rhu1/fgg/base"
+
 var _ = fmt.Errorf
 var _ = reflect.Append
 
@@ -43,16 +45,16 @@ func (p FGGProgram) Ok(allowStupid bool) {
 	p.e.Typing(p.ds, delta, gamma, allowStupid)
 }
 
-func (p FGGProgram) Eval() (FGGProgram, string) {
+func (p FGGProgram) Eval() (base.Program, string) {
 	e, rule := p.e.Eval(p.ds)
-	return FGGProgram{p.ds, e}, rule
+	return FGGProgram{p.ds, e.(Expr)}, rule
 }
 
 func (p FGGProgram) GetDecls() []Decl {
 	return p.ds // Returns a copy?
 }
 
-func (p FGGProgram) GetExpr() Expr {
+func (p FGGProgram) GetExpr() base.Expr {
 	return p.e
 }
 

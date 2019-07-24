@@ -4,17 +4,19 @@ import "fmt"
 import "reflect"
 import "strings"
 
+import "github.com/rhu1/fgg/base"
+
 var _ = fmt.Errorf
 var _ = reflect.Append
 
 /* Name, Type, Type param, Type name -- !!! submission version, "Type name" overloaded */
 
-type Name = string
+type Name = base.Name // TODO: tidy up refactoring, due to introducing base
 
 type Type interface {
 	TSubs(subs map[TParam]Type) Type
-	Impls(ds []Decl, delta TEnv, u Type) bool
-	Ok(ds []Decl, delta TEnv)
+	Impls(ds []base.Decl, delta TEnv, u Type) bool
+	Ok(ds []base.Decl, delta TEnv)
 	Equals(u Type) bool
 	String() string
 }
@@ -34,7 +36,7 @@ func (a TParam) TSubs(subs map[TParam]Type) Type {
 }
 
 // u0 <: u
-func (a TParam) Impls(ds []Decl, delta TEnv, u Type) bool {
+func (a TParam) Impls(ds []base.Decl, delta TEnv, u Type) bool {
 	if a1, ok := u.(TParam); ok {
 		return a == a1
 	} else {
@@ -42,7 +44,7 @@ func (a TParam) Impls(ds []Decl, delta TEnv, u Type) bool {
 	}
 }
 
-func (a TParam) Ok(ds []Decl, delta TEnv) {
+func (a TParam) Ok(ds []base.Decl, delta TEnv) {
 	if _, ok := delta[a]; !ok {
 		panic("Unknown type param: " + a.String())
 	}
@@ -59,6 +61,7 @@ func (a TParam) String() string {
 	return string(a)
 }
 
+// TODO: rename TNamed
 type TName struct {
 	t  Name
 	us []Type
@@ -75,7 +78,7 @@ func (u0 TName) TSubs(subs map[TParam]Type) Type {
 }
 
 // u0 <: 1
-func (u0 TName) Impls(ds []Decl, delta TEnv, u Type) bool {
+func (u0 TName) Impls(ds []base.Decl, delta TEnv, u Type) bool {
 	if isStructTName(ds, u) {
 		return isStructTName(ds, u0) && u0.Equals(u) // Asks equality of nested TParam
 	}
@@ -96,7 +99,7 @@ func (u0 TName) Impls(ds []Decl, delta TEnv, u Type) bool {
 	return true
 }
 
-func (u0 TName) Ok(ds []Decl, delta TEnv) {
+func (u0 TName) Ok(ds []base.Decl, delta TEnv) {
 	td := getTDecl(ds, u0.t)
 	psi := td.GetTFormals()
 	if len(psi.tfs) != len(u0.us) {
@@ -127,7 +130,7 @@ func (u0 TName) Ok(ds []Decl, delta TEnv) {
 }
 
 // \tau_I is a Spec, but not \tau_S -- this aspect is currently "dynamically typed"
-func (u TName) GetSigs(ds []Decl) []Sig {
+func (u TName) GetSigs(ds []base.Decl) []Sig {
 	if !isInterfaceTName(ds, u) { // isStructType would be more efficient
 		panic("Cannot use non-interface type as a Spec: " + u.String() +
 			" is a " + reflect.TypeOf(u).String())
@@ -167,7 +170,7 @@ func (u TName) String() string {
 
 /* Context, Type context */
 
-//type Env map[Variable]Type  // FIXME ?
+//type Env map[Variable]Type  // CHECKME: refactor?
 type Env map[Name]Type
 
 type TEnv map[TParam]Type
@@ -188,38 +191,32 @@ func (delta TEnv) String() string {
 
 /* AST base intefaces: FGGNode, Decl, TDecl, Spec, Expr */
 
-type FGGNode interface {
-	String() string
-}
-
-type Decl interface {
-	FGGNode
-	GetName() Name
-	Ok(ds []Decl)
-}
+// TODO: tidy up refactoring, due to introducing base
+type FGGNode = base.AstNode
+type Decl = base.Decl
 
 type TDecl interface {
-	Decl
+	base.Decl
 	GetTFormals() TFormals
 }
 
 type Spec interface {
 	FGGNode
-	GetSigs(ds []Decl) []Sig
+	GetSigs(ds []base.Decl) []Sig
 }
 
 type Expr interface {
-	FGGNode
+	base.Expr // Using the same name "Expr", maybe rename this type to FGGExpr
 	Subs(subs map[Variable]Expr) Expr
 	TSubs(subs map[TParam]Type) Expr
-	Eval(ds []Decl) (Expr, string)
 	// Like gamma, delta is effectively immutable
-	Typing(ds []Decl, delta TEnv, gamma Env, allowStupid bool) Type
+	Typing(ds []base.Decl, delta TEnv, gamma Env, allowStupid bool) Type
+	Eval(ds []base.Decl) (Expr, string)
 }
 
 /* Helpers */
 
-func isStructType(ds []Decl, t Name) bool {
+func isStructType(ds []base.Decl, t Name) bool {
 	for _, v := range ds {
 		d, ok := v.(STypeLit)
 		if ok && d.t == t {
@@ -230,7 +227,7 @@ func isStructType(ds []Decl, t Name) bool {
 }
 
 // Check if u is a \tau_S -- implicitly must be a TName
-func isStructTName(ds []Decl, u Type) bool {
+func isStructTName(ds []base.Decl, u Type) bool {
 	if u1, ok := u.(TName); ok {
 		for _, v := range ds {
 			d, ok := v.(STypeLit)
@@ -243,7 +240,7 @@ func isStructTName(ds []Decl, u Type) bool {
 }
 
 // Check if u is a \tau_I -- N.B. looks for a *TName*, i.e., not a TParam
-func isInterfaceTName(ds []Decl, u Type) bool {
+func isInterfaceTName(ds []base.Decl, u Type) bool {
 	if u1, ok := u.(TName); ok {
 		for _, v := range ds {
 			d, ok := v.(ITypeLit)
