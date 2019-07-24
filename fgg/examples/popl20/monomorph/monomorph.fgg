@@ -1,4 +1,4 @@
-//$ go run github.com/rhu1/fgg -fgg -monom -v fgg/examples/popl20/monomorph/monomorph.fgg
+//$ go run github.com/rhu1/fgg -fgg -eval=-1 -monom -v fgg/examples/popl20/monomorph/monomorph.fgg
 
 package main;
 
@@ -54,11 +54,13 @@ type Pair(type a Any(), b Any()) struct { Fst a; Snd b };
 type D(type ) struct {};
 func (d D(type )) _1(type )() Nat() { return Succ(){Zero(){}} };
 func (d D(type )) _2(type )() Nat() { return Succ(){D(){}._1()()} };
-func (d D(type )) _3(type )() Nat() { return Succ(){D(){}._3()()} };
+func (d D(type )) _3(type )() Nat() { return Succ(){D(){}._2()()} };
 
 func main() { _ =
 	Pair(List(Bool()), List(Nat())){
-		Cons(Bool()){TT(){}, Cons(Bool()){FF(){}, Nil(Bool()){}}}.Map(Bool())(not(){}),
-		Cons(Nat()){D(){}._1()(), Cons(Nat()){D(){}._2()(), Cons(Nat()){D(){}._3()(), Nil(Nat()){}}}}.Map(Nat())(incr(){D(){}._1()()})
+		Cons(Bool()){TT(){}, Cons(Bool()){FF(){}, Nil(Bool()){}}}
+				.Map(Bool())(not(){}),
+		Cons(Nat()){D(){}._1()(), Cons(Nat()){D(){}._2()(), Cons(Nat()){D(){}._3()(), Nil(Nat()){}}}}
+				.Map(Nat())(incr(){D(){}._1()()})
 	}
 }
