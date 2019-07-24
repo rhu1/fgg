@@ -41,18 +41,6 @@ func NewSig(m Name, pds []ParamDecl, t Type) Sig { // For fgg_util.MakeWMap
 	return Sig{m, pds, t}
 }
 
-func (g Sig) GetMethName() Name {
-	return g.m
-}
-
-func (g Sig) GetParamDecls() []ParamDecl {
-	return g.pds
-}
-
-func (g Sig) GetReturn() Type {
-	return g.t
-}
-
 /* Program */
 
 type FGProgram struct {
