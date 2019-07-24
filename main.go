@@ -21,6 +21,18 @@
 //go:generate antlr4 -Dlanguage=Go -o parser/fg parser/FG.g4
 //go:generate antlr4 -Dlanguage=Go -o parser/fgg parser/FGG.g4
 
+// FGG gotchas:
+// type B(type a Any) struct { f a }; // Any parsed as a TParam -- currently not permitted
+// Node(Nat){...} // fgg.FGGNode (Nat) is fgg.TParam, not fgg.TName
+// type IA(type ) interface { m1() };  // m1() parsed as a TName (an invalid Spec) -- N.B. ret missing anyway
+
+/* TODO
+- WF: repeat type decl
+
+	//b.WriteString("type B struct { f t };\n")  // TODO: unknown type
+	//b.WriteString("type B struct { b B };\n")  // TODO: recursive struct
+*/
+
 package main
 
 import (
@@ -31,6 +43,7 @@ import (
 	"reflect"
 	"strconv"
 
+	"github.com/rhu1/fgg/base"
 	"github.com/rhu1/fgg/fg"
 	"github.com/rhu1/fgg/fgg"
 )
@@ -43,21 +56,19 @@ var NO_EVAL = -2     // Must be < EVAL_TO_VAL
 
 var verbose bool = false
 
-// FGG gotchas:
-// type B(type a Any) struct { f a }; // Any parsed as a TParam -- currently not permitted
-// Node(Nat){...} // fgg.FGGNode (Nat) is fgg.TParam, not fgg.TName
-// type IA(type ) interface { m1() };  // m1() parsed as a TName (an invalid Spec) -- N.B. ret missing anyway
-
-// N.B. flags (e.g., -internal=true) must be supplied before any non-flag args
 func main() {
+	// N.B. flags (e.g., -internal=true) must be supplied before any non-flag args
 	evalPtr := flag.Int("eval", NO_EVAL,
 		"-steps=n, evaluate n (>=0) steps; or -steps=-1, evaluate to value (or panic)")
-	fgPtr := flag.Bool("fg", false, "-fg=false, interpret input as FG (defaults to true if neither -fg/-fgg set)")
+	fgPtr := flag.Bool("fg", false,
+		"-fg=false, interpret input as FG (defaults to true if neither -fg/-fgg set)")
 	fggPtr := flag.Bool("fgg", false, "-fgg=true, interpret input as FGG")
 	internalPtr := flag.Bool("internal", false,
 		"-internal=true, use \"internal\" input as source")
 	inlinePtr := flag.String("inline", "",
 		"-inline=true, use inline input as source")
+	monomPtr := flag.Bool("monom", false,
+		"-monom=true, [WIP] monomorphise FGG source (ignored if -fgg not set)")
 	strictParsePtr := flag.Bool("strict", true,
 		"-strict=false, disable strict parsing (attempt recovery on parsing errors)")
 	verbosePtr := flag.Bool("v", false, "-v=true, enable verbose printing")
@@ -82,47 +93,49 @@ func main() {
 	}
 
 	if *fgPtr {
-		interpFg(src, *strictParsePtr, *evalPtr)
+		var a fg.FGAdaptor
+		interp(&a, src, *strictParsePtr, *evalPtr, false)
 	} else if *fggPtr {
-		interpFgg(src, *strictParsePtr, *evalPtr)
+		var a fgg.FGGAdaptor
+		interp(&a, src, *strictParsePtr, *evalPtr, *monomPtr)
 	}
 }
 
-func interpFg(src string, strict bool, eval int) {
+func interp(a base.Adaptor, src string, strict bool, steps int, mono bool) {
 	vPrintln("\nParsing AST:")
-	var adptr fg.FGAdaptor
-	prog := adptr.Parse(strict, src) // AST (FGProgram root)
+	prog := a.Parse(strict, src) // AST (FGProgram root)
 	vPrintln(prog.String())
 
 	vPrintln("\nChecking source program OK:")
 	allowStupid := false
 	prog.Ok(allowStupid)
 
-	if eval > NO_EVAL {
-		evalFg(prog, eval)
+	if steps > NO_EVAL {
+		eval(prog, steps)
 	}
-}
 
-// TODO: factor out with above -- make a base Program/Expr interfaces with Ok/Eval/etc
-func interpFgg(src string, strict bool, eval int) {
-	vPrintln("\nParsing AST:")
-	var adptr fgg.FGGAdaptor
-	prog := adptr.Parse(strict, src) // AST (FGProgram root)
-	vPrintln(prog.String())
-
-	vPrintln("\nChecking source program OK:")
-	allowStupid := false
-	prog.Ok(allowStupid)
-
-	if eval > NO_EVAL {
-		evalFgg(prog, eval)
+	if mono {
+		vPrintln("\nMonomorphising: [Warning] WIP [Warning]")
+		var gamma fgg.Env
+		omega := make(fgg.WMap)
+		fgg.MakeWMap(prog.GetDecls(), gamma, prog.GetExpr().(fgg.Expr), omega)
+		for _, v := range omega {
+			vPrintln(v.GetTName().String() + " |-> " + string(v.GetMonomId()))
+			gs := v.GetParameterisedSigs()
+			if len(gs) > 0 {
+				vPrintln("Instantiations of parameterised methods: (i.e., those that had \"additional method params\")")
+				for _, g := range gs {
+					vPrintln("\t" + g.String())
+				}
+			}
+		}
 	}
 }
 
 // N.B. currently FG panic comes out implicitly as an underlying run-time panic
 // TODO: add explicit FG panics
 // If steps == EVAL_TO_VAL, then eval to value
-func evalFg(p fg.FGProgram, steps int) {
+func eval(p base.Program, steps int) {
 	allowStupid := true
 	vPrintln("\nEntering Eval loop:")
 	vPrintln("Decls:")
@@ -133,40 +146,14 @@ func evalFg(p fg.FGProgram, steps int) {
 	vPrintln(fmt.Sprintf("%6d: %8s %v", 0, "", p.GetExpr())) // Initial prog OK already checked
 
 	done := steps > EVAL_TO_VAL || // Ignore 'done' if num steps fixed (set true, for ||!done below)
-		fg.IsValue(p.GetExpr()) // O/w evaluate until a val -- here, check if init expr is already a val
+		p.GetExpr().IsValue() // O/w evaluate until a val -- here, check if init expr is already a val
 	var rule string
 	for i := 1; i <= steps || !done; i++ {
 		p, rule = p.Eval()
 		vPrintln(fmt.Sprintf("%6d: %8s %v", i, "["+rule+"]", p.GetExpr()))
 		vPrintln("Checking OK:") // TODO: maybe disable by default, enable by flag
 		p.Ok(allowStupid)
-		if !done && fg.IsValue(p.GetExpr()) {
-			done = true
-		}
-	}
-	fmt.Println(p.GetExpr().String()) // Final result
-}
-
-// TODO: factor out with above
-func evalFgg(p fgg.FGGProgram, steps int) {
-	allowStupid := true
-	vPrintln("\nEntering Eval loop:")
-	vPrintln("Decls:")
-	for _, v := range p.GetDecls() {
-		vPrintln("\t" + v.String() + ";")
-	}
-	vPrintln("Eval steps:")
-	vPrintln(fmt.Sprintf("%6d: %8s %v", 0, "", p.GetExpr())) // Initial prog OK already checked
-
-	done := steps > EVAL_TO_VAL || // Ignore 'done' if num steps fixed (set true, for ||!done below)
-		fgg.IsValue(p.GetExpr()) // O/w evaluate until a val -- here, check if init expr is already a val
-	var rule string
-	for i := 1; i <= steps || !done; i++ {
-		p, rule = p.Eval()
-		vPrintln(fmt.Sprintf("%6d: %8s %v", i, "["+rule+"]", p.GetExpr()))
-		vPrintln("Checking OK:") // TODO: maybe disable by default, enable by flag
-		p.Ok(allowStupid)
-		if !done && fgg.IsValue(p.GetExpr()) {
+		if !done && p.GetExpr().IsValue() {
 			done = true
 		}
 	}
@@ -195,10 +182,3 @@ func vPrintln(x string) {
 		fmt.Println(x)
 	}
 }
-
-/* TODO
-- WF: repeat type decl
-
-	//b.WriteString("type B struct { f t };\n")  // TODO: unknown type
-	//b.WriteString("type B struct { b B };\n")  // TODO: recursive struct
-*/

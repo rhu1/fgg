@@ -6,84 +6,23 @@ package fg_test // Separate package, can test "API"
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
+	"github.com/rhu1/fgg/base"
 	"github.com/rhu1/fgg/fg"
 )
 
 /* Harness funcs */
 
-func parseAndCheckOk(prog string) fg.FGProgram {
+func parseAndOkGood(t *testing.T, elems ...string) base.Program {
 	var adptr fg.FGAdaptor
-	ast := adptr.Parse(true, prog)
-	allowStupid := false
-	ast.Ok(allowStupid)
-	return ast
+	return base.ParseAndOkGood(t, &adptr, fg.MakeFgProgram(elems...))
 }
 
-func parseAndOkGood(t *testing.T, elems ...string) fg.FGProgram {
-	prog := fg.MakeFgProgram(elems...)
-	defer func() {
-		if r := recover(); r != nil {
-			t.Errorf("Unexpected panic: " + fmt.Sprintf("%v", r) + "\n" +
-				prog)
-		}
-	}()
-	return parseAndCheckOk(prog)
-}
-
-// N.B. do not use to check for bad *syntax* -- see the "[Parser]" panic check
-func parseAndOkBad(t *testing.T, msg string, elems ...string) fg.FGProgram {
-	prog := fg.MakeFgProgram(elems...)
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("Expected panic, but none occurred: " + msg + "\n" +
-				prog)
-		} else {
-			rec := fmt.Sprintf("%v", r)
-			if strings.HasPrefix(rec, "[Parser]") {
-				t.Errorf("Unexpected panic: " + rec + "\n" + prog)
-			}
-			// TODO FIXME: check panic more specifically
-		}
-	}()
-	return parseAndCheckOk(prog)
-}
-
-// Pre: parseAndOkGood
-func evalAndOkGood(t *testing.T, p fg.FGProgram, steps int) fg.FGProgram {
-	defer func() {
-		if r := recover(); r != nil {
-			t.Errorf("Unexpected panic: " + fmt.Sprintf("%v", r) + "\n" +
-				p.String())
-		}
-	}()
-	allowStupid := true
-	for i := 0; i < steps; i++ {
-		p, _ = p.Eval() // CHECKME: check rule names as part of test?
-		p.Ok(allowStupid)
-	}
-	return p
-}
-
-// Pre: parseAndOkGood
-func evalAndOkBad(t *testing.T, p fg.FGProgram, msg string, steps int) fg.FGProgram {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("Expected panic, but none occurred: " + msg + "\n" +
-				p.String())
-		} else {
-			// [Parser] panic should be already checked by parseAndOkGood
-			// TODO FIXME: check panic more specifically
-		}
-	}()
-	allowStupid := true
-	for i := 0; i < steps; i++ {
-		p, _ = p.Eval()
-		p.Ok(allowStupid)
-	}
-	return p
+// N.B. do not use to check for bad *syntax* -- see the "[Parser]" panic check in base.ParseAndOkBad
+func parseAndOkBad(t *testing.T, msg string, elems ...string) base.Program {
+	var adptr fg.FGAdaptor
+	return base.ParseAndOkBad(t, msg, &adptr, fg.MakeFgProgram(elems...))
 }
 
 /* Syntax and typing */
@@ -410,7 +349,7 @@ func TestEval001(t *testing.T) {
 	B := "type B struct { a A }"
 	e := "B{A{}}.a"
 	prog := parseAndOkGood(t, A, B, e)
-	evalAndOkGood(t, prog, 1)
+	base.EvalAndOkGood(t, prog, 1)
 }
 
 func TestEval002(t *testing.T) {
@@ -418,7 +357,7 @@ func TestEval002(t *testing.T) {
 	Am1 := "func (x0 A) m1() A { return x0.m1() }"
 	e := "A{}.m1()"
 	prog := parseAndOkGood(t, A, Am1, e)
-	evalAndOkGood(t, prog, 10)
+	base.EvalAndOkGood(t, prog, 10)
 }
 
 func TestEval003(t *testing.T) {
@@ -427,7 +366,7 @@ func TestEval003(t *testing.T) {
 	B := "type B struct { a A }"
 	e := "A{}.m1().a"
 	prog := parseAndOkGood(t, A, Am1, B, e)
-	evalAndOkGood(t, prog, 2)
+	base.EvalAndOkGood(t, prog, 2)
 }
 
 // Initial testing for assert -- Cf. Test016
@@ -437,7 +376,7 @@ func TestEval004(t *testing.T) {
 	A := "type A struct {}"
 	e := "ToAny{A{}}.any.(A)"
 	prog := parseAndOkGood(t, Any, ToAny, A, e)
-	evalAndOkGood(t, prog, 2)
+	base.EvalAndOkGood(t, prog, 2)
 }
 
 // Testing isValue on StructLit
@@ -447,7 +386,7 @@ func TestEval005(t *testing.T) {
 	A := "type A struct {}"
 	e := "ToAny{ToAny{ToAny{A{}}.any.(A)}}"
 	prog := parseAndOkGood(t, Any, ToAny, A, e)
-	evalAndOkGood(t, prog, 2)
+	base.EvalAndOkGood(t, prog, 2)
 }
 
 // //TODO: test -eval=-1 -- test is currently added as -eval=0
@@ -455,5 +394,5 @@ func TestEval006(t *testing.T) {
 	A := "type A struct {}"
 	e := "A{}"
 	prog := parseAndOkGood(t, A, e)
-	evalAndOkGood(t, prog, 0)
+	base.EvalAndOkGood(t, prog, 0)
 }

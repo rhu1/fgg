@@ -44,6 +44,10 @@ func (x Variable) Typing(ds []Decl, delta TEnv, gamma Env,
 	return res
 }
 
+func (x Variable) IsValue() bool {
+	return false
+}
+
 func (x Variable) String() string {
 	return x.id
 }
@@ -79,7 +83,7 @@ func (s StructLit) Eval(ds []Decl) (Expr, string) {
 	var rule string
 	for i := 0; i < len(s.es); i++ {
 		v := s.es[i]
-		if !done && !IsValue(v) {
+		if !done && !v.IsValue() {
 			v, rule = v.Eval(ds)
 			done = true
 		}
@@ -117,6 +121,15 @@ func (s StructLit) Typing(ds []Decl, delta TEnv, gamma Env,
 	return s.u
 }
 
+func (s StructLit) IsValue() bool {
+	for _, v := range s.es {
+		if !v.IsValue() {
+			return false
+		}
+	}
+	return true
+}
+
 func (s StructLit) String() string {
 	var b strings.Builder
 	b.WriteString(s.u.String())
@@ -142,7 +155,7 @@ func (s Select) TSubs(subs map[TParam]Type) Expr {
 }
 
 func (s Select) Eval(ds []Decl) (Expr, string) {
-	if !IsValue(s.e) {
+	if !s.e.IsValue() {
 		e, rule := s.e.Eval(ds)
 		return Select{e, s.f}, rule
 	}
@@ -169,6 +182,10 @@ func (s Select) Typing(ds []Decl, delta TEnv, gamma Env,
 		}
 	}
 	panic("Field not found: " + s.f + " in " + u.String())
+}
+
+func (s Select) IsValue() bool {
+	return false
 }
 
 func (s Select) String() string {
@@ -206,7 +223,7 @@ func (c Call) TSubs(subs map[TParam]Type) Expr {
 }
 
 func (c Call) Eval(ds []Decl) (Expr, string) {
-	if !IsValue(c.e) {
+	if !c.e.IsValue() {
 		e, rule := c.e.Eval(ds)
 		return Call{e, c.m, c.targs, c.args}, rule
 	}
@@ -215,7 +232,7 @@ func (c Call) Eval(ds []Decl) (Expr, string) {
 	var rule string
 	for i := 0; i < len(c.args); i++ {
 		e := c.args[i]
-		if !done && !IsValue(e) {
+		if !done && !e.IsValue() {
 			e, rule = e.Eval(ds)
 			done = true
 		}
@@ -286,6 +303,10 @@ func (c Call) Typing(ds []Decl, delta TEnv, gamma Env, allowStupid bool) Type {
 	return g.u.TSubs(subs) // subs necessary, c.psi info (i.e., bounds) will be "lost" after leaving this context
 }
 
+func (c Call) IsValue() bool {
+	return false
+}
+
 func (c Call) String() string {
 	var b strings.Builder
 	b.WriteString(c.e.String())
@@ -315,7 +336,7 @@ func (a Assert) TSubs(subs map[TParam]Type) Expr {
 }
 
 func (a Assert) Eval(ds []Decl) (Expr, string) {
-	if !IsValue(a.e) {
+	if !a.e.IsValue() {
 		e, rule := a.e.Eval(ds)
 		return Assert{e, a.u}, rule
 	}
@@ -348,24 +369,15 @@ func (a Assert) Typing(ds []Decl, delta TEnv, gamma Env, allowStupid bool) Type 
 		a.u.String() + ", expr=" + u.String())
 }
 
+func (a Assert) IsValue() bool {
+	return false
+}
+
 func (a Assert) String() string {
 	return a.e.String() + ".(" + a.u.String() + ")"
 }
 
 /* Aux, helpers */
-
-// Cf. checkErr
-func IsValue(e Expr) bool {
-	if s, ok := e.(StructLit); ok {
-		for _, v := range s.es {
-			if !IsValue(v) {
-				return false
-			}
-		}
-		return true
-	}
-	return false
-}
 
 func writeExprs(b *strings.Builder, es []Expr) {
 	if len(es) > 0 {

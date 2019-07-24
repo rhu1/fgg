@@ -5,86 +5,23 @@
 package fgg_test // Separate package, can test "API"
 
 import (
-	"fmt"
-	"strings"
 	"testing"
 
+	"github.com/rhu1/fgg/base"
 	"github.com/rhu1/fgg/fgg"
 )
 
 /* Harness funcs */
 
-func parseAndCheckOk(prog string) fgg.FGGProgram {
+func parseAndOkGood(t *testing.T, elems ...string) base.Program {
 	var adptr fgg.FGGAdaptor
-	ast := adptr.Parse(true, prog)
-	allowStupid := false
-	ast.Ok(allowStupid)
-	return ast
+	return base.ParseAndOkGood(t, &adptr, fgg.MakeFggProgram(elems...))
 }
 
-func parseAndOkGood(t *testing.T, elems ...string) fgg.FGGProgram {
-	prog := fgg.MakeFggProgram(elems...)
-	defer func() {
-		if r := recover(); r != nil {
-			t.Errorf("Unexpected panic: " + fmt.Sprintf("%v", r) + "\n" +
-				prog)
-		}
-	}()
-	return parseAndCheckOk(prog)
-}
-
-// N.B. do not use to check for bad *syntax* -- see the "[Parser]" panic check
-func parseAndOkBad(t *testing.T, msg string, elems ...string) fgg.FGGProgram {
-	prog := fgg.MakeFggProgram(elems...)
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("Expected panic, but none occurred: " + msg + "\n" +
-				prog)
-		} else {
-			rec := fmt.Sprintf("%v", r)
-			if strings.HasPrefix(rec, "[Parser]") {
-				t.Errorf("Unexpected panic: " + rec + "\n" + prog)
-			}
-			// TODO FIXME: check panic more specifically
-		}
-	}()
-	return parseAndCheckOk(prog)
-}
-
-//*
-// Pre: parseAndOkGood
-func evalAndOkGood(t *testing.T, p fgg.FGGProgram, steps int) fgg.FGGProgram {
-	defer func() {
-		if r := recover(); r != nil {
-			t.Errorf("Unexpected panic: " + fmt.Sprintf("%v", r) + "\n" +
-				p.String())
-		}
-	}()
-	allowStupid := true
-	for i := 0; i < steps; i++ {
-		p, _ = p.Eval() // CHECKME: check rule names as part of test?
-		p.Ok(allowStupid)
-	}
-	return p
-}
-
-// Pre: parseAndOkGood
-func evalAndOkBad(t *testing.T, p fgg.FGGProgram, msg string, steps int) fgg.FGGProgram {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("Expected panic, but none occurred: " + msg + "\n" +
-				p.String())
-		} else {
-			// [Parser] panic should be already checked by parseAndOkGood
-			// TODO FIXME: check panic more specifically
-		}
-	}()
-	allowStupid := true
-	for i := 0; i < steps; i++ {
-		p, _ = p.Eval()
-		p.Ok(allowStupid)
-	}
-	return p
+// N.B. do not use to check for bad *syntax* -- see the "[Parser]" panic check in base.ParseAndOkBad
+func parseAndOkBad(t *testing.T, msg string, elems ...string) base.Program {
+	var adptr fgg.FGGAdaptor
+	return base.ParseAndOkBad(t, msg, &adptr, fgg.MakeFggProgram(elems...))
 }
 
 /* Syntax and typing */
@@ -343,6 +280,8 @@ func Test0014(t *testing.T) {
 
 /* Eval */
 
+// TOOD: classify FG-compatible subset compare results to -fg
+
 func TestEval001(t *testing.T) {
 	Any := "type Any(type ) interface {}"
 	ToAny := "type ToAny(type ) struct { any Any() }"
@@ -351,7 +290,5 @@ func TestEval001(t *testing.T) {
 	Bm := "func (x0 B(type )) m(type a Any())(x1 a) a { return ToAny(){A(){}}.any.(a) }"
 	e := "B(A()){A(){}}.m(B(A()))(B(A()){A(){}}).f"
 	prog := parseAndOkGood(t, Any, ToAny, A, B, Bm, e)
-	evalAndOkBad(t, prog, "Cannot caast A() to B(A())", 3)
+	base.EvalAndOkBad(t, prog, "Cannot cast A() to B(A())", 3)
 }
-
-// TOOD: classify FG-compatible subset compare results to -fg
