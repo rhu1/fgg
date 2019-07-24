@@ -41,6 +41,10 @@ func NewSig(m Name, pds []ParamDecl, t Type) Sig { // For fgg_util.MakeWMap
 	return Sig{m, pds, t}
 }
 
+func (g Sig) GetMethName() Name { // Hack
+	return g.m
+}
+
 /* Program */
 
 type FGProgram struct {

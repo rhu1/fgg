@@ -90,8 +90,8 @@ func monomTDecl(ds []Decl, omega WMap, td TDecl, wv WVal) fg.TDecl {
 					for _, v := range omega {
 						if isStructType(ds, v.u.t) && v.u.Impls(ds, empty, wv.u) {
 							for _, v1 := range v.gs {
-								if len(v1.targs) > 0 {
-									hash := ""
+								if len(v1.targs) > 0 { // Redundant?
+									hash := "" // TODO: factor out
 									for _, v2 := range v1.targs {
 										hash = hash + v2.String()
 									}
@@ -100,6 +100,7 @@ func monomTDecl(ds []Decl, omega WMap, td TDecl, wv WVal) fg.TDecl {
 							}
 						}
 					}
+					// CHECKME: if targs empty, methods "discarded" -- replace meth-params by bounds?
 					for _, v := range targs {
 						subs1 := make(map[TParam]Type)
 						for k1, v1 := range subs {
@@ -161,13 +162,26 @@ func monomMDecl(ds []Decl, omega WMap, md MDecl, wv WVal) (res []fg.MDecl) {
 					if isStructTName(ds, v1.u) && v1.u.Impls(ds, empty, v.u) {
 						for _, v2 := range v1.gs {
 							if len(v2.targs) > 0 {
-								hash := ""
+								hash := "" // TODO: factor out
 								for _, v3 := range v2.targs {
 									hash = hash + v3.String()
 								}
 								targs[hash] = v2.targs
 							}
 						}
+					}
+				}
+			}
+		}
+		if len(targs) == 0 { // Means no u_I, and so targs doesn't even include "own" wv.gs
+			for _, v := range wv.gs {
+				if v.g.GetMethName() == md.m {
+					if len(v.targs) > 0 {
+						hash := "" // TODO: factor out
+						for _, v1 := range v.targs {
+							hash = hash + v1.String()
+						}
+						targs[hash] = v.targs
 					}
 				}
 			}
