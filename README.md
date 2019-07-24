@@ -53,6 +53,11 @@ WIP, the reported results are not yet complete and have been in no way checked
 for correctness.  
 It can be experimented with using the `-monom` flag (use it in conjunction
 with `-fgg` and `-v`).  
-E.g., `go run github.com/rhu1/fgg -fgg -monom -v fgg/examples/popl20/monomorph/monomorph.fgg`
+E.g., `go run github.com/rhu1/fgg -fgg -monom -v fgg/examples/popl20/monomorph/monomorph.fgg`  
+The above prints out the monomorphised code using something close to the
+notation used in the paper.  
+The output can also be formatted to be valid Go using the `-compile` flag  
+E.g., `go run github.com/rhu1/fgg -fgg -compile=tmp/out.go -v fgg/examples/popl20/monomorph/monomorph.fgg`  
+Use `-compile=--` to print to stdout instead of writing to a file.
 
 

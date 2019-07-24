@@ -2,6 +2,7 @@
 
 TODO: proper formatting
 
+
 20190724 Ray
 
 Refactored common Adaptor ("parser"), Name, Decl, Program and Expr interfaces
@@ -15,10 +16,11 @@ monomorph.
 Started a naive first hack at a monomorphisation function -- is WIP.  
 It can be experimented with using the -monom flag, e.g.,:  
 go run github.com/rhu1/fgg -fgg -monom -v fgg/examples/popl20/monomorph/monomorph.fgg  
-The results that are returned should be correct, but currently it is not
-complete, i.e., some results are missing -- in particular, monomorphisation of
-interface types is not properly handled yet.  
-The -monom flag is ignored unless -fgg is also set.
+The results that have not been checked for correctness yet.  
+The -monom flag is ignored unless -fgg is also set (and won't show anything if
+-v is not set).  
+Use the -compile-out.go flag instead of -monom to write the output as valid Go
+to a file.
 
 
 20190723 Ray
