@@ -101,7 +101,7 @@ func main() {
 	}
 }
 
-func interp(a base.Adaptor, src string, strict bool, steps int, mono bool) {
+func interp(a base.Adaptor, src string, strict bool, steps int, monom bool) {
 	vPrintln("\nParsing AST:")
 	prog := a.Parse(strict, src) // AST (FGProgram root)
 	vPrintln(prog.String())
@@ -114,7 +114,7 @@ func interp(a base.Adaptor, src string, strict bool, steps int, mono bool) {
 		eval(prog, steps)
 	}
 
-	if mono {
+	if monom {
 		vPrintln("\nMonomorphising: [Warning] WIP [Warning]")
 		var gamma fgg.Env
 		omega := make(fgg.WMap)
