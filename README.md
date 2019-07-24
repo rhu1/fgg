@@ -24,7 +24,8 @@ similarly for FGG.
 
 The ANTLR4 Runtime for Go is needed to run the tool.  
 Example download instructions are
-[here](https://github.com/antlr/antlr4/blob/master/doc/go-target.md).
+[here](https://github.com/antlr/antlr4/blob/master/doc/go-target.md) (mainly
+the second bullet).
 
 FG example usages: (`-eval=-1` means evaluate until a value is reached)
 
