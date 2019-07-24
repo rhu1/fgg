@@ -23,15 +23,15 @@ var _ FGNode = FGProgram{}
 
 func (p FGProgram) Ok(allowStupid bool) {
 	if !allowStupid { // Hack, to print the following only for "top-level" programs (not during Eval)
-		fmt.Println("[Warning] Type decl OK not checked yet " +
-			"(e.g., distinct type/field/method names, etc.)")
+		fmt.Println("[Warning] Type/method decl OK not fully checked yet " +
+			"(e.g., distinct field/param names, etc.)")
 	}
 	tds := make(map[Type]TDecl)
 	mds := make(map[string]MDecl) // Hack, string = string(md.recv.t) + "." + md.GetName()
 	for _, v := range p.ds {
 		switch d := v.(type) {
 		case TDecl:
-			// TODO: Check, e.g., unique type/field/method names -- cf., above [Warning]
+			d.Ok(p.ds) // Currently empty -- TODO: check, e.g., unique field names -- cf., above [Warning]
 			// N.B. checks also omitted from submission version
 			t := Type(d.GetName())
 			if _, ok := tds[t]; ok {
