@@ -22,7 +22,7 @@ type WKey struct {
 type WVal struct {
 	u   TName                 // Pre: isClosed(u)
 	id  fg.Type               // Monomorph identifier
-	mds map[string]SigRetPair // HACK: string key is Sig.String()
+	mds map[string]SigRetPair // HACK: string key is SigRetPair.g.String()
 }
 
 func (wv WVal) GetTName() TName {
