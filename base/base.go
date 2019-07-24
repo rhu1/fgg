@@ -35,38 +35,38 @@ type Expr interface {
 
 /* Test harness functions */
 
-func parseAndCheckOk(a Adaptor, prog string) Program {
-	ast := a.Parse(true, prog)
+func parseAndCheckOk(a Adaptor, src string) Program {
+	ast := a.Parse(true, src)
 	allowStupid := false
 	ast.Ok(allowStupid)
 	return ast
 }
 
-func ParseAndOkGood(t *testing.T, a Adaptor, prog string) Program {
+func ParseAndOkGood(t *testing.T, a Adaptor, src string) Program {
 	defer func() {
 		if r := recover(); r != nil {
 			t.Errorf("Unexpected panic: " + fmt.Sprintf("%v", r) + "\n" +
-				prog)
+				src)
 		}
 	}()
-	return parseAndCheckOk(a, prog)
+	return parseAndCheckOk(a, src)
 }
 
 // N.B. do not use to check for bad *syntax* -- see the "[Parser]" panic check
-func ParseAndOkBad(t *testing.T, msg string, a Adaptor, prog string) Program {
+func ParseAndOkBad(t *testing.T, msg string, a Adaptor, src string) Program {
 	defer func() {
 		if r := recover(); r == nil {
 			t.Errorf("Expected panic, but none occurred: " + msg + "\n" +
-				prog)
+				src)
 		} else {
 			rec := fmt.Sprintf("%v", r)
 			if strings.HasPrefix(rec, "[Parser]") {
-				t.Errorf("Unexpected panic: " + rec + "\n" + prog)
+				t.Errorf("Unexpected panic: " + rec + "\n" + src)
 			}
 			// TODO FIXME: check panic more specifically
 		}
 	}()
-	return parseAndCheckOk(a, prog)
+	return parseAndCheckOk(a, src)
 }
 
 // Pre: parseAndOkGood

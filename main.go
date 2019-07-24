@@ -116,7 +116,7 @@ func interp(a base.Adaptor, src string, strict bool, steps int, monom bool) {
 
 	if monom {
 		vPrintln("\nMonomorphising: [Warning] WIP [Warning]")
-		var gamma fgg.Env
+		var gamma fgg.ClosedEnv
 		omega := make(fgg.WMap)
 		fgg.MakeWMap(prog.GetDecls(), gamma, prog.GetExpr().(fgg.Expr), omega)
 		for _, v := range omega {

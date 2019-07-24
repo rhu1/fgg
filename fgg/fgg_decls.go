@@ -21,6 +21,7 @@ type FGGProgram struct {
 	e  Expr
 }
 
+var _ base.Program = FGGProgram{}
 var _ FGGNode = FGGProgram{}
 
 func (p FGGProgram) Ok(allowStupid bool) {
@@ -216,12 +217,11 @@ func (md MDecl) Ok(ds []Decl) {
 		v.u.Ok(ds, delta1)
 	}
 
-	gamma := make(map[Name]Type)
 	as := make([]Type, len(md.psi_recv.tfs)) // !!! submission version, x:t_S(a) => x:t_S(~a)
 	for i := 0; i < len(md.psi_recv.tfs); i++ {
 		as[i] = md.psi_recv.tfs[i].a
 	}
-	gamma[md.x_recv] = TName{md.t_recv, as} // CHECKME: can we give the bounds directly here instead of 'as'?
+	gamma := Env{md.x_recv: TName{md.t_recv, as}} // CHECKME: can we give the bounds directly here instead of 'as'?
 	for _, v := range md.pds {
 		gamma[v.x] = v.u
 	}
