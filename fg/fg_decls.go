@@ -18,8 +18,8 @@ type FGProgram struct {
 	e  Expr
 }
 
-var _ FGNode = FGProgram{}
 var _ base.Program = FGProgram{}
+var _ FGNode = FGProgram{}
 
 func (p FGProgram) Ok(allowStupid bool) {
 	if !allowStupid { // Hack, to print the following only for "top-level" programs (not during Eval)
@@ -158,8 +158,7 @@ func (md MDecl) Ok(ds []Decl) {
 		panic("Receiver must be a struct type: not " + md.recv.t.String() +
 			"\n\t" + md.String())
 	}
-	env := make(map[Name]Type)
-	env[md.recv.x] = md.recv.t
+	env := Env{md.recv.x: md.recv.t}
 	for _, v := range md.pds {
 		env[v.x] = v.t
 	}

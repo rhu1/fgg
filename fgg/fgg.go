@@ -15,8 +15,8 @@ type Name = base.Name // TODO: tidy up refactoring, due to introducing base
 
 type Type interface {
 	TSubs(subs map[TParam]Type) Type
-	Impls(ds []base.Decl, delta TEnv, u Type) bool
-	Ok(ds []base.Decl, delta TEnv)
+	Impls(ds []Decl, delta TEnv, u Type) bool
+	Ok(ds []Decl, delta TEnv)
 	Equals(u Type) bool
 	String() string
 }
@@ -36,7 +36,7 @@ func (a TParam) TSubs(subs map[TParam]Type) Type {
 }
 
 // u0 <: u
-func (a TParam) Impls(ds []base.Decl, delta TEnv, u Type) bool {
+func (a TParam) Impls(ds []Decl, delta TEnv, u Type) bool {
 	if a1, ok := u.(TParam); ok {
 		return a == a1
 	} else {
@@ -44,7 +44,7 @@ func (a TParam) Impls(ds []base.Decl, delta TEnv, u Type) bool {
 	}
 }
 
-func (a TParam) Ok(ds []base.Decl, delta TEnv) {
+func (a TParam) Ok(ds []Decl, delta TEnv) {
 	if _, ok := delta[a]; !ok {
 		panic("Unknown type param: " + a.String())
 	}
@@ -78,7 +78,7 @@ func (u0 TName) TSubs(subs map[TParam]Type) Type {
 }
 
 // u0 <: 1
-func (u0 TName) Impls(ds []base.Decl, delta TEnv, u Type) bool {
+func (u0 TName) Impls(ds []Decl, delta TEnv, u Type) bool {
 	if isStructTName(ds, u) {
 		return isStructTName(ds, u0) && u0.Equals(u) // Asks equality of nested TParam
 	}
@@ -99,7 +99,7 @@ func (u0 TName) Impls(ds []base.Decl, delta TEnv, u Type) bool {
 	return true
 }
 
-func (u0 TName) Ok(ds []base.Decl, delta TEnv) {
+func (u0 TName) Ok(ds []Decl, delta TEnv) {
 	td := getTDecl(ds, u0.t)
 	psi := td.GetTFormals()
 	if len(psi.tfs) != len(u0.us) {
@@ -130,7 +130,7 @@ func (u0 TName) Ok(ds []base.Decl, delta TEnv) {
 }
 
 // \tau_I is a Spec, but not \tau_S -- this aspect is currently "dynamically typed"
-func (u TName) GetSigs(ds []base.Decl) []Sig {
+func (u TName) GetSigs(ds []Decl) []Sig {
 	if !isInterfaceTName(ds, u) { // isStructType would be more efficient
 		panic("Cannot use non-interface type as a Spec: " + u.String() +
 			" is a " + reflect.TypeOf(u).String())
@@ -196,13 +196,13 @@ type FGGNode = base.AstNode
 type Decl = base.Decl
 
 type TDecl interface {
-	base.Decl
+	Decl
 	GetTFormals() TFormals
 }
 
 type Spec interface {
 	FGGNode
-	GetSigs(ds []base.Decl) []Sig
+	GetSigs(ds []Decl) []Sig
 }
 
 type Expr interface {
@@ -210,13 +210,13 @@ type Expr interface {
 	Subs(subs map[Variable]Expr) Expr
 	TSubs(subs map[TParam]Type) Expr
 	// Like gamma, delta is effectively immutable
-	Typing(ds []base.Decl, delta TEnv, gamma Env, allowStupid bool) Type
-	Eval(ds []base.Decl) (Expr, string)
+	Typing(ds []Decl, delta TEnv, gamma Env, allowStupid bool) Type
+	Eval(ds []Decl) (Expr, string)
 }
 
 /* Helpers */
 
-func isStructType(ds []base.Decl, t Name) bool {
+func isStructType(ds []Decl, t Name) bool {
 	for _, v := range ds {
 		d, ok := v.(STypeLit)
 		if ok && d.t == t {
@@ -227,7 +227,7 @@ func isStructType(ds []base.Decl, t Name) bool {
 }
 
 // Check if u is a \tau_S -- implicitly must be a TName
-func isStructTName(ds []base.Decl, u Type) bool {
+func isStructTName(ds []Decl, u Type) bool {
 	if u1, ok := u.(TName); ok {
 		for _, v := range ds {
 			d, ok := v.(STypeLit)
@@ -240,7 +240,7 @@ func isStructTName(ds []base.Decl, u Type) bool {
 }
 
 // Check if u is a \tau_I -- N.B. looks for a *TName*, i.e., not a TParam
-func isInterfaceTName(ds []base.Decl, u Type) bool {
+func isInterfaceTName(ds []Decl, u Type) bool {
 	if u1, ok := u.(TName); ok {
 		for _, v := range ds {
 			d, ok := v.(ITypeLit)
