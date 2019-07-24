@@ -121,19 +121,6 @@ func interp(a base.Adaptor, src string, strict bool, steps int, monom bool,
 	}
 
 	if monom || compile != "" {
-		/*var gamma fgg.ClosedEnv
-		omega := make(fgg.WMap)
-		fgg.MakeWMap(prog.GetDecls(), gamma, prog.GetExpr().(fgg.Expr), omega)
-		for _, v := range omega {
-			vPrintln(v.GetTName().String() + " |-> " + string(v.GetMonomId()))
-			gs := fgg.GetParameterisedSigs(v)
-			if len(gs) > 0 {
-				vPrintln("Instantiations of parameterised methods: (i.e., those that had \"additional method params\")")
-				for _, g := range gs {
-					vPrintln("\t" + g.String())
-				}
-			}
-		}*/
 		p_mono := fgg.Monomorph(prog.(fgg.FGGProgram)) // TODO: reformat (e.g., "<...>") to make an actual FG program
 		if monom {
 			vPrintln("\nMonomorphising, formal notation: [Warning] WIP [Warning]")

@@ -34,7 +34,7 @@ func Test001(t *testing.T) {
 	Am1 := "func (x0 A) m1() A { return x0 }"
 	Am2 := "func (x0 A) m2(x1 A) A { return x1 }"
 	Am3 := "func (x0 A) m3(x1 A, x2 A) A { return x2 }"
-	B := "type B struct { a A }"
+	B := "type B struct { f A }"
 	e := "B{A{}}"
 	parseAndOkGood(t, A, Am1, Am2, Am3, B, e)
 }
@@ -55,29 +55,29 @@ func Test002c(t *testing.T) {
 
 func Test003(t *testing.T) {
 	A := "type A struct {}"
-	B := "type B struct { a A }"
+	B := "type B struct { f A }"
 	e := "B{A{}}"
 	parseAndOkGood(t, A, B, e)
 }
 
 func Test003b(t *testing.T) {
 	A := "type A struct {}"
-	B := "type B struct { a A }"
+	B := "type B struct { f A }"
 	e := "B{B{A{}}}"
 	parseAndOkBad(t, "B takes an A, not a B", A, B, e)
 }
 
 func Test003c(t *testing.T) {
 	A := "type A struct {}"
-	B := "type B struct { a A }"
+	B := "type B struct { f A }"
 	e := "B{}"
 	parseAndOkBad(t, "B takes an A", A, B, e)
 }
 
 func Test004(t *testing.T) {
 	A := "type A struct {}"
-	B := "type B struct { a A }"
-	C := "type C struct { a A; b B }"
+	B := "type B struct { f A }"
+	C := "type C struct { f1 A; f2 B }"
 	e := "C{A{}, B{A{}}}"
 	parseAndOkGood(t, A, B, C, e)
 }
@@ -117,7 +117,7 @@ func Test005e(t *testing.T) {
 	Am1 := "func (x0 A) m1() A { return x0 }"
 	Am2 := "func (x0 A) m2(x1 A) A { return x1 }"
 	Am3 := "func (x0 A) m3(x1 A, x2 B) B { return x2 }"
-	B := "type B struct { a A }"
+	B := "type B struct { f A }"
 	e := "A{}"
 	parseAndOkGood(t, A, Am1, Am2, Am3, B, e)
 }
@@ -185,7 +185,7 @@ func Test009(t *testing.T) {
 }
 
 func Test009b(t *testing.T) {
-	Any := "type Foo interface { foo(a A) A }"
+	Any := "type Foo interface { foo(x A) A }"
 	IA := "type IA interface { m1(x1 A) A; Foo }"
 	A := "type A struct {}"
 	Am1 := "func (x0 A) m1(x1 A) A { return x1 }"
@@ -196,7 +196,7 @@ func Test009b(t *testing.T) {
 }
 
 func Test010b(t *testing.T) {
-	Any := "type Foo interface { foo(a A) A }"
+	Any := "type Foo interface { foo(x A) A }"
 	IA := "type IA interface { m1(x1 A) A; Foo }"
 	A := "type A struct {}"
 	Am1 := "func (x0 A) m1(x1 A) A { return x1 }"
@@ -209,7 +209,7 @@ func Test010b(t *testing.T) {
 func Test011(t *testing.T) {
 	A := "type A struct {}"
 	Am1 := "func (x0 A) m1() A { return B{A{}} }"
-	B := "type B struct { a A }"
+	B := "type B struct { f A }"
 	e := "B{A{}}"
 	parseAndOkBad(t, "Cannot return a B as an A", A, Am1, B, e)
 }
@@ -217,22 +217,22 @@ func Test011(t *testing.T) {
 // Initial testing for select
 func Test012(t *testing.T) {
 	A := "type A struct {}"
-	B := "type B struct { a A }"
-	e := "B{A{}}.a"
+	B := "type B struct { f A }"
+	e := "B{A{}}.f"
 	parseAndOkGood(t, A, B, e)
 }
 
 func Test012b(t *testing.T) {
 	A := "type A struct {}"
-	B := "type B struct { a A }"
-	e := "B{A{}}.b"
-	parseAndOkBad(t, "B does not have a \"b\" field", A, B, e)
+	B := "type B struct { f A }"
+	e := "B{A{}}.f1"
+	parseAndOkBad(t, "B does not have a \"f1\" field", A, B, e)
 }
 
 func Test012c(t *testing.T) {
 	A := "type A struct {}"
-	B := "type B struct { a A }"
-	e := "B{B{A{}}.a}"
+	B := "type B struct { f A }"
+	e := "B{B{A{}}.f}"
 	parseAndOkGood(t, A, B, e)
 }
 
@@ -283,7 +283,7 @@ func Test013f(t *testing.T) {
 func Test013g(t *testing.T) {
 	fmt.Println("Source:")
 	A := "type A struct {}"
-	B := "type B struct { a A }"
+	B := "type B struct { f A }"
 	A1m := "func (x0 A) m1(x1 A) A { return x0 }"
 	e := "A{}.m1(A{}.m1(B{A{}}))"
 	parseAndOkBad(t, "(Nested) m1 call given a B, expecting an A", A, A1m, B, e)
@@ -300,7 +300,7 @@ func Test014(t *testing.T) {
 func Test015(t *testing.T) {
 	Any := "type Any interface {}"
 	A := "type A struct {}"
-	B := "type B struct { a A }"
+	B := "type B struct { f A }"
 	A1m := "func (x0 A) m1(x1 Any) Any { return B{x0} }"
 	e := "A{}.m1(B{A{}})"
 	parseAndOkGood(t, Any, A, A1m, B, e)
@@ -361,8 +361,8 @@ func Test018b(t *testing.T) {
 
 func TestEval001(t *testing.T) {
 	A := "type A struct {}"
-	B := "type B struct { a A }"
-	e := "B{A{}}.a"
+	B := "type B struct { f A }"
+	e := "B{A{}}.f"
 	prog := parseAndOkGood(t, A, B, e)
 	base.EvalAndOkGood(t, prog, 1)
 }
@@ -378,8 +378,8 @@ func TestEval002(t *testing.T) {
 func TestEval003(t *testing.T) {
 	A := "type A struct {}"
 	Am1 := "func (x0 A) m1() B { return B{x0} }"
-	B := "type B struct { a A }"
-	e := "A{}.m1().a"
+	B := "type B struct { f A }"
+	e := "A{}.m1().f"
 	prog := parseAndOkGood(t, A, Am1, B, e)
 	base.EvalAndOkGood(t, prog, 2)
 }

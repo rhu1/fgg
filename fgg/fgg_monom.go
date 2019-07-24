@@ -18,21 +18,20 @@ type ClosedEnv map[Name]TName // Pre: forall TName, isClosed
 func Monomorph(p FGGProgram) fg.FGProgram {
 	var gamma ClosedEnv
 	omega := make(WMap)
-	MakeWMap(p.GetDecls(), gamma, p.GetExpr().(Expr), omega) // Builds omega
+	MakeWMap(p.GetDecls(), gamma, p.GetExpr().(Expr), omega) // Populates omega
 
-	e := monomExpr(omega, p.e) // Do first, to populate omega -- (unnecessary?)
 	var ds []Decl
 	for _, v := range p.ds {
 		switch d := v.(type) {
 		case TDecl:
 			t := d.GetName()
-			for k1, v1 := range omega {
+			for k1, v1 := range omega { // CHECKME: "prunes" unused types -- OK?
 				if k1.t == t {
 					ds = append(ds, monomTDecl(p.ds, omega, d, v1))
 				}
 			}
 		case MDecl:
-			for k1, v1 := range omega {
+			for k1, v1 := range omega { // CHECKME: "prunes" unused types -- OK?
 				if k1.t == d.t_recv {
 					//ds = append(ds, monomMDecl(omega, d, v1)...)  // Not allowed
 					for _, v := range monomMDecl(p.ds, omega, d, v1) {
@@ -45,6 +44,7 @@ func Monomorph(p FGGProgram) fg.FGProgram {
 				"\n\t" + d.String())
 		}
 	}
+	e := monomExpr(omega, p.e)
 	return fg.NewFGProgram(ds, e)
 }
 
@@ -84,14 +84,16 @@ func monomTDecl(ds []Decl, omega WMap, td TDecl, wv WVal) fg.TDecl {
 							ss = append(ss, v.g)
 						}
 					}*/
-					// forall u_S s.t. u_S <: wv.u, collect targs for all mono(u_S)
+					// forall u_S s.t. u_S <: wv.u, collect m.targs for all wv.m and mono(u_S.m)
+					gs := methods(ds, wv.u)
 					empty := make(TEnv)
 					targs := make(map[string][]Type)
 					for _, v := range omega {
 						if isStructType(ds, v.u.t) && v.u.Impls(ds, empty, wv.u) {
 							for _, v1 := range v.gs {
-								if len(v1.targs) > 0 { // Redundant?
-									hash := "" // TODO: factor out
+								m1 := getOrigMethName(v1.g.GetMethName())
+								if _, ok := gs[m1]; ok && len(v1.targs) > 0 { // Redundant?
+									hash := "" // TODO: factor out  // Use WriteTypes?
 									for _, v2 := range v1.targs {
 										hash = hash + v2.String()
 									}
@@ -158,10 +160,12 @@ func monomMDecl(ds []Decl, omega WMap, md MDecl, wv WVal) (res []fg.MDecl) {
 		// forall u_I s.t. wv.u <: u_I, forall u_S s.t. u_S <: u_I, collect targs for all mono(u_S)
 		for _, v := range omega {
 			if isInterfaceTName(ds, v.u) && wv.u.Impls(ds, empty, v.u) {
+				gs := methods(ds, v.u)
 				for _, v1 := range omega {
 					if isStructTName(ds, v1.u) && v1.u.Impls(ds, empty, v.u) {
 						for _, v2 := range v1.gs {
-							if len(v2.targs) > 0 {
+							m2 := getOrigMethName(v2.g.GetMethName())
+							if _, ok := gs[md.m]; m2 == md.m && ok && len(v2.targs) > 0 {
 								hash := "" // TODO: factor out
 								for _, v3 := range v2.targs {
 									hash = hash + v3.String()
@@ -175,7 +179,7 @@ func monomMDecl(ds []Decl, omega WMap, md MDecl, wv WVal) (res []fg.MDecl) {
 		}
 		if len(targs) == 0 { // Means no u_I, and so targs doesn't even include "own" wv.gs
 			for _, v := range wv.gs {
-				if v.g.GetMethName() == md.m {
+				if getOrigMethName(v.g.GetMethName()) == md.m {
 					if len(v.targs) > 0 {
 						hash := "" // TODO: factor out
 						for _, v1 := range v.targs {
@@ -433,7 +437,7 @@ func visitSig(ds []Decl, u0 TName, g Sig, targs []Type, omega WMap) (res TName,
 	return res, todo
 }
 
-/* Helper */
+/* Helpers */
 
 func isClosed(u TName) bool {
 	for _, v := range u.us {
@@ -458,6 +462,28 @@ func getMonomMethName(omega WMap, m Name, targs []Type) Name {
 	return Name(res)
 }
 
+func getOrigMethName(m Name) Name { // Hack
+	return m[:strings.Index(m, "<")]
+}
+
+/*
+// ...debug print WMap
+func ... {
+	var gamma fgg.ClosedEnv
+	omega := make(fgg.WMap)
+	fgg.MakeWMap(prog.GetDecls(), gamma, prog.GetExpr().(fgg.Expr), omega)
+	for _, v := range omega {
+		vPrintln(v.GetTName().String() + " |-> " + string(v.GetMonomId()))
+		gs := fgg.GetParameterisedSigs(v)
+		if len(gs) > 0 {
+			vPrintln("Instantiations of parameterised methods: (i.e., those that had \"additional method params\")")
+			for _, g := range gs {
+				vPrintln("\t" + g.String())
+			}
+		}
+	}
+}
+
 func GetParameterisedSigs(wv WVal) []fg.Sig {
 	var res []fg.Sig
 	for _, v := range wv.gs {
@@ -465,6 +491,7 @@ func GetParameterisedSigs(wv WVal) []fg.Sig {
 	}
 	return res
 }
+*/
 
 /* IGNORE */
 
