@@ -5,13 +5,15 @@ package main;
 
 type Any(type ) interface {};
 type Box(type a Any()) struct { f a };
-func (x0 Box(type a Any())) unbox(type )() a { return x0.f };
+//func (x0 Box(type a Any())) unbox(type )() a { return x0.f };
 
 type D(type ) struct {};
-func (x0 D(type )) bad(type a Any())(x1 a)) a {
-	return D(){}.bad(Box(a))(Box(a){x1}).unbox()()
-
+func (x0 D(type )) bad(type a Any())(x1 a)) Any() {
+	return D(){}.bad(Box(a))(Box(a){x1})
 };  
+/*func (x0 D(type )) bad(type a Any())(x1 a)) a {
+	return D(){}.bad(Box(a))(Box(a){x1}).unbox()()
+};*/
 
 type A(type ) struct {};
 func main() { _ =  D(){}.bad(A()) (   A(){} )  }
