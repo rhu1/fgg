@@ -14,6 +14,8 @@ var _ = fmt.Errorf
 
 type ClosedEnv map[Name]TName // Pre: forall TName, isClosed
 
+// func isMonomorphisable(p FGGProgram) bool { ... }
+
 // TODO: reformat (e.g., "<...>") to make an actual FG program
 func Monomorph(p FGGProgram) fg.FGProgram {
 	var gamma ClosedEnv
@@ -48,7 +50,7 @@ func Monomorph(p FGGProgram) fg.FGProgram {
 	return fg.NewFGProgram(ds, e)
 }
 
-// Pre: wv represents an instantiation of the `td` type
+// Pre: `wv` represents an instantiation of the `td` type  // TODO: refactor, decompose
 func monomTDecl(ds []Decl, omega WMap, td TDecl, wv WVal) fg.TDecl {
 	subs := make(map[TParam]Type) // Type is a TName
 	psi := td.GetTFormals()
@@ -137,7 +139,7 @@ func monomTDecl(ds []Decl, omega WMap, td TDecl, wv WVal) fg.TDecl {
 	}
 }
 
-// Pre: wv represents an instantiation of `md.t_recv`
+// Pre: `wv` represents an instantiation of `md.t_recv`  // TODO: refactor, decompose
 func monomMDecl(ds []Decl, omega WMap, md MDecl, wv WVal) (res []fg.MDecl) {
 	subs := make(map[TParam]Type) // Type is a TName
 	for i := 0; i < len(md.psi_recv.tfs); i++ {
@@ -157,20 +159,23 @@ func monomMDecl(ds []Decl, omega WMap, md MDecl, wv WVal) (res []fg.MDecl) {
 	} else {
 		empty := make(TEnv)
 		targs := make(map[string][]Type)
-		// forall u_I s.t. wv.u <: u_I, forall u_S s.t. u_S <: u_I, collect targs for all mono(u_S)
+		// Given m = md.m, forall u_I s.t. m in meths(u_I) && wv.u <: u_I, ..
+		// ..forall u_S s.t. u_S <: u_I, collect targs for all mono(u_S.m)
 		for _, v := range omega {
 			if isInterfaceTName(ds, v.u) && wv.u.Impls(ds, empty, v.u) {
 				gs := methods(ds, v.u)
-				for _, v1 := range omega {
-					if isStructTName(ds, v1.u) && v1.u.Impls(ds, empty, v.u) {
-						for _, v2 := range v1.gs {
-							m2 := getOrigMethName(v2.g.GetMethName())
-							if _, ok := gs[md.m]; m2 == md.m && ok && len(v2.targs) > 0 {
-								hash := "" // TODO: factor out
-								for _, v3 := range v2.targs {
-									hash = hash + v3.String()
+				if _, ok := gs[md.m]; ok {
+					for _, v1 := range omega {
+						if isStructTName(ds, v1.u) && v1.u.Impls(ds, empty, v.u) {
+							for _, v2 := range v1.gs {
+								m2 := getOrigMethName(v2.g.GetMethName())
+								if m2 == md.m && len(v2.targs) > 0 {
+									hash := "" // TODO: factor out
+									for _, v3 := range v2.targs {
+										hash = hash + v3.String()
+									}
+									targs[hash] = v2.targs
 								}
-								targs[hash] = v2.targs
 							}
 						}
 					}

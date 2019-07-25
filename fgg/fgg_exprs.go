@@ -6,9 +6,11 @@
 package fgg
 
 import "fmt"
+import "reflect"
 import "strings"
 
 var _ = fmt.Errorf
+var _ = reflect.Append
 var _ = strings.Compare
 
 /* Variable */
@@ -293,7 +295,11 @@ func (c Call) Typing(ds []Decl, delta TEnv, gamma Env, allowStupid bool) Type {
 	}
 	for i := 0; i < len(c.args); i++ {
 		// CHECKME: submission version's notation, (~\tau :> ~\rho)[subs], slightly unclear
-		u_a := c.args[i].Typing(ds, delta, gamma, allowStupid).TSubs(subs)
+		u_a := c.args[i].Typing(ds, delta, gamma, allowStupid)
+		//.TSubs(subs)  // !!! submission version, subs also applied to ~tau, ..
+		// ..falsely captures "repeat" var occurrences in recursive calls, ..
+		// ..e.g., bad monomorph (Box) example.
+		// The ~beta morally do not occur in ~tau, they only bind ~rho
 		u_p := g.pds[i].u.TSubs(subs)
 		if !u_a.Impls(ds, delta, u_p) {
 			panic("Arg expr type must implement param type: arg=" + u_a.String() +
