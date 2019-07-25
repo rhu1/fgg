@@ -1,0 +1,54 @@
+//$ go run github.com/rhu1/fgg -fgg [-monom] -v tmp/fgg/examples/monom/box/box.fgg
+
+// Cf. https://github.com/btoninho/featherweight_go/blob/3551b979a13efb51859d2bb4b3a1733f44821e14/agda/Mono.lagda#L358
+package main;
+
+type Any(type ) interface {};
+type Box(type a Any()) struct {
+	f a
+};
+func (x0 Box(type a Any())) unbox(type )() a { return x0.f };
+
+type D(type ) struct {};
+func (x0 D(type )) bad(type a Any())(x1 a)) a {
+	return D(){}.bad(Box(a))(Box(a){x1}).unbox()()
+
+};  
+
+type A(type ) struct {};
+func main() { _ =  D(){}.bad(A()) (   A(){} )  }
+
+
+
+
+
+
+
+/*
+type Any(type ) interface {};
+type Tree(type a Any()) interface {
+	//size(type )() Any  // FIXME: add WF, add test
+	size(type )() Any()
+};
+
+type Leaf(type a Any()) struct {
+  elem a
+};
+
+type Pair(type a Any(), b Any()) struct {
+	fst a;
+	snd b
+};
+
+type Node(type a Any()) struct {
+	children Tree(Pair(a, a))
+};
+
+type A(type ) struct {};
+
+func (x0 Node(type a Any())) size(type )() Any() {
+	return x0.children.size()()
+};
+
+func main() { _ = A(){} }
+//*/
