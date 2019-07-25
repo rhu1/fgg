@@ -147,8 +147,6 @@ func (s STypeLit) GetTFormals() TFormals {
 	return s.psi
 }
 
-//func (s STypeLit) TSubs(subs map[
-
 func (s STypeLit) String() string {
 	var b strings.Builder
 	b.WriteString("type ")
