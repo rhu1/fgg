@@ -1,0 +1,14 @@
+package main;
+
+type Any(type ) interface {};
+type Box(type a Any()) struct { f a };
+
+
+type D(type ) struct {};
+func (x0 D(type )) bad(type a Any())(x1 a)) Any() {
+	return D(){}.bad(a)(x1)
+};  
+
+type A(type ) struct {};
+func main() { _ =  D(){}.bad(A()) (   A(){} )  }
+
