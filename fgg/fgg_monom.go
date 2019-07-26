@@ -182,7 +182,7 @@ func monomMDecl(ds []Decl, omega WMap, md MDecl, wv WVal) (res []fg.MDecl) {
 				}
 			}
 		}
-		if len(targs) == 0 { // Means no u_I, and so targs doesn't even include "own" wv.gs
+		if len(targs) == 0 { // Means no u_I, if len(wv.gs)>0 -- targs doesn't include wv.gs
 			for _, v := range wv.gs {
 				if getOrigMethName(v.g.GetMethName()) == md.m {
 					if len(v.targs) > 0 {
@@ -359,14 +359,15 @@ func MakeWMap(ds []Decl, gamma ClosedEnv, e Expr, omega WMap) (res TName) {
 				if tmp, ok := mds[hash]; ok {
 					res = tmp.u
 				} else {
-					_, todo1 := visitSig(ds, u0, g, e1.targs, omega)
-					todo = append(todo, todo1...)
 					m := getMonomMethName(omega, g.m, e1.targs)
 					var pds []fg.ParamDecl
 					for _, v := range g.pds {
 						pds = append(pds, fg.NewParamDecl(v.x, toMonomId(v.u.(TName))))
 					}
-					mds[hash] = MonoSig{fg.NewSig(m, pds, toMonomId(g.u.(TName))), e1.targs, res}
+					mds[hash] = MonoSig{fg.NewSig(m, pds, toMonomId(g.u.(TName))),
+						e1.targs, res}
+					_, todo1 := visitSig(ds, u0, g, e1.targs, omega)
+					todo = append(todo, todo1...)
 				}
 			}
 		}
