@@ -364,6 +364,7 @@ func MakeWMap(ds []Decl, gamma ClosedEnv, e Expr, omega WMap) (res TName) {
 					for _, v := range g.pds {
 						pds = append(pds, fg.NewParamDecl(v.x, toMonomId(v.u.(TName))))
 					}
+					res = g.u.(TName)
 					mds[hash] = MonoSig{fg.NewSig(m, pds, toMonomId(g.u.(TName))),
 						e1.targs, res}
 					_, todo1 := visitSig(ds, u0, g, e1.targs, omega)

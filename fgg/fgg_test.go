@@ -15,18 +15,24 @@ import (
 
 func parseAndOkGood(t *testing.T, elems ...string) base.Program {
 	var adptr fgg.FGGAdaptor
-	return base.ParseAndOkGood(t, &adptr, fgg.MakeFggProgram(elems...))
+	p := base.ParseAndOkGood(t, &adptr,
+		fgg.MakeFggProgram(elems...)).(fgg.FGGProgram)
+	fgg.Monomorph(p)
+	return p
 }
 
 // N.B. do not use to check for bad *syntax* -- see the "[Parser]" panic check in base.ParseAndOkBad
 func parseAndOkBad(t *testing.T, msg string, elems ...string) base.Program {
 	var adptr fgg.FGGAdaptor
 	return base.ParseAndOkBad(t, msg, &adptr, fgg.MakeFggProgram(elems...))
+	// Don't attempt monom on bad program
 }
 
 /* Syntax and typing */
 
 // TOOD: classify FG-compatible subset compare results to -fg
+
+// Initial FGG test
 
 // Initial FGG test
 func Test001(t *testing.T) {
@@ -208,7 +214,7 @@ func Test009b(t *testing.T) {
 }
 
 // Initial test for generic type assertion
-func Test0010(t *testing.T) {
+func Test010(t *testing.T) {
 	Any := "type Any(type ) interface {}"
 	ToAny := "type ToAny(type ) struct { any Any() }"
 	IA := "type IA(type ) interface { m1(type a IA())() IA() }"
@@ -220,7 +226,7 @@ func Test0010(t *testing.T) {
 	parseAndOkGood(t, Any, ToAny, IA, A, Am1, B, Bm2, e)
 }
 
-func Test0011(t *testing.T) {
+func Test011(t *testing.T) {
 	IA := "type IA(type ) interface { m1(type a IA())() IA() }"
 	ToIA := "type ToIA(type ) struct { upcast IA() }"
 	A := "type A(type ) struct {}"
@@ -229,7 +235,7 @@ func Test0011(t *testing.T) {
 	parseAndOkGood(t, IA, ToIA, A, Am1, e)
 }
 
-func Test0011b(t *testing.T) {
+func Test011b(t *testing.T) {
 	IA := "type IA(type ) interface { m1(type a IA())() IA() }"
 	ToIA := "type ToIA(type ) struct { upcast IA() }"
 	A := "type A(type ) struct {}"
@@ -239,7 +245,7 @@ func Test0011b(t *testing.T) {
 	parseAndOkBad(t, "A1() is not an IA", IA, ToIA, A, Am1, A1, e)
 }
 
-func Test0011c(t *testing.T) {
+func Test011c(t *testing.T) {
 	Any := "type Any(type ) interface {}"
 	ToAny := "type ToAny(type ) struct { any Any() }"
 	B := "type B(type ) struct {}"
@@ -249,7 +255,7 @@ func Test0011c(t *testing.T) {
 }
 
 // Testing parsing for Call with both targ and arg
-func Test0012(t *testing.T) {
+func Test012(t *testing.T) {
 	Any := "type Any(type ) interface {}"
 	A := "type A(type ) struct {}"
 	B := "type B(type ) struct {}"
@@ -259,7 +265,7 @@ func Test0012(t *testing.T) {
 }
 
 // Testing Call typing, meth-tparam TSubs of result
-func Test0013(t *testing.T) {
+func Test013(t *testing.T) {
 	Any := "type Any(type ) interface {}"
 	A := "type A(type ) struct {}"
 	B := "type B(type a Any()) struct { f a }"
@@ -269,7 +275,7 @@ func Test0013(t *testing.T) {
 }
 
 // Testing u <: a, i.e., upper is open type param
-func Test0014(t *testing.T) {
+func Test014(t *testing.T) {
 	Any := "type Any(type ) interface {}"
 	A := "type A(type ) struct {}"
 	B := "type B(type a Any()) struct { f a }"
@@ -277,6 +283,20 @@ func Test0014(t *testing.T) {
 	e := "B(A()){A(){}}.m(B(A()))(B(A()){A(){}}).f" // Eval would break type preservation, see TestEval001
 	parseAndOkBad(t, Any, A, B, Bm, e)
 }
+
+/* Monom */
+
+// TODO: isMonomorphisable -- should fail that check
+/*
+func TestMonom001(t *testing.T) {
+	Any := "type Any(type ) interface {}"
+	A := "type A(type ) struct {}"
+	B := "type B(type a Any()) struct { f a }"
+	Bm := "func (x0 B(type a Any())) m(type )() Any() { return B(B(a)){x0}.m()() }"
+	e := "B(A()){A(){}}.m()()"
+	parseAndOkBad(t, Any, A, B, Bm, e)
+}
+//*/
 
 /* Eval */
 
