@@ -1,4 +1,7 @@
 //$ go run github.com/rhu1/fgg -fgg -eval=-1 -monom -v fgg/examples/popl20/monomorph/monomorph.fgg
+// or
+//$ go run github.com/rhu1/fgg -fgg -eval=-1 -compile=tmp/fg/monomorph/monomorph.go -v fgg/examples/popl20/monomorph/monomorph.fgg
+//$ go run github.com/rhu1/fgg -eval=-1 -v tmp/fg/monomorph/monomoprh.go
 
 package main;
 
