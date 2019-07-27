@@ -295,7 +295,7 @@ func TestMonom001(t *testing.T) {
 	B := "type B(type a Any()) struct { f a }"
 	Bm := "func (x0 B(type a Any())) m(type )() Any() { return B(B(a)){x0}.m()() }"
 	e := "B(A()){A(){}}.m()()"
-	parseAndOkBad(t, Any, A, B, Bm, e)
+	parseAndOkBad(t, "Polymorphic recursion on the receiver type", Any, A, B, Bm, e)
 }
 //*/
 
