@@ -70,6 +70,9 @@ type StructLit struct {
 	es []Expr
 }
 
+func (s StructLit) Type() Type         { return s.t }
+func (s StructLit) FieldExprs() []Expr { return s.es }
+
 var _ Expr = StructLit{}
 
 func (s StructLit) Subs(subs map[Variable]Expr) Expr {
@@ -149,6 +152,9 @@ type Select struct {
 	f Name
 }
 
+func (s Select) Expr() Expr      { return s.e }
+func (s Select) FieldName() Name { return s.f }
+
 func (s Select) Subs(subs map[Variable]Expr) Expr {
 	return Select{s.e.Subs(subs), s.f}
 }
@@ -197,6 +203,10 @@ type Call struct {
 	m    Name
 	args []Expr
 }
+
+func (c Call) Expr() Expr       { return c.e }
+func (c Call) MethodName() Name { return c.m }
+func (c Call) Args() []Expr     { return c.args }
 
 func (c Call) Subs(subs map[Variable]Expr) Expr {
 	e := c.e.Subs(subs)
@@ -285,6 +295,9 @@ type Assert struct {
 	e Expr
 	t Type
 }
+
+func (a Assert) Expr() Expr       { return a.e }
+func (a Assert) AssertType() Type { return a.t }
 
 func (a Assert) Subs(subs map[Variable]Expr) Expr {
 	return Assert{a.e.Subs(subs), a.t}
