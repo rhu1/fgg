@@ -140,6 +140,10 @@ func (s STypeLit) GetName() Name {
 	return Name(s.t)
 }
 
+func (s STypeLit) Fields() []FieldDecl {
+	return s.fds
+}
+
 func (s STypeLit) String() string {
 	var b strings.Builder
 	b.WriteString("type ")
@@ -159,6 +163,9 @@ type FieldDecl struct {
 	t Type
 }
 
+func (f FieldDecl) GetName() Name { return f.f }
+func (f FieldDecl) GetType() Type { return f.t }
+
 var _ FGNode = FieldDecl{}
 
 func (fd FieldDecl) String() string {
@@ -176,6 +183,27 @@ type MDecl struct {
 }
 
 var _ Decl = MDecl{}
+
+func (md MDecl) Receiver() ParamDecl {
+	return md.recv
+}
+
+func (md MDecl) MethodName() Name {
+	return md.m
+}
+
+// Params returns the non-receiver parameters
+func (md MDecl) Params() []ParamDecl {
+	return md.pds
+}
+
+func (md MDecl) ReturnType() Type {
+	return md.t
+}
+
+func (md MDecl) Impl() Expr {
+	return md.e
+}
 
 func (md MDecl) ToSig() Sig {
 	return Sig{md.m, md.pds, md.t}
@@ -223,6 +251,9 @@ type ParamDecl struct {
 	x Name // CHECKME: Variable? (also Env key)
 	t Type
 }
+
+func (pd ParamDecl) GetName() Name { return pd.x }
+func (pd ParamDecl) GetType() Type { return pd.t }
 
 var _ FGNode = ParamDecl{}
 
