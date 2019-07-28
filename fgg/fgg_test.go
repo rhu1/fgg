@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/rhu1/fgg/base"
+	"github.com/rhu1/fgg/base/testutils"
 	"github.com/rhu1/fgg/fgg"
 )
 
@@ -15,7 +16,7 @@ import (
 
 func parseAndOkGood(t *testing.T, elems ...string) base.Program {
 	var adptr fgg.FGGAdaptor
-	p := base.ParseAndOkGood(t, &adptr,
+	p := testutils.ParseAndOkGood(t, &adptr,
 		fgg.MakeFggProgram(elems...)).(fgg.FGGProgram)
 	fgg.Monomorph(p)
 	return p
@@ -24,7 +25,7 @@ func parseAndOkGood(t *testing.T, elems ...string) base.Program {
 // N.B. do not use to check for bad *syntax* -- see the "[Parser]" panic check in base.ParseAndOkBad
 func parseAndOkBad(t *testing.T, msg string, elems ...string) base.Program {
 	var adptr fgg.FGGAdaptor
-	return base.ParseAndOkBad(t, msg, &adptr, fgg.MakeFggProgram(elems...))
+	return testutils.ParseAndOkBad(t, msg, &adptr, fgg.MakeFggProgram(elems...))
 	// Don't attempt monom on bad program
 }
 
@@ -310,5 +311,5 @@ func TestEval001(t *testing.T) {
 	Bm := "func (x0 B(type )) m(type a Any())(x1 a) a { return ToAny(){A(){}}.any.(a) }"
 	e := "B(A()){A(){}}.m(B(A()))(B(A()){A(){}}).f"
 	prog := parseAndOkGood(t, Any, ToAny, A, B, Bm, e)
-	base.EvalAndOkBad(t, prog, "Cannot cast A() to B(A())", 3)
+	testutils.EvalAndOkBad(t, prog, "Cannot cast A() to B(A())", 3)
 }
