@@ -192,8 +192,8 @@ func (md MDecl) MethodName() Name {
 	return md.m
 }
 
-// Params returns the non-receiver parameters
-func (md MDecl) Params() []ParamDecl {
+// MethodParams returns the non-receiver parameters
+func (md MDecl) MethodParams() []ParamDecl {
 	return md.pds
 }
 
@@ -282,6 +282,10 @@ func (c ITypeLit) GetName() Name {
 	return Name(c.t)
 }
 
+func (c ITypeLit) Specs() []Spec {
+	return c.ss
+}
+
 func (c ITypeLit) String() string {
 	var b strings.Builder
 	b.WriteString("type ")
@@ -305,6 +309,10 @@ type Sig struct {
 	pds []ParamDecl
 	t   Type
 }
+
+func (s Sig) MethodName() Name          { return s.m }
+func (s Sig) MethodParams() []ParamDecl { return s.pds }
+func (s Sig) ReturnType() Type          { return s.t }
 
 var _ Spec = Sig{}
 
