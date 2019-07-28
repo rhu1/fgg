@@ -247,6 +247,7 @@ func (md MDecl) String() string {
 	b.WriteString(md.psi_recv.String())
 	b.WriteString(") ")
 	b.WriteString(md.m)
+	b.WriteString(md.psi.String())
 	b.WriteString("(")
 	writeParamDecls(&b, md.pds)
 	b.WriteString(") ")
