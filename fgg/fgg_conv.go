@@ -141,6 +141,7 @@ func (c *fg2fgg) convertMDecl(md fg.MDecl) (MDecl, error) {
 		t_recv:   recvTypeName,
 		psi_recv: recvTypeFormals,
 		m:        Name(md.MethodName()),
+		psi:      TFormals{}, // empty parameter
 		pds:      paramDecls,
 		u:        TName{t: retTypeName},
 		e:        methImpl,
