@@ -52,56 +52,104 @@ import (
 var _ = reflect.TypeOf
 var _ = strconv.Itoa
 
-var EVAL_TO_VAL = -1 // Must be < 0
-var NO_EVAL = -2     // Must be < EVAL_TO_VAL
+const (
+	EVAL_TO_VAL = -1 // Must be < 0
+	NO_EVAL     = -2 // Must be < EVAL_TO_VAL
+)
 
-var verbose bool = false
+// Command line parameters/flags
+var (
+	interpFG  bool // parse FG
+	interpFGG bool // parse FGG
+
+	monom       bool   // parse FGG and monomorphise FGG source
+	monomOutput string // output filename of monomorphised FGG
+
+	useInternalSrc bool   // use internal source
+	inlineSrc      string // use content of this as source
+	strictParse    bool   // use strict parsing mode
+
+	evalSteps int  // number of steps to evaluate
+	verbose   bool // verbose mode
+)
+
+func init() {
+	// FG or FGG
+	flag.BoolVar(&interpFG, "fg", false,
+		"interpret input as FG (defaults to true if neither -fg/-fgg set)")
+	flag.BoolVar(&interpFGG, "fgg", false,
+		"interpret input as FGG")
+
+	// Monomorphise
+	flag.BoolVar(&monom, "monom", false,
+		"[WIP] monomorphise FGG source using formal notation (ignored if -fgg not set)")
+	flag.StringVar(&monomOutput, "compile", "",
+		"[WIP] monomorphise FGG source to FG (ignored if -fgg not set)\nspecify '--' to print to stdout")
+
+	// Parsing options
+	flag.BoolVar(&useInternalSrc, "internal", false,
+		`use "internal" input as source`)
+	flag.StringVar(&inlineSrc, "inline", "",
+		`-inline="[FG/FGG src]", use inline input as source`)
+	flag.BoolVar(&strictParse, "strict", true,
+		"strict parsing (don't attempt recovery on parsing errors)")
+
+	flag.IntVar(&evalSteps, "eval", NO_EVAL,
+		" N ⇒ evaluate N (≥ 0) steps; or\n-1 ⇒ evaluate to value (or panic)")
+	flag.BoolVar(&verbose, "v", false,
+		"enable verbose printing")
+}
+
+var usage = func() {
+	fmt.Fprintf(os.Stderr, `Usage:
+
+	fgg [options] -fg  path/to/file.fg
+	fgg [options] -fgg path/to/file.fgg
+	fgg [options] -internal
+	fgg [options] -inline "package main; type ...; func main() { ... }"
+
+Options:
+
+`)
+	flag.PrintDefaults()
+	os.Exit(1)
+}
 
 func main() {
-	// N.B. flags (e.g., -internal=true) must be supplied before any non-flag args
-	evalPtr := flag.Int("eval", NO_EVAL,
-		"-eval=n, evaluate n (>=0) steps; or -steps=-1, evaluate to value (or panic)")
-	compilePtr := flag.String("compile", "",
-		"-compile=\"out.go\", [WIP] monomorphise FGG source to FG (ignored if -fgg not set);"+
-			" specify \"--\" to print to stdout")
-	fgPtr := flag.Bool("fg", false,
-		"-fg=false, interpret input as FG (defaults to true if neither -fg/-fgg set)")
-	fggPtr := flag.Bool("fgg", false, "-fgg=true, interpret input as FGG")
-	internalPtr := flag.Bool("internal", false,
-		"-internal=true, use \"internal\" input as source")
-	inlinePtr := flag.String("inline", "",
-		"-inline=\"[FG/FGG src]\", use inline input as source")
-	monomPtr := flag.Bool("monom", false,
-		"-monom=true, [WIP] monomorphise FGG source using formal notation (ignored if -fgg not set)")
-	strictParsePtr := flag.Bool("strict", true,
-		"-strict=false, disable strict parsing (attempt recovery on parsing errors)")
-	verbosePtr := flag.Bool("v", false, "-v=true, enable verbose printing")
+	flag.Usage = usage
 	flag.Parse()
-	if !*fgPtr && !*fggPtr {
-		*fgPtr = true
-	}
-	verbose = *verbosePtr
 
+	// Determine mode
+	if !interpFG && !interpFGG {
+		interpFG = true
+	}
+
+	// Determine source
 	var src string
-	if *internalPtr { // First priority
-		src = makeInternalSrc()
-	} else if *inlinePtr != "" { // Second priority, i.e., -inline overrules src file arg
-		src = *inlinePtr
-	} else {
-		if len(os.Args) < 2 {
-			fmt.Println("Input error: need a source .go file (or an -inline program)")
+	switch {
+	case useInternalSrc: // First priority
+		src = internalSrc()
+	case inlineSrc != "": // Second priority, i.e. -inline overrules src file
+		src = inlineSrc
+	default:
+		if flag.NArg() < 1 {
+			fmt.Fprintln(os.Stderr, "Input error: need a source .go file (or an -inline program)")
+			flag.Usage()
 		}
-		bs, err := ioutil.ReadFile(os.Args[len(os.Args)-1])
-		checkErr(err)
-		src = string(bs)
+		b, err := ioutil.ReadFile(flag.Arg(0))
+		if err != nil {
+			checkErr(err)
+		}
+		src = string(b)
 	}
 
-	if *fgPtr {
+	switch {
+	case interpFG:
 		var a fg.FGAdaptor
-		interp(&a, src, *strictParsePtr, *evalPtr, false, "")
-	} else if *fggPtr {
+		interp(&a, src, strictParse, evalSteps, false, "")
+	case interpFGG:
 		var a fgg.FGGAdaptor
-		interp(&a, src, *strictParsePtr, *evalPtr, *monomPtr, *compilePtr)
+		interp(&a, src, strictParse, evalSteps, monom, monomOutput)
 	}
 }
 
@@ -173,7 +221,7 @@ func eval(p base.Program, steps int) {
 }
 
 // For convenient quick testing -- via flag "-internal=true"
-func makeInternalSrc() string {
+func internalSrc() string {
 	Any := "type Any interface {}"
 	ToAny := "type ToAny struct { any Any }"
 	e := "ToAny{1}"
