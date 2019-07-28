@@ -33,6 +33,13 @@ func (c *fg2fgg) convert() error {
 			}
 			c.fggProg.ds = append(c.fggProg.ds, sTypeLit)
 
+		case fg.ITypeLit:
+			iTypeLit, err := c.convertITypeLit(decl)
+			if err != nil {
+				return err
+			}
+			c.fggProg.ds = append(c.fggProg.ds, iTypeLit)
+
 		case fg.MDecl:
 			mDecl, err := c.convertMDecl(decl)
 			if err != nil {
@@ -72,6 +79,33 @@ func (c *fg2fgg) convertSTypeLit(s fg.STypeLit) (STypeLit, error) {
 	}
 
 	return STypeLit{t: typeName, psi: typeFormals, fds: fieldDecls}, nil
+}
+
+func (c *fg2fgg) convertITypeLit(i fg.ITypeLit) (ITypeLit, error) {
+	typeName, typeFormals := c.convertType(i.GetType())
+
+	var specs []Spec
+	for _, s := range i.Specs() {
+		sig := s.(fg.Sig)
+		var paramDecls []ParamDecl
+		for _, p := range sig.MethodParams() {
+			pd, err := c.convertParamDecl(p)
+			if err != nil {
+				return ITypeLit{}, nil
+			}
+			paramDecls = append(paramDecls, pd)
+		}
+		retTypeName, _ := c.convertType(sig.ReturnType())
+
+		specs = append(specs, Sig{
+			m:   Name(sig.MethodName()),
+			psi: TFormals{tfs: nil},
+			pds: paramDecls,
+			u:   TName{t: retTypeName},
+		})
+	}
+
+	return ITypeLit{t: typeName, psi: typeFormals, ss: specs}, nil
 }
 
 func (c *fg2fgg) convertFieldDecl(fd fg.FieldDecl) (FieldDecl, error) {
