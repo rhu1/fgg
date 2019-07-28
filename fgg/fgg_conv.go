@@ -129,6 +129,7 @@ func (c *fg2fgg) convertMDecl(md fg.MDecl) (MDecl, error) {
 		}
 		paramDecls = append(paramDecls, pd)
 	}
+
 	retTypeName, _ := c.convertType(md.ReturnType())
 	methImpl, err := c.convertExpr(md.Impl())
 	if err != nil {
@@ -146,22 +147,73 @@ func (c *fg2fgg) convertMDecl(md fg.MDecl) (MDecl, error) {
 	}, nil
 }
 
-func (c *fg2fgg) convertExpr(e base.Expr) (Expr, error) {
-	return Variable{id: "_TODO_"}, nil
-	/*
-		switch e := e.(type) {
-		case fg.Variable:
-			return Variable{id: e.String()}, nil
-		case fg.StructLit:
-			return StructLit{}, nil
-		case fg.Call:
-			// TODO: add type param
-			return Call{}, nil
-		case fg.Select:
-			return Select{}, nil
-		case fg.Assert:
-			return Assert{}, nil
+func (c *fg2fgg) convertExpr(expr base.Expr) (Expr, error) {
+	switch expr := expr.(type) {
+	case fg.Variable:
+		return Variable{id: expr.String()}, nil
+
+	case fg.StructLit:
+		sLitExpr, err := c.convertStructLit(expr)
+		if err != nil {
+			return nil, err
 		}
-		return nil, fmt.Errorf("unknown expression type: %T", e)
-	*/
+		return sLitExpr, nil
+
+	case fg.Call:
+		callExpr, err := c.convertCall(expr)
+		if err != nil {
+			return nil, err
+		}
+		return callExpr, nil
+
+	case fg.Select:
+		selExpr, err := c.convertExpr(expr.Expr())
+		if err != nil {
+			return nil, err
+		}
+		return Select{e: selExpr, f: Name(expr.FieldName())}, nil
+
+	case fg.Assert:
+		assertExpr, err := c.convertExpr(expr.Expr())
+		if err != nil {
+			return nil, err
+		}
+		assType, _ := c.convertType(expr.AssertType())
+		return Assert{e: assertExpr, u: TName{t: assType}}, nil
+	}
+
+	return nil, fmt.Errorf("unknown expression type: %T", expr)
+}
+
+func (c *fg2fgg) convertStructLit(sLit fg.StructLit) (StructLit, error) {
+	structType, _ := c.convertType(sLit.Type())
+
+	var es []Expr
+	for _, expr := range sLit.FieldExprs() {
+		fieldExpr, err := c.convertExpr(expr)
+		if err != nil {
+			return StructLit{}, err
+		}
+		es = append(es, fieldExpr)
+	}
+
+	return StructLit{u: TName{t: structType}, es: es}, nil
+}
+
+func (c *fg2fgg) convertCall(call fg.Call) (Call, error) {
+	e, err := c.convertExpr(call.Expr())
+	if err != nil {
+		return Call{}, err
+	}
+
+	var args []Expr
+	for _, arg := range call.Args() {
+		argExpr, err := c.convertExpr(arg)
+		if err != nil {
+			return Call{}, err
+		}
+		args = append(args, argExpr)
+	}
+
+	return Call{e: e, m: Name(call.MethodName()), args: args}, nil
 }
