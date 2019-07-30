@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/rhu1/fgg/base"
+	"github.com/rhu1/fgg/base/testutils"
 	"github.com/rhu1/fgg/fg"
 )
 
@@ -16,13 +17,13 @@ import (
 
 func parseAndOkGood(t *testing.T, elems ...string) base.Program {
 	var adptr fg.FGAdaptor
-	return base.ParseAndOkGood(t, &adptr, fg.MakeFgProgram(elems...))
+	return testutils.ParseAndOkGood(t, &adptr, fg.MakeFgProgram(elems...))
 }
 
 // N.B. do not use to check for bad *syntax* -- see the "[Parser]" panic check in base.ParseAndOkBad
 func parseAndOkBad(t *testing.T, msg string, elems ...string) base.Program {
 	var adptr fg.FGAdaptor
-	return base.ParseAndOkBad(t, msg, &adptr, fg.MakeFgProgram(elems...))
+	return testutils.ParseAndOkBad(t, msg, &adptr, fg.MakeFgProgram(elems...))
 }
 
 /* Syntax and typing */
@@ -364,7 +365,7 @@ func TestEval001(t *testing.T) {
 	B := "type B struct { f A }"
 	e := "B{A{}}.f"
 	prog := parseAndOkGood(t, A, B, e)
-	base.EvalAndOkGood(t, prog, 1)
+	testutils.EvalAndOkGood(t, prog, 1)
 }
 
 func TestEval002(t *testing.T) {
@@ -372,7 +373,7 @@ func TestEval002(t *testing.T) {
 	Am1 := "func (x0 A) m1() A { return x0.m1() }"
 	e := "A{}.m1()"
 	prog := parseAndOkGood(t, A, Am1, e)
-	base.EvalAndOkGood(t, prog, 10)
+	testutils.EvalAndOkGood(t, prog, 10)
 }
 
 func TestEval003(t *testing.T) {
@@ -381,7 +382,7 @@ func TestEval003(t *testing.T) {
 	B := "type B struct { f A }"
 	e := "A{}.m1().f"
 	prog := parseAndOkGood(t, A, Am1, B, e)
-	base.EvalAndOkGood(t, prog, 2)
+	testutils.EvalAndOkGood(t, prog, 2)
 }
 
 // Initial testing for assert -- Cf. Test016
@@ -391,7 +392,7 @@ func TestEval004(t *testing.T) {
 	A := "type A struct {}"
 	e := "ToAny{A{}}.any.(A)"
 	prog := parseAndOkGood(t, Any, ToAny, A, e)
-	base.EvalAndOkGood(t, prog, 2)
+	testutils.EvalAndOkGood(t, prog, 2)
 }
 
 // Testing isValue on StructLit
@@ -401,7 +402,7 @@ func TestEval005(t *testing.T) {
 	A := "type A struct {}"
 	e := "ToAny{ToAny{ToAny{A{}}.any.(A)}}"
 	prog := parseAndOkGood(t, Any, ToAny, A, e)
-	base.EvalAndOkGood(t, prog, 2)
+	testutils.EvalAndOkGood(t, prog, 2)
 }
 
 // //TODO: test -eval=-1 -- test is currently added as -eval=0
@@ -409,5 +410,5 @@ func TestEval006(t *testing.T) {
 	A := "type A struct {}"
 	e := "A{}"
 	prog := parseAndOkGood(t, A, e)
-	base.EvalAndOkGood(t, prog, 0)
+	testutils.EvalAndOkGood(t, prog, 0)
 }
