@@ -128,22 +128,50 @@ clean-test-monom:
 
 .PHONY: test-fg2fgg
 test-fg2fgg:
+	mkdir -p tmp/test/fgg/booleans
+	go run github.com/rhu1/fgg/cmd/fg2fgg fg/examples/popl20/booleans/booleans.go > tmp/test/fgg/booleans/booleans.fgg
+	go run github.com/rhu1/fgg -fgg -eval=-1 tmp/test/fgg/booleans/booleans.fgg
+
 	mkdir -p tmp/test/fgg/compose
 	go run github.com/rhu1/fgg/cmd/fg2fgg fg/examples/popl20/compose/compose.go > tmp/test/fgg/compose/compose.fgg
 	go run github.com/rhu1/fgg -fgg -eval=-1 tmp/test/fgg/compose/compose.fgg
+
+	mkdir -p tmp/test/fgg/equal
+	go run github.com/rhu1/fgg/cmd/fg2fgg fg/examples/popl20/equal/equal.go > tmp/test/fgg/equal/equal.fgg
+	go run github.com/rhu1/fgg -fgg -eval=-1 tmp/test/fgg/equal/equal.fgg
+
+	mkdir -p tmp/test/fgg/incr
+	go run github.com/rhu1/fgg/cmd/fg2fgg fg/examples/popl20/incr/incr.go > tmp/test/fgg/incr/incr.fgg
+	go run github.com/rhu1/fgg -fgg -eval=-1 tmp/test/fgg/incr/incr.fgg
 
 	mkdir -p tmp/test/fgg/map
 	go run github.com/rhu1/fgg/cmd/fg2fgg fg/examples/popl20/map/map.go > tmp/test/fgg/map/map.fgg
 	go run github.com/rhu1/fgg -fgg -eval=-1 tmp/test/fgg/map/map.fgg
 
+	mkdir -p tmp/test/fgg/not
+	go run github.com/rhu1/fgg/cmd/fg2fgg fg/examples/popl20/not/not.go > tmp/test/fgg/not/not.fgg
+	go run github.com/rhu1/fgg -fgg -eval=-1 tmp/test/fgg/not/not.fgg
+
 
 .PHONY: clean-test-fg2fgg
 clean-test-fg2fgg:
+	rm -f tmp/test/fgg/booleans/booleans.fgg
+	rm -fd tmp/test/fgg/booleans
+
 	rm -f tmp/test/fgg/compose/compose.fgg
 	rm -fd tmp/test/fgg/compose
 
+	rm -f tmp/test/fgg/equal/equal.fgg
+	rm -fd tmp/test/fgg/equal
+
+	rm -f tmp/test/fgg/incr/incr.fgg
+	rm -fd tmp/test/fgg/incr
+
 	rm -f tmp/test/fgg/map/map.fgg
 	rm -fd tmp/test/fgg/map
+
+	rm -f tmp/test/fgg/not/not.fgg
+	rm -fd tmp/test/fgg/not
 
 
 .PHONY: clean-test
