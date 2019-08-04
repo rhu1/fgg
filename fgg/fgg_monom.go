@@ -83,20 +83,19 @@ func monomTDecl(ds []Decl, omega WMap, td TDecl, wv WVal) fg.TDecl {
 					u := s.u.TSubs(subs).(TName)
 					ss = append(ss, fg.NewSig(s.m, pds, omega[toWKey(u)].id))
 				} else {
-					/*for _, v := range wv.gs {  // Subsumed by below?
-						if v.g.GetMethName() == s.m {
-							ss = append(ss, v.g)
-						}
-					}*/
 					// forall u_S s.t. u_S <: wv.u, collect m.targs for all wv.m and mono(u_S.m)
-					// ^Correction: forall u, not only u_S, i.e., including interface type receivers (cf. map.fgg, Bool().Cond(Bool())(...))
+					// ^Correction: forall u, not only u_S, i.e., including interface type receivers
+					// (Cf. map.fgg, Bool().Cond(Bool())(...))
 					gs := methods(ds, wv.u)
 					empty := make(TEnv)
 					targs := make(map[string][]Type)
 					for _, v := range omega {
-						if /*isStructType(ds, v.u.t) &&*/ v.u.Impls(ds, empty, wv.u) {
+						if /*isStructType(ds, v.u.t) &&*/ v.u.Impls(ds, empty, wv.u) { // N.B. now adding reflexively
 							// Collect meth instans from *all* subtypes, i.e., including calls on interface receivers
-							for _, v1 := range v.gs {
+							for _, v1 := range gs {
+								addMethInstans(v, v1.m, targs)
+							}
+							/*for _, v1 := range v.gs {
 								// TODO: factor out with addMethInstans? but here, adding all m's, not filtering
 								m1 := getOrigMethName(v1.g.GetMethName())
 								if _, ok := gs[m1]; ok && len(v1.targs) > 0 { // len check redundant?
@@ -106,11 +105,11 @@ func monomTDecl(ds []Decl, omega WMap, td TDecl, wv WVal) fg.TDecl {
 									}
 									targs[hash] = v1.targs
 								}
-							}
+							}*/
 						}
 					}
 					// CHECKME: if targs empty, methods "discarded" -- replace meth-params by bounds?
-					for _, v := range targs {
+					for _, v := range targs { // CHECKME: factor out with MDecl?
 						subs1 := make(map[TParam]Type)
 						for k1, v1 := range subs {
 							subs1[k1] = v1
@@ -162,11 +161,11 @@ func monomMDecl(ds []Decl, omega WMap, md MDecl, wv WVal) (res []fg.MDecl) {
 		e := monomExpr(omega, md.e.TSubs(subs))
 		res = append(res, fg.NewMDecl(recv, md.m, pds, t, e))
 	} else {
-		targs := collectMethInstans(ds, omega, md, wv)
+		targs := collectZigZagMethInstans(ds, omega, md, wv)
 		if len(targs) == 0 { // Means no u_I, if len(wv.gs)>0 -- targs doesn't (yet) include wv.gs
 			addMethInstans(wv, md.m, targs)
 		}
-		for _, v := range targs {
+		for _, v := range targs { // CHECKME: factor out with ITypeLit?
 			subs1 := make(map[TParam]Type)
 			for k1, v1 := range subs {
 				subs1[k1] = v1
@@ -191,11 +190,13 @@ func monomMDecl(ds []Decl, omega WMap, md MDecl, wv WVal) (res []fg.MDecl) {
 	return res
 }
 
-func collectMethInstans(ds []Decl, omega WMap, md MDecl, wv WVal) map[string][]Type {
+// N.B. return is empty, i.e., does not include wv.gs, if no u_I
+func collectZigZagMethInstans(ds []Decl, omega WMap, md MDecl, wv WVal) map[string][]Type {
 	empty := make(TEnv)
 	targs := make(map[string][]Type)
 	// Given m = md.m, forall u_I s.t. m in meths(u_I) && wv.u <: u_I, ..
-	// ..forall u_S s.t. u_S <: u_I, collect targs for all mono(u_S.m)  // Correction: forall u, not only u_S
+	// ..forall u_S s.t. u_S <: u_I, collect targs for all mono(u_S.m)
+	// ^Correction: forall u, not only u_S
 	for _, v := range omega {
 		if isInterfaceTName(ds, v.u) && wv.u.Impls(ds, empty, v.u) {
 			gs := methods(ds, v.u)
@@ -212,6 +213,7 @@ func collectMethInstans(ds []Decl, omega WMap, md MDecl, wv WVal) map[string][]T
 	return targs
 }
 
+// Add meth instans from `wv`, filtered by `m`, to `targs`
 func addMethInstans(wv WVal, m Name, targs map[string][]Type) {
 	for _, v := range wv.gs {
 		m1 := getOrigMethName(v.g.GetMethName())
@@ -318,7 +320,7 @@ type MonoSig struct {
 // Pre: 'e' is typeable under an empty TEnv, i.e., does not feature any TParams
 func MakeWMap(ds []Decl, gamma ClosedEnv, e Expr, omega WMap) (res Type) {
 	var todo []TName // Pre: forall u, isClosed(u)
-	// Usage contract: if addTypeToWMap true, then append 'u' to 'todo'
+	// Usage contract: if addTypeToWMap true, then append `u` to `todo`
 
 	switch e1 := e.(type) {
 	case Variable:
@@ -383,10 +385,6 @@ func MakeWMap(ds []Decl, gamma ClosedEnv, e Expr, omega WMap) (res Type) {
 						e1.targs, res.(TName)}
 					_, todo1 := visitSig(ds, u0_closed, g_subs, e1.targs, omega)
 					todo = append(todo, todo1...)
-
-					/*if addTypeToWMap(g_subs.u, omega) {
-						todo = append(todo, g_subs.u)
-					}*/
 				}
 			}
 		}
@@ -419,7 +417,7 @@ func MakeWMap(ds []Decl, gamma ClosedEnv, e Expr, omega WMap) (res Type) {
 	return res
 }
 
-// N.B. mutates omega -- adds WKey, WVal pair (if 'u' closed)
+// N.B. mutates omega -- adds WKey, WVal pair (if `u` closed)
 // @return `true` if type added, `false` o/w
 func addTypeToWMap(u TName, omega WMap) bool {
 	if !isClosed(u) {
