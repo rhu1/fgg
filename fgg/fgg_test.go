@@ -299,6 +299,10 @@ func TestMonom001(t *testing.T) {
 }
 //*/
 
+//TODO: add -monom compose.fgg bug -- missing field type collection when visiting struct lits (e.g., Compose f, g types)
+
+//TODO: add -monom map.fgg bug -- missing add-meth-param instans collection for interface type receivers (e.g., Bool().Cond(Bool())(...))
+
 /* Eval */
 
 // TOOD: classify FG-compatible subset compare results to -fg

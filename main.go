@@ -63,7 +63,7 @@ var (
 	interpFGG bool // parse FGG
 
 	monom       bool   // parse FGG and monomorphise FGG source
-	monomOutput string // output filename of monomorphised FGG
+	monomOutput string // output filename of monomorphised FGG; "--" for stdout
 
 	useInternalSrc bool   // use internal source
 	inlineSrc      string // use content of this as source
@@ -80,7 +80,7 @@ func init() {
 	flag.BoolVar(&interpFGG, "fgg", false,
 		"interpret input as FGG")
 
-	// Monomorphise
+	// Monomorphise -- implicitly disabled if not -fgg
 	flag.BoolVar(&monom, "monom", false,
 		"[WIP] monomorphise FGG source using formal notation (ignored if -fgg not set)")
 	flag.StringVar(&monomOutput, "compile", "",
@@ -119,9 +119,13 @@ func main() {
 	flag.Usage = usage
 	flag.Parse()
 
-	// Determine mode
-	if !interpFG && !interpFGG {
-		interpFG = true
+	// Determine (default) mode
+	if interpFG {
+		if interpFGG { // -fg "overrules" -fgg
+			interpFGG = false
+		}
+	} else if !interpFGG {
+		interpFG = true // -fg default
 	}
 
 	// Determine source
@@ -143,17 +147,17 @@ func main() {
 		src = string(b)
 	}
 
-	switch {
+	switch { // Pre: !(interpFG && interpFGG)
 	case interpFG:
 		var a fg.FGAdaptor
-		interp(&a, src, strictParse, evalSteps, false, "")
+		interp(&a, src, strictParse, evalSteps, false, "") // monom implicitly disabled
 	case interpFGG:
 		var a fgg.FGGAdaptor
 		interp(&a, src, strictParse, evalSteps, monom, monomOutput)
 	}
 }
 
-// Pre: monom==true || compile != "" => -fgg is set
+// Pre: (monom==true || compile != "") => -fgg is set
 func interp(a base.Adaptor, src string, strict bool, steps int, monom bool,
 	compile string) {
 	vPrintln("\nParsing AST:")
@@ -184,8 +188,8 @@ func interp(a base.Adaptor, src string, strict bool, steps int, monom bool,
 				vPrintln(out)
 			} else {
 				vPrintln("Writing output to: " + compile)
-				d1 := []byte(out)
-				err := ioutil.WriteFile(compile, d1, 0644)
+				bs := []byte(out)
+				err := ioutil.WriteFile(compile, bs, 0644)
 				checkErr(err)
 			}
 		}
