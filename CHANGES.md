@@ -2,6 +2,12 @@
 
 TODO: proper formatting
 
+20190804 Ray
+
+Nick added `cmd/fg2fgg`.
+
+I added a (temporary) Makefile for testing, including -monom and fg2fgg.
+
 
 20190724 Ray
 
