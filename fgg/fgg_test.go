@@ -26,7 +26,7 @@ func parseAndOkGood(t *testing.T, elems ...string) base.Program {
 func parseAndOkBad(t *testing.T, msg string, elems ...string) base.Program {
 	var adptr fgg.FGGAdaptor
 	return testutils.ParseAndOkBad(t, msg, &adptr, fgg.MakeFggProgram(elems...))
-	// Don't attempt monom on bad program
+	// Not attempting monom on bad program
 }
 
 /* Syntax and typing */

@@ -157,11 +157,11 @@ func main() {
 	}
 }
 
-// Pre: (monom==true || compile != "") => -fgg is set
+// Pre: (monom == true || compile != "") => -fgg is set
 func interp(a base.Adaptor, src string, strict bool, steps int, monom bool,
 	compile string) {
 	vPrintln("\nParsing AST:")
-	prog := a.Parse(strict, src) // AST (FGProgram root)
+	prog := a.Parse(strict, src) // AST (Program root)
 	vPrintln(prog.String())
 
 	vPrintln("\nChecking source program OK:")
@@ -209,7 +209,7 @@ func eval(p base.Program, steps int) {
 	vPrintln("Eval steps:")
 	vPrintln(fmt.Sprintf("%6d: %8s %v", 0, "", p.GetExpr())) // Initial prog OK already checked
 
-	done := steps > EVAL_TO_VAL || // Ignore 'done' if num steps fixed (set true, for ||!done below)
+	done := steps > EVAL_TO_VAL || // Ignore 'done' if num steps fixed (set true, for `||!done` below)
 		p.GetExpr().IsValue() // O/w evaluate until a val -- here, check if init expr is already a val
 	var rule string
 	for i := 1; i <= steps || !done; i++ {

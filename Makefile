@@ -43,6 +43,9 @@ test-fg-examples:
 	go run github.com/rhu1/fgg -eval=-1 fg/examples/popl20/not/not.go
 
 # TODO: currently examples testing limited to "good" examples
+# TODO: check actual output, e.g.:
+#     [cmd] > output.txt
+#     diff output.txt correct.txt
 
 
 .PHONY: test-fgg
@@ -65,9 +68,6 @@ test-fgg-examples:
 	go run github.com/rhu1/fgg -fgg -eval=10 fgg/examples/monom/box/box.fgg
 	go run github.com/rhu1/fgg -fgg -eval=10 fgg/examples/monom/box/box2.fgg
 
-
-#program.exe < input.txt > output.txt
-#diff correct.txt output.txt
 
 .PHONY: test-monom
 test-monom:
@@ -151,6 +151,9 @@ test-fg2fgg:
 	mkdir -p tmp/test/fgg/not
 	go run github.com/rhu1/fgg/cmd/fg2fgg fg/examples/popl20/not/not.go > tmp/test/fgg/not/not.fgg
 	go run github.com/rhu1/fgg -fgg -eval=-1 tmp/test/fgg/not/not.fgg
+
+# TODO: run fg_test.go unit tests through fg2fgg
+
 
 
 .PHONY: clean-test-fg2fgg
