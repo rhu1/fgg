@@ -14,7 +14,7 @@ var _ = reflect.Append
 type Name = base.Name // TODO: tidy up refactoring, due to introducing base
 
 type Type interface {
-	TSubs(subs map[TParam]Type) Type
+	TSubs(subs map[TParam]Type) Type // TODO: factor out map[TParam]Type
 	Impls(ds []Decl, delta TEnv, u Type) bool
 	Ok(ds []Decl, delta TEnv)
 	Equals(u Type) bool
@@ -225,6 +225,11 @@ func isStructType(ds []Decl, t Name) bool {
 	}
 	return false
 }
+
+/*// TODO FIXME -- temp for visibility
+func IsStructTName1(ds []Decl, u Type) bool {
+	return isStructTName(ds, u)
+}*/
 
 // Check if u is a \tau_S -- implicitly must be a TName
 func isStructTName(ds []Decl, u Type) bool {

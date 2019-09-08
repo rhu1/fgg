@@ -216,6 +216,7 @@ func eval(p base.Program, steps int) {
 		p, rule = p.Eval()
 		vPrintln(fmt.Sprintf("%6d: %8s %v", i, "["+rule+"]", p.GetExpr()))
 		vPrintln("Checking OK:") // TODO: maybe disable by default, enable by flag
+		// TODO FIXME: check actual type preservation (not just typeability)
 		p.Ok(allowStupid)
 		if !done && p.GetExpr().IsValue() {
 			done = true

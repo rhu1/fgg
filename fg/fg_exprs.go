@@ -16,9 +16,11 @@ func NewVariable(id Name) Variable {
 func NewStructLit(t Type, es []Expr) StructLit {
 	return StructLit{t, es}
 }
+
 func NewSelect(e Expr, f Name) Select {
 	return Select{e, f}
 }
+
 func NewCall(e Expr, m Name, es []Expr) Call {
 	return Call{e, m, es}
 }
