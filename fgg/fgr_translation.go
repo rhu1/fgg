@@ -64,5 +64,5 @@ func wrap(ds []fg.Decl, delta TEnv, gamma Env, e Expr, u Type) fg.Expr {
 }
 
 func wrapper(targ Name, subj Name, e fg.Expr) fg.StructLit {
-	return fg.NewStructLit(fg.Type("TODO_"+targ+"_"+subj), []fg.Expr{e})
+	return fg.NewStructLit(fg.Type("Adptr_"+targ+"_"+subj), []fg.Expr{e}) // TODO: factor out naming
 }

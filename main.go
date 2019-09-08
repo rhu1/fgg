@@ -64,6 +64,9 @@ var (
 
 	monom       bool   // parse FGG and monomorphise FGG source
 	monomOutput string // output filename of monomorphised FGG; "--" for stdout
+	// TODO refactor naming between "monomOutput", "compile" and "treps"
+
+	treps bool
 
 	useInternalSrc bool   // use internal source
 	inlineSrc      string // use content of this as source
@@ -80,11 +83,14 @@ func init() {
 	flag.BoolVar(&interpFGG, "fgg", false,
 		"interpret input as FGG")
 
-	// Monomorphise -- implicitly disabled if not -fgg
+	// Erasure by monomorphisation -- implicitly disabled if not -fgg
 	flag.BoolVar(&monom, "monom", false,
 		"[WIP] monomorphise FGG source using formal notation (ignored if -fgg not set)")
 	flag.StringVar(&monomOutput, "compile", "",
 		"[WIP] monomorphise FGG source to FG (ignored if -fgg not set)\nspecify '--' to print to stdout")
+
+	// Erasure(?) by translation based on type reps -- FGG vs. FGR?
+	flag.BoolVar(&treps, "treps", false, "[WIP] compile FGG source to FGR")
 
 	// Parsing options
 	flag.BoolVar(&useInternalSrc, "internal", false,
@@ -150,16 +156,16 @@ func main() {
 	switch { // Pre: !(interpFG && interpFGG)
 	case interpFG:
 		var a fg.FGAdaptor
-		interp(&a, src, strictParse, evalSteps, false, "") // monom implicitly disabled
+		interp(&a, src, strictParse, evalSteps)
+		// monom implicitly disabled
 	case interpFGG:
 		var a fgg.FGGAdaptor
-		interp(&a, src, strictParse, evalSteps, monom, monomOutput)
+		prog := interp(&a, src, strictParse, evalSteps)
+		doMonom(prog, monom, monomOutput)
 	}
 }
 
-// Pre: (monom == true || compile != "") => -fgg is set
-func interp(a base.Adaptor, src string, strict bool, steps int, monom bool,
-	compile string) {
+func interp(a base.Adaptor, src string, strict bool, steps int) base.Program {
 	vPrintln("\nParsing AST:")
 	prog := a.Parse(strict, src) // AST (Program root)
 	vPrintln(prog.String())
@@ -172,6 +178,12 @@ func interp(a base.Adaptor, src string, strict bool, steps int, monom bool,
 		eval(prog, steps)
 	}
 
+	return prog
+}
+
+// Pre: (monom == true || compile != "") => -fgg is set
+// TODO: rename
+func doMonom(prog base.Program, monom bool, compile string) {
 	if monom || compile != "" {
 		p_mono := fgg.Monomorph(prog.(fgg.FGGProgram)) // TODO: reformat (e.g., "<...>") to make an actual FG program
 		if monom {
