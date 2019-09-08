@@ -162,6 +162,7 @@ func main() {
 		var a fgg.FGGAdaptor
 		prog := interp(&a, src, strictParse, evalSteps)
 		doMonom(prog, monom, monomOutput)
+		doTypeReps(prog, treps)
 	}
 }
 
@@ -179,33 +180,6 @@ func interp(a base.Adaptor, src string, strict bool, steps int) base.Program {
 	}
 
 	return prog
-}
-
-// Pre: (monom == true || compile != "") => -fgg is set
-// TODO: rename
-func doMonom(prog base.Program, monom bool, compile string) {
-	if monom || compile != "" {
-		p_mono := fgg.Monomorph(prog.(fgg.FGGProgram)) // TODO: reformat (e.g., "<...>") to make an actual FG program
-		if monom {
-			vPrintln("\nMonomorphising, formal notation: [Warning] WIP [Warning]")
-			vPrintln(p_mono.String())
-		}
-		if compile != "" {
-			vPrintln("\nMonomorphising, FG output: [Warning] WIP [Warning]")
-			out := p_mono.String()
-			out = strings.Replace(out, ",,", "", -1)
-			out = strings.Replace(out, "<", "", -1)
-			out = strings.Replace(out, ">", "", -1)
-			if compile == "--" {
-				vPrintln(out)
-			} else {
-				vPrintln("Writing output to: " + compile)
-				bs := []byte(out)
-				err := ioutil.WriteFile(compile, bs, 0644)
-				checkErr(err)
-			}
-		}
-	}
 }
 
 // N.B. currently FG panic comes out implicitly as an underlying run-time panic
@@ -235,6 +209,51 @@ func eval(p base.Program, steps int) {
 		}
 	}
 	fmt.Println(p.GetExpr().String()) // Final result
+}
+
+// Pre: (monom == true || compile != "") => -fgg is set
+// TODO: rename
+func doMonom(prog base.Program, monom bool, compile string) {
+	if monom || compile != "" {
+		p_mono := fgg.Monomorph(prog.(fgg.FGGProgram)) // TODO: reformat (e.g., "<...>") to make an actual FG program
+		if monom {
+			vPrintln("\nMonomorphising, formal notation: [Warning] WIP [Warning]")
+			vPrintln(p_mono.String())
+		}
+		if compile != "" {
+			vPrintln("\nMonomorphising, FG output: [Warning] WIP [Warning]")
+			out := p_mono.String()
+			out = strings.Replace(out, ",,", "", -1)
+			out = strings.Replace(out, "<", "", -1)
+			out = strings.Replace(out, ">", "", -1)
+			if compile == "--" {
+				vPrintln(out)
+			} else {
+				vPrintln("Writing output to: " + compile)
+				bs := []byte(out)
+				err := ioutil.WriteFile(compile, bs, 0644)
+				checkErr(err)
+			}
+		}
+	}
+}
+
+func doTypeReps(prog base.Program, treps bool) {
+	if !treps {
+		return
+	}
+	vPrintln("\nTranslating to FGR: [Warning] WIP [Warning]")
+
+	ds := prog.GetDecls()
+	e := prog.GetExpr().(fgg.Expr)
+
+	// Empty envs for main -- duplicated from FGGProgram.OK
+	var delta fgg.TEnv
+	var gamma fgg.Env
+	e.Typing(ds, delta, gamma, false)
+
+	e_fgr := fgg.Translate(ds, delta, gamma, e)
+	vPrintln(e_fgr.String())
 }
 
 // For convenient quick testing -- via flag "-internal=true"

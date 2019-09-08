@@ -15,7 +15,8 @@ func erase(delta TEnv, u Type) Name { //fg.Type {
 }
 
 // |e_FGG|_(\Delta; \Gamma) = e_FGR
-func translate(ds []Decl, delta TEnv, gamma Env, e Expr) fg.Expr {
+// TODO: rename
+func Translate(ds []Decl, delta TEnv, gamma Env, e Expr) fg.Expr {
 	switch e1 := e.(type) {
 	case Variable:
 		u := e1.Typing(ds, delta, gamma, false)
@@ -51,12 +52,12 @@ func wrap(ds []fg.Decl, delta TEnv, gamma Env, e Expr, u Type) fg.Expr {
 	/*t := erase(u, delta)
 	if _, ok := fg.isStructType(t)*/
 	if isStructTName(ds, u) { // N.B. differs slightly from def -- because there is no FG t_S decl (yet)?
-		return translate(ds, delta, gamma, e)
+		return Translate(ds, delta, gamma, e)
 	} else if isInterfaceTName(ds, u) {
 		targ := erase(delta, u)
 		u1 := e.Typing(ds, delta, gamma, false)
 		subj := erase(delta, u1)
-		e1 := translate(ds, delta, gamma, e)
+		e1 := Translate(ds, delta, gamma, e)
 		return wrapper(targ, subj, e1)
 	} else {
 		panic("Invalid wrap case: e=" + e.String() + ", u=" + u.String())
