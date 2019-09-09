@@ -242,9 +242,9 @@ func doTypeReps(prog base.Program, treps bool) {
 	if !treps {
 		return
 	}
-	vPrintln("\nTranslating to FGR: [Warning] WIP [Warning]")
+	vPrintln("\nTranslating FGG to FGR: [Warning] WIP [Warning]")
 
-	ds := prog.GetDecls()
+	/*ds := prog.GetDecls()
 	e := prog.GetExpr().(fgg.Expr)
 
 	// Empty envs for main -- duplicated from FGGProgram.OK
@@ -252,8 +252,9 @@ func doTypeReps(prog base.Program, treps bool) {
 	var gamma fgg.Env
 	e.Typing(ds, delta, gamma, false)
 
-	e_fgr := fgg.Translate(ds, delta, gamma, e)
-	vPrintln(e_fgr.String())
+	e_fgr := fgg.Translate(ds, delta, gamma, e)*/
+	p_fgr := fgg.Translate(prog.(fgg.FGGProgram))
+	vPrintln(p_fgr.String())
 }
 
 // For convenient quick testing -- via flag "-internal=true"
