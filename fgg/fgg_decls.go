@@ -183,11 +183,12 @@ type MDecl struct {
 	x_recv   Name // CHECKME: better to be Variable?  (etc. for other such Names)
 	t_recv   Name // N.B. t_S
 	psi_recv TFormals
-	m        Name // Refactor to embed Sig?
-	psi      TFormals
-	pds      []ParamDecl
-	u        Type // Return
-	e        Expr
+	// N.B. receiver elements "decomposed" because TFormals (not TName, cf. fg.MDecl uses ParamDecl)
+	m   Name // Refactor to embed Sig?
+	psi TFormals
+	pds []ParamDecl
+	u   Type // Return
+	e   Expr
 }
 
 var _ Decl = MDecl{}

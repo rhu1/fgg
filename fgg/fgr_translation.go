@@ -13,19 +13,15 @@ var _ = fmt.Errorf
 
 /* FGGProgram */
 
-type foo struct {
-	subj fg.Type
-	targ fg.Type
+type adaptPair struct {
+	sub   fg.Type
+	super fg.Type // The "target" type, a t_I
 }
 
 func Translate(p FGGProgram) fg.FGProgram { // TODO FIXME: FGR -- TODO also can subsume existing FGG-FG trans?
-
-	wrappers := make(map[fg.Type]foo)
-
-	//ds := make([]Decl, len(p.ds))
 	var ds []Decl
 
-	// Add t_0 to ds
+	// Add t_0 (etc.) to ds
 	// TODO: factor out constants
 	Any_0 := fg.NewITypeLit(fg.Type("Any_0"), []fg.Spec{})
 	Dummy_0 := fg.NewSTypeLit(fg.Type("Dummy_0"), []fg.FieldDecl{})
@@ -37,6 +33,8 @@ func Translate(p FGGProgram) fg.FGProgram { // TODO FIXME: FGR -- TODO also can 
 	ss_0 := []fg.Spec{getValue}
 	t_0 := fg.NewITypeLit(fg.Type("t_0"), ss_0) // TODO FIXME? Go doesn't allow "overlapping" interfaces
 	ds = append(ds, t_0)
+
+	wrappers := make(map[fg.Type]adaptPair) // Populated by visiting MDecl and main Expr
 
 	for i := 0; i < len(p.ds); i++ {
 		d := p.ds[i]
@@ -55,10 +53,29 @@ func Translate(p FGGProgram) fg.FGProgram { // TODO FIXME: FGR -- TODO also can 
 		case ITypeLit:
 			ds = append(ds, translateITypeLit(d1))
 		case MDecl:
-
-			// HERE: do MDecl translation, and add remaining Expr translations
-
-			panic("TODO: " + reflect.TypeOf(d).String())
+			delta := d1.psi_recv.ToTEnv()
+			for _, v := range d1.psi.tfs {
+				delta[v.a] = v.u
+			}
+			gamma := make(Env)
+			us := make([]Type, len(d1.psi_recv.tfs))
+			for i := 0; i < len(us); i++ {
+				us[i] = d1.psi_recv.tfs[i].a
+			}
+			gamma[d1.x_recv] = TName{d1.t_recv, us}
+			for _, v := range d1.pds {
+				gamma[v.x] = v.u
+			}
+			recv := fg.NewParamDecl(d1.x_recv, fg.Type(d1.t_recv))
+			pds := make([]fg.ParamDecl, len(d1.pds))
+			for i := 0; i < len(d1.pds); i++ {
+				pd := d1.pds[i]
+				pds[i] = fg.NewParamDecl(pd.x, fg.Type(erase(delta, pd.u)))
+			}
+			t := fg.Type(erase(delta, d1.u))
+			e := wrap(p.ds, delta, gamma, d1.e, d1.u, wrappers) // TODO FIXME: subs ~alpha?
+			md := fg.NewMDecl(recv, d1.m, pds, t, e)
+			ds = append(ds, md)
 		default:
 			panic("Unexpected Decl type " + reflect.TypeOf(d).String() +
 				": " + d.String())
@@ -73,7 +90,7 @@ func Translate(p FGGProgram) fg.FGProgram { // TODO FIXME: FGR -- TODO also can 
 	// Add wrappers, wrapper meths -- also getValue/getTypeRep (TODO: factor out with above)
 	// Needs to follow translateExpr, for wrappers to be populated
 	for k, v := range wrappers {
-		fds := []fg.FieldDecl{fg.NewFieldDecl("value", v.subj)} // TODO: factor out
+		fds := []fg.FieldDecl{fg.NewFieldDecl("value", v.sub)} // TODO: factor out
 		adptr := fg.NewSTypeLit(k, fds)
 
 		// TODO: factor out with STypeLits
@@ -82,36 +99,48 @@ func Translate(p FGGProgram) fg.FGProgram { // TODO FIXME: FGR -- TODO also can 
 			[]fg.ParamDecl{}, fg.Type("Any_0"), e_getv)
 		// gettr := ...TODO...
 
-		//methods(ds, u Type) map[Name]Sig
-		c := getTDecl(p.ds, string(v.targ)).(ITypeLit)
-		for _, s := range c.ss {
+		c := getTDecl(p.ds, string(v.super)).(ITypeLit)
+		us := make([]Type, len(c.psi.tfs))
+		for i := 0; i < len(us); i++ {
+			us[i] = c.psi.tfs[i].a
+		}
+		dummy := TName{c.t, us}    // `us` are just the decl TParams, args not actually needed for `methods` or below
+		gs := methods(p.ds, dummy) //map[Name]Sig
 
+		//for _, s := range c.ss {
+		for _, g := range gs {
 			delta := make(TEnv)
 			for _, v1 := range c.psi.tfs {
 				delta[v1.a] = v1.u
 			}
-			delta1 := make(TEnv)
-			psi := getTDecl(p.ds, string(v.subj)).GetTFormals()
+			for _, v1 := range g.psi.tfs {
+				delta[v1.a] = v1.u
+			}
+			/*delta1 := make(TEnv)
+			psi := getTDecl(p.ds, string(v.sub)).GetTFormals()
 			for _, v1 := range psi.tfs {
 				delta1[v1.a] = v1.u
 			}
+			for _, v1 := range g.psi.tfs {
+				delta1[v1.a] = v1.u
+			}*/
 
-			if g, ok := s.(Sig); ok {
-				pds := make([]fg.ParamDecl, len(g.pds))
-				for i := 0; i < len(g.pds); i++ {
-					pd := g.pds[i]
-					pds[i] = fg.NewParamDecl(pd.x, fg.Type(erase(delta, pd.u)))
-				}
-				t := fg.Type(erase(delta, g.u))
-				var e fg.Expr
-				e = fg.NewStructLit("Dummy_0", []fg.Expr{})
-				e = fg.NewStructLit("ToAny_0", []fg.Expr{e})
-				e = fg.NewSelect(e, "any")
-				e = fg.NewAssert(e, fg.Type(erase(delta1, g.u)))
-				md := fg.NewMDecl(fg.NewParamDecl("x", k), g.m,
-					pds, t, e)
-				ds = append(ds, md)
+			//if g, ok := s.(Sig); ok { // TODO FIXME: need all meths in meth set (i.e., from embedded)
+			pds := make([]fg.ParamDecl, len(g.pds))
+			for i := 0; i < len(g.pds); i++ {
+				pd := g.pds[i]
+				pds[i] = fg.NewParamDecl(pd.x, fg.Type(erase(delta, pd.u)))
 			}
+			t := fg.Type(erase(delta, g.u))
+			var e fg.Expr
+			e = fg.NewStructLit("Dummy_0", []fg.Expr{})
+			e = fg.NewStructLit("ToAny_0", []fg.Expr{e})
+			e = fg.NewSelect(e, "any")
+			e = fg.NewAssert(e, fg.Type(erase(delta, g.u)))
+			md := fg.NewMDecl(fg.NewParamDecl("x", k), g.m,
+				pds, t, e)
+			ds = append(ds, md)
+			//}
 		}
 
 		ds = append(ds, adptr, getv)
@@ -151,7 +180,7 @@ func translateITypeLit(c ITypeLit) fg.ITypeLit {
 }
 
 func translateSig(delta TEnv, g Sig) fg.Sig {
-	var delta1 TEnv
+	delta1 := make(TEnv)
 	for k, v := range delta {
 		delta1[k] = v
 	}
@@ -170,17 +199,18 @@ func translateSig(delta TEnv, g Sig) fg.Sig {
 
 // |e_FGG|_(\Delta; \Gamma) = e_FGR
 // TODO: rename
-func translateExpr(ds []Decl, delta TEnv, gamma Env, e Expr, wrappers map[fg.Type]foo) fg.Expr {
+func translateExpr(ds []Decl, delta TEnv, gamma Env, e Expr, wrappers map[fg.Type]adaptPair) fg.Expr {
 	switch e1 := e.(type) {
 	case Variable:
 		u := e1.Typing(ds, delta, gamma, false)
-		if isStructTName(ds, u) {
-			return fg.NewVariable(e1.id)
-		} else { // "interface" case
+		var res fg.Expr
+		res = fg.NewVariable(e1.id)
+		if isInterfaceTName(ds, u) {
 			// x.getValue().((mkRep u))
-			getVal := fg.NewCall(fg.NewVariable(e1.id), Name("getValue"), []fg.Expr{})
-			return fg.NewAssert(getVal, fg.Type(erase(delta, u))) // TODO FIXME: mkRep -- "FG" for now, not FGR
+			res = fg.NewCall(res, Name("getValue"), []fg.Expr{})
+			res = fg.NewAssert(res, fg.Type(erase(delta, u))) // TODO FIXME: mkRep -- "FG" for now, not FGR
 		}
+		return res
 	case StructLit:
 		t := e1.u.t
 		es := make([]fg.Expr, len(e1.es)) // TODO FIXME: additional mkRep args
@@ -195,8 +225,41 @@ func translateExpr(ds []Decl, delta TEnv, gamma Env, e Expr, wrappers map[fg.Typ
 			es[i] = wrap(ds, delta, gamma, e1.es[i], u_i.TSubs(subs), wrappers)
 		}
 		return fg.NewStructLit(fg.Type(t), es)
-	default:
+	case Select:
+		u := e1.Typing(ds, delta, gamma, false)
+		var res fg.Expr
+		res = fg.NewSelect(translateExpr(ds, delta, gamma, e1.e, wrappers), e1.f)
+		if isInterfaceTName(ds, u) {
+			// TODO FIXME: factor out with Variable
+			res = fg.NewCall(res, Name("getValue"), []fg.Expr{})
+			res = fg.NewAssert(res, fg.Type(erase(delta, u))) // TODO FIXME: mkRep -- "FG" for now, not FGR
+		}
+		return res
+	case Call:
+		u_recv := e1.e.Typing(ds, delta, gamma, false)
+		g := methods(ds, bounds(delta, u_recv))[e1.m] // map[Name]Sig
+		subs := make(map[TParam]Type)
+		for i := 0; i < len(g.psi.tfs); i++ {
+			subs[g.psi.tfs[i].a] = e1.targs[i]
+		}
+		args := make([]fg.Expr, len(e1.args))
+		for i := 0; i < len(e1.args); i++ {
+			args[i] = wrap(ds, delta, gamma, e1.args[i], g.pds[i].u.TSubs(subs), wrappers)
+		}
+		u := e1.Typing(ds, delta, gamma, false)
+		e_recv := translateExpr(ds, delta, gamma, e1.e, wrappers)
+		var res fg.Expr
+		res = fg.NewCall(e_recv, e1.m, args)
+		if isInterfaceTName(ds, u) {
+			// TODO FIXME: factor out with Variable
+			res = fg.NewCall(res, Name("getValue"), []fg.Expr{})
+			res = fg.NewAssert(res, fg.Type(erase(delta, u))) // TODO FIXME: mkRep -- "FG" for now, not FGR
+		}
+		return res
+	case Assert:
 		panic("TODO " + reflect.TypeOf(e).String() + ": " + e.String())
+	default:
+		panic("Unknown Expr type " + reflect.TypeOf(e).String() + ": " + e.String())
 	}
 }
 
@@ -204,12 +267,13 @@ func translateExpr(ds []Decl, delta TEnv, gamma Env, e Expr, wrappers map[fg.Typ
 
 // |\tau|_\Delta = t
 func erase(delta TEnv, u Type) Name { //fg.Type {  // CHECKME: change return back to fg.Type?
+	fmt.Println("aaa:", u, bounds(delta, u), delta)
 	return bounds(delta, u).(TName).t
 }
 
 // Pre: type of e <: u
 // `u` is "target type"
-func wrap(ds []fg.Decl, delta TEnv, gamma Env, e Expr, u Type, wrappers map[fg.Type]foo) fg.Expr {
+func wrap(ds []fg.Decl, delta TEnv, gamma Env, e Expr, u Type, wrappers map[fg.Type]adaptPair) fg.Expr {
 	/*t := erase(u, delta)
 	if _, ok := fg.isStructType(t)*/
 	if isStructTName(ds, u) { // N.B. differs slightly from def -- because there is no FG t_S decl (yet)?
@@ -225,12 +289,12 @@ func wrap(ds []fg.Decl, delta TEnv, gamma Env, e Expr, u Type, wrappers map[fg.T
 
 // targ is a t_I
 // TODO: rename, cf. wrap(ds, delta, gamma, e, u)
-func wrapper(delta TEnv, e fg.Expr, subj Type, targ Type, wrappers map[fg.Type]foo) fg.StructLit {
+func wrapper(delta TEnv, e fg.Expr, subj Type, targ Type, wrappers map[fg.Type]adaptPair) fg.StructLit {
 	t1 := fg.Type(erase(delta, subj))
 	t_I := fg.Type(erase(delta, targ))
 	adptr := fg.Type("Adptr_" + t1 + "_" + t_I) // TODO: factor out naming
 	if _, ok := wrappers[adptr]; !ok {
-		wrappers[adptr] = foo{t1, t_I}
+		wrappers[adptr] = adaptPair{t1, t_I}
 	}
 	return fg.NewStructLit(adptr, []fg.Expr{e})
 }
