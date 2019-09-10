@@ -267,7 +267,6 @@ func translateExpr(ds []Decl, delta TEnv, gamma Env, e Expr, wrappers map[fg.Typ
 
 // |\tau|_\Delta = t
 func erase(delta TEnv, u Type) Name { //fg.Type {  // CHECKME: change return back to fg.Type?
-	fmt.Println("aaa:", u, bounds(delta, u), delta)
 	return bounds(delta, u).(TName).t
 }
 
