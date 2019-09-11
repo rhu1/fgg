@@ -62,8 +62,11 @@ var (
 	interpFG  bool // parse FG
 	interpFGG bool // parse FGG
 
-	monom       bool   // parse FGG and monomorphise FGG source
-	monomOutput string // output filename of monomorphised FGG; "--" for stdout
+	monom  bool   // parse FGG and monomorphise FGG source
+	monomc string // output filename of monomorphised FGG; "--" for stdout
+	// TODO refactor naming between "monomc", "compile" and "fgrc"
+
+	fgrc string // output filename of FGR compilation; "--" for stdout
 
 	useInternalSrc bool   // use internal source
 	inlineSrc      string // use content of this as source
@@ -80,11 +83,17 @@ func init() {
 	flag.BoolVar(&interpFGG, "fgg", false,
 		"interpret input as FGG")
 
-	// Monomorphise -- implicitly disabled if not -fgg
+	// Erasure by monomorphisation -- implicitly disabled if not -fgg
 	flag.BoolVar(&monom, "monom", false,
 		"[WIP] monomorphise FGG source using formal notation (ignored if -fgg not set)")
-	flag.StringVar(&monomOutput, "compile", "",
-		"[WIP] monomorphise FGG source to FG (ignored if -fgg not set)\nspecify '--' to print to stdout")
+	flag.StringVar(&monomc, "monomc", "", // Empty string for "false"
+		"[WIP] monomorphise FGG source to FG (ignored if -fgg not set)\n"+
+			"specify '--' to print to stdout")
+
+	// Erasure(?) by translation based on type reps -- FGG vs. FGR?
+	flag.StringVar(&fgrc, "fgrc", "", // Empty string for "false"
+		"[WIP] compile FGG source to FGR (ignored if -fgg not set)\n"+
+			"specify '--' to print to stdout")
 
 	// Parsing options
 	flag.BoolVar(&useInternalSrc, "internal", false,
@@ -150,16 +159,17 @@ func main() {
 	switch { // Pre: !(interpFG && interpFGG)
 	case interpFG:
 		var a fg.FGAdaptor
-		interp(&a, src, strictParse, evalSteps, false, "") // monom implicitly disabled
+		interp(&a, src, strictParse, evalSteps)
+		// monom implicitly disabled
 	case interpFGG:
 		var a fgg.FGGAdaptor
-		interp(&a, src, strictParse, evalSteps, monom, monomOutput)
+		prog := interp(&a, src, strictParse, evalSteps)
+		doMonom(prog, monom, monomc)
+		doTypeReps(prog, fgrc)
 	}
 }
 
-// Pre: (monom == true || compile != "") => -fgg is set
-func interp(a base.Adaptor, src string, strict bool, steps int, monom bool,
-	compile string) {
+func interp(a base.Adaptor, src string, strict bool, steps int) base.Program {
 	vPrintln("\nParsing AST:")
 	prog := a.Parse(strict, src) // AST (Program root)
 	vPrintln(prog.String())
@@ -172,28 +182,7 @@ func interp(a base.Adaptor, src string, strict bool, steps int, monom bool,
 		eval(prog, steps)
 	}
 
-	if monom || compile != "" {
-		p_mono := fgg.Monomorph(prog.(fgg.FGGProgram)) // TODO: reformat (e.g., "<...>") to make an actual FG program
-		if monom {
-			vPrintln("\nMonomorphising, formal notation: [Warning] WIP [Warning]")
-			vPrintln(p_mono.String())
-		}
-		if compile != "" {
-			vPrintln("\nMonomorphising, FG output: [Warning] WIP [Warning]")
-			out := p_mono.String()
-			out = strings.Replace(out, ",,", "", -1)
-			out = strings.Replace(out, "<", "", -1)
-			out = strings.Replace(out, ">", "", -1)
-			if compile == "--" {
-				vPrintln(out)
-			} else {
-				vPrintln("Writing output to: " + compile)
-				bs := []byte(out)
-				err := ioutil.WriteFile(compile, bs, 0644)
-				checkErr(err)
-			}
-		}
-	}
+	return prog
 }
 
 // N.B. currently FG panic comes out implicitly as an underlying run-time panic
@@ -216,12 +205,59 @@ func eval(p base.Program, steps int) {
 		p, rule = p.Eval()
 		vPrintln(fmt.Sprintf("%6d: %8s %v", i, "["+rule+"]", p.GetExpr()))
 		vPrintln("Checking OK:") // TODO: maybe disable by default, enable by flag
+		// TODO FIXME: check actual type preservation (not just typeability)
 		p.Ok(allowStupid)
 		if !done && p.GetExpr().IsValue() {
 			done = true
 		}
 	}
 	fmt.Println(p.GetExpr().String()) // Final result
+}
+
+// Pre: (monom == true || compile != "") => -fgg is set
+// TODO: rename
+func doMonom(prog base.Program, monom bool, compile string) {
+	if !monom && compile == "" {
+		return
+	}
+	p_mono := fgg.Monomorph(prog.(fgg.FGGProgram)) // TODO: reformat (e.g., "<...>") to make an actual FG program
+	if monom {
+		vPrintln("\nMonomorphising, formal notation: [Warning] WIP [Warning]")
+		vPrintln(p_mono.String())
+	}
+	if compile != "" {
+		vPrintln("\nMonomorphising, FG output: [Warning] WIP [Warning]")
+		out := p_mono.String()
+		out = strings.Replace(out, ",,", "", -1)
+		out = strings.Replace(out, "<", "", -1)
+		out = strings.Replace(out, ">", "", -1)
+		if compile == "--" {
+			vPrintln(out)
+		} else {
+			vPrintln("Writing output to: " + compile)
+			bs := []byte(out)
+			err := ioutil.WriteFile(compile, bs, 0644)
+			checkErr(err)
+		}
+	}
+}
+
+func doTypeReps(prog base.Program, compile string) {
+	if compile == "" {
+		return
+	}
+	vPrintln("\nTranslating FGG to FGR: [Warning] WIP [Warning]")
+	p_fgr := fgg.Translate(prog.(fgg.FGGProgram))
+	out := p_fgr.String()
+	// TODO: factor out with -monomc
+	if compile == "--" {
+		vPrintln(out)
+	} else {
+		vPrintln("Writing output to: " + compile)
+		bs := []byte(out)
+		err := ioutil.WriteFile(compile, bs, 0644)
+		checkErr(err)
+	}
 }
 
 // For convenient quick testing -- via flag "-internal=true"

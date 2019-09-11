@@ -72,31 +72,31 @@ test-fgg-examples:
 .PHONY: test-monom
 test-monom:
 	mkdir -p tmp/test/fg/booleans
-	go run github.com/rhu1/fgg -fgg -eval=-1 -compile=tmp/test/fg/booleans/booleans.go fgg/examples/popl20/booleans/booleans.fgg
+	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/booleans/booleans.go fgg/examples/popl20/booleans/booleans.fgg
 	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/booleans/booleans.go
 
 	mkdir -p tmp/test/fg/compose
-	go run github.com/rhu1/fgg -fgg -eval=-1 -compile=tmp/test/fg/compose/compose.go fgg/examples/popl20/compose/compose.fgg
+	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/compose/compose.go fgg/examples/popl20/compose/compose.fgg
 	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/compose/compose.go
 
 	mkdir -p tmp/test/fg/graph
-	go run github.com/rhu1/fgg -fgg -eval=-1 -compile=tmp/test/fg/graph/graph.go fgg/examples/popl20/graph/graph.fgg
+	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/graph/graph.go fgg/examples/popl20/graph/graph.fgg
 	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/graph/graph.go
 
 	mkdir -p tmp/test/fg/irregular
-	go run github.com/rhu1/fgg -fgg -eval=-1 -compile=tmp/test/fg/irregular/irregular.go fgg/examples/popl20/irregular/irregular.fgg
+	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/irregular/irregular.go fgg/examples/popl20/irregular/irregular.fgg
 	go run github.com/rhu1/fgg -eval=-1 tmp/fg/irregular/irregular.go
 
 	mkdir -p tmp/test/fg/map
-	go run github.com/rhu1/fgg -fgg -eval=-1 -compile=tmp/test/fg/map/map.go fgg/examples/popl20/map/map.fgg
+	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/map/map.go fgg/examples/popl20/map/map.fgg
 	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/map/map.go
 
 	mkdir -p tmp/test/fg/monomorph
-	go run github.com/rhu1/fgg -fgg -eval=-1 -compile=tmp/test/fg/monomorph/monomorph.go fgg/examples/popl20/monomorph/monomorph.fgg
+	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/monomorph/monomorph.go fgg/examples/popl20/monomorph/monomorph.fgg
 	go run github.com/rhu1/fgg -eval=-1 tmp/fg/monomorph/monomorph.go
 
 	mkdir -p tmp/test/fg/box
-	go run github.com/rhu1/fgg -fgg -eval=10 -compile=tmp/test/fg/box/box2.go fgg/examples/monom/box/box2.fgg
+	go run github.com/rhu1/fgg -fgg -eval=10 -monomc=tmp/test/fg/box/box2.go fgg/examples/monom/box/box2.fgg
 	go run github.com/rhu1/fgg -eval=10 tmp/test/fg/box/box2.go
 
 # TODO: check simulation of -monom output (same result and number of eval steps)

@@ -37,6 +37,7 @@ func (x Variable) Eval(ds []Decl) (Expr, string) {
 	panic("Cannot evaluate free variable: " + x.id)
 }
 
+// TODO: refactor Typing and StupidTyping (clearer than bool param)
 func (x Variable) Typing(ds []Decl, delta TEnv, gamma Env,
 	allowStupid bool) Type {
 	res, ok := gamma[x.id]
