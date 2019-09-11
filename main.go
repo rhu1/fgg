@@ -62,11 +62,11 @@ var (
 	interpFG  bool // parse FG
 	interpFGG bool // parse FGG
 
-	monom       bool   // parse FGG and monomorphise FGG source
-	monomOutput string // output filename of monomorphised FGG; "--" for stdout
-	// TODO refactor naming between "monomOutput", "compile" and "treps"
+	monom  bool   // parse FGG and monomorphise FGG source
+	monomc string // output filename of monomorphised FGG; "--" for stdout
+	// TODO refactor naming between "monomc", "compile" and "fgrc"
 
-	treps bool
+	fgrc string // output filename of FGR compilation; "--" for stdout
 
 	useInternalSrc bool   // use internal source
 	inlineSrc      string // use content of this as source
@@ -86,11 +86,14 @@ func init() {
 	// Erasure by monomorphisation -- implicitly disabled if not -fgg
 	flag.BoolVar(&monom, "monom", false,
 		"[WIP] monomorphise FGG source using formal notation (ignored if -fgg not set)")
-	flag.StringVar(&monomOutput, "compile", "",
-		"[WIP] monomorphise FGG source to FG (ignored if -fgg not set)\nspecify '--' to print to stdout")
+	flag.StringVar(&monomc, "monomc", "", // Empty string for "false"
+		"[WIP] monomorphise FGG source to FG (ignored if -fgg not set)\n"+
+			"specify '--' to print to stdout")
 
 	// Erasure(?) by translation based on type reps -- FGG vs. FGR?
-	flag.BoolVar(&treps, "treps", false, "[WIP] compile FGG source to FGR")
+	flag.StringVar(&fgrc, "fgrc", "", // Empty string for "false"
+		"[WIP] compile FGG source to FGR (ignored if -fgg not set)\n"+
+			"specify '--' to print to stdout")
 
 	// Parsing options
 	flag.BoolVar(&useInternalSrc, "internal", false,
@@ -161,8 +164,8 @@ func main() {
 	case interpFGG:
 		var a fgg.FGGAdaptor
 		prog := interp(&a, src, strictParse, evalSteps)
-		doMonom(prog, monom, monomOutput)
-		doTypeReps(prog, treps)
+		doMonom(prog, monom, monomc)
+		doTypeReps(prog, fgrc)
 	}
 }
 
@@ -214,47 +217,47 @@ func eval(p base.Program, steps int) {
 // Pre: (monom == true || compile != "") => -fgg is set
 // TODO: rename
 func doMonom(prog base.Program, monom bool, compile string) {
-	if monom || compile != "" {
-		p_mono := fgg.Monomorph(prog.(fgg.FGGProgram)) // TODO: reformat (e.g., "<...>") to make an actual FG program
-		if monom {
-			vPrintln("\nMonomorphising, formal notation: [Warning] WIP [Warning]")
-			vPrintln(p_mono.String())
-		}
-		if compile != "" {
-			vPrintln("\nMonomorphising, FG output: [Warning] WIP [Warning]")
-			out := p_mono.String()
-			out = strings.Replace(out, ",,", "", -1)
-			out = strings.Replace(out, "<", "", -1)
-			out = strings.Replace(out, ">", "", -1)
-			if compile == "--" {
-				vPrintln(out)
-			} else {
-				vPrintln("Writing output to: " + compile)
-				bs := []byte(out)
-				err := ioutil.WriteFile(compile, bs, 0644)
-				checkErr(err)
-			}
+	if !monom && compile == "" {
+		return
+	}
+	p_mono := fgg.Monomorph(prog.(fgg.FGGProgram)) // TODO: reformat (e.g., "<...>") to make an actual FG program
+	if monom {
+		vPrintln("\nMonomorphising, formal notation: [Warning] WIP [Warning]")
+		vPrintln(p_mono.String())
+	}
+	if compile != "" {
+		vPrintln("\nMonomorphising, FG output: [Warning] WIP [Warning]")
+		out := p_mono.String()
+		out = strings.Replace(out, ",,", "", -1)
+		out = strings.Replace(out, "<", "", -1)
+		out = strings.Replace(out, ">", "", -1)
+		if compile == "--" {
+			vPrintln(out)
+		} else {
+			vPrintln("Writing output to: " + compile)
+			bs := []byte(out)
+			err := ioutil.WriteFile(compile, bs, 0644)
+			checkErr(err)
 		}
 	}
 }
 
-func doTypeReps(prog base.Program, treps bool) {
-	if !treps {
+func doTypeReps(prog base.Program, compile string) {
+	if compile == "" {
 		return
 	}
 	vPrintln("\nTranslating FGG to FGR: [Warning] WIP [Warning]")
-
-	/*ds := prog.GetDecls()
-	e := prog.GetExpr().(fgg.Expr)
-
-	// Empty envs for main -- duplicated from FGGProgram.OK
-	var delta fgg.TEnv
-	var gamma fgg.Env
-	e.Typing(ds, delta, gamma, false)
-
-	e_fgr := fgg.Translate(ds, delta, gamma, e)*/
 	p_fgr := fgg.Translate(prog.(fgg.FGGProgram))
-	vPrintln(p_fgr.String())
+	out := p_fgr.String()
+	// TODO: factor out with -monomc
+	if compile == "--" {
+		vPrintln(out)
+	} else {
+		vPrintln("Writing output to: " + compile)
+		bs := []byte(out)
+		err := ioutil.WriteFile(compile, bs, 0644)
+		checkErr(err)
+	}
 }
 
 // For convenient quick testing -- via flag "-internal=true"

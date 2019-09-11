@@ -62,7 +62,7 @@ func Translate(p FGGProgram) fg.FGProgram { // TODO FIXME: FGR -- TODO also can 
 			for i := 0; i < len(us); i++ {
 				us[i] = d1.psi_recv.tfs[i].a
 			}
-			gamma[d1.x_recv] = TName{d1.t_recv, us}
+			gamma[d1.x_recv] = TName{d1.t_recv, us} // !!! also receiver
 			for _, v := range d1.pds {
 				gamma[v.x] = v.u
 			}
@@ -72,7 +72,7 @@ func Translate(p FGGProgram) fg.FGProgram { // TODO FIXME: FGR -- TODO also can 
 				pd := d1.pds[i]
 				pds[i] = fg.NewParamDecl(pd.x, fg.Type(erase(delta, pd.u)))
 			}
-			t := fg.Type(erase(delta, d1.u))
+			t := fg.Type(erase(delta, d1.u))                    // !!! tau_p typo
 			e := wrap(p.ds, delta, gamma, d1.e, d1.u, wrappers) // TODO FIXME: subs ~alpha?
 			md := fg.NewMDecl(recv, d1.m, pds, t, e)
 			ds = append(ds, md)
@@ -105,7 +105,7 @@ func Translate(p FGGProgram) fg.FGProgram { // TODO FIXME: FGR -- TODO also can 
 			us[i] = c.psi.tfs[i].a
 		}
 		dummy := TName{c.t, us}    // `us` are just the decl TParams, args not actually needed for `methods` or below
-		gs := methods(p.ds, dummy) //map[Name]Sig
+		gs := methods(p.ds, dummy) // !!! all meths of t_I target
 
 		//for _, s := range c.ss {
 		for _, g := range gs {
@@ -131,7 +131,7 @@ func Translate(p FGGProgram) fg.FGProgram { // TODO FIXME: FGR -- TODO also can 
 				pd := g.pds[i]
 				pds[i] = fg.NewParamDecl(pd.x, fg.Type(erase(delta, pd.u)))
 			}
-			t := fg.Type(erase(delta, g.u))
+			t := fg.Type(erase(delta, g.u)) // !!! tau_p typo, and delta'?
 			var e fg.Expr
 			e = fg.NewStructLit("Dummy_0", []fg.Expr{})
 			e = fg.NewStructLit("ToAny_0", []fg.Expr{e})
@@ -218,11 +218,13 @@ func translateExpr(ds []Decl, delta TEnv, gamma Env, e Expr, wrappers map[fg.Typ
 		subs := make(map[TParam]Type)
 		psi := getTDecl(ds, t).GetTFormals()
 		for i := 0; i < len(psi.tfs); i++ {
-			subs[psi.tfs[i].a] = e1.u.us[i]
+			//subs[psi.tfs[i].a] = e1.u.us[i]
+			// !!! type arg may be a TParam (when visiting MDecl), e.g., Box(a){...}
+			subs[psi.tfs[i].a] = bounds(delta, e1.u.us[i])
 		}
 		for i := 0; i < len(e1.es); i++ {
-			u_i := fds[i].u
-			es[i] = wrap(ds, delta, gamma, e1.es[i], u_i.TSubs(subs), wrappers)
+			u_i := fds[i].u.TSubs(subs)
+			es[i] = wrap(ds, delta, gamma, e1.es[i], u_i, wrappers)
 		}
 		return fg.NewStructLit(fg.Type(t), es)
 	case Select:
@@ -237,14 +239,16 @@ func translateExpr(ds []Decl, delta TEnv, gamma Env, e Expr, wrappers map[fg.Typ
 		return res
 	case Call:
 		u_recv := e1.e.Typing(ds, delta, gamma, false)
-		g := methods(ds, bounds(delta, u_recv))[e1.m] // map[Name]Sig
+		g := methods(ds, bounds(delta, u_recv))[e1.m]
 		subs := make(map[TParam]Type)
 		for i := 0; i < len(g.psi.tfs); i++ {
-			subs[g.psi.tfs[i].a] = e1.targs[i]
+			//subs[g.psi.tfs[i].a] = e1.targs[i]  // !!! cf. StructLit case
+			subs[g.psi.tfs[i].a] = bounds(delta, e1.targs[i])
 		}
 		args := make([]fg.Expr, len(e1.args))
 		for i := 0; i < len(e1.args); i++ {
-			args[i] = wrap(ds, delta, gamma, e1.args[i], g.pds[i].u.TSubs(subs), wrappers)
+			u_i := g.pds[i].u.TSubs(subs)
+			args[i] = wrap(ds, delta, gamma, e1.args[i], u_i, wrappers)
 		}
 		u := e1.Typing(ds, delta, gamma, false)
 		e_recv := translateExpr(ds, delta, gamma, e1.e, wrappers)
@@ -257,6 +261,7 @@ func translateExpr(ds []Decl, delta TEnv, gamma Env, e Expr, wrappers map[fg.Typ
 		}
 		return res
 	case Assert:
+		// Need actual FGR
 		panic("TODO " + reflect.TypeOf(e).String() + ": " + e.String())
 	default:
 		panic("Unknown Expr type " + reflect.TypeOf(e).String() + ": " + e.String())
@@ -275,7 +280,7 @@ func erase(delta TEnv, u Type) Name { //fg.Type {  // CHECKME: change return bac
 func wrap(ds []fg.Decl, delta TEnv, gamma Env, e Expr, u Type, wrappers map[fg.Type]adaptPair) fg.Expr {
 	/*t := erase(u, delta)
 	if _, ok := fg.isStructType(t)*/
-	if isStructTName(ds, u) { // N.B. differs slightly from def -- because there is no FG t_S decl (yet)?
+	if isStructTName(ds, u) { // !!! differs slightly from def -- because there is no FG t_S decl (yet)?
 		return translateExpr(ds, delta, gamma, e, wrappers)
 	} else if isInterfaceTName(ds, u) {
 		u1 := e.Typing(ds, delta, gamma, false)
