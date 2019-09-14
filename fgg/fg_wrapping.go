@@ -18,7 +18,7 @@ type fgAdaptPair struct {
 	super fg.Type // The "target" type, a t_I
 }
 
-func FGAdptrTranslate(p FGGProgram) fg.FGProgram { // TODO FIXME: FGR -- TODO also can subsume existing FGG-FG trans?
+func FgAdptrTranslate(p FGGProgram) fg.FGProgram { // TODO FIXME: FGR -- TODO also can subsume existing FGG-FG trans?
 	var ds []Decl
 
 	// Add t_0 (etc.) to ds
@@ -34,7 +34,7 @@ func FGAdptrTranslate(p FGGProgram) fg.FGProgram { // TODO FIXME: FGR -- TODO al
 	t_0 := fg.NewITypeLit(fg.Type("t_0"), ss_0) // TODO FIXME? Go doesn't allow "overlapping" interfaces
 	ds = append(ds, t_0)
 
-	fgfgWrappers := make(map[fg.Type]fgAdaptPair) // Populated by visiting MDecl and main Expr
+	fgWrappers := make(map[fg.Type]fgAdaptPair) // Populated by visiting MDecl and main Expr
 
 	for i := 0; i < len(p.ds); i++ {
 		d := p.ds[i]
@@ -42,8 +42,8 @@ func FGAdptrTranslate(p FGGProgram) fg.FGProgram { // TODO FIXME: FGR -- TODO al
 		case STypeLit:
 			s := fgAdaptSTypeLit(d1)
 
-			// Add getValue/getTypeRep to all (existing) t_S -- every t_S must implement t_0 -- TODO: factor out with fgfgWrappers
-			//e_getv := fg.NewSelect(fg.NewVariable("x"), "value") // CHECKME: but t_S doesn't have value field, fgfgWrapper does?
+			// Add getValue/getTypeRep to all (existing) t_S -- every t_S must implement t_0 -- TODO: factor out with fgWrappers
+			//e_getv := fg.NewSelect(fg.NewVariable("x"), "value") // CHECKME: but t_S doesn't have value field, fgWrapper does?
 			e_getv := fg.NewStructLit(fg.Type("Dummy_0"), []fg.Expr{})
 			getv := fg.NewMDecl(fg.NewParamDecl("x", fg.Type(d1.t)), "getValue",
 				[]fg.ParamDecl{}, fg.Type("Any_0"), e_getv)
@@ -74,7 +74,7 @@ func FGAdptrTranslate(p FGGProgram) fg.FGProgram { // TODO FIXME: FGR -- TODO al
 			}
 			t := fg.Type(fgErase(delta, d1.u)) // !!! tau_p typo
 			u := bounds(delta, d1.u)           // !!! cf. fgWrap, pre: u is a TName
-			e := fgWrap(p.ds, delta, gamma, d1.e, u, fgfgWrappers)
+			e := fgWrap(p.ds, delta, gamma, d1.e, u, fgWrappers)
 			// ^TODO FIXME: subs ~alpha?
 			md := fg.NewMDecl(recv, d1.m, pds, t, e)
 			ds = append(ds, md)
@@ -87,16 +87,16 @@ func FGAdptrTranslate(p FGGProgram) fg.FGProgram { // TODO FIXME: FGR -- TODO al
 	var delta TEnv // Empty envs for main -- duplicated from FGGProgram.OK
 	var gamma Env
 	p.e.Typing(p.ds, delta, gamma, false) // Populates delta and gamma
-	e := fgAdaptExpr(p.ds, delta, gamma, p.e, fgfgWrappers)
+	e := fgAdaptExpr(p.ds, delta, gamma, p.e, fgWrappers)
 
-	// Add fgfgWrappers, fgfgWrapper meths -- also getValue/getTypeRep (TODO: factor out with above)
-	// Needs to follow fgAdaptExpr, for fgfgWrappers to be populated
-	for k, v := range fgfgWrappers {
+	// Add fgWrappers, fgWrapper meths -- also getValue/getTypeRep (TODO: factor out with above)
+	// Needs to follow fgAdaptExpr, for fgWrappers to be populated
+	for k, v := range fgWrappers {
 		fds := []fg.FieldDecl{fg.NewFieldDecl("value", v.sub)} // TODO: factor out
 		adptr := fg.NewSTypeLit(k, fds)
 
 		// TODO: factor out with STypeLits
-		e_getv := fg.NewSelect(fg.NewVariable("x"), "value") // CHECKME: but t_S doesn't have value field, fgfgWrapper does?
+		e_getv := fg.NewSelect(fg.NewVariable("x"), "value") // CHECKME: but t_S doesn't have value field, fgWrapper does?
 		getv := fg.NewMDecl(fg.NewParamDecl("x", fg.Type(k)), "getValue",
 			[]fg.ParamDecl{}, fg.Type("Any_0"), e_getv)
 		// gettr := ...TODO...
@@ -201,7 +201,7 @@ func fgAdaptSig(delta TEnv, g Sig) fg.Sig {
 
 // |e_FGG|_(\Delta; \Gamma) = e_FGR
 // TODO: rename
-func fgAdaptExpr(ds []Decl, delta TEnv, gamma Env, e Expr, fgfgWrappers map[fg.Type]fgAdaptPair) fg.Expr {
+func fgAdaptExpr(ds []Decl, delta TEnv, gamma Env, e Expr, fgWrappers map[fg.Type]fgAdaptPair) fg.Expr {
 	switch e1 := e.(type) {
 	case Variable:
 		u := e1.Typing(ds, delta, gamma, false)
@@ -226,13 +226,13 @@ func fgAdaptExpr(ds []Decl, delta TEnv, gamma Env, e Expr, fgfgWrappers map[fg.T
 		}
 		for i := 0; i < len(e1.es); i++ {
 			u_i := fds[i].u.TSubs(subs)
-			es[i] = fgWrap(ds, delta, gamma, e1.es[i], u_i, fgfgWrappers)
+			es[i] = fgWrap(ds, delta, gamma, e1.es[i], u_i, fgWrappers)
 		}
 		return fg.NewStructLit(fg.Type(t), es)
 	case Select:
 		u := e1.Typing(ds, delta, gamma, false)
 		var res fg.Expr
-		res = fg.NewSelect(fgAdaptExpr(ds, delta, gamma, e1.e, fgfgWrappers), e1.f)
+		res = fg.NewSelect(fgAdaptExpr(ds, delta, gamma, e1.e, fgWrappers), e1.f)
 		if isInterfaceTName(ds, u) {
 			// TODO FIXME: factor out with Variable
 			res = fg.NewCall(res, Name("getValue"), []fg.Expr{})
@@ -250,10 +250,10 @@ func fgAdaptExpr(ds []Decl, delta TEnv, gamma Env, e Expr, fgfgWrappers map[fg.T
 		args := make([]fg.Expr, len(e1.args))
 		for i := 0; i < len(e1.args); i++ {
 			u_i := g.pds[i].u.TSubs(subs)
-			args[i] = fgWrap(ds, delta, gamma, e1.args[i], u_i, fgfgWrappers)
+			args[i] = fgWrap(ds, delta, gamma, e1.args[i], u_i, fgWrappers)
 		}
 		//u := e1.Typing(ds, delta, gamma, false)
-		e_recv := fgAdaptExpr(ds, delta, gamma, e1.e, fgfgWrappers)
+		e_recv := fgAdaptExpr(ds, delta, gamma, e1.e, fgWrappers)
 		var res fg.Expr
 		res = fg.NewCall(e_recv, e1.m, args)
 		//if isInterfaceTName(ds, fgErase(delta, u)) {  // !!! fgErase returns fg.Type (cf. fgWrap isStructTName)
@@ -305,15 +305,15 @@ func fgErase(delta TEnv, u Type) Name { //fg.Type {  // CHECKME: change return b
 // Pre: u is a TName  // !!!
 // Pre: type of e <: u
 // `u` is "target type"
-func fgWrap(ds []fg.Decl, delta TEnv, gamma Env, e Expr, u Type, fgfgWrappers map[fg.Type]fgAdaptPair) fg.Expr {
+func fgWrap(ds []fg.Decl, delta TEnv, gamma Env, e Expr, u Type, fgWrappers map[fg.Type]fgAdaptPair) fg.Expr {
 	/*t := fgErase(u, delta)
 	if _, ok := fg.isStructType(t)*/
 	if isStructTName(ds, u) { // !!! differs slightly from def -- because there is no FG t_S decl (yet)?
-		return fgAdaptExpr(ds, delta, gamma, e, fgfgWrappers)
+		return fgAdaptExpr(ds, delta, gamma, e, fgWrappers)
 	} else if isInterfaceTName(ds, u) {
 		u1 := e.Typing(ds, delta, gamma, false)
-		e1 := fgAdaptExpr(ds, delta, gamma, e, fgfgWrappers)
-		return fgfgWrapper(delta, e1, u1, u, fgfgWrappers)
+		e1 := fgAdaptExpr(ds, delta, gamma, e, fgWrappers)
+		return fgWrapper(delta, e1, u1, u, fgWrappers)
 	} else {
 		panic("Invalid fgWrap case: e=" + e.String() + ", u=" + u.String())
 	}
@@ -321,12 +321,23 @@ func fgWrap(ds []fg.Decl, delta TEnv, gamma Env, e Expr, u Type, fgfgWrappers ma
 
 // targ is a t_I
 // TODO: rename, cf. fgWrap(ds, delta, gamma, e, u)
-func fgfgWrapper(delta TEnv, e fg.Expr, subj Type, targ Type, fgfgWrappers map[fg.Type]fgAdaptPair) fg.StructLit {
+func fgWrapper(delta TEnv, e fg.Expr, subj Type, targ Type, fgWrappers map[fg.Type]fgAdaptPair) fg.StructLit {
 	t1 := fg.Type(fgErase(delta, subj))
 	t_I := fg.Type(fgErase(delta, targ))
 	adptr := fg.Type("Adptr_" + t1 + "_" + t_I) // TODO: factor out naming
-	if _, ok := fgfgWrappers[adptr]; !ok {
-		fgfgWrappers[adptr] = fgAdaptPair{t1, t_I}
+	if _, ok := fgWrappers[adptr]; !ok {
+		fgWrappers[adptr] = fgAdaptPair{t1, t_I}
 	}
 	return fg.NewStructLit(adptr, []fg.Expr{e})
+}
+
+/* Helper */
+
+func isSTypeLit(ds []Decl, t Name) bool {
+	for _, v := range ds {
+		if _, ok := v.(STypeLit); ok && v.GetName() == string(t) {
+			return true
+		}
+	}
+	return false
 }
