@@ -253,7 +253,7 @@ func (c Call) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
 	t0 := c.e.Typing(ds, gamma, allowStupid)
 	var g Sig
 	if tmp, ok := methods(ds, t0)[c.m]; !ok { // !!! submission version had "methods(m)"
-		panic("Method not found: " + c.m + " in " + t0.String())
+		panic("Method not found: " + c.m + " in " + t0.String() + "\n\t" + c.String())
 	} else {
 		g = tmp
 	}
