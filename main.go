@@ -246,8 +246,8 @@ func doTypeReps(prog base.Program, compile string) {
 	if compile == "" {
 		return
 	}
-	vPrintln("\nTranslating FGG to FGR: [Warning] WIP [Warning]")
-	p_fgr := fgg.Translate(prog.(fgg.FGGProgram))
+	vPrintln("\nTranslating FGG to FG(R) using Adaptors: [Warning] WIP [Warning]")
+	p_fgr := fgg.FGAdptrTranslate(prog.(fgg.FGGProgram))
 	out := p_fgr.String()
 	// TODO: factor out with -monomc
 	if compile == "--" {
