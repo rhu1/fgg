@@ -72,8 +72,10 @@ func Translate(p FGGProgram) fg.FGProgram { // TODO FIXME: FGR -- TODO also can 
 				pd := d1.pds[i]
 				pds[i] = fg.NewParamDecl(pd.x, fg.Type(erase(delta, pd.u)))
 			}
-			t := fg.Type(erase(delta, d1.u))                    // !!! tau_p typo
-			e := wrap(p.ds, delta, gamma, d1.e, d1.u, wrappers) // TODO FIXME: subs ~alpha?
+			t := fg.Type(erase(delta, d1.u)) // !!! tau_p typo
+			u := bounds(delta, d1.u)         // !!! cf. wrap, pre: u is a TName
+			e := wrap(p.ds, delta, gamma, d1.e, u, wrappers)
+			// ^TODO FIXME: subs ~alpha?
 			md := fg.NewMDecl(recv, d1.m, pds, t, e)
 			ds = append(ds, md)
 		default:
@@ -250,14 +252,39 @@ func translateExpr(ds []Decl, delta TEnv, gamma Env, e Expr, wrappers map[fg.Typ
 			u_i := g.pds[i].u.TSubs(subs)
 			args[i] = wrap(ds, delta, gamma, e1.args[i], u_i, wrappers)
 		}
-		u := e1.Typing(ds, delta, gamma, false)
+		//u := e1.Typing(ds, delta, gamma, false)
 		e_recv := translateExpr(ds, delta, gamma, e1.e, wrappers)
 		var res fg.Expr
 		res = fg.NewCall(e_recv, e1.m, args)
-		if isInterfaceTName(ds, u) {
+		//if isInterfaceTName(ds, erase(delta, u)) {  // !!! erase returns fg.Type (cf. wrap isStructTName)
+
+		//fmt.Println("aaa:", e1, u, bounds(delta, u))
+
+		//u_ret := u.TSubs(subs) // Cf. bounds(delta, u) ?
+
+		delta1 := make(map[TParam]Type)
+		for i := 0; i < len(g.psi.tfs); i++ {
+			tf := g.psi.tfs[i]
+			delta1[tf.a] = tf.u
+		}
+		td := getTDecl(ds, bounds(delta, u_recv).(TName).t)
+		psi := td.GetTFormals()
+		for i := 0; i < len(psi.tfs); i++ {
+			tf := psi.tfs[i]
+			delta1[tf.a] = tf.u
+		}
+
+		//u_ret := g.u.TSubs(delta1)
+		u_ret := erase(delta1, g.u)
+
+		//if isInterfaceTName(ds, u_ret) {
+		//if _, ok := u_ret.(TParam); ok || isInterfaceTName(ds, u_ret) {
+		//if isInterfaceTName(ds, u_ret) {
+		if !isSTypeLit(ds, u_ret) {
 			// TODO FIXME: factor out with Variable
 			res = fg.NewCall(res, Name("getValue"), []fg.Expr{})
-			res = fg.NewAssert(res, fg.Type(erase(delta, u))) // TODO FIXME: mkRep -- "FG" for now, not FGR
+			//res = fg.NewAssert(res, fg.Type(erase(delta, u_ret))) // TODO FIXME: mkRep -- "FG" for now, not FGR
+			res = fg.NewAssert(res, fg.Type(u_ret))
 		}
 		return res
 	case Assert:
@@ -275,6 +302,7 @@ func erase(delta TEnv, u Type) Name { //fg.Type {  // CHECKME: change return bac
 	return bounds(delta, u).(TName).t
 }
 
+// Pre: u is a TName  // !!!
 // Pre: type of e <: u
 // `u` is "target type"
 func wrap(ds []fg.Decl, delta TEnv, gamma Env, e Expr, u Type, wrappers map[fg.Type]adaptPair) fg.Expr {
@@ -301,4 +329,13 @@ func wrapper(delta TEnv, e fg.Expr, subj Type, targ Type, wrappers map[fg.Type]a
 		wrappers[adptr] = adaptPair{t1, t_I}
 	}
 	return fg.NewStructLit(adptr, []fg.Expr{e})
+}
+
+func isSTypeLit(ds []Decl, t Name) bool {
+	for _, v := range ds {
+		if _, ok := v.(STypeLit); ok && v.GetName() == t {
+			return true
+		}
+	}
+	return false
 }
