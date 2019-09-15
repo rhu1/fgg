@@ -28,6 +28,10 @@
 
 /* TODO
 - WF: repeat type decl
+- Compact getters/constructors
+- factor out fgg_monom, MDecl and ITypeLit
+- fix type preservation check
+- factor out more into base
 
 	//b.WriteString("type B struct { f t };\n")  // TODO: unknown type
 	//b.WriteString("type B struct { b B };\n")  // TODO: recursive struct
