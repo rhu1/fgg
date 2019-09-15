@@ -7,7 +7,7 @@ package fgr
 
 import "strings"
 
-/* "Exported" constructors for fgg (monomorph) */
+/* "Exported" constructors for fgg (translation) */
 
 func NewVariable(id Name) Variable {
 	return Variable{id}
@@ -154,6 +154,8 @@ type Select struct {
 	f Name
 }
 
+var _ Expr = Select{}
+
 func (s Select) Expr() Expr      { return s.e }
 func (s Select) FieldName() Name { return s.f }
 
@@ -205,6 +207,8 @@ type Call struct {
 	m    Name
 	args []Expr
 }
+
+var _ Expr = Call{}
 
 func (c Call) Expr() Expr       { return c.e }
 func (c Call) MethodName() Name { return c.m }
@@ -297,6 +301,8 @@ type Assert struct {
 	e Expr
 	t Type
 }
+
+var _ Expr = Assert{}
 
 func (a Assert) Expr() Expr       { return a.e }
 func (a Assert) AssertType() Type { return a.t }
