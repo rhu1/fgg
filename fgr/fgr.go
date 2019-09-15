@@ -4,6 +4,8 @@ import "reflect"
 
 import "github.com/rhu1/fgg/base"
 
+//import "github.com/rhu1/fgg/fgg"
+
 /* Name, Context, Type */
 
 type Name = base.Name // TODO: tidy up refactoring, due to introducing base
@@ -50,24 +52,30 @@ func (t Type) String() string {
 	return string(t)
 }
 
-/* AST base intefaces: FGNode, Decl, TDecl, Spec, Expr */
+/* Reps */
+
+type Rep struct {
+	//u fgg.Type
+}
+
+/* AST base intefaces: FGRNode, Decl, TDecl, Spec, Expr */
 
 // TODO: tidy up refactoring, due to introducing base
-type FGNode = base.AstNode
+type FGRNode = base.AstNode
 type Decl = base.Decl
 
 type TDecl interface {
 	Decl
-	GetType() Type // In FG, GetType() == Type(GetName())
+	GetType() Type // In FGR, GetType() == Type(GetName())
 }
 
 type Spec interface {
-	FGNode
+	FGRNode
 	GetSigs(ds []Decl) []Sig
 }
 
 type Expr interface {
-	base.Expr // Using the same name "Expr", maybe rename this type to FGExpr
+	base.Expr // Using the same name "Expr", maybe rename this type to FGRExpr
 	Subs(subs map[Variable]Expr) Expr
 
 	// N.B. gamma should be effectively immutable (and ds, of course)
@@ -78,7 +86,7 @@ type Expr interface {
 	// CHECKME: resulting Exprs are not "parsed" from source, OK?
 	Eval(ds []Decl) (Expr, string)
 
-	//IsPanic() bool  // TODO "explicit" FG panic -- cf. underlying runtime panic
+	//IsPanic() bool  // TODO "explicit" FGR panic -- cf. underlying runtime panic
 }
 
 /* Helpers */

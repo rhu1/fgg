@@ -13,8 +13,8 @@ import "github.com/rhu1/fgg/base"
 
 /* "Exported" constructors for fgg (monomorph) */
 
-func NewFGProgram(ds []Decl, e Expr) FGProgram {
-	return FGProgram{ds, e}
+func NewFGRProgram(ds []Decl, e Expr) FGRProgram {
+	return FGRProgram{ds, e}
 }
 
 func NewSTypeLit(t Type, fds []FieldDecl) STypeLit {
@@ -47,15 +47,15 @@ func (g Sig) GetMethName() Name { // Hack
 
 /* Program */
 
-type FGProgram struct {
+type FGRProgram struct {
 	ds []Decl
 	e  Expr
 }
 
-var _ base.Program = FGProgram{}
-var _ FGNode = FGProgram{}
+var _ base.Program = FGRProgram{}
+var _ FGRNode = FGRProgram{}
 
-func (p FGProgram) Ok(allowStupid bool) {
+func (p FGRProgram) Ok(allowStupid bool) {
 	if !allowStupid { // Hack, to print the following only for "top-level" programs (not during Eval)
 		fmt.Println("[Warning] Type/method decl OK not fully checked yet " +
 			"(e.g., distinct field/param names, etc.)")
@@ -91,22 +91,22 @@ func (p FGProgram) Ok(allowStupid bool) {
 	p.e.Typing(p.ds, gamma, allowStupid)
 }
 
-// CHECKME: resulting FGProgram is not parsed from source, OK? -- cf. Expr.Eval
-// But doesn't affect FGPprogam.Ok() (i.e., Expr.Typing)
-func (p FGProgram) Eval() (base.Program, string) {
+// CHECKME: resulting FGRProgram is not parsed from source, OK? -- cf. Expr.Eval
+// But doesn't affect FGRPprogam.Ok() (i.e., Expr.Typing)
+func (p FGRProgram) Eval() (base.Program, string) {
 	e, rule := p.e.Eval(p.ds)
-	return FGProgram{p.ds, e.(Expr)}, rule
+	return FGRProgram{p.ds, e.(Expr)}, rule
 }
 
-func (p FGProgram) GetDecls() []Decl {
+func (p FGRProgram) GetDecls() []Decl {
 	return p.ds // Returns a copy?
 }
 
-func (p FGProgram) GetExpr() base.Expr {
+func (p FGRProgram) GetExpr() base.Expr {
 	return p.e
 }
 
-func (p FGProgram) String() string {
+func (p FGRProgram) String() string {
 	var b strings.Builder
 	b.WriteString("package main;\n")
 	for _, v := range p.ds {
@@ -166,7 +166,7 @@ type FieldDecl struct {
 func (f FieldDecl) GetName() Name { return f.f }
 func (f FieldDecl) GetType() Type { return f.t }
 
-var _ FGNode = FieldDecl{}
+var _ FGRNode = FieldDecl{}
 
 func (fd FieldDecl) String() string {
 	return fd.f + " " + fd.t.String()
@@ -255,7 +255,7 @@ type ParamDecl struct {
 func (pd ParamDecl) GetName() Name { return pd.x }
 func (pd ParamDecl) GetType() Type { return pd.t }
 
-var _ FGNode = ParamDecl{}
+var _ FGRNode = ParamDecl{}
 
 func (pd ParamDecl) String() string {
 	return pd.x + " " + pd.t.String()
@@ -316,7 +316,7 @@ func (s Sig) ReturnType() Type          { return s.t }
 
 var _ Spec = Sig{}
 
-// !!! Sig in FG (also, Go spec) includes ~x, which naively breaks "impls"
+// !!! Sig in FGR (also, Go spec) includes ~x, which naively breaks "impls"
 func (g0 Sig) EqExceptVars(g Sig) bool {
 	if len(g0.pds) != len(g.pds) {
 		return false
@@ -375,7 +375,7 @@ func isDistinctDecl(decl Decl, ds []Decl) bool {
 		switch d := d.(type) {
 		case TDecl:
 			// checks that type-name is unique regardless of definition
-			// RH: Refactor as a single global pass (use a temp map), or into a TDecl.Wf() -- done: currently integrated into FGProgram.Ok for now (to avoid a second iteration)
+			// RH: Refactor as a single global pass (use a temp map), or into a TDecl.Wf() -- done: currently integrated into FGRProgram.Ok for now (to avoid a second iteration)
 			if td, ok := decl.(TDecl); ok && d.GetName() == td.GetName() {
 				count++
 			}

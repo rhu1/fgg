@@ -47,10 +47,12 @@ import (
 	"github.com/rhu1/fgg/base"
 	"github.com/rhu1/fgg/fg"
 	"github.com/rhu1/fgg/fgg"
+	"github.com/rhu1/fgg/fgr"
 )
 
 var _ = reflect.TypeOf
 var _ = strconv.Itoa
+var _ = fgr.NewAssert
 
 const (
 	EVAL_TO_VAL = -1 // Must be < 0
@@ -252,7 +254,9 @@ func doTypeReps(prog base.Program, compile string) {
 		return
 	}
 	vPrintln("\nTranslating FGG to FG(R) using Adaptors: [Warning] WIP [Warning]")
-	p_fgr := fgg.FgrTranslate(prog.(fgg.FGGProgram))
+	//p_fgr := fgg.FgAdptrTranslate(prog.(fgg.FGGProgram))
+	//p_fgr := fgg.FgrTranslate(prog.(fgg.FGGProgram))
+	p_fgr := fgr.Translate(prog.(fgg.FGGProgram))
 	out := p_fgr.String()
 	// TODO: factor out with -monomc
 	if compile == "--" {

@@ -70,6 +70,21 @@ type TName struct {
 var _ Type = TName{}
 var _ Spec = TName{}
 
+// TODO: refactor
+func NewTName(t Name, us []Type) TName {
+	return TName{t, us}
+}
+
+// TODO: refactor
+func (u0 TName) GetName() Name {
+	return u0.t
+}
+
+// TODO: refactor
+func (u0 TName) GetTArgs() []Type {
+	return u0.us
+}
+
 func (u0 TName) TSubs(subs map[TParam]Type) Type {
 	us := make([]Type, len(u0.us))
 	for i := 0; i < len(us); i++ {

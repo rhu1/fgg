@@ -7,6 +7,11 @@ var _ = fmt.Errorf
 
 /* bounds(delta, u), fields(u_S), methods(u), body(u_S, m), type(v_S) */
 
+// TODO refactor
+func Bounds1(delta TEnv, u Type) Type {
+	return bounds(delta, u)
+}
+
 // CHECKME: does bounds ever need to work recursively? i.e., can an upperbound be a TParam?
 // CHECKME: return type TName?
 func bounds(delta TEnv, u Type) Type {
@@ -16,6 +21,11 @@ func bounds(delta TEnv, u Type) Type {
 		}
 	}
 	return u // CHECKME: submission version, includes when TParam 'a' not in delta, correct?
+}
+
+// TODO refactor
+func Fields1(ds []Decl, u_S TName) []FieldDecl {
+	return fields(ds, u_S)
 }
 
 // Pre: len(s.psi.as) == len (u_S.typs), where s is the STypeLit decl for u_S.t
@@ -33,6 +43,11 @@ func fields(ds []Decl, u_S TName) []FieldDecl {
 		fds[i] = s.fds[i].Subs(subs)
 	}
 	return fds
+}
+
+// TODO refactor
+func Methods1(ds []Decl, u Type) map[Name]Sig {
+	return methods(ds, u)
 }
 
 // Go has no overloading, meth names are a unique key
@@ -124,4 +139,9 @@ func getTDecl(ds []Decl, t Name) TDecl {
 		}
 	}
 	panic("Type not found: " + t)
+}
+
+// TODO refactor
+func GetTDecl1(ds []Decl, t Name) TDecl {
+	return getTDecl(ds, t)
 }
