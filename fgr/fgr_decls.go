@@ -10,15 +10,17 @@ import "reflect"
 import "strings"
 
 import "github.com/rhu1/fgg/base"
+import "github.com/rhu1/fgg/fgg"
 
 /* "Exported" constructors for fgg (monomorph) */
 
+// TODO: compact
 func NewFGRProgram(ds []Decl, e Expr) FGRProgram {
 	return FGRProgram{ds, e}
 }
 
-func NewSTypeLit(t Type, fds []FieldDecl) STypeLit {
-	return STypeLit{t, fds}
+func NewSTypeLit(t Type, rds []RepDecl, fds []FieldDecl) STypeLit {
+	return STypeLit{t, rds, fds}
 }
 
 func NewFieldDecl(f Name, t Type) FieldDecl {
@@ -119,10 +121,11 @@ func (p FGRProgram) String() string {
 	return b.String()
 }
 
-/* STypeLit, FieldDecl */
+/* STypeLit, RepDecl, FieldDecl */
 
 type STypeLit struct {
 	t   Type
+	rds []RepDecl
 	fds []FieldDecl
 }
 
@@ -149,13 +152,31 @@ func (s STypeLit) String() string {
 	b.WriteString("type ")
 	b.WriteString(s.t.String())
 	b.WriteString(" struct {")
+	if len(s.rds) > 0 {
+		b.WriteString(" ")
+		writeRepDecls(&b, s.rds)
+		if len(s.fds) > 0 {
+			b.WriteString(";")
+		}
+	}
 	if len(s.fds) > 0 {
 		b.WriteString(" ")
 		writeFieldDecls(&b, s.fds)
-		b.WriteString(" ")
 	}
+	b.WriteString(" ")
 	b.WriteString("}")
 	return b.String()
+}
+
+type RepDecl struct {
+	a fgg.TParam
+	r Rep
+}
+
+var _ FGRNode = RepDecl{}
+
+func (rd RepDecl) String() string {
+	return rd.a.String() + " " + rd.r.String()
 }
 
 type FieldDecl struct {
@@ -346,6 +367,15 @@ func (g Sig) String() string {
 /* Helpers */
 
 // Doesn't include "(...)" -- slightly more convenient for debug messages
+func writeRepDecls(b *strings.Builder, rds []RepDecl) {
+	if len(rds) > 0 {
+		b.WriteString(rds[0].String())
+		for _, v := range rds[1:] {
+			b.WriteString("; " + v.String())
+		}
+	}
+}
+
 func writeFieldDecls(b *strings.Builder, fds []FieldDecl) {
 	if len(fds) > 0 {
 		b.WriteString(fds[0].String())

@@ -18,8 +18,8 @@ func Translate(p fgg.FGGProgram) FGRProgram { // TODO FIXME: FGR -- TODO also ca
 	// Add t_0 (etc.) to ds_fgr
 	// TODO: factor out constants
 	Any_0 := NewITypeLit(Type("Any_0"), []Spec{})
-	Dummy_0 := NewSTypeLit(Type("Dummy_0"), []FieldDecl{})
-	ToAny_0 := NewSTypeLit(Type("ToAny_0"), []FieldDecl{NewFieldDecl("any", Type("Any_0"))})
+	Dummy_0 := NewSTypeLit(Type("Dummy_0"), []RepDecl{}, []FieldDecl{})
+	ToAny_0 := NewSTypeLit(Type("ToAny_0"), []RepDecl{}, []FieldDecl{NewFieldDecl("any", Type("Any_0"))})
 	getValue := NewSig("getValue", []ParamDecl{}, Type("Any_0")) // TODO: rename "unwrap"?
 	//getTypeRep := fg.NewSig("getTypeRep", []fg.ParamDecl{}, fg.Type("...TODO..."))
 	ss_0 := []Spec{getValue}
@@ -67,7 +67,7 @@ func Translate(p fgg.FGGProgram) FGRProgram { // TODO FIXME: FGR -- TODO also ca
 	for k, v := range wrappers {
 		// Add Adptr and getValue/getTypeRep
 		fds := []FieldDecl{NewFieldDecl("value", v.sub)} // TODO: factor out
-		adptr := NewSTypeLit(k, fds)
+		adptr := NewSTypeLit(k, []RepDecl{}, fds)
 		// TODO: factor out with STypeLits
 		e_getv := NewSelect(NewVariable("x"), "value") // CHECKME: but t_S doesn't have value field, wrapper does?
 		getv := NewMDecl(NewParamDecl("x", Type(k)), "getValue",
@@ -131,13 +131,18 @@ func Translate(p fgg.FGGProgram) FGRProgram { // TODO FIXME: FGR -- TODO also ca
 
 func fgrTransSTypeLit(s fgg.STypeLit) STypeLit {
 	delta := s.GetTFormals().ToTEnv()
+	tfs := s.GetTFormals().GetFormals()
+	rds := make([]RepDecl, len(tfs))
+	for i := 0; i < len(tfs); i++ {
+		rds[i] = RepDecl{tfs[i].GetTParam(), Rep{tfs[i].GetType()}}
+	}
 	fds_fgg := s.GetFieldDecls()
-	fds := make([]FieldDecl, len(fds_fgg)) // TODO FIXME: additional typerep fields
+	fds := make([]FieldDecl, len(fds_fgg))
 	for i := 0; i < len(fds_fgg); i++ {
 		fd := fds_fgg[i]
 		fds[i] = NewFieldDecl(fd.GetName(), toFgTypeFromBounds(delta, fd.GetType()))
 	}
-	return NewSTypeLit(Type(s.GetName()), fds)
+	return NewSTypeLit(Type(s.GetName()), rds, fds)
 }
 
 func fgrTransITypeLit(c fgg.ITypeLit) ITypeLit {
@@ -210,6 +215,7 @@ func fgrTransMDecl(ds []Decl, d1 fgg.MDecl, wrappers map[Type]adptrPair) MDecl {
 	}
 	t := toFgTypeFromBounds(delta, u)                   // !!! tau_p typo
 	e := wrapExpr(ds, delta, gamma, e_fgg, u, wrappers) // TODO FIXME: subs ~alpha?
+
 	return NewMDecl(recv, m, pds, t, e)
 }
 
@@ -234,9 +240,12 @@ func fgrTransExpr(ds []Decl, delta fgg.TEnv, gamma fgg.Env, e fgg.Expr,
 	case fgg.StructLit:
 		u := e1.GetTName()
 		t := u.GetName()
-		//us := u.GetTArgs()
+		us := u.GetTArgs()
 		es_fgg := e1.GetArgs()
-		es := make([]Expr, len(es_fgg)) // TODO FIXME: additional mkRep args
+		es := make([]Expr, (len(us) + len(es_fgg)))
+		for i := 0; i < len(us); i++ {
+			es[i] = mkRep(us[i])
+		}
 		fds_fgg := fgg.Fields1(ds, u)
 		subs := make(map[fgg.TParam]fgg.Type)
 		tfs := fgg.GetTDecl1(ds, t).GetTFormals().GetFormals()
@@ -246,7 +255,7 @@ func fgrTransExpr(ds []Decl, delta fgg.TEnv, gamma fgg.Env, e fgg.Expr,
 		}
 		for i := 0; i < len(es_fgg); i++ {
 			u_i := fds_fgg[i].GetType().TSubs(subs)
-			es[i] = wrapExpr(ds, delta, gamma, es_fgg[i], u_i, wrappers)
+			es[i+len(us)] = wrapExpr(ds, delta, gamma, es_fgg[i], u_i, wrappers)
 		}
 		return NewStructLit(Type(t), es)
 	case fgg.Select:
@@ -355,9 +364,6 @@ type adptrPair struct {
 func wrapExpr(ds []Decl, delta fgg.TEnv, gamma fgg.Env, e fgg.Expr, u fgg.Type,
 	wrappers map[Type]adptrPair) Expr {
 	t := toFgTypeFromBounds(delta, u)
-
-	fmt.Println("aaa:", u, t, isFggSTypeLit(ds, t), isFggITypeLit(ds, t))
-
 	if isFggSTypeLit(ds, t) {
 		return fgrTransExpr(ds, delta, gamma, e, wrappers)
 	} else if isFggITypeLit(ds, t) {
@@ -366,6 +372,23 @@ func wrapExpr(ds []Decl, delta fgg.TEnv, gamma fgg.Env, e fgg.Expr, u fgg.Type,
 		return makeAdptr(delta, e1, u1, u, wrappers)
 	} else {
 		panic("Invalid wrap case: e=" + e.String() + ", u=" + u.String() + ", t=" + t.String())
+	}
+}
+
+// Post: TypeTree or TmpTParam
+func mkRep(u fgg.Type) Expr {
+	switch u1 := u.(type) {
+	case fgg.TParam:
+		return TmpTParam{u1.String()}
+	case fgg.TName:
+		us := u1.GetTArgs()
+		es := make([]Expr, len(us))
+		for i := 0; i < len(us); i++ {
+			es[i] = mkRep(us[i])
+		}
+		return TypeTree{Type(u1.GetName()), es}
+	default:
+		panic("Unknown fgg.Type kind " + reflect.TypeOf(u).String() + ": " + u.String())
 	}
 }
 

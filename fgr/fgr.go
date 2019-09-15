@@ -4,7 +4,7 @@ import "reflect"
 
 import "github.com/rhu1/fgg/base"
 
-//import "github.com/rhu1/fgg/fgg"
+import "github.com/rhu1/fgg/fgg"
 
 /* Name, Context, Type */
 
@@ -12,7 +12,7 @@ type Name = base.Name // TODO: tidy up refactoring, due to introducing base
 
 type Env map[Name]Type // TODO: should be Variable rather than Name -- though Variable is an Expr
 
-type Type Name // Type definition (cf. alias)
+type Type Name // TODO FIXME: should be based on fgg.Type
 
 var _ Spec = Type("")
 
@@ -55,7 +55,13 @@ func (t Type) String() string {
 /* Reps */
 
 type Rep struct {
-	//u fgg.Type
+	u fgg.Type
+}
+
+//var _ Type = Rep{}  // TODO FIXME
+
+func (r Rep) String() string {
+	return "Rep(" + r.u.String() + ")"
 }
 
 /* AST base intefaces: FGRNode, Decl, TDecl, Spec, Expr */

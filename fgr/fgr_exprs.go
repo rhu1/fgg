@@ -9,25 +9,11 @@ import "strings"
 
 /* "Exported" constructors for fgg (translation) */
 
-func NewVariable(id Name) Variable {
-	return Variable{id}
-}
-
-func NewStructLit(t Type, es []Expr) StructLit {
-	return StructLit{t, es}
-}
-
-func NewSelect(e Expr, f Name) Select {
-	return Select{e, f}
-}
-
-func NewCall(e Expr, m Name, es []Expr) Call {
-	return Call{e, m, es}
-}
-
-func NewAssert(e Expr, t Type) Assert {
-	return Assert{e, t}
-}
+func NewVariable(id Name) Variable             { return Variable{id} }
+func NewStructLit(t Type, es []Expr) StructLit { return StructLit{t, es} }
+func NewSelect(e Expr, f Name) Select          { return Select{e, f} }
+func NewCall(e Expr, m Name, es []Expr) Call   { return Call{e, m, es} }
+func NewAssert(e Expr, t Type) Assert          { return Assert{e, t} }
 
 /* Variable */
 
@@ -351,6 +337,124 @@ func (a Assert) IsValue() bool {
 
 func (a Assert) String() string {
 	return a.e.String() + ".(" + a.t.String() + ")"
+}
+
+/* Panic */
+
+type Panic struct{}
+
+var _ Expr = Panic{}
+
+func (p Panic) Subs(subs map[Variable]Expr) Expr {
+	panic("TODO: " + p.String())
+}
+
+func (p Panic) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
+	panic("TODO: " + p.String())
+}
+
+func (p Panic) Eval(ds []Decl) (Expr, string) {
+	panic("TODO: " + p.String())
+}
+
+func (p Panic) IsValue() bool {
+	return true
+}
+
+func (p Panic) String() string {
+	return "panic"
+}
+
+/* IfThenElse */
+
+type IfThenElse struct {
+	e1 Call
+	e2 TypeTree
+	e3 Expr
+}
+
+var _ Expr = IfThenElse{}
+
+func (ite IfThenElse) Subs(subs map[Variable]Expr) Expr {
+	panic("TODO: " + ite.String())
+}
+
+func (ite IfThenElse) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
+	panic("TODO: " + ite.String())
+}
+
+func (ite IfThenElse) Eval(ds []Decl) (Expr, string) {
+	panic("TODO: " + ite.String())
+}
+
+func (ite IfThenElse) IsValue() bool {
+	return false
+}
+
+func (ite IfThenElse) String() string {
+	return "if " + ite.e1.String() + " << " + ite.e2.String() + " then " +
+		ite.e3.String() + " else panic"
+}
+
+/* TypeTree */
+
+type TypeTree struct {
+	t  Type
+	es []Expr // TypeTree or TmpTParam
+}
+
+var _ Expr = TypeTree{}
+
+func (tt TypeTree) Subs(subs map[Variable]Expr) Expr {
+	panic("TODO: " + tt.String())
+}
+
+func (tt TypeTree) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
+	panic("TODO: " + tt.String())
+}
+
+func (tt TypeTree) Eval(ds []Decl) (Expr, string) {
+	panic("TODO: " + tt.String())
+}
+
+func (tt TypeTree) IsValue() bool {
+	panic("TODO: " + tt.String())
+}
+
+func (tt TypeTree) String() string {
+	var b strings.Builder
+	b.WriteString(string(tt.t))
+	writeExprs(&b, tt.es)
+	return b.String()
+}
+
+/* Intermediate TParam */
+
+// Cf. Variable
+type TmpTParam struct {
+	id Name
+}
+
+var _ Expr = TmpTParam{}
+
+func (tmp TmpTParam) Subs(subs map[Variable]Expr) Expr {
+	panic("TODO: " + tmp.String())
+}
+
+func (tmp TmpTParam) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
+	panic("TODO: " + tmp.String())
+}
+
+func (tmp TmpTParam) Eval(ds []Decl) (Expr, string) {
+	panic("TODO: " + tmp.String())
+}
+
+func (tmp TmpTParam) IsValue() bool {
+	panic("Shouldn't get in here: " + tmp.String())
+}
+
+func (tmp TmpTParam) String() string {
+	return tmp.id
 }
 
 /* Aux, helpers */
