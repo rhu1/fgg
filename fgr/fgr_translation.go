@@ -234,14 +234,15 @@ func fgrTransExpr(ds []Decl, delta fgg.TEnv, gamma fgg.Env, e fgg.Expr,
 	case fgg.StructLit:
 		u := e1.GetTName()
 		t := u.GetName()
-		us := u.GetTArgs()
+		//us := u.GetTArgs()
 		es_fgg := e1.GetArgs()
 		es := make([]Expr, len(es_fgg)) // TODO FIXME: additional mkRep args
 		fds_fgg := fgg.Fields1(ds, u)
 		subs := make(map[fgg.TParam]fgg.Type)
 		tfs := fgg.GetTDecl1(ds, t).GetTFormals().GetFormals()
 		for i := 0; i < len(tfs); i++ {
-			subs[tfs[i].GetTParam()] = us[i]
+			subs[tfs[i].GetTParam()] = //us[i]  // !!! Cf. ParamDecls in Call
+				tfs[i].GetType()
 		}
 		for i := 0; i < len(es_fgg); i++ {
 			u_i := fds_fgg[i].GetType().TSubs(subs)
@@ -264,46 +265,59 @@ func fgrTransExpr(ds []Decl, delta fgg.TEnv, gamma fgg.Env, e fgg.Expr,
 	case fgg.Call:
 		e_recv_fgg := e1.GetRecv()
 		m := e1.GetName()
-		targs := e1.GetTArgs()
+		//targs := e1.GetTArgs()
 		args_fgg := e1.GetArgs()
+
 		u_recv := e_recv_fgg.Typing(ds, delta, gamma, false)
-		g := fgg.Methods1(ds, fgg.Bounds1(delta, u_recv))[m]
+		/*g := fgg.Methods1(ds, fgg.Bounds1(delta, u_recv))[m]
 		subs := make(map[fgg.TParam]fgg.Type)
 		tfs := g.GetTFormals().GetFormals()
 		for i := 0; i < len(tfs); i++ {
 			subs[tfs[i].GetTParam()] = targs[i]
-		}
-		args := make([]Expr, len(args_fgg))
-		pds_fgg := g.GetParamDecls()
-		for i := 0; i < len(args_fgg); i++ {
-			u_i := pds_fgg[i].GetType().TSubs(subs)
-			args[i] = wrapExpr(ds, delta, gamma, args_fgg[i], u_i, wrappers)
-		}
-		//u := e1.Typing(ds, delta, gamma, false)
-		e_recv := fgrTransExpr(ds, delta, gamma, e_recv_fgg, wrappers)
-		var res Expr
-		res = NewCall(e_recv, m, args)
-		//if isInterfaceTName(ds, erase(delta, u)) {  // !!! erase returns fg.Type (cf. wrap isStructTName)
-
-		//fmt.Println("aaa:", e1, u, bounds(delta, u))
-
-		//u_ret := u.TSubs(subs) // Cf. bounds(delta, u) ?
-
-		delta1 := make(map[fgg.TParam]fgg.Type)
-		for i := 0; i < len(tfs); i++ {
-			tf := tfs[i]
-			delta1[tf.GetTParam()] = tf.GetType()
-		}
+		}*/
+		// !!! wrap target should be "raw" FGR decl, not FGG type -- don't want type arg instantiation, which may be t_S, we always want upper bound t_I(?)
+		//t_recv := toFgTypeFromBounds(delta, u_recv)
 		td := fgg.GetTDecl1(ds, fgg.Bounds1(delta, u_recv).(fgg.TName).GetName())
 		tfs_recv := td.GetTFormals().GetFormals()
+		//md := getMDecl(ds, t_recv, m)
+
+		// TODO factor out -- cf. add-wrapper-meths part in Translate
+		us := make([]fgg.Type, len(tfs_recv))
+		for i := 0; i < len(tfs_recv); i++ {
+			us[i] = tfs_recv[i].GetTParam()
+		}
+		dummy := fgg.NewTName(td.GetName(), us)
+		g := fgg.Methods1(ds, dummy)[m]
+
+		delta1 := make(map[fgg.TParam]fgg.Type)
 		for i := 0; i < len(tfs_recv); i++ {
 			tf := tfs_recv[i]
 			delta1[tf.GetTParam()] = tf.GetType()
 		}
+		//tfs := md.GetTFormals().GetFormals()
+		tfs := g.GetTFormals().GetFormals()
+		for i := 0; i < len(tfs); i++ {
+			tf := tfs[i]
+			delta1[tf.GetTParam()] = tf.GetType()
+		}
 
-		//u_ret := g.u.TSubs(delta1)
-		u_ret := toFgTypeFromBounds(delta1, g.GetType())
+		args := make([]Expr, len(args_fgg))
+		//pds_fgg := md.GetParamDecls()
+		pds_fgg := g.GetParamDecls()
+		for i := 0; i < len(args_fgg); i++ {
+			u_i := pds_fgg[i].GetType(). //TSubs(subs)
+							TSubs(delta1) // Not toFgTypeFromBounds, need FGG Type target for wrap
+			args[i] = wrapExpr(ds, delta, gamma, args_fgg[i], u_i, wrappers)
+		}
+		//u := e1.Typing(ds, delta, gamma, false)
+		e_recv := fgrTransExpr(ds, delta, gamma, e_recv_fgg, wrappers)
 
+		var res Expr
+		res = NewCall(e_recv, m, args)
+
+		////u_ret := g.u.TSubs(delta1)
+		//u_ret := toFgTypeFromBounds(delta1, md.GetReturn())
+		u_ret := toFgTypeFromBounds(delta1, g.GetType()) // CHECKME: same as "direct" md.GetReturn().TSubs(delta1) ?
 		//if isInterfaceTName(ds, u_ret) {
 		//if _, ok := u_ret.(TParam); ok || isInterfaceTName(ds, u_ret) {
 		//if isInterfaceTName(ds, u_ret) {
@@ -388,4 +402,18 @@ func isFggITypeLit(ds []Decl, t Type) bool {
 		}
 	}
 	return false
+}
+
+// ds are from FGG source (t is from toFgTypeFromBounds)
+func getMDecl(ds []Decl, t Type, m Name) fgg.MDecl {
+	for _, v := range ds {
+		md, ok := v.(fgg.MDecl)
+		if ok {
+			fmt.Println("bbb:", v.String(), (md.GetRecvTypeName() == string(t)), (md.GetName() == m))
+		}
+		if ok && md.GetRecvTypeName() == string(t) && md.GetName() == m {
+			return md
+		}
+	}
+	panic("Method not found for type " + string(t) + ": " + m)
 }
