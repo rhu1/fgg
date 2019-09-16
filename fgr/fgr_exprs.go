@@ -5,7 +5,10 @@
 
 package fgr
 
+import "fmt"
 import "strings"
+
+var _ = fmt.Errorf
 
 /* "Exported" constructors for fgg (translation) */
 
@@ -369,14 +372,14 @@ func (p Panic) String() string {
 
 type IfThenElse struct {
 	e1 Call
-	e2 TypeTree
+	e2 Expr // TmpTParam (Variable) or TypeTree
 	e3 Expr
 }
 
 var _ Expr = IfThenElse{}
 
 func (ite IfThenElse) Subs(subs map[Variable]Expr) Expr {
-	panic("TODO: " + ite.String())
+	return IfThenElse{ite.e1.Subs(subs).(Call), ite.e2.Subs(subs), ite.e3.Subs(subs)}
 }
 
 func (ite IfThenElse) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
@@ -406,7 +409,11 @@ type TypeTree struct {
 var _ Expr = TypeTree{}
 
 func (tt TypeTree) Subs(subs map[Variable]Expr) Expr {
-	panic("TODO: " + tt.String())
+	es := make([]Expr, len(tt.es))
+	for i := 0; i < len(es); i++ {
+		es[i] = tt.es[i].Subs(subs)
+	}
+	return TypeTree{tt.t, es}
 }
 
 func (tt TypeTree) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
@@ -414,17 +421,19 @@ func (tt TypeTree) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
 }
 
 func (tt TypeTree) Eval(ds []Decl) (Expr, string) {
-	panic("TODO: " + tt.String())
+	panic("Cannot reduce: " + tt.String())
 }
 
 func (tt TypeTree) IsValue() bool {
-	panic("TODO: " + tt.String())
+	return true // CHECKME: correct?
 }
 
 func (tt TypeTree) String() string {
 	var b strings.Builder
 	b.WriteString(string(tt.t))
+	b.WriteString("|(")
 	writeExprs(&b, tt.es)
+	b.WriteString(")")
 	return b.String()
 }
 
@@ -438,15 +447,19 @@ type TmpTParam struct {
 var _ Expr = TmpTParam{}
 
 func (tmp TmpTParam) Subs(subs map[Variable]Expr) Expr {
-	panic("TODO: " + tmp.String())
+	a := NewVariable(tmp.id) // FIXME -- should just make Variable earlier? -- or make a Disamb pass?
+	if e, ok := subs[a]; ok {
+		return e
+	}
+	return a // FIXME -- should not depend on calling Subs to disamb?
 }
 
 func (tmp TmpTParam) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
-	panic("TODO: " + tmp.String())
+	panic("TODO: " + tmp.String()) // CHECKME?
 }
 
 func (tmp TmpTParam) Eval(ds []Decl) (Expr, string) {
-	panic("TODO: " + tmp.String())
+	panic("Shouldn't get in here: " + tmp.String())
 }
 
 func (tmp TmpTParam) IsValue() bool {

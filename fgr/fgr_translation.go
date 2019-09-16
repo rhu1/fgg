@@ -10,6 +10,12 @@ import (
 
 var _ = fmt.Errorf
 
+/*HERE
+- do assert->ifthenelse trans
+- add meth-param RepDecls
+- FGR eval
+*/
+
 /* FGGProgram */
 
 func Translate(p fgg.FGGProgram) FGRProgram { // TODO FIXME: FGR -- TODO also can subsume existing FGG-FG trans?
@@ -216,6 +222,20 @@ func fgrTransMDecl(ds []Decl, d1 fgg.MDecl, wrappers map[Type]adptrPair) MDecl {
 	t := toFgTypeFromBounds(delta, u)                   // !!! tau_p typo
 	e := wrapExpr(ds, delta, gamma, e_fgg, u, wrappers) // TODO FIXME: subs ~alpha?
 
+	// Substituting TmpTParam's
+	subs := make(map[Variable]Expr) // FIXME: Variable hack, actually subbing TmpTParam -- do as a separate disamb pass?
+	subs[NewVariable(x_recv)] = NewVariable(x_recv)
+	for _, pd := range pds_fgg {
+		x := NewVariable(pd.GetName())
+		subs[x] = x
+	}
+	tfs_recv := psi_recv.GetFormals()
+	for _, tf := range tfs_recv {
+		a := tf.GetTParam().String()
+		subs[NewVariable(a)] = NewSelect(NewVariable(x_recv), a)
+	}
+	e = e.Subs(subs)
+
 	return NewMDecl(recv, m, pds, t, e)
 }
 
@@ -227,14 +247,14 @@ func fgrTransExpr(ds []Decl, delta fgg.TEnv, gamma fgg.Env, e fgg.Expr,
 	wrappers map[Type]adptrPair) Expr {
 	switch e1 := e.(type) {
 	case fgg.Variable:
-		u := e1.Typing(ds, delta, gamma, false)
+		u := e1.Typing(ds, delta, gamma, false) // FIXME: should target type be `u` (possibly struct), or "base" (always i/face)?
 		var res Expr
 		res = NewVariable(e1.GetName())
 		//if isInterfaceTName(ds, u) {
-		if isFggITypeLit(ds, toFgTypeFromBounds(delta, u)) {
-			// x.getValue().((mkRep u))
-			res = NewCall(res, Name("getValue"), []Expr{})
-			res = NewAssert(res, toFgTypeFromBounds(delta, u)) // TODO FIXME: mkRep -- "FG" for now, not FGR
+		if isFggITypeLit(ds, toFgTypeFromBounds(delta, u)) { // CHECKME FIXME: should check "base" type, not `u` instantiated FGG type?
+			/*res = NewCall(res, Name("getValue"), []Expr{})
+			res = NewAssert(res, toFgTypeFromBounds(delta, u))*/
+			res = addGetValueCast(delta, res, u)
 		}
 		return res
 	case fgg.StructLit:
@@ -264,11 +284,28 @@ func fgrTransExpr(ds []Decl, delta fgg.TEnv, gamma fgg.Env, e fgg.Expr,
 		u := e1.Typing(ds, delta, gamma, false)
 		var res Expr
 		res = NewSelect(fgrTransExpr(ds, delta, gamma, e_fgg, wrappers), f)
-		//if isInterfaceTName(ds, u) {
-		if isFggITypeLit(ds, toFgTypeFromBounds(delta, u)) {
+
+		u_expr := fgg.Bounds1(delta, e1.GetExpr().Typing(ds, delta, gamma, false)).(fgg.TName)
+		td := fgg.GetTDecl1(ds, u_expr.GetName()).(fgg.STypeLit)
+		fds := td.GetFieldDecls() // Could use fields aux using a "dummy", cf. Call using methods
+		var u_f fgg.Type = nil
+		for _, fd := range fds {
+			if fd.GetName() == f {
+				u_f = fd.GetType()
+			}
+		}
+		if u_f == nil {
+			panic("Field not found in " + u_expr.String() + ": " + f)
+		}
+		delta1 := td.GetTFormals().ToTEnv()
+
+		////if isInterfaceTName(ds, u) {
+		//if isFggITypeLit(ds, toFgTypeFromBounds(delta, u)) {
+		if isFggITypeLit(ds, toFgTypeFromBounds(delta1, u_f)) {
 			// TODO FIXME: factor out with Variable
-			res = NewCall(res, Name("getValue"), []Expr{})
-			res = NewAssert(res, toFgTypeFromBounds(delta, u)) // TODO FIXME: mkRep -- "FG" for now, not FGR
+			/*res = NewCall(res, Name("getValue"), []Expr{})
+			res = NewAssert(res, toFgTypeFromBounds(delta, u))*/
+			res = addGetValueCast(delta, res, u)
 		}
 		return res
 	case fgg.Call:
@@ -295,7 +332,7 @@ func fgrTransExpr(ds []Decl, delta fgg.TEnv, gamma fgg.Env, e fgg.Expr,
 		for i := 0; i < len(tfs_recv); i++ {
 			us[i] = tfs_recv[i].GetTParam()
 		}
-		dummy := fgg.NewTName(td.GetName(), us)
+		dummy := fgg.NewTName(td.GetName(), us) // From the "base" type decl, not the instantiated type
 		g := fgg.Methods1(ds, dummy)[m]
 
 		delta1 := make(map[fgg.TParam]fgg.Type)
@@ -324,17 +361,19 @@ func fgrTransExpr(ds []Decl, delta fgg.TEnv, gamma fgg.Env, e fgg.Expr,
 		var res Expr
 		res = NewCall(e_recv, m, args)
 
+		u := g.GetType()
 		////u_ret := g.u.TSubs(delta1)
 		//u_ret := toFgTypeFromBounds(delta1, md.GetReturn())
-		u_ret := toFgTypeFromBounds(delta1, g.GetType()) // CHECKME: same as "direct" md.GetReturn().TSubs(delta1) ?
+		u_ret := toFgTypeFromBounds(delta1, u) // CHECKME: same as "direct" md.GetReturn().TSubs(delta1) ?
 		//if isInterfaceTName(ds, u_ret) {
 		//if _, ok := u_ret.(TParam); ok || isInterfaceTName(ds, u_ret) {
 		//if isInterfaceTName(ds, u_ret) {
 		if !isFggSTypeLit(ds, u_ret) {
 			// TODO FIXME: factor out with Variable
-			res = NewCall(res, Name("getValue"), []Expr{})
+			/*res = NewCall(res, Name("getValue"), []Expr{})
 			//res = fg.NewAssert(res, fg.Type(erase(delta, u_ret))) // TODO FIXME: mkRep -- "FG" for now, not FGR
-			res = NewAssert(res, u_ret)
+			res = NewAssert(res, u_ret)*/
+			res = addGetValueCast(delta, res, u)
 		}
 		return res
 	case fgg.Assert:
@@ -439,4 +478,13 @@ func getMDecl(ds []Decl, t Type, m Name) fgg.MDecl {
 		}
 	}
 	panic("Method not found for type " + string(t) + ": " + m)
+}
+
+func addGetValueCast(delta fgg.TEnv, e Expr, u fgg.Type) Expr {
+	e3 := NewCall(e, Name("getValue"), []Expr{})
+	//e = NewAssert(e, toFgTypeFromBounds(delta, u)) // TODO FIXME: mkRep -- "FG" for now, not FGR
+	e2 := mkRep(u)
+	e1 := NewCall(e3, "getTypeRep", []Expr{})
+	e = IfThenElse{e1, e2, e3}
+	return e
 }
