@@ -369,6 +369,9 @@ type Assert struct {
 	u Type
 }
 
+func (a Assert) GetExpr() Expr { return a.e }
+func (a Assert) GetType() Type { return a.u }
+
 func (a Assert) Subs(subs map[Variable]Expr) Expr {
 	return Assert{a.e.Subs(subs), a.u}
 }

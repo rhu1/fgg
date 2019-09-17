@@ -56,7 +56,7 @@ import (
 
 var _ = reflect.TypeOf
 var _ = strconv.Itoa
-var _ = fgr.NewAssert
+var _ = fgr.NewCall
 
 const (
 	EVAL_TO_VAL = -1 // Must be < 0
