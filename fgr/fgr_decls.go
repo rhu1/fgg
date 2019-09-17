@@ -27,8 +27,9 @@ func NewFieldDecl(f Name, t Type) FieldDecl {
 	return FieldDecl{f, t}
 }
 
-func NewMDecl(recv ParamDecl, m Name, pds []ParamDecl, t Type, e Expr) MDecl {
-	return MDecl{recv, m, pds, t, e}
+func NewMDecl(recv ParamDecl, m Name, rds []RepDecl, pds []ParamDecl, t Type,
+	e Expr) MDecl {
+	return MDecl{recv, m, rds, pds, t, e}
 }
 
 func NewParamDecl(x Name, t Type) ParamDecl { // For fgg_util.MakeWMap
@@ -131,20 +132,12 @@ type STypeLit struct {
 
 var _ TDecl = STypeLit{}
 
+func (s STypeLit) GetType() Type       { return s.t }
+func (s STypeLit) GetName() Name       { return Name(s.t) }
+func (s STypeLit) Fields() []FieldDecl { return s.fds }
+
 func (s STypeLit) Ok(ds []Decl) {
 	// TODO
-}
-
-func (s STypeLit) GetType() Type {
-	return s.t
-}
-
-func (s STypeLit) GetName() Name {
-	return Name(s.t)
-}
-
-func (s STypeLit) Fields() []FieldDecl {
-	return s.fds
 }
 
 func (s STypeLit) String() string {
@@ -198,6 +191,7 @@ func (fd FieldDecl) String() string {
 type MDecl struct {
 	recv ParamDecl
 	m    Name // Not embedding Sig because Sig doesn't take xs
+	rds  []RepDecl
 	pds  []ParamDecl
 	t    Type // Return
 	e    Expr
@@ -205,26 +199,14 @@ type MDecl struct {
 
 var _ Decl = MDecl{}
 
-func (md MDecl) Receiver() ParamDecl {
-	return md.recv
-}
-
-func (md MDecl) MethodName() Name {
-	return md.m
-}
+func (md MDecl) Receiver() ParamDecl    { return md.recv }
+func (md MDecl) MethodName() Name       { return md.m }
+func (md MDecl) GetRepDecls() []RepDecl { return md.rds }
 
 // MethodParams returns the non-receiver parameters
-func (md MDecl) MethodParams() []ParamDecl {
-	return md.pds
-}
-
-func (md MDecl) ReturnType() Type {
-	return md.t
-}
-
-func (md MDecl) Impl() Expr {
-	return md.e
-}
+func (md MDecl) MethodParams() []ParamDecl { return md.pds }
+func (md MDecl) ReturnType() Type          { return md.t }
+func (md MDecl) Impl() Expr                { return md.e }
 
 func (md MDecl) ToSig() Sig {
 	return Sig{md.m, md.pds, md.t}
@@ -236,6 +218,7 @@ func (md MDecl) Ok(ds []Decl) {
 			"\n\t" + md.String())
 	}
 	env := Env{md.recv.x: md.recv.t}
+	// TODO: rds
 	for _, v := range md.pds {
 		env[v.x] = v.t
 	}
@@ -258,6 +241,10 @@ func (md MDecl) String() string {
 	b.WriteString(") ")
 	b.WriteString(md.m)
 	b.WriteString("(")
+	writeRepDecls(&b, md.rds)
+	if len(md.rds) > 0 && len(md.pds) > 0 {
+		b.WriteString("; ")
+	}
 	writeParamDecls(&b, md.pds)
 	b.WriteString(") ")
 	b.WriteString(md.t.String())
