@@ -122,7 +122,8 @@ func Translate(p fgg.FGGProgram) FGRProgram { // TODO FIXME: FGR -- TODO also ca
 			e = NewStructLit("Dummy_0", []Expr{})
 			e = NewStructLit("ToAny_0", []Expr{e})
 			e = NewSelect(e, "any")
-			e = NewAssert(e, toFgTypeFromBounds(delta, u))
+			//e = NewAssert(e, toFgTypeFromBounds(delta, u))
+			e = addGetValueCast(delta, e, u)
 			md := NewMDecl(NewParamDecl("x", k), g.GetName(),
 				pds, t, e)
 			ds_fgr = append(ds_fgr, md)
@@ -377,8 +378,9 @@ func fgrTransExpr(ds []Decl, delta fgg.TEnv, gamma fgg.Env, e fgg.Expr,
 		}
 		return res
 	case fgg.Assert:
-		// Need actual FGR
-		panic("TODO " + reflect.TypeOf(e).String() + ": " + e.String())
+		u := e1.GetType()
+		e2 := fgrTransExpr(ds, delta, gamma, e1.GetExpr(), wrappers)
+		return IfThenElse{NewCall(e2, "getTypeRep", []Expr{}), mkRep(u), e2}
 	default:
 		panic("Unknown Expr type " + reflect.TypeOf(e).String() + ": " + e.String())
 	}
