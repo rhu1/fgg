@@ -293,7 +293,7 @@ func fgrTransExpr(ds []Decl, delta fgg.TEnv, gamma fgg.Env, e fgg.Expr,
 
 		u_expr := fgg.Bounds1(delta, e1.GetExpr().Typing(ds, delta, gamma, false)).(fgg.TName)
 		td := fgg.GetTDecl1(ds, u_expr.GetName()).(fgg.STypeLit)
-		fds := td.GetFieldDecls() // Could use fields aux using a "dummy", cf. Call using methods
+		fds := td.GetFieldDecls() // Could use fields aux using a "dummy" type, cf. Call using methods
 		var u_f fgg.Type = nil
 		for _, fd := range fds {
 			if fd.GetName() == f {
