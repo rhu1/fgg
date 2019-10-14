@@ -16,8 +16,7 @@ func NewVariable(id Name) Variable             { return Variable{id} }
 func NewStructLit(t Type, es []Expr) StructLit { return StructLit{t, es} }
 func NewSelect(e Expr, f Name) Select          { return Select{e, f} }
 func NewCall(e Expr, m Name, es []Expr) Call   { return Call{e, m, es} }
-
-//func NewAssert(e Expr, t Type) Assert          { return Assert{e, t} }
+func NewAssert(e Expr, t Type) Assert          { return Assert{e, t} }
 
 /* Variable */
 
@@ -287,7 +286,6 @@ func (c Call) String() string {
 
 /* Assert */
 
-/*
 type Assert struct {
 	e Expr
 	t Type
@@ -343,7 +341,6 @@ func (a Assert) IsValue() bool {
 func (a Assert) String() string {
 	return a.e.String() + ".(" + a.t.String() + ")"
 }
-//*/
 
 /* Panic */
 
@@ -402,7 +399,7 @@ func (ite IfThenElse) String() string {
 		ite.e3.String() + " else panic"
 }
 
-/* TypeTree */
+/* TypeTree -- the result of mkRep, i.e., run-time type rep value */
 
 type TypeTree struct {
 	t  Type

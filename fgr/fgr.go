@@ -12,6 +12,7 @@ type Name = base.Name // TODO: tidy up refactoring, due to introducing base
 
 type Env map[Name]Type // TODO: should be Variable rather than Name -- though Variable is an Expr
 
+// Same as FGR
 type Type Name // TODO FIXME: should be based on fgg.Type
 
 var _ Spec = Type("")
