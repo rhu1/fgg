@@ -76,6 +76,9 @@ type TDecl interface {
 	GetType() Type // In FGR, GetType() == Type(GetName())
 }
 
+//0800 0287034
+
+// A Sig or a Type (specifically a t_I -- bad t_S usage raises a run-time error, cf. Type.GetSigs)
 type Spec interface {
 	FGRNode
 	GetSigs(ds []Decl) []Sig
