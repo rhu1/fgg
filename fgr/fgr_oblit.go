@@ -11,16 +11,9 @@ import (
 var _ = fmt.Errorf
 var _ = reflect.Append
 
-/*HERE
-- getTypeReps
-- add meth-param RepDecls
-- FGR eval
-*/
-
 /* FGGProgram */
 
 func Obliterate(p_fgg fgg.FGGProgram) FGRProgram { // CHECKME can also subsume existing FGG-FG trans?
-
 	ds_fgg := p_fgg.GetDecls()
 
 	e_fgg := p_fgg.GetExpr().(fgg.Expr)
@@ -28,35 +21,28 @@ func Obliterate(p_fgg fgg.FGGProgram) FGRProgram { // CHECKME can also subsume e
 	var gamma fgg.Env
 	e_fgr := oblitExpr(ds_fgg, delta, gamma, e_fgg)
 
-	var ds_fgr []Decl
-
-	// Translate Decls (and collect wrappers from MDecls)
-	/*ds_fgg := p.GetDecls()
+	// Translate Decls
+	ds_fgr := make([]Decl, 1)                                       // There will also be an additional getRep MDecl for each t_S
+	ss_IRep := []Spec{NewSig("getRep", []ParamDecl{}, Type("Rep"))} // !!! Rep type name -- TODO: factor out constants
+	ds_fgr[0] = NewITypeLit(Type("IRep"), ss_IRep)                  // TODO: factor out constant
 	for i := 0; i < len(ds_fgg); i++ {
-		d := ds_fgg[i]
-		switch d1 := d.(type) {
+		d_fgg := ds_fgg[i]
+		switch d := d_fgg.(type) {
 		case fgg.STypeLit:
-			s := fgrTransSTypeLit(d1)
-
-			// Add getValue/getTypeRep to all (existing) t_S -- every t_S must implement t_0 -- TODO: factor out with wrappers
-			//e_getv := fg.NewSelect(fg.NewVariable("x"), "value") // CHECKME: but t_S doesn't have value field, wrapper does?
-			e_getv := NewStructLit(Type("Dummy_0"), []Expr{})
-			t := Type(d1.GetName())
-			getv := NewMDecl(NewParamDecl("x", t), "getValue",
-				[]RepDecl{}, // FIXME
-				[]ParamDecl{}, Type("Any_0"), e_getv)
-			// gettr := ...TODO FIXME...
-
-			ds_fgr = append(ds_fgr, s, getv)
+			recv_getRep := NewParamDecl("x", d.GetName())
+			e_getRep := 123 // HERE FIXME: need downarrow Expr
+			getRep := NewMDecl(recv_getRep, "getRep", []RepDecl{}, []ParamDecl{},
+				Type("Rep"), e_getRep) // TODO: factor out constants
+			ds_fgr = append(ds_fgr, oblitSTypeLit(d), getRep)
 		case fgg.ITypeLit:
-			ds_fgr = append(ds_fgr, fgrTransITypeLit(d1))
+			ds_fgr = append(ds_fgr, oblitITypeLit(d))
 		case fgg.MDecl:
-			ds_fgr = append(ds_fgr, fgrTransMDecl(ds_fgg, d1, wrappers))
+			ds_fgr = append(ds_fgr, oblitMDecl(ds_fgg, d))
 		default:
-			panic("Unexpected Decl type " + reflect.TypeOf(d).String() +
-				": " + d.String())
+			panic("Unexpected Decl type " + reflect.TypeOf(d).String() + ": " +
+				d.String())
 		}
-	}*/
+	}
 
 	return NewFGRProgram(ds_fgr, e_fgr)
 }
@@ -81,8 +67,8 @@ func oblitSTypeLit(s fgg.STypeLit) STypeLit {
 func oblitITypeLit(c fgg.ITypeLit) ITypeLit {
 	t := Type(c.GetName())
 	ss_fgg := c.GetSpecs()
-	ss_fgr := make([]Spec, len(ss_fgg))
-	ss_fgr[0] = Type("t_0") // TODO: factor out constant
+	ss_fgr := make([]Spec, 1+len(ss_fgg))
+	ss_fgr[0] = Type("IRep") // TODO: add IRep to decls -- and factor out constant
 	for i := 0; i < len(ss_fgg); i++ {
 		s_fgg := ss_fgg[i]
 		switch s := s_fgg.(type) {
@@ -102,7 +88,9 @@ func oblitSig(g_fgg fgg.Sig) Sig {
 	pds_fgr := make([]ParamDecl, len(tfs)+len(pds_fgg))
 	for i := 0; i < len(tfs); i++ {
 		tf := tfs[i]
-		pds_fgr[i] = NewParamDecl(tf.GetTParam().String(), Rep{tf.GetType()}) // TODO: Rep `New` constructor
+		pds_fgr[i] = NewParamDecl(tf.GetTParam().String(),
+			//Rep{tf.GetType()}) // TODO: !!! Rep `New` constructor
+			Type("Rep")) // !!! TODO: factor out constant
 	}
 	for i := 0; i < len(pds_fgg); i++ {
 		pd_fgg := pds_fgg[i]
@@ -141,7 +129,7 @@ func oblitMDecl(ds_fgg []Decl, d fgg.MDecl) MDecl {
 	for i := 0; i < len(tfs_recv); i++ {
 		us_fgg[i] = tfs_recv[i].GetTParam()
 	}
-	gamma[x_recv] = fgg.TName{string(t_recv), us_fgg} // FIXME: New constructor
+	gamma[x_recv] = fgg.NewTName(string(t_recv), us_fgg)
 	for i := 0; i < len(pds_fgg); i++ {
 		pd := pds_fgg[i]
 		gamma[pd.GetName()] = pd.GetType()

@@ -9,6 +9,12 @@ import "github.com/rhu1/fgg/base"
 var _ = fmt.Errorf
 var _ = reflect.Append
 
+/* Export */
+
+func NewTName(t Name, us []Type) TName {
+	return TName{t, us}
+}
+
 /* Name, Type, Type param, Type name -- !!! submission version, "Type name" overloaded */
 
 type Name = base.Name // TODO: tidy up refactoring, due to introducing base
@@ -69,11 +75,6 @@ type TName struct {
 
 var _ Type = TName{}
 var _ Spec = TName{}
-
-// TODO: refactor
-func NewTName(t Name, us []Type) TName {
-	return TName{t, us}
-}
 
 // TODO: refactor
 func (u0 TName) GetName() Name {

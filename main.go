@@ -1,4 +1,9 @@
 // Pre (1): ANTLR4
+/*HERE
+- getTypeReps
+- add meth-param RepDecls
+- FGR eval
+*/
 // E.g., antlr-4.7.1-complete.jar
 // (See go:generate below)
 
@@ -175,8 +180,11 @@ func main() {
 	case interpFGG:
 		var a fgg.FGGAdaptor
 		prog := interp(&a, src, strictParse, evalSteps)
+
+		// TODO: refactor
 		doMonom(prog, monom, monomc)
-		doTypeReps(prog, fgrc)
+		//doWrappers(prog, fgrc)
+		doOblit(prog, fgrc)
 	}
 }
 
@@ -253,14 +261,32 @@ func doMonom(prog base.Program, monom bool, compile string) {
 	}
 }
 
-func doTypeReps(prog base.Program, compile string) {
+func doWrappers(prog base.Program, compile string) {
 	if compile == "" {
 		return
 	}
-	vPrintln("\nTranslating FGG to FG(R) using Adaptors: [Warning] WIP [Warning]")
+	vPrintln("\nTranslating FGG to FG(R) using Wrappers: [Warning] WIP [Warning]")
 	//p_fgr := fgg.FgAdptrTranslate(prog.(fgg.FGGProgram))
 	//p_fgr := fgg.FgrTranslate(prog.(fgg.FGGProgram))
 	p_fgr := fgr.Translate(prog.(fgg.FGGProgram))
+	out := p_fgr.String()
+	// TODO: factor out with -monomc
+	if compile == "--" {
+		vPrintln(out)
+	} else {
+		vPrintln("Writing output to: " + compile)
+		bs := []byte(out)
+		err := ioutil.WriteFile(compile, bs, 0644)
+		checkErr(err)
+	}
+}
+
+func doOblit(prog base.Program, compile string) {
+	if compile == "" {
+		return
+	}
+	vPrintln("\nTranslating FGG to FG(R) using Obliteration: [Warning] WIP [Warning]")
+	p_fgr := fgr.Obliterate(prog.(fgg.FGGProgram))
 	out := p_fgr.String()
 	// TODO: factor out with -monomc
 	if compile == "--" {
