@@ -56,7 +56,7 @@ func (t Type) String() string {
 /* Reps */
 
 type Rep struct {
-	u fgg.Type
+	u fgg.Type // FIXME: Rep doesn't carry u any more
 }
 
 //var _ Type = Rep{}  // TODO FIXME
