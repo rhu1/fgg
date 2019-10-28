@@ -164,9 +164,9 @@ func oblitExpr(ds_fgg []Decl, delta fgg.TEnv, gamma fgg.Env,
 		return NewStructLit(t, es_fgr)
 	case fgg.Select:
 		e_fgr := oblitExpr(ds_fgg, delta, gamma, e.GetExpr())
-		u := e_fgg.Typing(ds_fgg, delta, gamma, true).(fgg.TName)
-		fds_fgg := fgg.Fields1(ds_fgg, u) // !!! CHECKME: bounds on u
 		f := e.GetName()
+		/*u := e_fgg.Typing(ds_fgg, delta, gamma, true).(fgg.TName)
+		fds_fgg := fgg.Fields1(ds_fgg, u) // !!! CHECKME: bounds on u  // !!! deprecated
 		var u_f fgg.Type = nil
 		for _, fd_fgg := range fds_fgg {
 			if fd_fgg.GetName() == f {
@@ -175,10 +175,10 @@ func oblitExpr(ds_fgg []Decl, delta fgg.TEnv, gamma fgg.Env,
 		}
 		if u_f == nil {
 			panic("Field not found in " + u.String() + ": " + f)
-		}
+		}*/
 		var res Expr
 		res = NewSelect(e_fgr, f)
-		res = NewAssert(res, toFgrTypeFromBounds(delta, u_f))
+		//res = NewAssert(res, toFgrTypeFromBounds(delta, u_f))
 		return res
 	case fgg.Call:
 		e_fgg := e.GetRecv()
