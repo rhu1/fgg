@@ -5,11 +5,13 @@
 
 package fg
 
-import "fmt"
-import "reflect"
-import "strings"
+import (
+	"fmt"
+	"reflect"
+	"strings"
 
-import "github.com/rhu1/fgg/base"
+	"github.com/rhu1/fgg/base"
+)
 
 /* "Exported" constructors for fgg (monomorph) */
 

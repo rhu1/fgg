@@ -5,11 +5,13 @@
 
 package fgg
 
-import "fmt"
-import "reflect"
-import "strings"
+import (
+	"fmt"
+	"reflect"
+	"strings"
 
-import "github.com/rhu1/fgg/base"
+	"github.com/rhu1/fgg/base"
+)
 
 var _ = fmt.Errorf
 var _ = reflect.Append
@@ -80,6 +82,8 @@ type TFormals struct {
 	tfs []TFormal
 }
 
+func (tf TFormals) Get() []TFormal { return tf.tfs }
+
 func (psi TFormals) Ok(ds []Decl) {
 	for _, v := range psi.tfs {
 		u, ok := v.u.(TName)
@@ -121,6 +125,8 @@ type TFormal struct {
 	// ^If so, then can refine to TName
 }
 
+func (tf TFormal) Name() Name { return Name(tf.a) }
+
 func (tf TFormal) String() string {
 	return string(tf.a) + " " + tf.u.String()
 }
@@ -147,6 +153,10 @@ func (s STypeLit) GetTFormals() TFormals {
 	return s.psi
 }
 
+func (s STypeLit) GetFields() []FieldDecl {
+	return s.fds
+}
+
 func (s STypeLit) String() string {
 	var b strings.Builder
 	b.WriteString("type ")
@@ -166,6 +176,9 @@ type FieldDecl struct {
 	f Name
 	u Type
 }
+
+func (fd FieldDecl) GetName() Name { return fd.f }
+func (fd FieldDecl) GetType() Type { return fd.u }
 
 var _ FGGNode = FieldDecl{}
 
@@ -192,6 +205,21 @@ type MDecl struct {
 }
 
 var _ Decl = MDecl{}
+
+func (md MDecl) Receiver() ParamDecl {
+	var tparam []Type
+	for _, tf := range md.psi_recv.tfs {
+		tparam = append(tparam, tf.u)
+	}
+	return ParamDecl{x: md.x_recv, u: TName{
+		t:  md.t_recv,
+		us: tparam,
+	}}
+}
+func (md MDecl) ParamDecls() []ParamDecl { return md.pds }
+func (md MDecl) TFormals() []TFormal     { return md.psi.tfs }
+func (md MDecl) ReturnType() Type        { return md.u }
+func (md MDecl) Body() Expr              { return md.e }
 
 func (md MDecl) ToSig() Sig {
 	return Sig{md.m, md.psi, md.pds, md.u}
@@ -265,6 +293,9 @@ type ParamDecl struct {
 	u Type
 }
 
+func (pd ParamDecl) Name() Name { return pd.x }
+func (pd ParamDecl) Type() Type { return pd.u }
+
 var _ FGGNode = ParamDecl{}
 
 func (pd ParamDecl) String() string {
@@ -324,6 +355,10 @@ type Sig struct {
 	psi TFormals
 	pds []ParamDecl
 	u   Type
+}
+
+func (s Sig) IsParameterised() bool {
+	return len(s.psi.tfs) > 0
 }
 
 var _ Spec = Sig{}

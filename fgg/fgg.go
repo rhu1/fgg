@@ -1,10 +1,12 @@
 package fgg
 
-import "fmt"
-import "reflect"
-import "strings"
+import (
+	"fmt"
+	"reflect"
+	"strings"
 
-import "github.com/rhu1/fgg/base"
+	"github.com/rhu1/fgg/base"
+)
 
 var _ = fmt.Errorf
 var _ = reflect.Append
@@ -66,6 +68,8 @@ type TName struct {
 	t  Name
 	us []Type
 }
+
+func (tn TName) Name() Name { return tn.t }
 
 var _ Type = TName{}
 var _ Spec = TName{}
