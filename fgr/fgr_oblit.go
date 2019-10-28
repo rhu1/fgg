@@ -29,12 +29,12 @@ func Obliterate(p_fgg fgg.FGGProgram) FGRProgram { // CHECKME can also subsume e
 		d_fgg := ds_fgg[i]
 		switch d := d_fgg.(type) {
 		case fgg.STypeLit:
-			recv_getRep := NewParamDecl("x", Type(d.GetName())) // TODO: factor out constant
+			recv_getRep := NewParamDecl("x0", Type(d.GetName())) // TODO: factor out constant
 			t_S := d.GetName()
 			tfs := d.GetTFormals().GetFormals()
 			es := make([]Expr, len(tfs))
 			for i := 0; i < len(es); i++ {
-				es[i] = NewSelect(NewVariable("x"), tfs[i].GetTParam().String())
+				es[i] = NewSelect(NewVariable("x0"), tfs[i].GetTParam().String())
 			}
 			e_getRep := TypeTree{Type(t_S), es} // TODO: New constructor
 			getRep := NewMDecl(recv_getRep, "getRep", []RepDecl{}, []ParamDecl{},
