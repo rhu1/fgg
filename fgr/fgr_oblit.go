@@ -22,15 +22,21 @@ func Obliterate(p_fgg fgg.FGGProgram) FGRProgram { // CHECKME can also subsume e
 	e_fgr := oblitExpr(ds_fgg, delta, gamma, e_fgg)
 
 	// Translate Decls
-	ds_fgr := make([]Decl, 1)                                       // There will also be an additional getRep MDecl for each t_S
-	ss_IRep := []Spec{NewSig("getRep", []ParamDecl{}, Type("Rep"))} // !!! Rep type name -- TODO: factor out constants
-	ds_fgr[0] = NewITypeLit(Type("IRep"), ss_IRep)                  // TODO: factor out constant
+	ds_fgr := make([]Decl, 1)                                         // There will also be an additional getRep MDecl for each t_S
+	ss_GetRep := []Spec{NewSig("getRep", []ParamDecl{}, Type("Rep"))} // !!! Rep type name -- TODO: factor out constants
+	ds_fgr[0] = NewITypeLit(Type("GetRep"), ss_GetRep)                // TODO: factor out constant
 	for i := 0; i < len(ds_fgg); i++ {
 		d_fgg := ds_fgg[i]
 		switch d := d_fgg.(type) {
 		case fgg.STypeLit:
-			recv_getRep := NewParamDecl("x", d.GetName())
-			e_getRep := 123 // HERE FIXME: need downarrow Expr
+			recv_getRep := NewParamDecl("x", Type(d.GetName())) // TODO: factor out constant
+			t_S := d.GetName()
+			tfs := d.GetTFormals().GetFormals()
+			es := make([]Expr, len(tfs))
+			for i := 0; i < len(es); i++ {
+				es[i] = NewSelect(NewVariable("x"), tfs[i].GetTParam().String())
+			}
+			e_getRep := TypeTree{Type(t_S), es} // TODO: New constructor
 			getRep := NewMDecl(recv_getRep, "getRep", []RepDecl{}, []ParamDecl{},
 				Type("Rep"), e_getRep) // TODO: factor out constants
 			ds_fgr = append(ds_fgr, oblitSTypeLit(d), getRep)
@@ -68,7 +74,7 @@ func oblitITypeLit(c fgg.ITypeLit) ITypeLit {
 	t := Type(c.GetName())
 	ss_fgg := c.GetSpecs()
 	ss_fgr := make([]Spec, 1+len(ss_fgg))
-	ss_fgr[0] = Type("IRep") // TODO: add IRep to decls -- and factor out constant
+	ss_fgr[0] = Type("GetRep") // TODO: add GetRep to decls -- and factor out constant
 	for i := 0; i < len(ss_fgg); i++ {
 		s_fgg := ss_fgg[i]
 		switch s := s_fgg.(type) {
@@ -224,14 +230,18 @@ func oblitMkRep(u fgg.Type) Expr {
 	case fgg.TParam:
 		return TmpTParam{u1.String()}
 	case fgg.TName:
-		us := u1.GetTArgs()
-		es := make([]Expr, len(us))
-		for i := 0; i < len(us); i++ {
-			es[i] = mkRep(us[i])
-		}
-		return TypeTree{Type(u1.GetName()), es}
+		return makeTypeTree(u1)
 	default:
 		panic("Unknown fgg.Type kind " + reflect.TypeOf(u).String() + ": " +
 			u.String())
 	}
+}
+
+func makeTypeTree(u1 fgg.TName) TypeTree {
+	us := u1.GetTArgs()
+	es := make([]Expr, len(us))
+	for i := 0; i < len(us); i++ {
+		es[i] = mkRep(us[i])
+	}
+	return TypeTree{Type(u1.GetName()), es}
 }
