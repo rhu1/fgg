@@ -65,7 +65,7 @@ func oblitSTypeLit(s fgg.STypeLit) STypeLit {
 	fds_fgr := make([]FieldDecl, len(fds_fgg))
 	for i := 0; i < len(fds_fgg); i++ {
 		fd_fgg := fds_fgg[i]
-		fds_fgr[i] = NewFieldDecl(fd_fgg.GetName(), Type("Any_0")) // TODO: factor out constant
+		fds_fgr[i] = NewFieldDecl(fd_fgg.GetName(), Type("GetRep")) // TODO: factor out constant
 	}
 	return NewSTypeLit(t, rds, fds_fgr)
 }
@@ -100,9 +100,9 @@ func oblitSig(g_fgg fgg.Sig) Sig {
 	}
 	for i := 0; i < len(pds_fgg); i++ {
 		pd_fgg := pds_fgg[i]
-		pds_fgr[i] = NewParamDecl(pd_fgg.GetName(), Type("Any_0")) // TODO: factor out constant
+		pds_fgr[i] = NewParamDecl(pd_fgg.GetName(), Type("GetRep")) // TODO: factor out constant
 	}
-	return NewSig(m, pds_fgr, Type("Any_0")) // TODO: constant
+	return NewSig(m, pds_fgr, Type("GetRep")) // TODO: constant
 	// FIXME: need RepDecl in Sig?
 }
 
@@ -121,9 +121,9 @@ func oblitMDecl(ds_fgg []Decl, d fgg.MDecl) MDecl {
 	pds_fgr := make([]ParamDecl, len(pds_fgg))
 	for i := 0; i < len(pds_fgg); i++ {
 		pd := pds_fgg[i]
-		pds_fgr[i] = NewParamDecl(pd.GetName(), Type("Any_0"))
+		pds_fgr[i] = NewParamDecl(pd.GetName(), Type("GetRep"))
 	}
-	t_fgr := Type("Any_0")
+	t_fgr := Type("GetRep")
 	delta := d.GetRecvTFormals().ToTEnv()
 	for i := 0; i < len(tfs); i++ {
 		tf := tfs[i]
