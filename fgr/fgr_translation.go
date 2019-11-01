@@ -198,7 +198,7 @@ func fgrTransMDecl(ds []Decl, d1 fgg.MDecl, wrappers map[Type]adptrPair) MDecl {
 	t_recv := d1.GetRecvTypeName()
 	psi_recv := d1.GetRecvTFormals()
 	m := d1.GetName()
-	psi := d1.GetTFormals()
+	psi := d1.GetMDeclTFormals()
 	pds_fgg := d1.GetParamDecls()
 	u := d1.GetReturn()
 	e_fgg := d1.GetExpr()

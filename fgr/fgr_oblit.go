@@ -111,7 +111,7 @@ func oblitMDecl(ds_fgg []Decl, d fgg.MDecl) MDecl {
 	t_recv := Type(d.GetRecvTypeName())
 	recv_fgr := NewParamDecl(x_recv, t_recv)
 	m := d.GetName()
-	tfs := d.GetTFormals().GetFormals()
+	tfs := d.GetMDeclTFormals().GetFormals()
 	rds := make([]RepDecl, len(tfs))
 	for i := 0; i < len(tfs); i++ {
 		tf := tfs[i]
