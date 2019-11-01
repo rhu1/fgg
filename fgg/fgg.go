@@ -214,7 +214,7 @@ type Decl = base.Decl
 
 type TDecl interface {
 	Decl
-	GetTFormals() TFormals
+	GetTFormals() TFormals // TODO: rename? potential clash with, e.g., MDecl, can cause "false" interface satisfaction
 }
 
 type Spec interface {

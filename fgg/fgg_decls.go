@@ -281,8 +281,8 @@ func (md MDecl) GetName() Name {
 	return md.m
 }
 
-// TODO refactor
-func (md MDecl) GetTFormals() TFormals {
+// TODO refactor // TODO: MDecl in name to prevent false capture by TDecl interface
+func (md MDecl) GetMDeclTFormals() TFormals {
 	return md.psi
 }
 
