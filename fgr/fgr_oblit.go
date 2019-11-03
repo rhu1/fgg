@@ -102,11 +102,11 @@ func oblitSig(g_fgg fgg.Sig) Sig {
 		tf := tfs[i]
 		pds_fgr[i] = NewParamDecl(tf.GetTParam().String(),
 			//Rep{tf.GetType()}) // TODO: !!! Rep `New` constructor
-			Type("Rep")) // !!! TODO: factor out constant
+			TRep)
 	}
 	for i := 0; i < len(pds_fgg); i++ {
 		pd_fgg := pds_fgg[i]
-		pds_fgr[i] = NewParamDecl(pd_fgg.GetName(), Type("GetRep")) // TODO: factor out constant
+		pds_fgr[len(tfs)+i] = NewParamDecl(pd_fgg.GetName(), Type("GetRep")) // TODO: factor out constant
 	}
 	return NewSig(m, pds_fgr, Type("GetRep")) // TODO: constant
 	// FIXME: need RepDecl in Sig?
