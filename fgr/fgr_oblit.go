@@ -150,7 +150,16 @@ func oblitMDecl(ds_fgg []Decl, d fgg.MDecl) MDecl {
 		x := pd.GetName()
 		pds_fgr[len(tfs)+i] = NewParamDecl(x, Type("GetRep"))
 		v := NewVariable(x)
-		subs[v] = NewAssert(v, toFgrTypeFromBounds(delta, pd.GetType()))
+		u := pd.GetType()
+
+		// HERE
+		//if _, ok := u.(fgg.TParam); ok || fgg.IsInterfaceTName1(ds_fgg, u) { // !!! cf. y := y.(erase(\sigma))
+		if true {
+			subs[v] = NewAssert(v, toFgrTypeFromBounds(delta, u))
+		} else {
+			subs[v] = v
+		}
+
 	}
 	gamma := make(fgg.Env)
 	tfs_recv := d.GetRecvTFormals().GetFormals()
