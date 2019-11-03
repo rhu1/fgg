@@ -37,7 +37,7 @@ func Obliterate(p_fgg fgg.FGGProgram) FGRProgram { // CHECKME can also subsume e
 				es[i] = NewSelect(NewVariable("x0"), tfs[i].GetTParam().String())
 			}
 			e_getRep := TypeTree{Type(t_S), es} // TODO: New constructor
-			getRep := NewMDecl(recv_getRep, "getRep", []RepDecl{}, []ParamDecl{},
+			getRep := NewMDecl(recv_getRep, "getRep" /*[]RepDecl{},*/, []ParamDecl{},
 				Type("Rep"), e_getRep) // TODO: factor out constants
 			ds_fgr = append(ds_fgr, oblitSTypeLit(d), getRep)
 		case fgg.ITypeLit:
@@ -118,16 +118,20 @@ func oblitMDecl(ds_fgg []Decl, d fgg.MDecl) MDecl {
 	recv_fgr := NewParamDecl(x_recv, t_recv)
 	m := d.GetName()
 	tfs := d.GetMDeclTFormals().GetFormals()
-	rds := make([]RepDecl, len(tfs))
+	/*rds := make([]RepDecl, len(tfs))
 	for i := 0; i < len(tfs); i++ {
 		tf := tfs[i]
 		rds[i] = RepDecl{tf.GetTParam(), Rep{tf.GetType()}} // TODO: `New` constructors
-	}
+	}*/
 	pds_fgg := d.GetParamDecls()
-	pds_fgr := make([]ParamDecl, len(pds_fgg))
+	pds_fgr := make([]ParamDecl, len(tfs)+len(pds_fgg)) // Cf. TStructLit
+	for i := 0; i < len(tfs); i++ {
+		tf := tfs[i]
+		pds_fgr[i] = NewParamDecl(tf.GetTParam().String(), TRep)
+	}
 	for i := 0; i < len(pds_fgg); i++ {
 		pd := pds_fgg[i]
-		pds_fgr[i] = NewParamDecl(pd.GetName(), Type("GetRep"))
+		pds_fgr[len(tfs)+i] = NewParamDecl(pd.GetName(), Type("GetRep")) // !!! Why params oblit'd, but field types erased?
 	}
 	t_fgr := Type("GetRep")
 	delta := d.GetRecvTFormals().ToTEnv()
@@ -147,7 +151,7 @@ func oblitMDecl(ds_fgg []Decl, d fgg.MDecl) MDecl {
 		gamma[pd.GetName()] = pd.GetType()
 	}
 	e_fgr := oblitExpr(ds_fgg, delta, gamma, d.GetExpr())
-	return NewMDecl(recv_fgr, m, rds, pds_fgr, t_fgr, e_fgr)
+	return NewMDecl(recv_fgr, m /*rds,*/, pds_fgr, t_fgr, e_fgr)
 }
 
 func oblitExpr(ds_fgg []Decl, delta fgg.TEnv, gamma fgg.Env,
