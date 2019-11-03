@@ -59,14 +59,23 @@ func (a *FGAdaptor) Parse(strictParse bool, input string) base.Program {
 func (a *FGAdaptor) ExitProgram(ctx *parser.ProgramContext) {
 	body := a.pop().(Expr)
 	var ds []Decl
-	if ctx.GetChildCount() > 13 {
-		nds := ctx.GetChild(3).GetChildCount() / 2 // (decl ';')+ -- i.e, includes trailing ';'
+	offset := 0 // TODO: refactor
+	c3 := ctx.GetChild(3)
+	if _, ok := c3.GetPayload().(*antlr.CommonToken); ok {
+		//c3.GetPayload().(*antlr.CommonToken).GetText() == "import" {
+		offset = 5
+	}
+	//if ctx.GetChildCount() > offset+13 {  // well-typed program must have at least one decl?
+	tmp := ctx.GetChild(offset + 3)
+	if _, ok := tmp.GetPayload().(*antlr.BaseParserRuleContext); ok { // If no decls, then *antlr.CommonToken, 'func'
+		nds := ctx.GetChild(offset+3).GetChildCount() / 2 // (decl ';')+ -- i.e, includes trailing ';'
 		ds = make([]Decl, nds)
 		for i := nds - 1; i >= 0; i-- {
 			ds[i] = a.pop().(Decl) // Adding backwards
 		}
 	}
-	a.push(FGProgram{ds, body})
+	printf := false
+	a.push(FGProgram{ds, body, printf})
 }
 
 /* "typeDecl" */
