@@ -8,6 +8,8 @@ package fgr
 import "fmt"
 import "strings"
 
+import "github.com/rhu1/fgg/fgg"
+
 var _ = fmt.Errorf
 
 /* "Exported" constructors for fgg (translation) */
@@ -35,7 +37,7 @@ func (x Variable) Subs(subs map[Variable]Expr) Expr {
 }
 
 func (x Variable) Eval(ds []Decl) (Expr, string) {
-	panic("Cannot evaluate free variable: " + x.id)
+	panic("Cannot reduce free variable: " + x.id)
 }
 
 func (x Variable) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
@@ -349,15 +351,15 @@ type Panic struct{}
 var _ Expr = Panic{}
 
 func (p Panic) Subs(subs map[Variable]Expr) Expr {
-	panic("TODO: " + p.String())
+	return p
 }
 
 func (p Panic) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
-	panic("TODO: " + p.String())
+	panic("TODO: " + p.String()) // FIXME: allow any t
 }
 
 func (p Panic) Eval(ds []Decl) (Expr, string) {
-	panic("TODO: " + p.String())
+	panic("Cannot reduce panic.")
 }
 
 func (p Panic) IsValue() bool {
@@ -371,42 +373,83 @@ func (p Panic) String() string {
 /* IfThenElse */
 
 type IfThenElse struct {
-	e1 Call
+	e1 Expr // Cannot hardcode Call, needs to be a general eval context
 	e2 Expr // TmpTParam (Variable) or TypeTree
 	e3 Expr
+	//rho Map[fgg.Type]([]fgg.Sig)
+	src string // Original FGG source
 }
 
 var _ Expr = IfThenElse{}
 
-func (ite IfThenElse) Subs(subs map[Variable]Expr) Expr {
-	return IfThenElse{ite.e1.Subs(subs).(Call), ite.e2.Subs(subs), ite.e3.Subs(subs)}
+func (c IfThenElse) Subs(subs map[Variable]Expr) Expr {
+	return IfThenElse{c.e1.Subs(subs), c.e2.Subs(subs),
+		c.e3.Subs(subs), c.src}
 }
 
-func (ite IfThenElse) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
-	panic("TODO: " + ite.String())
+func (c IfThenElse) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
+	if t1 := c.e1.Typing(ds, gamma, false); t1 != TRep {
+		panic("IfThenElse comparison LHS must be of type " + string(TRep) +
+			": found " + t1.String())
+	}
+	if t2 := c.e2.Typing(ds, gamma, false); t2 != TRep {
+		panic("IfThenElse comparison RHS must be of type " + string(TRep) +
+			": found " + t2.String())
+	}
+	t3 := c.e3.Typing(ds, gamma, false)
+	// !!! no explicit e4 -- should always be panic? (panic typing is TODO)
+	return t3
 }
 
-func (ite IfThenElse) Eval(ds []Decl) (Expr, string) {
-	panic("TODO: " + ite.String())
+func (c IfThenElse) Eval(ds []Decl) (Expr, string) {
+	if !c.e1.IsValue() {
+		e, rule := c.e1.Eval(ds)
+		return IfThenElse{e.(Expr), c.e2, c.e3, c.src}, rule
+	}
+	if !c.e2.IsValue() {
+		e, rule := c.e2.Eval(ds)
+		return IfThenElse{c.e1, e.(Expr), c.e3, c.src}, rule
+	}
+
+	// TODO: refactor
+	var a fgg.FGGAdaptor
+	p_fgg := a.Parse(true, c.src).(fgg.FGGProgram)
+	ds_fgg := p_fgg.GetDecls()
+
+	tt1 := c.e1.(TypeTree)
+	tt2 := c.e2.(TypeTree)
+	if tt1.Reify().Impls(ds_fgg, make(fgg.TEnv), tt2.Reify()) {
+		return c.e3, "If-true"
+	} else {
+		return Panic{}, "If-false"
+	}
 }
 
-func (ite IfThenElse) IsValue() bool {
+func (c IfThenElse) IsValue() bool {
 	return false
 }
 
-func (ite IfThenElse) String() string {
-	return "if " + ite.e1.String() + " << " + ite.e2.String() + " then " +
-		ite.e3.String() + " else panic"
+func (c IfThenElse) String() string {
+	return "if " + c.e1.String() + " << " + c.e2.String() + " then " +
+		c.e3.String() + " else panic" // !!! hardcoded else-panic
 }
 
 /* TypeTree -- the result of mkRep, i.e., run-time type rep value */
 
 type TypeTree struct {
 	t  Type
-	es []Expr // TypeTree or TmpTParam
+	es []Expr // TypeTree or TmpTParam -- CHECKME: TmpTParam still needed?
 }
 
 var _ Expr = TypeTree{}
+
+func (tt TypeTree) Reify() fgg.TName {
+	us := make([]fgg.Type, len(tt.es)) // All TName
+	for i := 0; i < len(us); i++ {
+		us[i] = tt.es[i].(TypeTree).Reify() // CHECKME: guaranteed TypeTree?
+	}
+	return fgg.NewTName(string(tt.t), us)
+}
 
 func (tt TypeTree) Subs(subs map[Variable]Expr) Expr {
 	es := make([]Expr, len(tt.es))
@@ -417,7 +460,7 @@ func (tt TypeTree) Subs(subs map[Variable]Expr) Expr {
 }
 
 func (tt TypeTree) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
-	panic("TODO: " + tt.String())
+	return TRep
 }
 
 func (tt TypeTree) Eval(ds []Decl) (Expr, string) {
@@ -431,9 +474,9 @@ func (tt TypeTree) IsValue() bool {
 func (tt TypeTree) String() string {
 	var b strings.Builder
 	b.WriteString(string(tt.t))
-	b.WriteString("|(")
+	b.WriteString("[[")
 	writeExprs(&b, tt.es)
-	b.WriteString(")")
+	b.WriteString("]]")
 	return b.String()
 }
 

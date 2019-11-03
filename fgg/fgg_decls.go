@@ -14,6 +14,12 @@ import "github.com/rhu1/fgg/base"
 var _ = fmt.Errorf
 var _ = reflect.Append
 
+/* Public constructors */
+
+func NewProgram(ds []Decl, e Expr) FGGProgram {
+	return FGGProgram{ds, e}
+}
+
 /* Program */
 
 type FGGProgram struct {

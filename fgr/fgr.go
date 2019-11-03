@@ -13,7 +13,7 @@ type Name = base.Name // TODO: tidy up refactoring, due to introducing base
 type Env map[Name]Type // TODO: should be Variable rather than Name -- though Variable is an Expr
 
 // Same as FGR
-type Type Name // TODO FIXME: should be based on fgg.Type
+type Type Name // should be based on fgg.Type -- no: Rep now not parameterised
 
 var _ Spec = Type("")
 
@@ -55,11 +55,13 @@ func (t Type) String() string {
 
 /* Reps */
 
+const TRep = Type("Rep")
+
 type Rep struct {
 	u fgg.Type // FIXME: Rep doesn't carry u any more
 }
 
-//var _ Type = Rep{}  // TODO FIXME
+//var _ Type = Rep{}  // TODO FIXME -- no: this "Rep" is not a String/Type
 
 func (r Rep) String() string {
 	return "Rep(" + r.u.String() + ")"

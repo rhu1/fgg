@@ -267,7 +267,7 @@ func doWrappers(prog base.Program, compile string) {
 	out := p_fgr.String()
 	// TODO: factor out with -monomc
 	if compile == "--" {
-		vPrintln(out)
+		fmt.Println(out)
 	} else {
 		vPrintln("Writing output to: " + compile)
 		bs := []byte(out)
@@ -285,7 +285,10 @@ func doOblit(prog base.Program, compile string) {
 	out := p_fgr.String()
 	// TODO: factor out with -monomc
 	if compile == "--" {
-		vPrintln(out)
+		fmt.Println(out)
+
+		eval(p_fgr, -1)
+
 	} else {
 		vPrintln("Writing output to: " + compile)
 		bs := []byte(out)
