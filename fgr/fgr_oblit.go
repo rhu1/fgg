@@ -118,6 +118,7 @@ func oblitMDecl(ds_fgg []Decl, d fgg.MDecl) MDecl {
 	recv_fgr := NewParamDecl(x_recv, t_recv)
 	m := d.GetName()
 	tfs := d.GetMDeclTFormals().GetFormals()
+	recv_tfs := d.GetRecvTFormals().GetFormals()
 	/*rds := make([]RepDecl, len(tfs))
 	for i := 0; i < len(tfs); i++ {
 		tf := tfs[i]
@@ -130,14 +131,18 @@ func oblitMDecl(ds_fgg []Decl, d fgg.MDecl) MDecl {
 		pds_fgr[i] = NewParamDecl(tf.GetTParam().String(), TRep)
 	}
 	t_fgr := Type("GetRep")
-	subs := make(map[Variable]Expr)
-	v_recv := NewVariable(x_recv)
-	subs[v_recv] = v_recv // CHECKME: needed o/w Variable.Subs panics -- refactor?
 	delta := d.GetRecvTFormals().ToTEnv()
 	for i := 0; i < len(tfs); i++ {
 		tf := tfs[i]
 		a := tf.GetTParam()
 		delta[a] = tf.GetType() // CHECKME: bounds on GetType?
+	}
+	subs := make(map[Variable]Expr)
+	v_recv := NewVariable(x_recv)
+	subs[v_recv] = v_recv // CHECKME: needed o/w Variable.Subs panics -- refactor?
+	for i := 0; i < len(recv_tfs); i++ {
+		recv_tf := recv_tfs[i]
+		a := recv_tf.GetTParam()
 		subs[NewVariable(a.String())] = NewSelect(v_recv, a.String())
 	}
 	for i := 0; i < len(pds_fgg); i++ {
