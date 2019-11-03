@@ -129,15 +129,23 @@ func oblitMDecl(ds_fgg []Decl, d fgg.MDecl) MDecl {
 		tf := tfs[i]
 		pds_fgr[i] = NewParamDecl(tf.GetTParam().String(), TRep)
 	}
-	for i := 0; i < len(pds_fgg); i++ {
-		pd := pds_fgg[i]
-		pds_fgr[len(tfs)+i] = NewParamDecl(pd.GetName(), Type("GetRep")) // !!! Why params oblit'd, but field types erased?
-	}
 	t_fgr := Type("GetRep")
+	subs := make(map[Variable]Expr)
+	v_recv := NewVariable(x_recv)
+	subs[v_recv] = v_recv // CHECKME: needed o/w Variable.Subs panics -- refactor?
 	delta := d.GetRecvTFormals().ToTEnv()
 	for i := 0; i < len(tfs); i++ {
 		tf := tfs[i]
-		delta[tf.GetTParam()] = tf.GetType() // CHECKME: bounds on GetType?
+		a := tf.GetTParam()
+		delta[a] = tf.GetType() // CHECKME: bounds on GetType?
+		subs[NewVariable(a.String())] = NewSelect(v_recv, a.String())
+	}
+	for i := 0; i < len(pds_fgg); i++ {
+		pd := pds_fgg[i]
+		x := pd.GetName()
+		pds_fgr[len(tfs)+i] = NewParamDecl(x, Type("GetRep"))
+		v := NewVariable(x)
+		subs[v] = NewAssert(v, toFgrTypeFromBounds(delta, pd.GetType()))
 	}
 	gamma := make(fgg.Env)
 	tfs_recv := d.GetRecvTFormals().GetFormals()
@@ -151,6 +159,7 @@ func oblitMDecl(ds_fgg []Decl, d fgg.MDecl) MDecl {
 		gamma[pd.GetName()] = pd.GetType()
 	}
 	e_fgr := oblitExpr(ds_fgg, delta, gamma, d.GetExpr())
+	e_fgr = e_fgr.Subs(subs)
 	return NewMDecl(recv_fgr, m /*rds,*/, pds_fgr, t_fgr, e_fgr)
 }
 
