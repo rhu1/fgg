@@ -55,19 +55,25 @@ func Obliterate(p_fgg fgg.FGGProgram) FGRProgram { // CHECKME can also subsume e
 
 func oblitSTypeLit(s fgg.STypeLit) STypeLit {
 	t := Type(s.GetName())
-	tfs := s.GetTFormals().GetFormals()
-	rds := make([]RepDecl, len(tfs))
+	psi := s.GetTFormals()
+	tfs := psi.GetFormals()
+	/*rds := make([]RepDecl, len(tfs))
 	for i := 0; i < len(rds); i++ {
 		tf := tfs[i]
 		rds[i] = RepDecl{tf.GetTParam(), Rep{tf.GetType()}} // TODO: make `New` constructor
-	}
+	}*/
 	fds_fgg := s.GetFieldDecls()
-	fds_fgr := make([]FieldDecl, len(fds_fgg))
+	fds_fgr := make([]FieldDecl, len(tfs)+len(fds_fgg))
+	for i := 0; i < len(tfs); i++ {
+		fds_fgr[i] = NewFieldDecl(tfs[i].GetTParam().String(), TRep)
+	}
+	delta := psi.ToTEnv()
 	for i := 0; i < len(fds_fgg); i++ {
 		fd_fgg := fds_fgg[i]
-		fds_fgr[i] = NewFieldDecl(fd_fgg.GetName(), Type("GetRep")) // TODO: factor out constant
+		erased := toFgrTypeFromBounds(delta, fd_fgg.GetType())
+		fds_fgr[len(tfs)+i] = NewFieldDecl(fd_fgg.GetName(), erased)
 	}
-	return NewSTypeLit(t, rds, fds_fgr)
+	return NewSTypeLit(t /*rds,*/, fds_fgr)
 }
 
 func oblitITypeLit(c fgg.ITypeLit) ITypeLit {
@@ -209,7 +215,7 @@ func oblitExpr(ds_fgg []Decl, delta fgg.TEnv, gamma fgg.Env,
 		return res
 	case fgg.Assert:
 		x := oblitExpr(ds_fgg, delta, gamma, e.GetExpr())
-		e1 := NewCall(x, "getTypeRep", []Expr{})
+		e1 := NewCall(x, "getRep", []Expr{})
 		u := e.GetType()
 		e3 := NewAssert(x, toFgrTypeFromBounds(delta, u))
 		p_fgg := fgg.NewProgram(ds_fgg, fgg.NewVariable(fgg.Name("dummy")))
@@ -221,6 +227,7 @@ func oblitExpr(ds_fgg []Decl, delta fgg.TEnv, gamma fgg.Env,
 
 /* Helper */
 
+// i.e., "erase" -- cf. oblit
 func toFgrTypeFromBounds(delta fgg.TEnv, u fgg.Type) Type {
 	return Type(fgg.Bounds1(delta, u).(fgg.TName).GetName())
 }

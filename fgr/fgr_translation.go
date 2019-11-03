@@ -24,8 +24,8 @@ func Translate(p fgg.FGGProgram) FGRProgram { // TODO FIXME: FGR -- TODO also ca
 	// Add t_0 (etc.) to ds_fgr
 	// TODO: factor out constants
 	Any_0 := NewITypeLit(Type("Any_0"), []Spec{})
-	Dummy_0 := NewSTypeLit(Type("Dummy_0"), []RepDecl{}, []FieldDecl{})
-	ToAny_0 := NewSTypeLit(Type("ToAny_0"), []RepDecl{}, []FieldDecl{NewFieldDecl("any", Type("Any_0"))})
+	Dummy_0 := NewSTypeLit(Type("Dummy_0") /*[]RepDecl{},*/, []FieldDecl{})
+	ToAny_0 := NewSTypeLit(Type("ToAny_0") /*[]RepDecl{},*/, []FieldDecl{NewFieldDecl("any", Type("Any_0"))})
 	getValue := NewSig("getValue", []ParamDecl{}, Type("Any_0")) // TODO: rename "unwrap"?
 	//getTypeRep := fg.NewSig("getTypeRep", []fg.ParamDecl{}, fg.Type("...TODO..."))
 	ss_0 := []Spec{getValue}
@@ -74,7 +74,7 @@ func Translate(p fgg.FGGProgram) FGRProgram { // TODO FIXME: FGR -- TODO also ca
 	for k, v := range wrappers {
 		// Add Adptr and getValue/getTypeRep
 		fds := []FieldDecl{NewFieldDecl("value", v.sub)} // TODO: factor out
-		adptr := NewSTypeLit(k, []RepDecl{}, fds)
+		adptr := NewSTypeLit(k /*[]RepDecl{},*/, fds)
 		// TODO: factor out with STypeLits
 		e_getv := NewSelect(NewVariable("x"), "value") // CHECKME: but t_S doesn't have value field, wrapper does?
 		getv := NewMDecl(NewParamDecl("x", Type(k)), "getValue",
@@ -152,7 +152,7 @@ func fgrTransSTypeLit(s fgg.STypeLit) STypeLit {
 		fd := fds_fgg[i]
 		fds[i] = NewFieldDecl(fd.GetName(), toFgTypeFromBounds(delta, fd.GetType()))
 	}
-	return NewSTypeLit(Type(s.GetName()), rds, fds)
+	return NewSTypeLit(Type(s.GetName()) /*rds,*/, fds)
 }
 
 func fgrTransITypeLit(c fgg.ITypeLit) ITypeLit {
