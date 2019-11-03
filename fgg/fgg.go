@@ -274,6 +274,11 @@ func isInterfaceTName(ds []Decl, u Type) bool {
 	return false
 }
 
+// TODO: refactor
+func IsInterfaceTName1(ds []Decl, u Type) bool {
+	return isInterfaceTName(ds, u)
+}
+
 func writeTypes(b *strings.Builder, us []Type) {
 	if len(us) > 0 {
 		b.WriteString(us[0].String())
