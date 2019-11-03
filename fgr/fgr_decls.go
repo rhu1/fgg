@@ -19,8 +19,8 @@ func NewFGRProgram(ds []Decl, e Expr) FGRProgram {
 	return FGRProgram{ds, e}
 }
 
-func NewSTypeLit(t Type, rds []RepDecl, fds []FieldDecl) STypeLit {
-	return STypeLit{t, rds, fds}
+func NewSTypeLit(t Type /*rds []RepDecl,*/, fds []FieldDecl) STypeLit {
+	return STypeLit{t /*rds,*/, fds}
 }
 
 func NewFieldDecl(f Name, t Type) FieldDecl {
@@ -125,8 +125,8 @@ func (p FGRProgram) String() string {
 /* STypeLit, RepDecl, FieldDecl */
 
 type STypeLit struct {
-	t   Type
-	rds []RepDecl
+	t Type
+	//rds []RepDecl
 	fds []FieldDecl
 }
 
@@ -145,13 +145,13 @@ func (s STypeLit) String() string {
 	b.WriteString("type ")
 	b.WriteString(s.t.String())
 	b.WriteString(" struct {")
-	if len(s.rds) > 0 {
+	/*if len(s.rds) > 0 {
 		b.WriteString(" ")
 		writeRepDecls(&b, s.rds)
 		if len(s.fds) > 0 {
 			b.WriteString(";")
 		}
-	}
+	}*/
 	if len(s.fds) > 0 {
 		b.WriteString(" ")
 		writeFieldDecls(&b, s.fds)
@@ -163,7 +163,7 @@ func (s STypeLit) String() string {
 
 type RepDecl struct {
 	a fgg.TParam
-	r Rep
+	r Rep // TODO: Rep shouldn't be parameterised
 }
 
 var _ FGRNode = RepDecl{}

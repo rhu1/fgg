@@ -444,6 +444,9 @@ type TypeTree struct {
 var _ Expr = TypeTree{}
 
 func (tt TypeTree) Reify() fgg.TName {
+	if !tt.IsValue() {
+		panic("Cannot refiy non-ground TypeTree: " + tt.String())
+	}
 	us := make([]fgg.Type, len(tt.es)) // All TName
 	for i := 0; i < len(us); i++ {
 		us[i] = tt.es[i].(TypeTree).Reify() // CHECKME: guaranteed TypeTree?
@@ -463,12 +466,34 @@ func (tt TypeTree) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
 	return TRep
 }
 
+// !!! TypeTree evaluation contexts vs. reify aux?
 func (tt TypeTree) Eval(ds []Decl) (Expr, string) {
-	panic("Cannot reduce: " + tt.String())
+	// Cf. StructLit.Eval
+	es := make([]Expr, len(tt.es))
+	done := false
+	var rule string
+	for i := 0; i < len(es); i++ {
+		v := tt.es[i]
+		if !done && !v.IsValue() {
+			v, rule = v.Eval(ds)
+			done = true
+		}
+		es[i] = v
+	}
+	if done {
+		return TypeTree{tt.t, es}, rule
+	} else {
+		panic("Cannot reduce: " + tt.String())
+	}
 }
 
 func (tt TypeTree) IsValue() bool {
-	return true // CHECKME: correct?
+	for i := 0; i < len(tt.es); i++ {
+		if !tt.es[i].IsValue() {
+			return false
+		}
+	}
+	return true
 }
 
 func (tt TypeTree) String() string {
