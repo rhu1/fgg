@@ -47,7 +47,7 @@ func Translate(p fgg.FGGProgram) FGRProgram { // TODO FIXME: FGR -- TODO also ca
 			e_getv := NewStructLit(Type("Dummy_0"), []Expr{})
 			t := Type(d1.GetName())
 			getv := NewMDecl(NewParamDecl("x", t), "getValue",
-				[]RepDecl{}, // FIXME
+				//[]RepDecl{}, // FIXME
 				[]ParamDecl{}, Type("Any_0"), e_getv)
 			// gettr := ...TODO FIXME...
 
@@ -78,7 +78,7 @@ func Translate(p fgg.FGGProgram) FGRProgram { // TODO FIXME: FGR -- TODO also ca
 		// TODO: factor out with STypeLits
 		e_getv := NewSelect(NewVariable("x"), "value") // CHECKME: but t_S doesn't have value field, wrapper does?
 		getv := NewMDecl(NewParamDecl("x", Type(k)), "getValue",
-			[]RepDecl{}, // FIXME
+			//[]RepDecl{}, // FIXME
 			[]ParamDecl{}, Type("Any_0"), e_getv)
 		// gettr := ...TODO FIXME...
 		ds_fgr = append(ds_fgr, adptr, getv)
@@ -127,7 +127,7 @@ func Translate(p fgg.FGGProgram) FGRProgram { // TODO FIXME: FGR -- TODO also ca
 			//e = NewAssert(e, toFgTypeFromBounds(delta, u))
 			e = addGetValueCast(delta, e, u)
 			md := NewMDecl(NewParamDecl("x", k), g.GetName(),
-				[]RepDecl{}, // FIXME
+				//[]RepDecl{}, // FIXME
 				pds, t, e)
 			ds_fgr = append(ds_fgr, md)
 			//}
@@ -241,7 +241,7 @@ func fgrTransMDecl(ds []Decl, d1 fgg.MDecl, wrappers map[Type]adptrPair) MDecl {
 	e = e.Subs(subs)
 
 	return NewMDecl(recv, m,
-		[]RepDecl{}, // FIXME
+		//[]RepDecl{}, // FIXME
 		pds, t, e)
 }
 

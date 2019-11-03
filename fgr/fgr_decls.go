@@ -27,9 +27,9 @@ func NewFieldDecl(f Name, t Type) FieldDecl {
 	return FieldDecl{f, t}
 }
 
-func NewMDecl(recv ParamDecl, m Name, rds []RepDecl, pds []ParamDecl, t Type,
+func NewMDecl(recv ParamDecl, m Name /*rds []RepDecl,*/, pds []ParamDecl, t Type,
 	e Expr) MDecl {
-	return MDecl{recv, m, rds, pds, t, e}
+	return MDecl{recv, m /*rds,*/, pds, t, e}
 }
 
 func NewParamDecl(x Name, t Type) ParamDecl { // For fgg_util.MakeWMap
@@ -191,17 +191,18 @@ func (fd FieldDecl) String() string {
 type MDecl struct {
 	recv ParamDecl
 	m    Name // Not embedding Sig because Sig doesn't take xs
-	rds  []RepDecl
-	pds  []ParamDecl
-	t    Type // Return
-	e    Expr
+	//rds  []RepDecl
+	pds []ParamDecl
+	t   Type // Return
+	e   Expr
 }
 
 var _ Decl = MDecl{}
 
-func (md MDecl) Receiver() ParamDecl    { return md.recv }
-func (md MDecl) MethodName() Name       { return md.m }
-func (md MDecl) GetRepDecls() []RepDecl { return md.rds }
+func (md MDecl) Receiver() ParamDecl { return md.recv }
+func (md MDecl) MethodName() Name    { return md.m }
+
+//func (md MDecl) GetRepDecls() []RepDecl { return md.rds }
 
 // MethodParams returns the non-receiver parameters
 func (md MDecl) MethodParams() []ParamDecl { return md.pds }
@@ -241,10 +242,10 @@ func (md MDecl) String() string {
 	b.WriteString(") ")
 	b.WriteString(md.m)
 	b.WriteString("(")
-	writeRepDecls(&b, md.rds)
+	/*writeRepDecls(&b, md.rds)
 	if len(md.rds) > 0 && len(md.pds) > 0 {
 		b.WriteString("; ")
-	}
+	}*/
 	writeParamDecls(&b, md.pds)
 	b.WriteString(") ")
 	b.WriteString(md.t.String())
