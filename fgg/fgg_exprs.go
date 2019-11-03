@@ -13,6 +13,12 @@ var _ = fmt.Errorf
 var _ = reflect.Append
 var _ = strings.Compare
 
+/* Public constructors */
+
+func NewVariable(id Name) Variable {
+	return Variable{id}
+}
+
 /* Variable */
 
 type Variable struct {

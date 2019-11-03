@@ -385,7 +385,7 @@ func fgrTransExpr(ds []Decl, delta fgg.TEnv, gamma fgg.Env, e fgg.Expr,
 	case fgg.Assert:
 		u := e1.GetType()
 		e2 := fgrTransExpr(ds, delta, gamma, e1.GetExpr(), wrappers)
-		return IfThenElse{NewCall(e2, "getTypeRep", []Expr{}), mkRep(u), e2}
+		return IfThenElse{NewCall(e2, "getTypeRep", []Expr{}), mkRep(u), e2, "TODO"}
 	default:
 		panic("Unknown Expr type " + reflect.TypeOf(e).String() + ": " + e.String())
 	}
@@ -492,6 +492,6 @@ func addGetValueCast(delta fgg.TEnv, e Expr, u fgg.Type) Expr {
 	//e = NewAssert(e, toFgTypeFromBounds(delta, u)) // TODO FIXME: mkRep -- "FG" for now, not FGR
 	e2 := mkRep(u)
 	e1 := NewCall(e3, "getTypeRep", []Expr{})
-	e = IfThenElse{e1, e2, e3}
+	e = IfThenElse{e1, e2, e3, "TODO"}
 	return e
 }
