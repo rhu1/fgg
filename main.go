@@ -74,6 +74,8 @@ var (
 
 	evalSteps int  // number of steps to evaluate
 	verbose   bool // verbose mode
+
+	printf bool // Use fmt.Printf for main expr
 )
 
 func init() {
@@ -107,6 +109,9 @@ func init() {
 		" N ⇒ evaluate N (≥ 0) steps; or\n-1 ⇒ evaluate to value (or panic)")
 	flag.BoolVar(&verbose, "v", false,
 		"enable verbose printing")
+
+	flag.BoolVar(&printf, "printf", false,
+		"Use fmt.Printf for main expr")
 }
 
 var usage = func() {

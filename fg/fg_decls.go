@@ -14,7 +14,7 @@ import "github.com/rhu1/fgg/base"
 /* "Exported" constructors for fgg (monomorph) */
 
 func NewFGProgram(ds []Decl, e Expr) FGProgram {
-	return FGProgram{ds, e}
+	return FGProgram{ds, e, false} // FIXME: extend FGGProgram and carry through to here for, e.g., monom
 }
 
 func NewSTypeLit(t Type, fds []FieldDecl) STypeLit {
@@ -48,8 +48,9 @@ func (g Sig) GetMethName() Name { // Hack
 /* Program */
 
 type FGProgram struct {
-	ds []Decl
-	e  Expr
+	ds     []Decl
+	e      Expr
+	printf bool
 }
 
 var _ base.Program = FGProgram{}
@@ -95,7 +96,7 @@ func (p FGProgram) Ok(allowStupid bool) {
 // But doesn't affect FGPprogam.Ok() (i.e., Expr.Typing)
 func (p FGProgram) Eval() (base.Program, string) {
 	e, rule := p.e.Eval(p.ds)
-	return FGProgram{p.ds, e.(Expr)}, rule
+	return FGProgram{p.ds, e.(Expr), p.printf}, rule
 }
 
 func (p FGProgram) GetDecls() []Decl {
@@ -113,8 +114,15 @@ func (p FGProgram) String() string {
 		b.WriteString(v.String())
 		b.WriteString(";\n")
 	}
-	b.WriteString("func main() { _ = ")
-	b.WriteString(p.e.String())
+	b.WriteString("func main() { ")
+	if p.printf {
+		b.WriteString("fmt.Printf(\"%#v\", ")
+		b.WriteString(p.e.String())
+		b.WriteString(")")
+	} else {
+		b.WriteString("_ = ")
+		b.WriteString(p.e.String())
+	}
 	b.WriteString(" }")
 	return b.String()
 }

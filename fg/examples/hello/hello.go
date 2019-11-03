@@ -7,8 +7,10 @@
 // So the ';' are mandatory -- cannot replace by newlines (as in actual Go).
 // (Newlines and other whitespace may be freely added, though.)
 package main;
+import "fmt";
 type Hello struct {};
 func (x0 Hello) world() Hello { return x0.world() };
 func main() {
-	_ = Hello{}.world()
+	//_ = Hello{}.world()
+	fmt.Printf("%#v", Hello{}.world())
 }

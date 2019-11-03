@@ -11,12 +11,16 @@ grammar FG;
 /* Keywords */
 
 FUNC      : 'func' ;
+IMPORT    : 'import' ;
 INTERFACE : 'interface' ;
 MAIN      : 'main' ;
 PACKAGE   : 'package' ;
 RETURN    : 'return' ;
 STRUCT    : 'struct' ;
 TYPE      : 'type' ;
+
+FMT       : 'fmt' ;
+PRINTF    : 'Printf' ;
 
 
 /* Tokens */
@@ -38,7 +42,11 @@ LINE_COMMENT    : '//' ~[\r\n]* -> channel(HIDDEN) ;
 // "plurals", e.g., decls, used for sequences: comes out as "helper" Contexts,
 // nodes that group up actual children underneath -- makes "adapting" easier.
 
-program    : PACKAGE MAIN ';' decls? FUNC MAIN '(' ')' '{' '_' '=' expr '}' EOF ;
+program    : PACKAGE MAIN ';' 
+             (IMPORT '"' FMT '"')?
+             decls? FUNC MAIN '(' ')' '{' 
+             ('_' '=' expr | FMT '.' PRINTF '(' '"' '%' '#' 'v' '"' ',' expr ')')  // TODO: too permissive re. whitespace
+             '}' EOF ;
 decls      : ((typeDecl | methDecl) ';')+ ;
 typeDecl   : TYPE NAME typeLit ;  // TODO: tag id=NAME, better for adapting (vs., index constants)
 methDecl   : FUNC '(' paramDecl ')' sig '{' RETURN expr '}' ;
