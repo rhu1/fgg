@@ -388,15 +388,15 @@ func (c IfThenElse) Subs(subs map[Variable]Expr) Expr {
 }
 
 func (c IfThenElse) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
-	if t1 := c.e1.Typing(ds, gamma, false); t1 != TRep {
+	if t1 := c.e1.Typing(ds, gamma, allowStupid); t1 != TRep {
 		panic("IfThenElse comparison LHS must be of type " + string(TRep) +
 			": found " + t1.String())
 	}
-	if t2 := c.e2.Typing(ds, gamma, false); t2 != TRep {
+	if t2 := c.e2.Typing(ds, gamma, allowStupid); t2 != TRep {
 		panic("IfThenElse comparison RHS must be of type " + string(TRep) +
 			": found " + t2.String())
 	}
-	t3 := c.e3.Typing(ds, gamma, false)
+	t3 := c.e3.Typing(ds, gamma, allowStupid)
 	// !!! no explicit e4 -- should always be panic? (panic typing is TODO)
 	return t3
 }
@@ -430,8 +430,8 @@ func (c IfThenElse) IsValue() bool {
 }
 
 func (c IfThenElse) String() string {
-	return "if " + c.e1.String() + " << " + c.e2.String() + " then " +
-		c.e3.String() + " else panic" // !!! hardcoded else-panic
+	return "(if " + c.e1.String() + " << " + c.e2.String() + " then " +
+		c.e3.String() + " else panic)" // !!! hardcoded else-panic
 }
 
 /* TypeTree -- the result of mkRep, i.e., run-time type rep value */
