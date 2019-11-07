@@ -189,25 +189,27 @@ func oblitExpr(ds_fgg []Decl, delta fgg.TEnv, gamma fgg.Env,
 		}
 		return NewStructLit(t, es_fgr)
 	case fgg.Select:
-		e_fgr := oblitExpr(ds_fgg, delta, gamma, e.GetExpr())
+		e_fgg := e.GetExpr() // Shadows original e_fgg
+		e_fgr := oblitExpr(ds_fgg, delta, gamma, e_fgg)
 		f := e.GetName()
-		/*u := e_fgg.Typing(ds_fgg, delta, gamma, true).(fgg.TName)
-		fds_fgg := fgg.Fields1(ds_fgg, u) // !!! CHECKME: bounds on u  // !!! deprecated
+		u := e_fgg.Typing(ds_fgg, delta, gamma, true).(fgg.TName)
+		fds_fgg := fgg.Fields1(ds_fgg, u)
 		var u_f fgg.Type = nil
 		for _, fd_fgg := range fds_fgg {
 			if fd_fgg.GetName() == f {
 				u_f = fd_fgg.GetType()
+				break
 			}
 		}
 		if u_f == nil {
 			panic("Field not found in " + u.String() + ": " + f)
-		}*/
+		}
 		var res Expr
 		res = NewSelect(e_fgr, f)
-		//res = NewAssert(res, toFgrTypeFromBounds(delta, u_f))
+		res = NewAssert(res, toFgrTypeFromBounds(delta, u_f)) // !!! adds cast when field type is a struct
 		return res
 	case fgg.Call:
-		e_fgg := e.GetRecv()
+		e_fgg := e.GetRecv() // Shadows original e_fgg
 		e_fgr := oblitExpr(ds_fgg, delta, gamma, e_fgg)
 		m := e.GetName()
 		targs := e.GetTArgs()
