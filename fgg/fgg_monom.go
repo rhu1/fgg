@@ -313,11 +313,11 @@ type MonoSig struct {
 }
 
 // CHECKME: "whole-program" approach starting from the "main" Expr means monom
-// may still work in the presence of irregular types and polymorphic
+// may somtimes work in the presence of irregular types and polymorphic
 // recursion? -- the cost is, of course, to give up separate compilation
 //
 // N.B. mutates omega -- i.e., omega is populated with the results
-// Pre: 'e' is typeable under an empty TEnv, i.e., does not feature any TParams
+// Pre: `e` is typeable under an empty TEnv, i.e., does not feature any TParams
 func MakeWMap(ds []Decl, gamma ClosedEnv, e Expr, omega WMap) (res Type) {
 	var todo []TName // Pre: forall u, isClosed(u)
 	// Usage contract: if addTypeToWMap true, then append `u` to `todo`
@@ -337,7 +337,7 @@ func MakeWMap(ds []Decl, gamma ClosedEnv, e Expr, omega WMap) (res Type) {
 			}
 		}
 		for _, v := range e1.es {
-			MakeWMap(ds, gamma, v, omega) // Discard return
+			MakeWMap(ds, gamma, v, omega) // Discard return -- recursive recording done inside, here we want the decl type fd.u as done above
 		}
 		res = e1.u
 	case Select:
@@ -420,7 +420,7 @@ func MakeWMap(ds []Decl, gamma ClosedEnv, e Expr, omega WMap) (res Type) {
 // N.B. mutates omega -- adds WKey, WVal pair (if `u` closed)
 // @return `true` if type added, `false` o/w
 func addTypeToWMap(u TName, omega WMap) bool {
-	if !isClosed(u) {
+	if !isClosed(u) { // CHECKME: necessary?
 		return false
 	}
 	wk := toWKey(u)

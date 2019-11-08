@@ -1,8 +1,10 @@
-package fg
+package fgr
 
 import "reflect"
 
 import "github.com/rhu1/fgg/base"
+
+import "github.com/rhu1/fgg/fgg"
 
 /* Name, Context, Type */
 
@@ -10,7 +12,8 @@ type Name = base.Name // TODO: tidy up refactoring, due to introducing base
 
 type Env map[Name]Type // TODO: should be Variable rather than Name -- though Variable is an Expr
 
-type Type Name // Type definition (cf. alias)
+// Same as FGR
+type Type Name // should be based on fgg.Type -- no: Rep now not parameterised
 
 var _ Spec = Type("")
 
@@ -50,25 +53,41 @@ func (t Type) String() string {
 	return string(t)
 }
 
-/* AST base intefaces: FGNode, Decl, TDecl, Spec, Expr */
+/* Reps */
+
+const TRep = Type("Rep")
+
+type Rep struct {
+	u fgg.Type // FIXME: Rep doesn't carry u any more
+}
+
+//var _ Type = Rep{}  // TODO FIXME -- no: this "Rep" is not a String/Type
+
+func (r Rep) String() string {
+	return "Rep(" + r.u.String() + ")"
+}
+
+/* AST base intefaces: FGRNode, Decl, TDecl, Spec, Expr */
 
 // TODO: tidy up refactoring, due to introducing base
-type FGNode = base.AstNode
+type FGRNode = base.AstNode
 type Decl = base.Decl
 
 type TDecl interface {
 	Decl
-	GetType() Type // In FG, GetType() == Type(GetName())
+	GetType() Type // In FGR, GetType() == Type(GetName())
 }
+
+//0800 0287034
 
 // A Sig or a Type (specifically a t_I -- bad t_S usage raises a run-time error, cf. Type.GetSigs)
 type Spec interface {
-	FGNode
+	FGRNode
 	GetSigs(ds []Decl) []Sig
 }
 
 type Expr interface {
-	base.Expr // Using the same name "Expr", maybe rename this type to FGExpr
+	base.Expr // Using the same name "Expr", maybe rename this type to FGRExpr
 	Subs(subs map[Variable]Expr) Expr
 
 	// N.B. gamma should be effectively immutable (and ds, of course)
@@ -79,7 +98,7 @@ type Expr interface {
 	// CHECKME: resulting Exprs are not "parsed" from source, OK?
 	Eval(ds []Decl) (Expr, string)
 
-	//IsPanic() bool  // TODO "explicit" FG panic -- cf. underlying runtime panic
+	//IsPanic() bool  // TODO "explicit" FGR panic -- cf. underlying runtime panic
 }
 
 /* Helpers */

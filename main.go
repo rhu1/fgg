@@ -1,4 +1,9 @@
 // Pre (1): ANTLR4
+/*HERE
+- getTypeReps
+- add meth-param RepDecls
+- FGR eval
+*/
 // E.g., antlr-4.7.1-complete.jar
 // (See go:generate below)
 
@@ -28,6 +33,10 @@
 
 /* TODO
 - WF: repeat type decl
+- Compact getters/constructors
+- factor out fgg_monom, MDecl and ITypeLit
+- fix type preservation check
+- factor out more into base
 
 	//b.WriteString("type B struct { f t };\n")  // TODO: unknown type
 	//b.WriteString("type B struct { b B };\n")  // TODO: recursive struct
@@ -47,10 +56,12 @@ import (
 	"github.com/rhu1/fgg/base"
 	"github.com/rhu1/fgg/fg"
 	"github.com/rhu1/fgg/fgg"
+	"github.com/rhu1/fgg/fgr"
 )
 
 var _ = reflect.TypeOf
 var _ = strconv.Itoa
+var _ = fgr.NewCall
 
 const (
 	EVAL_TO_VAL = -1 // Must be < 0
@@ -66,7 +77,8 @@ var (
 	monomc string // output filename of monomorphised FGG; "--" for stdout
 	// TODO refactor naming between "monomc", "compile" and "fgrc"
 
-	fgrc string // output filename of FGR compilation; "--" for stdout
+	fgrc         string // output filename of FGR compilation; "--" for stdout
+	fgrEvalSteps int
 
 	useInternalSrc bool   // use internal source
 	inlineSrc      string // use content of this as source
@@ -96,6 +108,8 @@ func init() {
 	flag.StringVar(&fgrc, "fgrc", "", // Empty string for "false"
 		"[WIP] compile FGG source to FGR (ignored if -fgg not set)\n"+
 			"specify '--' to print to stdout")
+	flag.IntVar(&fgrEvalSteps, "fgreval", NO_EVAL,
+		" N ⇒ evaluate N (≥ 0) steps; or\n-1 ⇒ evaluate to value (or panic)")
 
 	// Parsing options
 	flag.BoolVar(&useInternalSrc, "internal", false,
@@ -169,8 +183,11 @@ func main() {
 	case interpFGG:
 		var a fgg.FGGAdaptor
 		prog := interp(&a, src, strictParse, evalSteps)
+
+		// TODO: refactor
 		doMonom(prog, monom, monomc)
-		doTypeReps(prog, fgrc)
+		//doWrappers(prog, fgrc)
+		doOblit(prog, fgrc)
 	}
 }
 
@@ -247,21 +264,48 @@ func doMonom(prog base.Program, monom bool, compile string) {
 	}
 }
 
-func doTypeReps(prog base.Program, compile string) {
+func doWrappers(prog base.Program, compile string) {
 	if compile == "" {
 		return
 	}
-	vPrintln("\nTranslating FGG to FGR: [Warning] WIP [Warning]")
-	p_fgr := fgg.Translate(prog.(fgg.FGGProgram))
+	vPrintln("\nTranslating FGG to FG(R) using Wrappers: [Warning] WIP [Warning]")
+	//p_fgr := fgg.FgAdptrTranslate(prog.(fgg.FGGProgram))
+	//p_fgr := fgg.FgrTranslate(prog.(fgg.FGGProgram))
+	p_fgr := fgr.Translate(prog.(fgg.FGGProgram))
 	out := p_fgr.String()
 	// TODO: factor out with -monomc
 	if compile == "--" {
-		vPrintln(out)
+		fmt.Println(out)
 	} else {
 		vPrintln("Writing output to: " + compile)
 		bs := []byte(out)
 		err := ioutil.WriteFile(compile, bs, 0644)
 		checkErr(err)
+	}
+}
+
+func doOblit(prog base.Program, compile string) {
+	if compile == "" {
+		return
+	}
+	vPrintln("\nTranslating FGG to FG(R) using Obliteration: [Warning] WIP [Warning]")
+	p_fgr := fgr.Obliterate(prog.(fgg.FGGProgram))
+	out := p_fgr.String()
+	// TODO: factor out with -monomc
+	if compile == "--" {
+		fmt.Println(out)
+	} else {
+		vPrintln("Writing output to: " + compile)
+		bs := []byte(out)
+		err := ioutil.WriteFile(compile, bs, 0644)
+		checkErr(err)
+	}
+
+	// cf. interp -- TODO: refactor
+	p_fgr.Ok(false)
+	if fgrEvalSteps > NO_EVAL {
+		vPrint("\nEvaluating FGR:") // eval prints a leading "\n"
+		eval(p_fgr, fgrEvalSteps)
 	}
 }
 
@@ -279,6 +323,12 @@ func internalSrc() string {
 func checkErr(e error) {
 	if e != nil {
 		panic(e)
+	}
+}
+
+func vPrint(x string) {
+	if verbose {
+		fmt.Print(x)
 	}
 }
 

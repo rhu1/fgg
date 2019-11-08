@@ -3,32 +3,22 @@
  * Base ("abstract") types, interfaces, etc. are in fg.go.
  */
 
-package fg
+package fgr
 
+import "fmt"
 import "strings"
 
-/* "Exported" constructors for fgg (monomorph) */
+import "github.com/rhu1/fgg/fgg"
 
-// TODO: compact (cf. Expr getters)
-func NewVariable(id Name) Variable {
-	return Variable{id}
-}
+var _ = fmt.Errorf
 
-func NewStructLit(t Type, es []Expr) StructLit {
-	return StructLit{t, es}
-}
+/* "Exported" constructors for fgg (translation) */
 
-func NewSelect(e Expr, f Name) Select {
-	return Select{e, f}
-}
-
-func NewCall(e Expr, m Name, es []Expr) Call {
-	return Call{e, m, es}
-}
-
-func NewAssert(e Expr, t Type) Assert {
-	return Assert{e, t}
-}
+func NewVariable(id Name) Variable             { return Variable{id} }
+func NewStructLit(t Type, es []Expr) StructLit { return StructLit{t, es} }
+func NewSelect(e Expr, f Name) Select          { return Select{e, f} }
+func NewCall(e Expr, m Name, es []Expr) Call   { return Call{e, m, es} }
+func NewAssert(e Expr, t Type) Assert          { return Assert{e, t} }
 
 /* Variable */
 
@@ -47,7 +37,7 @@ func (x Variable) Subs(subs map[Variable]Expr) Expr {
 }
 
 func (x Variable) Eval(ds []Decl) (Expr, string) {
-	panic("Cannot evaluate free variable: " + x.id)
+	panic("Cannot reduce free variable: " + x.id)
 }
 
 func (x Variable) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
@@ -352,6 +342,200 @@ func (a Assert) IsValue() bool {
 
 func (a Assert) String() string {
 	return a.e.String() + ".(" + a.t.String() + ")"
+}
+
+/* Panic */
+
+type Panic struct{}
+
+var _ Expr = Panic{}
+
+func (p Panic) Subs(subs map[Variable]Expr) Expr {
+	return p
+}
+
+func (p Panic) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
+	panic("TODO: " + p.String()) // FIXME: allow any t
+}
+
+func (p Panic) Eval(ds []Decl) (Expr, string) {
+	panic("Cannot reduce panic.")
+}
+
+func (p Panic) IsValue() bool {
+	return true
+}
+
+func (p Panic) String() string {
+	return "panic"
+}
+
+/* IfThenElse */
+
+type IfThenElse struct {
+	e1 Expr // Cannot hardcode Call, needs to be a general eval context
+	e2 Expr // TmpTParam (Variable) or TypeTree
+	e3 Expr
+	//rho Map[fgg.Type]([]fgg.Sig)
+	src string // Original FGG source
+}
+
+var _ Expr = IfThenElse{}
+
+func (c IfThenElse) Subs(subs map[Variable]Expr) Expr {
+	return IfThenElse{c.e1.Subs(subs), c.e2.Subs(subs),
+		c.e3.Subs(subs), c.src}
+}
+
+func (c IfThenElse) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
+	if t1 := c.e1.Typing(ds, gamma, allowStupid); t1 != TRep {
+		panic("IfThenElse comparison LHS must be of type " + string(TRep) +
+			": found " + t1.String())
+	}
+	if t2 := c.e2.Typing(ds, gamma, allowStupid); t2 != TRep {
+		panic("IfThenElse comparison RHS must be of type " + string(TRep) +
+			": found " + t2.String())
+	}
+	t3 := c.e3.Typing(ds, gamma, allowStupid)
+	// !!! no explicit e4 -- should always be panic? (panic typing is TODO)
+	return t3
+}
+
+func (c IfThenElse) Eval(ds []Decl) (Expr, string) {
+	if !c.e1.IsValue() {
+		e, rule := c.e1.Eval(ds)
+		return IfThenElse{e.(Expr), c.e2, c.e3, c.src}, rule
+	}
+	if !c.e2.IsValue() {
+		e, rule := c.e2.Eval(ds)
+		return IfThenElse{c.e1, e.(Expr), c.e3, c.src}, rule
+	}
+
+	// TODO: refactor
+	var a fgg.FGGAdaptor
+	p_fgg := a.Parse(true, c.src).(fgg.FGGProgram)
+	ds_fgg := p_fgg.GetDecls()
+
+	tt1 := c.e1.(TypeTree)
+	tt2 := c.e2.(TypeTree)
+	if tt1.Reify().Impls(ds_fgg, make(fgg.TEnv), tt2.Reify()) {
+		return c.e3, "If-true"
+	} else {
+		return Panic{}, "If-false"
+	}
+}
+
+func (c IfThenElse) IsValue() bool {
+	return false
+}
+
+func (c IfThenElse) String() string {
+	return "(if " + c.e1.String() + " << " + c.e2.String() + " then " +
+		c.e3.String() + " else panic)" // !!! hardcoded else-panic
+}
+
+/* TypeTree -- the result of mkRep, i.e., run-time type rep value */
+
+type TypeTree struct {
+	t  Type
+	es []Expr // TypeTree or TmpTParam -- CHECKME: TmpTParam still needed?
+}
+
+var _ Expr = TypeTree{}
+
+func (tt TypeTree) Reify() fgg.TName {
+	if !tt.IsValue() {
+		panic("Cannot refiy non-ground TypeTree: " + tt.String())
+	}
+	us := make([]fgg.Type, len(tt.es)) // All TName
+	for i := 0; i < len(us); i++ {
+		us[i] = tt.es[i].(TypeTree).Reify() // CHECKME: guaranteed TypeTree?
+	}
+	return fgg.NewTName(string(tt.t), us)
+}
+
+func (tt TypeTree) Subs(subs map[Variable]Expr) Expr {
+	es := make([]Expr, len(tt.es))
+	for i := 0; i < len(es); i++ {
+		es[i] = tt.es[i].Subs(subs)
+	}
+	return TypeTree{tt.t, es}
+}
+
+func (tt TypeTree) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
+	return TRep
+}
+
+// !!! TypeTree evaluation contexts vs. reify aux?
+func (tt TypeTree) Eval(ds []Decl) (Expr, string) {
+	// Cf. StructLit.Eval
+	es := make([]Expr, len(tt.es))
+	done := false
+	var rule string
+	for i := 0; i < len(es); i++ {
+		v := tt.es[i]
+		if !done && !v.IsValue() {
+			v, rule = v.Eval(ds)
+			done = true
+		}
+		es[i] = v
+	}
+	if done {
+		return TypeTree{tt.t, es}, rule
+	} else {
+		panic("Cannot reduce: " + tt.String())
+	}
+}
+
+func (tt TypeTree) IsValue() bool {
+	for i := 0; i < len(tt.es); i++ {
+		if !tt.es[i].IsValue() {
+			return false
+		}
+	}
+	return true
+}
+
+func (tt TypeTree) String() string {
+	var b strings.Builder
+	b.WriteString(string(tt.t))
+	b.WriteString("[[")
+	writeExprs(&b, tt.es)
+	b.WriteString("]]")
+	return b.String()
+}
+
+/* Intermediate TParam */
+
+// Cf. Variable
+type TmpTParam struct {
+	id Name
+}
+
+var _ Expr = TmpTParam{}
+
+func (tmp TmpTParam) Subs(subs map[Variable]Expr) Expr {
+	a := NewVariable(tmp.id) // FIXME -- should just make Variable earlier? -- or make a Disamb pass?
+	if e, ok := subs[a]; ok {
+		return e
+	}
+	return a // FIXME -- should not depend on calling Subs to disamb?
+}
+
+func (tmp TmpTParam) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
+	panic("TODO: " + tmp.String()) // CHECKME?
+}
+
+func (tmp TmpTParam) Eval(ds []Decl) (Expr, string) {
+	panic("Shouldn't get in here: " + tmp.String())
+}
+
+func (tmp TmpTParam) IsValue() bool {
+	panic("Shouldn't get in here: " + tmp.String())
+}
+
+func (tmp TmpTParam) String() string {
+	return tmp.id
 }
 
 /* Aux, helpers */

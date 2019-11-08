@@ -1,10 +1,8 @@
 package base
 
-type Adaptor interface {
-	Parse(strictParse bool, input string) Program
-}
+type Name = string // Type alias (cf. type def)
 
-type Name = string // Type alias (cf. definition)
+/* AST Nodes */
 
 type AstNode interface {
 	String() string
@@ -27,4 +25,10 @@ type Program interface {
 type Expr interface {
 	AstNode
 	IsValue() bool
+}
+
+/* ANTLR (parsing) */
+
+type Adaptor interface {
+	Parse(strictParse bool, input string) Program
 }

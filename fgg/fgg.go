@@ -9,6 +9,12 @@ import "github.com/rhu1/fgg/base"
 var _ = fmt.Errorf
 var _ = reflect.Append
 
+/* Export */
+
+func NewTName(t Name, us []Type) TName {
+	return TName{t, us}
+}
+
 /* Name, Type, Type param, Type name -- !!! submission version, "Type name" overloaded */
 
 type Name = base.Name // TODO: tidy up refactoring, due to introducing base
@@ -69,6 +75,16 @@ type TName struct {
 
 var _ Type = TName{}
 var _ Spec = TName{}
+
+// TODO: refactor
+func (u0 TName) GetName() Name {
+	return u0.t
+}
+
+// TODO: refactor
+func (u0 TName) GetTArgs() []Type {
+	return u0.us
+}
 
 func (u0 TName) TSubs(subs map[TParam]Type) Type {
 	us := make([]Type, len(u0.us))
@@ -198,7 +214,7 @@ type Decl = base.Decl
 
 type TDecl interface {
 	Decl
-	GetTFormals() TFormals
+	GetTFormals() TFormals // TODO: rename? potential clash with, e.g., MDecl, can cause "false" interface satisfaction
 }
 
 type Spec interface {
@@ -227,11 +243,6 @@ func isStructType(ds []Decl, t Name) bool {
 	return false
 }
 
-/*// TODO FIXME -- temp for visibility
-func IsStructTName1(ds []Decl, u Type) bool {
-	return isStructTName(ds, u)
-}*/
-
 // Check if u is a \tau_S -- implicitly must be a TName
 func isStructTName(ds []Decl, u Type) bool {
 	if u1, ok := u.(TName); ok {
@@ -245,6 +256,11 @@ func isStructTName(ds []Decl, u Type) bool {
 	return false
 }
 
+// TODO FIXME -- temp for visibility
+func IsStructTName1(ds []Decl, u Type) bool {
+	return isStructTName(ds, u)
+}
+
 // Check if u is a \tau_I -- N.B. looks for a *TName*, i.e., not a TParam
 func isInterfaceTName(ds []Decl, u Type) bool {
 	if u1, ok := u.(TName); ok {
@@ -256,6 +272,11 @@ func isInterfaceTName(ds []Decl, u Type) bool {
 		}
 	}
 	return false
+}
+
+// TODO: refactor
+func IsInterfaceTName1(ds []Decl, u Type) bool {
+	return isInterfaceTName(ds, u)
 }
 
 func writeTypes(b *strings.Builder, us []Type) {

@@ -14,6 +14,12 @@ import "github.com/rhu1/fgg/base"
 var _ = fmt.Errorf
 var _ = reflect.Append
 
+/* Public constructors */
+
+func NewProgram(ds []Decl, e Expr) FGGProgram {
+	return FGGProgram{ds, e}
+}
+
 /* Program */
 
 type FGGProgram struct {
@@ -100,6 +106,11 @@ func (psi TFormals) ToTEnv() TEnv {
 	return delta
 }
 
+// TODO: refactor
+func (psi TFormals) GetFormals() []TFormal {
+	return psi.tfs
+}
+
 func (psi TFormals) String() string {
 	var b strings.Builder
 	b.WriteString("(type ") // Includes "(...)" -- cf. e.g., writeFieldDecls
@@ -121,6 +132,16 @@ type TFormal struct {
 	// ^If so, then can refine to TName
 }
 
+// TODO refactor
+func (tf TFormal) GetTParam() TParam {
+	return tf.a
+}
+
+// TODO refactor
+func (tf TFormal) GetType() Type {
+	return tf.u
+}
+
 func (tf TFormal) String() string {
 	return string(tf.a) + " " + tf.u.String()
 }
@@ -139,12 +160,15 @@ func (s STypeLit) Ok(ds []Decl) {
 	TDeclOk(ds, s)
 }
 
-func (s STypeLit) GetName() Name {
-	return s.t
-}
+// TODO: compact (cf. fg.Expr getters)
+func (s STypeLit) GetName() Name { return s.t }
 
 func (s STypeLit) GetTFormals() TFormals {
 	return s.psi
+}
+
+func (s STypeLit) GetFieldDecls() []FieldDecl {
+	return s.fds
 }
 
 func (s STypeLit) String() string {
@@ -168,6 +192,16 @@ type FieldDecl struct {
 }
 
 var _ FGGNode = FieldDecl{}
+
+// TODO refactor
+func (fd FieldDecl) GetName() Name {
+	return fd.f
+}
+
+// TODO refactor
+func (fd FieldDecl) GetType() Type {
+	return fd.u
+}
 
 func (fd FieldDecl) Subs(subs map[TParam]Type) FieldDecl {
 	return FieldDecl{fd.f, fd.u.TSubs(subs)}
@@ -234,8 +268,43 @@ func (md MDecl) Ok(ds []Decl) {
 	}
 }
 
+// TODO refactor
+func (md MDecl) GetRecvName() Name {
+	return md.x_recv
+}
+
+// TODO refactor
+func (md MDecl) GetRecvTypeName() Name {
+	return md.t_recv
+}
+
+// TODO refactor
+func (md MDecl) GetRecvTFormals() TFormals {
+	return md.psi_recv
+}
+
 func (md MDecl) GetName() Name {
 	return md.m
+}
+
+// TODO refactor // TODO: MDecl in name to prevent false capture by TDecl interface
+func (md MDecl) GetMDeclTFormals() TFormals {
+	return md.psi
+}
+
+// TODO refactor
+func (md MDecl) GetParamDecls() []ParamDecl {
+	return md.pds
+}
+
+// TODO refactor
+func (md MDecl) GetReturn() Type {
+	return md.u
+}
+
+// TODO refactor
+func (md MDecl) GetExpr() Expr {
+	return md.e
 }
 
 func (md MDecl) String() string {
@@ -266,6 +335,16 @@ type ParamDecl struct {
 }
 
 var _ FGGNode = ParamDecl{}
+
+// TODO refactor
+func (pd ParamDecl) GetName() Name {
+	return pd.x
+}
+
+// TODO refactor
+func (pd ParamDecl) GetType() Type {
+	return pd.u
+}
 
 func (pd ParamDecl) String() string {
 	return pd.x + " " + pd.u.String()
@@ -300,6 +379,11 @@ func (c ITypeLit) GetTFormals() TFormals {
 	return c.psi
 }
 
+// TODO refactor
+func (c ITypeLit) GetSpecs() []Spec {
+	return c.ss
+}
+
 func (c ITypeLit) String() string {
 	var b strings.Builder
 	b.WriteString("type ")
@@ -328,7 +412,26 @@ type Sig struct {
 
 var _ Spec = Sig{}
 
-// TODO: rename TSubs
+// TODO: refactor
+func (g Sig) GetName() Name {
+	return g.m
+}
+
+// TODO: refactor
+func (g Sig) GetTFormals() TFormals {
+	return g.psi
+}
+
+// TODO: refactor
+func (g Sig) GetParamDecls() []ParamDecl {
+	return g.pds
+}
+
+// TODO: refactor
+func (g Sig) GetType() Type {
+	return g.u
+}
+
 func (g Sig) TSubs(subs map[TParam]Type) Sig {
 	tfs := make([]TFormal, len(g.psi.tfs))
 	for i := 0; i < len(g.psi.tfs); i++ {

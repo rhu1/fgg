@@ -13,6 +13,12 @@ var _ = fmt.Errorf
 var _ = reflect.Append
 var _ = strings.Compare
 
+/* Public constructors */
+
+func NewVariable(id Name) Variable {
+	return Variable{id}
+}
+
 /* Variable */
 
 type Variable struct {
@@ -20,6 +26,11 @@ type Variable struct {
 }
 
 var _ Expr = Variable{}
+
+// TODO refactor
+func (x Variable) GetName() Name {
+	return x.id
+}
 
 func (x Variable) Subs(m map[Variable]Expr) Expr {
 	res, ok := m[x]
@@ -63,6 +74,16 @@ type StructLit struct {
 }
 
 var _ Expr = StructLit{}
+
+// TODO refactor
+func (s StructLit) GetTName() TName {
+	return s.u
+}
+
+// TODO refactor
+func (s StructLit) GetArgs() []Expr {
+	return s.es
+}
 
 func (s StructLit) Subs(subs map[Variable]Expr) Expr {
 	es := make([]Expr, len(s.es))
@@ -149,6 +170,18 @@ type Select struct {
 	f Name
 }
 
+var _ Expr = Select{}
+
+// TODO refactor
+func (s Select) GetExpr() Expr {
+	return s.e
+}
+
+// TODO refactor
+func (s Select) GetName() Name {
+	return s.f
+}
+
 func (s Select) Subs(subs map[Variable]Expr) Expr {
 	return Select{s.e.Subs(subs), s.f}
 }
@@ -203,6 +236,14 @@ type Call struct {
 	targs []Type
 	args  []Expr
 }
+
+var _ Expr = Call{}
+
+// TODO refactor
+func (c Call) GetRecv() Expr    { return c.e }
+func (c Call) GetName() Name    { return c.m }
+func (c Call) GetTArgs() []Type { return c.targs }
+func (c Call) GetArgs() []Expr  { return c.args }
 
 func (c Call) Subs(subs map[Variable]Expr) Expr {
 	e := c.e.Subs(subs)
@@ -333,6 +374,9 @@ type Assert struct {
 	e Expr
 	u Type
 }
+
+func (a Assert) GetExpr() Expr { return a.e }
+func (a Assert) GetType() Type { return a.u }
 
 func (a Assert) Subs(subs map[Variable]Expr) Expr {
 	return Assert{a.e.Subs(subs), a.u}
