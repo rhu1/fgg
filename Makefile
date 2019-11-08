@@ -202,6 +202,10 @@ test-oblit:
 	go run github.com/rhu1/fgg -fgg -fgrc=tmp/test-oblit/fgr/box/box.fgr -fgreval=10 fgg/examples/monom/box/box.fgg
 	go run github.com/rhu1/fgg -fgg -fgrc=tmp/test-oblit/fgr/box/box2.fgr -fgreval=10 fgg/examples/monom/box/box2.fgg
 
+	mkdir -p tmp/test-oblit/fgr/julien
+	go run github.com/rhu1/fgg -fgg -fgrc=tmp/test/fgr/monom/julien/ifacebox.fgr -fgreval=-1 fgg/examples/monom/julien/ifacebox.fgg
+	go run github.com/rhu1/fgg -fgg -fgrc=tmp/test/fgr/monom/julien/ifacebox-nomethparam.fgr -fgreval=-1 fgg/examples/monom/julien/ifacebox-nomethparam.fgg
+
 
 .PHONY: clean-test-oblit
 clean-test-oblit:
@@ -226,6 +230,10 @@ clean-test-oblit:
 	rm -f tmp/test-oblit/fgr/box/box.fgr
 	rm -f tmp/test-oblit/fgr/box/box2.fgr
 	rm -fd tmp/test-oblit/fgr/box
+
+	rm -f tmp/test-oblit/fgr/julien/ifacebox.fgr
+	rm -f tmp/test-oblit/fgr/julien/ifacebox-nomethparam.fgr
+	rm -fd tmp/test-oblit/fgr/julien
 
 
 .PHONY: clean-test
