@@ -77,7 +77,8 @@ var (
 	monomc string // output filename of monomorphised FGG; "--" for stdout
 	// TODO refactor naming between "monomc", "compile" and "fgrc"
 
-	fgrc string // output filename of FGR compilation; "--" for stdout
+	fgrc         string // output filename of FGR compilation; "--" for stdout
+	fgrEvalSteps int
 
 	useInternalSrc bool   // use internal source
 	inlineSrc      string // use content of this as source
@@ -105,6 +106,8 @@ func init() {
 	flag.StringVar(&fgrc, "fgrc", "", // Empty string for "false"
 		"[WIP] compile FGG source to FGR (ignored if -fgg not set)\n"+
 			"specify '--' to print to stdout")
+	flag.IntVar(&fgrEvalSteps, "fgreval", NO_EVAL,
+		" N ⇒ evaluate N (≥ 0) steps; or\n-1 ⇒ evaluate to value (or panic)")
 
 	// Parsing options
 	flag.BoolVar(&useInternalSrc, "internal", false,
@@ -286,14 +289,17 @@ func doOblit(prog base.Program, compile string) {
 	// TODO: factor out with -monomc
 	if compile == "--" {
 		fmt.Println(out)
-
-		eval(p_fgr, -1)
-
 	} else {
 		vPrintln("Writing output to: " + compile)
 		bs := []byte(out)
 		err := ioutil.WriteFile(compile, bs, 0644)
 		checkErr(err)
+	}
+
+	// cf. interp -- TODO: refactor
+	if fgrEvalSteps > NO_EVAL {
+		vPrint("\nEvaluating FGR:") // eval prints a leading "\n"
+		eval(p_fgr, fgrEvalSteps)
 	}
 }
 
@@ -311,6 +317,12 @@ func internalSrc() string {
 func checkErr(e error) {
 	if e != nil {
 		panic(e)
+	}
+}
+
+func vPrint(x string) {
+	if verbose {
+		fmt.Print(x)
 	}
 }
 

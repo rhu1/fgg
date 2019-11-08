@@ -14,7 +14,7 @@
 
 
 .PHONY: test
-test: test-fg test-fgg test-monom test-fg2fgg
+test: test-fg test-fgg test-fg2fgg test-monom test-oblit
 
 
 .PHONY: clean
@@ -106,6 +106,7 @@ test-monom:
 clean-test-monom:
 	rm -f tmp/test/fg/booleans/booleans.go
 	rm -fd tmp/test/fg/booleans
+# TODO: use test-monom dir instead of test
 
 	rm -f tmp/test/fg/compose/compose.go
 	rm -fd tmp/test/fg/compose
@@ -155,7 +156,6 @@ test-fg2fgg:
 # TODO: run fg_test.go unit tests through fg2fgg
 
 
-
 .PHONY: clean-test-fg2fgg
 clean-test-fg2fgg:
 	rm -f tmp/test/fgg/booleans/booleans.fgg
@@ -177,6 +177,57 @@ clean-test-fg2fgg:
 	rm -fd tmp/test/fgg/not
 
 
+.PHONY: test-oblit
+test-oblit:
+	mkdir -p tmp/test-oblit/fgr/booleans
+	go run github.com/rhu1/fgg -fgg -fgrc=tmp/test-oblit/fgr/booleans/booleans.fgr -fgreval=-1 fgg/examples/popl20/booleans/booleans.fgg
+# TODO: standalone FGR execution (.fgr output currently unused)
+# 
+	mkdir -p tmp/test-oblit/fgr/compose
+	go run github.com/rhu1/fgg -fgg -fgrc=tmp/test-oblit/fgr/compose/compose.fgr -fgreval=-1 fgg/examples/popl20/compose/compose.fgg
+
+	mkdir -p tmp/test-oblit/fgr/graph
+	go run github.com/rhu1/fgg -fgg -fgrc=tmp/test-oblit/fgr/graph/graph.fgr -fgreval=-1 fgg/examples/popl20/graph/graph.fgg
+
+	mkdir -p tmp/test-oblit/fgr/irregular
+	go run github.com/rhu1/fgg -fgg -fgrc=tmp/test-oblit/fgr/irregular/irregular.fgr -fgreval=-1 fgg/examples/popl20/irregular/irregular.fgg
+
+	mkdir -p tmp/test-oblit/fgr/map
+	go run github.com/rhu1/fgg -fgg -fgrc=tmp/test-oblit/fgr/map/map.fgr -fgreval=-1 fgg/examples/popl20/map/map.fgg
+
+	mkdir -p tmp/test-oblit/fgr/monomorph
+	go run github.com/rhu1/fgg -fgg -fgrc=tmp/test-oblit/fgr/monomorph/monomorph.fgr -fgreval=-1 fgg/examples/popl20/monomorph/monomorph.fgg
+
+	mkdir -p tmp/test-oblit/fgr/box
+	go run github.com/rhu1/fgg -fgg -fgrc=tmp/test-oblit/fgr/box/box.fgr -fgreval=10 fgg/examples/monom/box/box.fgg
+	go run github.com/rhu1/fgg -fgg -fgrc=tmp/test-oblit/fgr/box/box2.fgr -fgreval=10 fgg/examples/monom/box/box2.fgg
+
+
+.PHONY: clean-test-oblit
+clean-test-oblit:
+	rm -f tmp/test-oblit/fgr/booleans/booleans.fgr
+	rm -fd tmp/test-oblit/fgr/booleans
+
+	rm -f tmp/test-oblit/fgr/compose/compose.fgr
+	rm -fd tmp/test-oblit/fgr/compose
+
+	rm -f tmp/test-oblit/fgr/graph/graph.fgr
+	rm -fd tmp/test-oblit/fgr/graph
+
+	rm -f tmp/test-oblit/fgr/irregular/irregular.fgr
+	rm -fd tmp/test-oblit/fgr/irregular
+
+	rm -f tmp/test-oblit/fgr/map/map.fgr
+	rm -fd tmp/test-oblit/fgr/map
+
+	rm -f tmp/test-oblit/fgr/monomorph/monomorph.fgr
+	rm -fd tmp/test-oblit/fgr/monomorph
+
+	rm -f tmp/test-oblit/fgr/box/box.fgr
+	rm -f tmp/test-oblit/fgr/box/box2.fgr
+	rm -fd tmp/test-oblit/fgr/box
+
+
 .PHONY: clean-test
-clean-test: clean-test-monom clean-test-fg2fgg
+clean-test: clean-test-fg2fgg clean-test-monom clean-test-oblit
 
