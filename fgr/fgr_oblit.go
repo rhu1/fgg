@@ -206,7 +206,9 @@ func oblitExpr(ds_fgg []Decl, delta fgg.TEnv, gamma fgg.Env,
 		}
 		var res Expr
 		res = NewSelect(e_fgr, f)
-		res = NewAssert(res, toFgrTypeFromBounds(delta, u_f)) // !!! adds cast when field type is a struct
+		if !fgg.IsStructTName1(ds_fgg, u_f) { // !!! don't add cast when field type is a struct
+			res = NewAssert(res, toFgrTypeFromBounds(delta, u_f))
+		}
 		return res
 	case fgg.Call:
 		e_fgg := e.GetRecv() // Shadows original e_fgg
