@@ -302,6 +302,7 @@ func doOblit(prog base.Program, compile string) {
 	}
 
 	// cf. interp -- TODO: refactor
+	p_fgr.Ok(false)
 	if fgrEvalSteps > NO_EVAL {
 		vPrint("\nEvaluating FGR:") // eval prints a leading "\n"
 		eval(p_fgr, fgrEvalSteps)
