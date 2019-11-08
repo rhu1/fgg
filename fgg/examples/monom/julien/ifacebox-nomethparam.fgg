@@ -30,10 +30,12 @@ func (a BBox(type A Any())) Make(type )() Box(A) {
 
 
 
-type E(type ) struct {val D};
+//type E(type ) struct {val D};  // FIXME: WF check
+type E(type ) struct {val D()};
 
 
-type D(type ) struct {val E};
+//type D(type ) struct {val E};  // FIXME: WF check
+type D(type ) struct {val E()};
 
 type Dummy(type ) struct{};
 func (x Dummy(type )) doSomething(type )(y Box(E())) Box(E()) {
