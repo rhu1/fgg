@@ -256,6 +256,29 @@ func toFgrTypeFromBounds(delta fgg.TEnv, u fgg.Type) Type {
 	return Type(fgg.Bounds1(delta, u).(fgg.TName).GetName())
 }
 
+func dtype(ds []Delta, delta fgg.TEnv, gamma fgg.Env, d fgg.Expr) fgg.Type {
+	switch e := d.(type) {
+	case fgg.Variable:
+		return gamma[e]
+	case fgg.StructLit:
+		t_S := e.GetTName()
+		td := getTDecl(ds, t_S).(STypeLit)
+		td.GetType().(TName)
+
+		HERE
+
+		return
+	case fgg.Select:
+		panic("TODO: " + e)
+	case fgg.Call:
+		panic("TODO: " + e)
+	case fgg.Assert:
+		panic("TODO: " + e)
+	default:
+		panic("TODO: " + e)
+	}
+}
+
 // Post: TypeTree or TmpTParam
 func oblitMkRep(u fgg.Type) Expr {
 	switch u1 := u.(type) {
