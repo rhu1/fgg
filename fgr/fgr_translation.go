@@ -338,7 +338,7 @@ func fgrTransExpr(ds []Decl, delta fgg.TEnv, gamma fgg.Env, e fgg.Expr,
 		for i := 0; i < len(tfs_recv); i++ {
 			us[i] = tfs_recv[i].GetTParam()
 		}
-		dummy := fgg.NewTName(td.GetName(), us) // From the "base" type decl, not the instantiated type
+		dummy := fgg.NewTName(td.GetName(), us) // From the "base" type decl, not the instantiated type -- TODO: dtype
 		g := fgg.Methods1(ds, dummy)[m]
 
 		delta1 := make(map[fgg.TParam]fgg.Type)
