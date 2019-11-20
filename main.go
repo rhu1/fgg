@@ -75,10 +75,10 @@ var (
 
 	monom  bool   // parse FGG and monomorphise FGG source
 	monomc string // output filename of monomorphised FGG; "--" for stdout
-	// TODO refactor naming between "monomc", "compile" and "fgrc"
+	// TODO refactor naming between "monomc", "compile" and "oblitc"
 
-	fgrc         string // output filename of FGR compilation; "--" for stdout
-	fgrEvalSteps int
+	oblitc         string // output filename of FGR compilation via oblit; "--" for stdout
+	oblitEvalSteps int
 
 	useInternalSrc bool   // use internal source
 	inlineSrc      string // use content of this as source
@@ -105,10 +105,10 @@ func init() {
 			"specify '--' to print to stdout")
 
 	// Erasure(?) by translation based on type reps -- FGG vs. FGR?
-	flag.StringVar(&fgrc, "fgrc", "", // Empty string for "false"
+	flag.StringVar(&oblitc, "oblitc", "", // Empty string for "false"
 		"[WIP] compile FGG source to FGR (ignored if -fgg not set)\n"+
 			"specify '--' to print to stdout")
-	flag.IntVar(&fgrEvalSteps, "fgreval", NO_EVAL,
+	flag.IntVar(&oblitEvalSteps, "oblit-eval", NO_EVAL,
 		" N ⇒ evaluate N (≥ 0) steps; or\n-1 ⇒ evaluate to value (or panic)")
 
 	// Parsing options
@@ -186,8 +186,8 @@ func main() {
 
 		// TODO: refactor
 		doMonom(prog, monom, monomc)
-		//doWrappers(prog, fgrc)
-		doOblit(prog, fgrc)
+		//doWrappers(prog, wrapperc)
+		doOblit(prog, oblitc)
 	}
 }
 
@@ -303,9 +303,9 @@ func doOblit(prog base.Program, compile string) {
 
 	// cf. interp -- TODO: refactor
 	p_fgr.Ok(false)
-	if fgrEvalSteps > NO_EVAL {
+	if oblitEvalSteps > NO_EVAL {
 		vPrint("\nEvaluating FGR:") // eval prints a leading "\n"
-		eval(p_fgr, fgrEvalSteps)
+		eval(p_fgr, oblitEvalSteps)
 	}
 }
 
