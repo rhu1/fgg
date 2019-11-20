@@ -1,5 +1,5 @@
 //$ go run github.com/rhu1/fgg -fgg [-monom] -v fgg/examples/monom/box/box.fgg
-//$ go run github.com/rhu1/fgg -fgg -fgrc=tmp/test/fgr/box/box.go -v fgg/examples/monom/box/box.fgg
+//$ go run github.com/rhu1/fgg -fgg -oblitc=tmp/test/fgr/box/box.go -v fgg/examples/monom/box/box.fgg
 
 // Cf. https://github.com/btoninho/featherweight_go/blob/3551b979a13efb51859d2bb4b3a1733f44821e14/agda/Mono.lagda#L358
 package main;

@@ -73,12 +73,12 @@ var (
 	interpFG  bool // parse FG
 	interpFGG bool // parse FGG
 
-	monom  bool   // parse FGG and monomorphise FGG source
-	monomc string // output filename of monomorphised FGG; "--" for stdout
+	monom  bool   // parse FGG and monomorphise FGG source -- paper notation (angle bracks)
+	monomc string // output filename of monomorphised FGG; "--" for stdout -- Go output (no angle bracks)
 	// TODO refactor naming between "monomc", "compile" and "oblitc"
 
 	oblitc         string // output filename of FGR compilation via oblit; "--" for stdout
-	oblitEvalSteps int
+	oblitEvalSteps int    // TODO: Need an actual FGR syntax, for oblitc to concrete output
 
 	useInternalSrc bool   // use internal source
 	inlineSrc      string // use content of this as source
@@ -99,9 +99,9 @@ func init() {
 
 	// Erasure by monomorphisation -- implicitly disabled if not -fgg
 	flag.BoolVar(&monom, "monom", false,
-		"[WIP] monomorphise FGG source using formal notation (ignored if -fgg not set)")
+		"[WIP] monomorphise FGG source using paper notation, i.e., angle bracks (ignored if -fgg not set)")
 	flag.StringVar(&monomc, "monomc", "", // Empty string for "false"
-		"[WIP] monomorphise FGG source to FG (ignored if -fgg not set)\n"+
+		"[WIP] monomorphise FGG source to (Go-compatible) FG, i.e., no angle bracks (ignored if -fgg not set)\n"+
 			"specify '--' to print to stdout")
 
 	// Erasure(?) by translation based on type reps -- FGG vs. FGR?
