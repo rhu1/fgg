@@ -1,3 +1,6 @@
+//$ go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/julien/ifacebox.go -v fgg/examples/monom/julien/ifacebox.fgg
+//$ go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/julien/ifacebox.go
+
 //$ go run github.com/rhu1/fgg -fgg -oblitc=tmp/test/fgr/monom/julien/ifacebox.fgr -v -oblit-eval=10 fgg/examples/monom/julien/ifacebox.fgg
 
 package main;
