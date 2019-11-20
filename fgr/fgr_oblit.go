@@ -206,7 +206,9 @@ func oblitExpr(ds_fgg []Decl, delta fgg.TEnv, gamma fgg.Env,
 		}
 		var res Expr
 		res = NewSelect(e_fgr, f)
-		if !fgg.IsStructTName1(ds_fgg, u_f) { // !!! don't add cast when field type is a struct
+		du := dtype(ds_fgg, delta, gamma, e)
+		//if !fgg.IsStructTName1(ds_fgg, u_f) { // !!! don't add cast when field type is a struct
+		if !fgg.IsStructTName1(ds_fgg, du) { // if the FGR field decl type is (erased) non-struct, in general need to cast the select result to the (erasure of the) expected FGG type
 			res = NewAssert(res, toFgrTypeFromBounds(delta, u_f))
 		}
 		return res
@@ -256,26 +258,39 @@ func toFgrTypeFromBounds(delta fgg.TEnv, u fgg.Type) Type {
 	return Type(fgg.Bounds1(delta, u).(fgg.TName).GetName())
 }
 
-func dtype(ds []Delta, delta fgg.TEnv, gamma fgg.Env, d fgg.Expr) fgg.Type {
+// TODO: check where dtype should be used in wrapper translation -- and add unit tests (when return type is type param, don't want the FGG type arg, which may be struct; want the FGR target decl type as the wrapper target)
+func dtype(ds []Decl, delta fgg.TEnv, gamma fgg.Env, d fgg.Expr) fgg.Type {
 	switch e := d.(type) {
 	case fgg.Variable:
-		return gamma[e]
+		return gamma[e.GetName()]
 	case fgg.StructLit:
-		t_S := e.GetTName()
-		td := getTDecl(ds, t_S).(STypeLit)
-		td.GetType().(TName)
-
-		HERE
-
-		return
+		t_S := e.GetTName().GetName()
+		td := fgg.GetTDecl1(ds, t_S).(fgg.STypeLit)
+		tfs := td.GetTFormals().GetFormals()
+		us := make([]fgg.Type, len(tfs))
+		for i := 0; i < len(us); i++ {
+			us[i] = fgg.TParam(tfs[i].GetTParam().String())
+		}
+		return fgg.NewTName(t_S, us)
 	case fgg.Select:
-		panic("TODO: " + e)
+		u := dtype(ds, delta, gamma, e.GetExpr()).(fgg.TName)
+		fds := fgg.Fields1(ds, u)
+		f := e.GetName()
+		for _, fd := range fds {
+			if fd.GetName() == f {
+				return fd.GetType()
+			}
+		}
+		panic("Field " + f + "not found in: " + u.String())
 	case fgg.Call:
-		panic("TODO: " + e)
+		u := fgg.Bounds1(delta, dtype(ds, delta, gamma, e.GetRecv()))
+		g := fgg.Methods1(ds, u)[e.GetName()]
+		return g.GetType()
 	case fgg.Assert:
-		panic("TODO: " + e)
+		return e.GetType()
 	default:
-		panic("TODO: " + e)
+		panic("Unknown FGG expr kind: " + reflect.TypeOf(e).String() + "\n\t" +
+			e.String())
 	}
 }
 

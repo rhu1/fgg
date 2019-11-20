@@ -11,9 +11,7 @@ var _ = reflect.Append
 
 /* Export */
 
-func NewTName(t Name, us []Type) TName {
-	return TName{t, us}
-}
+func NewTName(t Name, us []Type) TName { return TName{t, us} }
 
 /* Name, Type, Type param, Type name -- !!! submission version, "Type name" overloaded */
 
