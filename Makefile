@@ -99,6 +99,10 @@ test-monom:
 	go run github.com/rhu1/fgg -fgg -eval=10 -monomc=tmp/test/fg/box/box2.go fgg/examples/monom/box/box2.fgg
 	go run github.com/rhu1/fgg -eval=10 tmp/test/fg/box/box2.go
 
+	mkdir -p tmp/test/fg/julien
+	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/julien/ifacebox-nomethparam.go fgg/examples/monom/julien/ifacebox-nomethparam.fgg
+	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/julien/ifacebox-nomethparam.go
+
 # TODO: check simulation of -monom output (same result and number of eval steps)
 
 
@@ -125,6 +129,9 @@ clean-test-monom:
 
 	rm -f tmp/test/fg/box/box2.go
 	rm -fd tmp/test/fg/box
+
+	rm -f tmp/test/fg/julien/ifacebox-nomethparam.go
+	rm -fd tmp/test/fg/julien/ifacebox-nomethparam
 
 
 .PHONY: test-fg2fgg
