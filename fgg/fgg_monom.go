@@ -569,7 +569,7 @@ func collectGroundFggType(ds []Decl, u Type, ground map[string]Ground) {
 		}
 
 		// visit meths
-		gs := methods(ds, u)
+		gs := methods(ds, u_S)
 		for _, g := range gs {
 			// visit types in sig
 			pds := g.GetParamDecls()
@@ -593,7 +593,32 @@ func collectGroundFggType(ds []Decl, u Type, ground map[string]Ground) {
 
 		// check all super interfaces, and visit all meths of sub structs (recursively) -- no
 	} else { // interface
-		// TODO visit sigs and embedded
+		u_I := u1
+
+		// visit meths
+		gs := methods(ds, u_I)
+		for _, g := range gs {
+			// visit types in sig // TODO: duplicated from above, factor out
+			pds := g.GetParamDecls()
+			for i := 0; i < len(pds); i++ {
+				u_pd := pds[i].GetType()
+				collectGroundFggType(ds, u_pd, ground)
+			}
+			collectGroundFggType(ds, g.u, ground)
+		}
+
+		// visit embedded
+		td := getTDecl(ds, u_I.t).(ITypeLit)
+		tfs := td.GetTFormals().GetFormals()
+		subs := make(map[TParam]Type)
+		for i := 0; i < len(u_I.us); i++ {
+			subs[tfs[i].a] = u_I.us[i]
+		}
+		for _, s := range td.ss {
+			if u, ok := s.(TName); ok {
+				collectGroundFggType(ds, u.TSubs(subs), ground)
+			}
+		}
 
 		// visit all meths of sub structs -- no
 	}
