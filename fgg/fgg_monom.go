@@ -322,49 +322,6 @@ type MonoSig struct {
 	// ..method under targs (and the TEnv of the parent TDecl instance)
 }
 
-func MakeWMap2(ds []Decl, ground map[string]Ground, omega WMap) {
-	for _, v := range ground {
-		wk := toWKey(v.u)
-		gs := make(map[string]MonoSig)
-		omega[wk] = WVal{v.u, toMonomId(v.u), gs}
-		/*}
-
-		for _, v := range ground {*/
-		for _, pair := range v.gs {
-			if len(pair.targs) == 0 {
-				continue
-			}
-			hash := pair.g.String()
-			pds := pair.g.GetParamDecls()
-			pds_fg := make([]fg.ParamDecl, len(pds))
-			for i := 0; i < len(pds); i++ {
-				pd := pds[i]
-				pds_fg[i] = fg.NewParamDecl(pd.x, toMonomId(pd.u.(TName)))
-			}
-			ret := pair.g.u.(TName)
-			m := getMonomMethName(omega, pair.g.m, pair.targs)
-			//gs := omega[toWKey(v.u)].gs
-			gs[hash] = MonoSig{fg.NewSig(m, pds_fg, toMonomId(ret)), pair.targs, ret}
-		}
-	}
-
-	/*for _, d1 := range ds {
-		switch d := d1.(type) {
-		case STypeLit:
-			if len(d.GetTFormals().GetFormals()) == 0 {
-				u := TName{d.t, []Type{}}
-				wk := toWKey(u)
-				if _, ok := omega[wk]; ok {
-					continue
-				}
-				omega[wk] = WVal{u, toMonomId(u), make(map[string]MonoSig)}
-			}
-		case ITypeLit:
-			// CHECKME: meth decls?
-		}
-	}*/
-}
-
 // CHECKME: "whole-program" approach starting from the "main" Expr means monom
 // may somtimes work in the presence of irregular types and polymorphic
 // recursion? -- the cost is, of course, to give up separate compilation
@@ -546,6 +503,60 @@ func getOrigMethName(m Name) Name { // Hack
 
 /****************/
 
+func MakeWMap2(ds []Decl, ground map[string]Ground, omega WMap) {
+	for _, v := range ground {
+		wk := toWKey(v.u)
+		gs := make(map[string]MonoSig)
+		omega[wk] = WVal{v.u, toMonomId(v.u), gs}
+		/*}
+
+		for _, v := range ground {*/
+		for _, pair := range v.gs {
+			if len(pair.targs) == 0 {
+				continue
+			}
+			hash := pair.g.String()
+			pds := pair.g.GetParamDecls()
+			pds_fg := make([]fg.ParamDecl, len(pds))
+			for i := 0; i < len(pds); i++ {
+				pd := pds[i]
+				pds_fg[i] = fg.NewParamDecl(pd.x, toMonomId(pd.u.(TName)))
+			}
+			ret := pair.g.u.(TName)
+			m := getMonomMethName(omega, pair.g.m, pair.targs)
+			//gs := omega[toWKey(v.u)].gs
+			gs[hash] = MonoSig{fg.NewSig(m, pds_fg, toMonomId(ret)), pair.targs, ret}
+		}
+	}
+
+	/*for _, d1 := range ds {
+		switch d := d1.(type) {
+		case STypeLit:
+			if len(d.GetTFormals().GetFormals()) == 0 {
+				u := TName{d.t, []Type{}}
+				wk := toWKey(u)
+				if _, ok := omega[wk]; ok {
+					continue
+				}
+				omega[wk] = WVal{u, toMonomId(u), make(map[string]MonoSig)}
+			}
+		case ITypeLit:
+			// CHECKME: meth decls?
+		}
+	}*/
+}
+
+// Cf. WVal
+type Ground struct {
+	u  TName                 // Pre: isClosed(u)
+	gs map[string]GroundPair // // HACK: string key is Sig.String
+}
+
+type GroundPair struct {
+	g     Sig
+	targs []Type
+}
+
 func collectGroundFggType(ds []Decl, u Type, ground map[string]Ground) {
 	//fmt.Println("555:", u)
 	if _, ok := ground[u.String()]; ok {
@@ -624,15 +635,54 @@ func collectGroundFggType(ds []Decl, u Type, ground map[string]Ground) {
 	}
 }
 
-type GroundPair struct {
-	g     Sig
-	targs []Type
-}
+// gamma needed when we're visiting an e of a "standalone" meth decl (via collectGroundFggType)
+// CHECKME: Post: res already collected?
+func collectGroundFggTypes(ds []Decl, gamma ClosedEnv, e Expr, ground map[string]Ground) (res Type) {
+	//fmt.Println("444:", e)
+	switch e1 := e.(type) {
+	case Variable:
+		res = gamma[e1.id]
+	case StructLit:
+		collectGroundFggType(ds, e1.u, ground)
+		for _, v := range e1.es {
+			collectGroundFggTypes(ds, gamma, v, ground) // Discard return
+		}
+		res = e1.u
+	case Select:
+		u_S := collectGroundFggTypes(ds, gamma, e1.e, ground).(TName) // Field types already collected via the structlit?
+		collectGroundFggType(ds, u_S, ground)
+		for _, v := range fields(ds, u_S) {
+			if v.f == e1.f {
+				res = v.u.(TName)
+				break
+			}
+		}
+	case Call:
+		u0 := collectGroundFggTypes(ds, gamma, e1.e, ground)
+		for _, v := range e1.targs {
+			collectGroundFggType(ds, v, ground)
+		}
+		for _, v := range e1.args {
+			collectGroundFggTypes(ds, gamma, v, ground) // Discard return
+		}
+		collectGroundFggCall(ds, u0, e1, ground)
 
-// Cf. WVal
-type Ground struct {
-	u  TName                 // Pre: isClosed(u)
-	gs map[string]GroundPair // // HACK: string key is Sig.String
+		gamma1 := make(Env)
+		for k, v := range gamma {
+			gamma1[k] = v
+		}
+		res = e1.Typing(ds, make(TEnv), gamma1, true) // CHECKME: typing vs. sig? -- CHECKME: currently this typing mixed with res
+		//res = g.u // May be a TParam, e.g., `Cond(type a Any())(br Branches(a)) a` (map.fgg)
+	case Assert:
+		u := e1.u.(TName) // CHECKME: guaranteed?
+		collectGroundFggType(ds, u, ground)
+		collectGroundFggTypes(ds, gamma, e1.e, ground)
+		res = u
+	default:
+		panic("Unknown Expr kind: " + reflect.TypeOf(e).String() + "\n\t" +
+			e.String())
+	}
+	return res
 }
 
 // Pre: if u0 is ground, then already in `ground` -- no XXX
@@ -700,56 +750,6 @@ func collectGroundFggCall(ds []Decl, u0 Type, c Call, ground map[string]Ground) 
 	} else {
 		// visit all possible bodies
 	}
-}
-
-// gamma needed when we're visiting an e of a "standalone" meth decl (via collectGroundFggType)
-// CHECKME: Post: res already collected?
-func collectGroundFggTypes(ds []Decl, gamma ClosedEnv, e Expr, ground map[string]Ground) (res Type) {
-	//fmt.Println("444:", e)
-	switch e1 := e.(type) {
-	case Variable:
-		res = gamma[e1.id]
-	case StructLit:
-		collectGroundFggType(ds, e1.u, ground)
-		for _, v := range e1.es {
-			collectGroundFggTypes(ds, gamma, v, ground) // Discard return
-		}
-		res = e1.u
-	case Select:
-		u_S := collectGroundFggTypes(ds, gamma, e1.e, ground).(TName) // Field types already collected via the structlit?
-		collectGroundFggType(ds, u_S, ground)
-		for _, v := range fields(ds, u_S) {
-			if v.f == e1.f {
-				res = v.u.(TName)
-				break
-			}
-		}
-	case Call:
-		u0 := collectGroundFggTypes(ds, gamma, e1.e, ground)
-		for _, v := range e1.targs {
-			collectGroundFggType(ds, v, ground)
-		}
-		for _, v := range e1.args {
-			collectGroundFggTypes(ds, gamma, v, ground) // Discard return
-		}
-		collectGroundFggCall(ds, u0, e1, ground)
-
-		gamma1 := make(Env)
-		for k, v := range gamma {
-			gamma1[k] = v
-		}
-		res = e1.Typing(ds, make(TEnv), gamma1, true) // CHECKME: typing vs. sig? -- CHECKME: currently this typing mixed with res
-		//res = g.u // May be a TParam, e.g., `Cond(type a Any())(br Branches(a)) a` (map.fgg)
-	case Assert:
-		u := e1.u.(TName) // CHECKME: guaranteed?
-		collectGroundFggType(ds, u, ground)
-		collectGroundFggTypes(ds, gamma, e1.e, ground)
-		res = u
-	default:
-		panic("Unknown Expr kind: " + reflect.TypeOf(e).String() + "\n\t" +
-			e.String())
-	}
-	return res
 }
 
 /*
