@@ -73,12 +73,12 @@ var (
 	interpFG  bool // parse FG
 	interpFGG bool // parse FGG
 
-	monom  bool   // parse FGG and monomorphise FGG source
-	monomc string // output filename of monomorphised FGG; "--" for stdout
-	// TODO refactor naming between "monomc", "compile" and "fgrc"
+	monom  bool   // parse FGG and monomorphise FGG source -- paper notation (angle bracks)
+	monomc string // output filename of monomorphised FGG; "--" for stdout -- Go output (no angle bracks)
+	// TODO refactor naming between "monomc", "compile" and "oblitc"
 
-	fgrc         string // output filename of FGR compilation; "--" for stdout
-	fgrEvalSteps int
+	oblitc         string // output filename of FGR compilation via oblit; "--" for stdout
+	oblitEvalSteps int    // TODO: Need an actual FGR syntax, for oblitc to concrete output
 
 	useInternalSrc bool   // use internal source
 	inlineSrc      string // use content of this as source
@@ -99,16 +99,16 @@ func init() {
 
 	// Erasure by monomorphisation -- implicitly disabled if not -fgg
 	flag.BoolVar(&monom, "monom", false,
-		"[WIP] monomorphise FGG source using formal notation (ignored if -fgg not set)")
+		"[WIP] monomorphise FGG source using paper notation, i.e., angle bracks (ignored if -fgg not set)")
 	flag.StringVar(&monomc, "monomc", "", // Empty string for "false"
-		"[WIP] monomorphise FGG source to FG (ignored if -fgg not set)\n"+
+		"[WIP] monomorphise FGG source to (Go-compatible) FG, i.e., no angle bracks (ignored if -fgg not set)\n"+
 			"specify '--' to print to stdout")
 
 	// Erasure(?) by translation based on type reps -- FGG vs. FGR?
-	flag.StringVar(&fgrc, "fgrc", "", // Empty string for "false"
+	flag.StringVar(&oblitc, "oblitc", "", // Empty string for "false"
 		"[WIP] compile FGG source to FGR (ignored if -fgg not set)\n"+
 			"specify '--' to print to stdout")
-	flag.IntVar(&fgrEvalSteps, "fgreval", NO_EVAL,
+	flag.IntVar(&oblitEvalSteps, "oblit-eval", NO_EVAL,
 		" N ⇒ evaluate N (≥ 0) steps; or\n-1 ⇒ evaluate to value (or panic)")
 
 	// Parsing options
@@ -186,8 +186,8 @@ func main() {
 
 		// TODO: refactor
 		doMonom(prog, monom, monomc)
-		//doWrappers(prog, fgrc)
-		doOblit(prog, fgrc)
+		//doWrappers(prog, wrapperc)
+		doOblit(prog, oblitc)
 	}
 }
 
@@ -245,7 +245,7 @@ func doMonom(prog base.Program, monom bool, compile string) {
 	p_mono := fgg.Monomorph(prog.(fgg.FGGProgram)) // TODO: reformat (e.g., "<...>") to make an actual FG program
 	if monom {
 		vPrintln("\nMonomorphising, formal notation: [Warning] WIP [Warning]")
-		vPrintln(p_mono.String())
+		fmt.Println(p_mono.String())
 	}
 	if compile != "" {
 		vPrintln("\nMonomorphising, FG output: [Warning] WIP [Warning]")
@@ -254,8 +254,9 @@ func doMonom(prog base.Program, monom bool, compile string) {
 		out = strings.Replace(out, "<", "", -1)
 		out = strings.Replace(out, ">", "", -1)
 		if compile == "--" {
-			vPrintln(out)
+			fmt.Println(out)
 		} else {
+			vPrintln(out)
 			vPrintln("Writing output to: " + compile)
 			bs := []byte(out)
 			err := ioutil.WriteFile(compile, bs, 0644)
@@ -295,6 +296,7 @@ func doOblit(prog base.Program, compile string) {
 	if compile == "--" {
 		fmt.Println(out)
 	} else {
+		vPrintln(out)
 		vPrintln("Writing output to: " + compile)
 		bs := []byte(out)
 		err := ioutil.WriteFile(compile, bs, 0644)
@@ -303,9 +305,9 @@ func doOblit(prog base.Program, compile string) {
 
 	// cf. interp -- TODO: refactor
 	p_fgr.Ok(false)
-	if fgrEvalSteps > NO_EVAL {
+	if oblitEvalSteps > NO_EVAL {
 		vPrint("\nEvaluating FGR:") // eval prints a leading "\n"
-		eval(p_fgr, fgrEvalSteps)
+		eval(p_fgr, oblitEvalSteps)
 	}
 }
 

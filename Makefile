@@ -99,6 +99,12 @@ test-monom:
 	go run github.com/rhu1/fgg -fgg -eval=10 -monomc=tmp/test/fg/box/box2.go fgg/examples/monom/box/box2.fgg
 	go run github.com/rhu1/fgg -eval=10 tmp/test/fg/box/box2.go
 
+	mkdir -p tmp/test/fg/julien
+	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/julien/ifacebox.go fgg/examples/monom/julien/ifacebox.fgg
+	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/julien/ifacebox.go
+	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/julien/ifacebox-nomethparam.go fgg/examples/monom/julien/ifacebox-nomethparam.fgg
+	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/julien/ifacebox-nomethparam.go
+
 # TODO: check simulation of -monom output (same result and number of eval steps)
 
 
@@ -125,6 +131,10 @@ clean-test-monom:
 
 	rm -f tmp/test/fg/box/box2.go
 	rm -fd tmp/test/fg/box
+
+	rm -f tmp/test/fg/julien/ifacebox.go
+	rm -f tmp/test/fg/julien/ifacebox-nomethparam.go
+	rm -fd tmp/test/fg/julien
 
 
 .PHONY: test-fg2fgg
@@ -180,31 +190,31 @@ clean-test-fg2fgg:
 .PHONY: test-oblit
 test-oblit:
 	mkdir -p tmp/test-oblit/fgr/booleans
-	go run github.com/rhu1/fgg -fgg -fgrc=tmp/test-oblit/fgr/booleans/booleans.fgr -fgreval=-1 fgg/examples/popl20/booleans/booleans.fgg
+	go run github.com/rhu1/fgg -fgg -oblitc=tmp/test-oblit/fgr/booleans/booleans.fgr -oblit-eval=-1 fgg/examples/popl20/booleans/booleans.fgg
 # TODO: standalone FGR execution (.fgr output currently unused)
 # 
 	mkdir -p tmp/test-oblit/fgr/compose
-	go run github.com/rhu1/fgg -fgg -fgrc=tmp/test-oblit/fgr/compose/compose.fgr -fgreval=-1 fgg/examples/popl20/compose/compose.fgg
+	go run github.com/rhu1/fgg -fgg -oblitc=tmp/test-oblit/fgr/compose/compose.fgr -oblit-eval=-1 fgg/examples/popl20/compose/compose.fgg
 
 	mkdir -p tmp/test-oblit/fgr/graph
-	go run github.com/rhu1/fgg -fgg -fgrc=tmp/test-oblit/fgr/graph/graph.fgr -fgreval=-1 fgg/examples/popl20/graph/graph.fgg
+	go run github.com/rhu1/fgg -fgg -oblitc=tmp/test-oblit/fgr/graph/graph.fgr -oblit-eval=-1 fgg/examples/popl20/graph/graph.fgg
 
 	mkdir -p tmp/test-oblit/fgr/irregular
-	go run github.com/rhu1/fgg -fgg -fgrc=tmp/test-oblit/fgr/irregular/irregular.fgr -fgreval=-1 fgg/examples/popl20/irregular/irregular.fgg
+	go run github.com/rhu1/fgg -fgg -oblitc=tmp/test-oblit/fgr/irregular/irregular.fgr -oblit-eval=-1 fgg/examples/popl20/irregular/irregular.fgg
 
 	mkdir -p tmp/test-oblit/fgr/map
-	go run github.com/rhu1/fgg -fgg -fgrc=tmp/test-oblit/fgr/map/map.fgr -fgreval=-1 fgg/examples/popl20/map/map.fgg
+	go run github.com/rhu1/fgg -fgg -oblitc=tmp/test-oblit/fgr/map/map.fgr -oblit-eval=-1 fgg/examples/popl20/map/map.fgg
 
 	mkdir -p tmp/test-oblit/fgr/monomorph
-	go run github.com/rhu1/fgg -fgg -fgrc=tmp/test-oblit/fgr/monomorph/monomorph.fgr -fgreval=-1 fgg/examples/popl20/monomorph/monomorph.fgg
+	go run github.com/rhu1/fgg -fgg -oblitc=tmp/test-oblit/fgr/monomorph/monomorph.fgr -oblit-eval=-1 fgg/examples/popl20/monomorph/monomorph.fgg
 
 	mkdir -p tmp/test-oblit/fgr/box
-	go run github.com/rhu1/fgg -fgg -fgrc=tmp/test-oblit/fgr/box/box.fgr -fgreval=10 fgg/examples/monom/box/box.fgg
-	go run github.com/rhu1/fgg -fgg -fgrc=tmp/test-oblit/fgr/box/box2.fgr -fgreval=10 fgg/examples/monom/box/box2.fgg
+	go run github.com/rhu1/fgg -fgg -oblitc=tmp/test-oblit/fgr/box/box.fgr -oblit-eval=10 fgg/examples/monom/box/box.fgg
+	go run github.com/rhu1/fgg -fgg -oblitc=tmp/test-oblit/fgr/box/box2.fgr -oblit-eval=10 fgg/examples/monom/box/box2.fgg
 
 	mkdir -p tmp/test-oblit/fgr/julien
-	go run github.com/rhu1/fgg -fgg -fgrc=tmp/test/fgr/monom/julien/ifacebox.fgr -fgreval=-1 fgg/examples/monom/julien/ifacebox.fgg
-	go run github.com/rhu1/fgg -fgg -fgrc=tmp/test/fgr/monom/julien/ifacebox-nomethparam.fgr -fgreval=-1 fgg/examples/monom/julien/ifacebox-nomethparam.fgg
+	go run github.com/rhu1/fgg -fgg -oblitc=tmp/test/fgr/monom/julien/ifacebox.fgr -oblit-eval=-1 fgg/examples/monom/julien/ifacebox.fgg
+	go run github.com/rhu1/fgg -fgg -oblitc=tmp/test/fgr/monom/julien/ifacebox-nomethparam.fgr -oblit-eval=-1 fgg/examples/monom/julien/ifacebox-nomethparam.fgg
 
 
 .PHONY: clean-test-oblit

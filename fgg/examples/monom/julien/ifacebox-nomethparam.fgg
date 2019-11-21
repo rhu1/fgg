@@ -1,4 +1,7 @@
-//$ go run github.com/rhu1/fgg -fgg -fgrc=tmp/test/fgr/monom/julien/ifacebox-nomethparam.fgr -v -fgreval=10 fgg/examples/monom/julien/ifacebox-nomethparam.fgg
+//$ go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/julien/ifacebox-nomethparam.go -v fgg/examples/monom/julien/ifacebox-nomethparam.fgg
+//$ go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/julien/ifacebox-nomethparam.go
+
+//$ go run github.com/rhu1/fgg -fgg -oblitc=tmp/test/fgr/monom/julien/ifacebox-nomethparam.fgr -v -oblit-eval=10 fgg/examples/monom/julien/ifacebox-nomethparam.fgg
 
 package main;
 
