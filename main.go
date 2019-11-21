@@ -245,7 +245,7 @@ func doMonom(prog base.Program, monom bool, compile string) {
 	p_mono := fgg.Monomorph(prog.(fgg.FGGProgram)) // TODO: reformat (e.g., "<...>") to make an actual FG program
 	if monom {
 		vPrintln("\nMonomorphising, formal notation: [Warning] WIP [Warning]")
-		vPrintln(p_mono.String())
+		fmt.Println(p_mono.String())
 	}
 	if compile != "" {
 		vPrintln("\nMonomorphising, FG output: [Warning] WIP [Warning]")
@@ -254,8 +254,9 @@ func doMonom(prog base.Program, monom bool, compile string) {
 		out = strings.Replace(out, "<", "", -1)
 		out = strings.Replace(out, ">", "", -1)
 		if compile == "--" {
-			vPrintln(out)
+			fmt.Println(out)
 		} else {
+			vPrintln(out)
 			vPrintln("Writing output to: " + compile)
 			bs := []byte(out)
 			err := ioutil.WriteFile(compile, bs, 0644)
@@ -295,6 +296,7 @@ func doOblit(prog base.Program, compile string) {
 	if compile == "--" {
 		fmt.Println(out)
 	} else {
+		vPrintln(out)
 		vPrintln("Writing output to: " + compile)
 		bs := []byte(out)
 		err := ioutil.WriteFile(compile, bs, 0644)

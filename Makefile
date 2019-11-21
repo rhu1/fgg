@@ -100,6 +100,8 @@ test-monom:
 	go run github.com/rhu1/fgg -eval=10 tmp/test/fg/box/box2.go
 
 	mkdir -p tmp/test/fg/julien
+	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/julien/ifacebox.go fgg/examples/monom/julien/ifacebox.fgg
+	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/julien/ifacebox.go
 	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/julien/ifacebox-nomethparam.go fgg/examples/monom/julien/ifacebox-nomethparam.fgg
 	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/julien/ifacebox-nomethparam.go
 
@@ -130,8 +132,9 @@ clean-test-monom:
 	rm -f tmp/test/fg/box/box2.go
 	rm -fd tmp/test/fg/box
 
+	rm -f tmp/test/fg/julien/ifacebox.go
 	rm -f tmp/test/fg/julien/ifacebox-nomethparam.go
-	rm -fd tmp/test/fg/julien/ifacebox-nomethparam
+	rm -fd tmp/test/fg/julien
 
 
 .PHONY: test-fg2fgg

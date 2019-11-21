@@ -198,7 +198,8 @@ func (a *FGGAdaptor) ExitSig(ctx *parser.SigContext) {
 	m := ctx.GetMeth().GetText()
 	// Reverse order
 	t := a.pop().(Type)
-	var pds []ParamDecl
+	//var pds []ParamDecl  // No: nil if no params -- FIXME: similar others (e.g., FieldDecl) -- and FG
+	pds := []ParamDecl{}
 	if ctx.GetChildCount() > 5 {
 		npds := (ctx.GetChild(3).GetChildCount() + 1) / 2 // e.g., pd ',' pd ',' pd
 		pds = make([]ParamDecl, npds)
