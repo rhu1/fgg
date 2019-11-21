@@ -246,7 +246,11 @@ func monomExpr(omega WMap, e Expr) fg.Expr {
 		for i := 0; i < len(e1.es); i++ {
 			es[i] = monomExpr(omega, e1.es[i])
 		}
-		return fg.NewStructLit(omega[toWKey(e1.u)].id, es)
+		wk := toWKey(e1.u)
+		if _, ok := omega[wk]; !ok {
+			panic("Unknown type: " + e1.u.String())
+		}
+		return fg.NewStructLit(omega[wk].id, es)
 	case Select:
 		return fg.NewSelect(monomExpr(omega, e1.e), e1.f)
 	case Call:
@@ -263,8 +267,12 @@ func monomExpr(omega WMap, e Expr) fg.Expr {
 		}
 		return fg.NewCall(e2, m, es)
 	case Assert:
+		wk := toWKey(e1.u.(TName))
+		if _, ok := omega[wk]; !ok {
+			panic("Unknown type: " + e1.u.String())
+		}
 		return fg.NewAssert(monomExpr(omega, e1.e),
-			omega[toWKey(e1.u.(TName))].id)
+			omega[wk].id)
 	default:
 		panic("Unknown Expr kind: " + reflect.TypeOf(e).String() + "\n\t" +
 			e.String())
