@@ -12,13 +12,15 @@
 #install:
 #	go install github.com/rhu1/fgg
 
-
 .PHONY: test
-test: test-fg test-fgg test-fg2fgg test-monom test-oblit
+test: test-all
+
+.PHONY: test-all
+test-all: test-fg test-fgg test-fg2fgg test-monom test-oblit
 
 
 .PHONY: clean
-clean: clean-test
+clean: clean-test-all
 
 #rm -f ../../../../bin/fgg.exe
 #make test-clean
@@ -246,6 +248,6 @@ clean-test-oblit:
 	rm -fd tmp/test-oblit/fgr/julien
 
 
-.PHONY: clean-test
-clean-test: clean-test-fg2fgg clean-test-monom clean-test-oblit
+.PHONY: clean-test-all
+clean-test-all: clean-test-fg2fgg clean-test-monom clean-test-oblit
 

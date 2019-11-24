@@ -66,6 +66,10 @@ func (x Variable) String() string {
 	return x.id
 }
 
+func (x Variable) ToGoString() string {
+	return x.id
+}
+
 /* StructLit */
 
 type StructLit struct {
@@ -148,6 +152,16 @@ func (s StructLit) String() string {
 	return b.String()
 }
 
+func (s StructLit) ToGoString() string {
+	var b strings.Builder
+	b.WriteString("main.")
+	b.WriteString(s.t.String())
+	b.WriteString("{")
+	writeToGoExprs(&b, s.es)
+	b.WriteString("}")
+	return b.String()
+}
+
 /* Select */
 
 type Select struct {
@@ -199,6 +213,10 @@ func (s Select) IsValue() bool {
 
 func (s Select) String() string {
 	return s.e.String() + "." + s.f
+}
+
+func (s Select) ToGoString() string {
+	return s.e.ToGoString() + "." + s.f
 }
 
 /* Call */
@@ -296,6 +314,17 @@ func (c Call) String() string {
 	return b.String()
 }
 
+func (c Call) ToGoString() string {
+	var b strings.Builder
+	b.WriteString(c.e.ToGoString())
+	b.WriteString(".")
+	b.WriteString(c.m)
+	b.WriteString("(")
+	writeToGoExprs(&b, c.args)
+	b.WriteString(")")
+	return b.String()
+}
+
 /* Assert */
 
 type Assert struct {
@@ -351,7 +380,21 @@ func (a Assert) IsValue() bool {
 }
 
 func (a Assert) String() string {
-	return a.e.String() + ".(" + a.t.String() + ")"
+	var b strings.Builder
+	b.WriteString(a.e.String())
+	b.WriteString(".(")
+	b.WriteString(a.t.String())
+	b.WriteString(")")
+	return b.String()
+}
+
+func (a Assert) ToGoString() string {
+	var b strings.Builder
+	b.WriteString(a.e.ToGoString())
+	b.WriteString(".(main.")
+	b.WriteString(a.t.String())
+	b.WriteString(")")
+	return b.String()
 }
 
 /* Aux, helpers */
@@ -362,6 +405,16 @@ func writeExprs(b *strings.Builder, es []Expr) {
 		for _, v := range es[1:] {
 			b.WriteString(", ")
 			b.WriteString(v.String())
+		}
+	}
+}
+
+func writeToGoExprs(b *strings.Builder, es []Expr) {
+	if len(es) > 0 {
+		b.WriteString(es[0].ToGoString())
+		for _, v := range es[1:] {
+			b.WriteString(", ")
+			b.WriteString(v.ToGoString())
 		}
 	}
 }

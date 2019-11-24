@@ -23,6 +23,7 @@ type Type interface {
 	Ok(ds []Decl, delta TEnv)
 	Equals(u Type) bool
 	String() string
+	ToGoString() string
 }
 
 type TParam Name
@@ -62,6 +63,10 @@ func (a TParam) Equals(u Type) bool {
 }
 
 func (a TParam) String() string {
+	return string(a)
+}
+
+func (a TParam) ToGoString() string {
 	return string(a)
 }
 
@@ -183,6 +188,16 @@ func (u TName) String() string {
 	return b.String()
 }
 
+func (u TName) ToGoString() string {
+	var b strings.Builder
+	b.WriteString("main.")
+	b.WriteString(string(u.t))
+	b.WriteString("(")
+	writeToGoTypes(&b, u.us)
+	b.WriteString(")")
+	return b.String()
+}
+
 /* Context, Type context */
 
 //type Env map[Variable]Type  // CHECKME: refactor?
@@ -282,6 +297,15 @@ func writeTypes(b *strings.Builder, us []Type) {
 		b.WriteString(us[0].String())
 		for _, v := range us[1:] {
 			b.WriteString(", " + v.String())
+		}
+	}
+}
+
+func writeToGoTypes(b *strings.Builder, us []Type) {
+	if len(us) > 0 {
+		b.WriteString(us[0].ToGoString())
+		for _, v := range us[1:] {
+			b.WriteString(", " + v.ToGoString())
 		}
 	}
 }

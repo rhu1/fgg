@@ -56,6 +56,10 @@ func (x Variable) String() string {
 	return x.id
 }
 
+func (x Variable) ToGoString() string {
+	return x.id
+}
+
 /* StructLit */
 
 type StructLit struct {
@@ -138,6 +142,16 @@ func (s StructLit) String() string {
 	return b.String()
 }
 
+func (s StructLit) ToGoString() string {
+	var b strings.Builder
+	b.WriteString("main.")
+	b.WriteString(s.t.String())
+	b.WriteString("{")
+	writeToGoExprs(&b, s.es)
+	b.WriteString("}")
+	return b.String()
+}
+
 /* Select */
 
 type Select struct {
@@ -189,6 +203,10 @@ func (s Select) IsValue() bool {
 
 func (s Select) String() string {
 	return s.e.String() + "." + s.f
+}
+
+func (s Select) ToGoString() string {
+	return s.e.ToGoString() + "." + s.f
 }
 
 /* Call */
@@ -286,6 +304,17 @@ func (c Call) String() string {
 	return b.String()
 }
 
+func (c Call) ToGoString() string {
+	var b strings.Builder
+	b.WriteString(c.e.ToGoString())
+	b.WriteString(".")
+	b.WriteString(c.m)
+	b.WriteString("(")
+	writeToGoExprs(&b, c.args)
+	b.WriteString(")")
+	return b.String()
+}
+
 /* Assert */
 
 type Assert struct {
@@ -341,7 +370,21 @@ func (a Assert) IsValue() bool {
 }
 
 func (a Assert) String() string {
-	return a.e.String() + ".(" + a.t.String() + ")"
+	var b strings.Builder
+	b.WriteString(a.e.String())
+	b.WriteString(".(")
+	b.WriteString(a.t.String())
+	b.WriteString(")")
+	return b.String()
+}
+
+func (a Assert) ToGoString() string {
+	var b strings.Builder
+	b.WriteString(a.e.ToGoString())
+	b.WriteString(".(main.")
+	b.WriteString(a.t.String())
+	b.WriteString(")")
+	return b.String()
 }
 
 /* Panic */
@@ -367,6 +410,10 @@ func (p Panic) IsValue() bool {
 }
 
 func (p Panic) String() string {
+	return "panic"
+}
+
+func (p Panic) ToGoString() string {
 	return "panic"
 }
 
@@ -430,8 +477,27 @@ func (c IfThenElse) IsValue() bool {
 }
 
 func (c IfThenElse) String() string {
-	return "(if " + c.e1.String() + " << " + c.e2.String() + " then " +
-		c.e3.String() + " else panic)" // !!! hardcoded else-panic
+	var b strings.Builder
+	b.WriteString("(if ")
+	b.WriteString(c.e1.String())
+	b.WriteString(" << ")
+	b.WriteString(c.e2.String())
+	b.WriteString(" then ")
+	b.WriteString(c.e3.String())
+	b.WriteString(" else panic)") // !!! hardcoded else-panic
+	return b.String()
+}
+
+func (c IfThenElse) ToGoString() string {
+	var b strings.Builder
+	b.WriteString("(if ")
+	b.WriteString(c.e1.ToGoString())
+	b.WriteString(" << ")
+	b.WriteString(c.e2.ToGoString())
+	b.WriteString(" then ")
+	b.WriteString(c.e3.ToGoString())
+	b.WriteString(" else panic)") // !!! hardcoded else-panic
+	return b.String()
 }
 
 /* TypeTree -- the result of mkRep, i.e., run-time type rep value */
@@ -505,6 +571,16 @@ func (tt TypeTree) String() string {
 	return b.String()
 }
 
+func (tt TypeTree) ToGoString() string {
+	var b strings.Builder
+	b.WriteString("main.")
+	b.WriteString(string(tt.t))
+	b.WriteString("[[")
+	writeToGoExprs(&b, tt.es)
+	b.WriteString("]]")
+	return b.String()
+}
+
 /* Intermediate TParam */
 
 // Cf. Variable
@@ -538,6 +614,10 @@ func (tmp TmpTParam) String() string {
 	return tmp.id
 }
 
+func (tmp TmpTParam) ToGoString() string {
+	return tmp.id
+}
+
 /* Aux, helpers */
 
 func writeExprs(b *strings.Builder, es []Expr) {
@@ -546,6 +626,16 @@ func writeExprs(b *strings.Builder, es []Expr) {
 		for _, v := range es[1:] {
 			b.WriteString(", ")
 			b.WriteString(v.String())
+		}
+	}
+}
+
+func writeToGoExprs(b *strings.Builder, es []Expr) {
+	if len(es) > 0 {
+		b.WriteString(es[0].ToGoString())
+		for _, v := range es[1:] {
+			b.WriteString(", ")
+			b.WriteString(v.ToGoString())
 		}
 	}
 }
