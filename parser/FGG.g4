@@ -49,7 +49,7 @@ typeFDecl   : NAME typ ;  // CHECKME: #TypeName ?
 program     : PACKAGE MAIN ';'
               (IMPORT '"' FMT '"')?
               decls? FUNC MAIN '(' ')' '{'
-              '_' '=' expr  | FMT'.' PRINTF '(' '"' '%' '#' 'v' '"' ',' expr ')')  // TODO: too permissive re. whitespace  // FIXME: seems to be incompatible with (at least) type params named 'v', e.g., graph.fgg
+              ('_' '=' expr  | FMT'.' PRINTF '(' '"' '%' '#' 'v' '"' ',' expr ')')  // TODO: too permissive re. whitespace  // FIXME: seems to be incompatible with (at least) type params named 'v', e.g., graph.fgg
               '}' EOF
             ;
 decls       : ((typeDecl | methDecl) ';')+ ;
