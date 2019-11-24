@@ -98,14 +98,24 @@ func (a *FGGAdaptor) ExitTypeFDecl(ctx *parser.TypeFDeclContext) {
 func (a *FGGAdaptor) ExitProgram(ctx *parser.ProgramContext) {
 	body := a.pop().(Expr)
 	var ds []Decl
-	if ctx.GetChildCount() > 13 {
-		nds := ctx.GetChild(3).GetChildCount() / 2 // (decl ';')+ -- i.e, includes trailing ';'
+	offset := 0 // TODO: refactor
+	printf := false
+	c3 := ctx.GetChild(3)
+	if _, ok := c3.GetPayload().(*antlr.CommonToken); ok { // IMPORT
+		//c3.GetPayload().(*antlr.CommonToken).GetText() == "import" {
+		offset = 5
+		printf = true
+	}
+	//if ctx.GetChildCount() > offset+13 {  // well-typed program must have at least one decl?
+	tmp := ctx.GetChild(offset + 3)
+	if _, ok := tmp.GetPayload().(*antlr.BaseParserRuleContext); ok { // If no decls, then *antlr.CommonToken, 'func'
+		nds := ctx.GetChild(offset+3).GetChildCount() / 2 // (decl ';')+ -- i.e, includes trailing ';'
 		ds = make([]Decl, nds)
 		for i := nds - 1; i >= 0; i-- {
 			ds[i] = a.pop().(Decl) // Adding backwards
 		}
 	}
-	a.push(FGGProgram{ds, body})
+	a.push(FGGProgram{ds, body, printf})
 }
 
 /* "typeDecl" */

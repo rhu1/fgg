@@ -15,6 +15,10 @@ RETURN    : 'return' ;
 STRUCT    : 'struct' ;
 TYPE      : 'type' ;
 
+IMPORT    : 'import' ;
+FMT       : 'fmt' ;
+PRINTF    : 'Printf' ;
+
 
 /* Tokens */
 
@@ -42,7 +46,11 @@ typs        : typ (',' typ)*  ;
 typeFormals : '(' TYPE typeFDecls? ')' ; // Refactored "(...)" into here
 typeFDecls  : typeFDecl (',' typeFDecl)* ;
 typeFDecl   : NAME typ ;  // CHECKME: #TypeName ?
-program     : PACKAGE MAIN ';' decls? FUNC MAIN '(' ')' '{' '_' '=' expr '}' EOF
+program     : PACKAGE MAIN ';'
+              (IMPORT '"' FMT '"')?
+              decls? FUNC MAIN '(' ')' '{'
+              '_' '=' expr  | FMT'.' PRINTF '(' '"' '%' '#' 'v' '"' ',' expr ')')  // TODO: too permissive re. whitespace  // FIXME: seems to be incompatible with (at least) type params named 'v', e.g., graph.fgg
+              '}' EOF
             ;
 decls       : ((typeDecl | methDecl) ';')+ ;
 typeDecl    : TYPE NAME typeFormals typeLit ;  // TODO: tag id=NAME, better for adapting (vs., index constants)

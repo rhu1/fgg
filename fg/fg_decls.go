@@ -13,8 +13,8 @@ import "github.com/rhu1/fgg/base"
 
 /* "Exported" constructors for fgg (monomorph) */
 
-func NewFGProgram(ds []Decl, e Expr) FGProgram {
-	return FGProgram{ds, e, false} // FIXME: extend FGGProgram and carry through to here for, e.g., monom
+func NewFGProgram(ds []Decl, e Expr, printf bool) FGProgram {
+	return FGProgram{ds, e, printf} // FIXME: extend FGGProgram and carry through to here for, e.g., monom
 }
 
 func NewSTypeLit(t Type, fds []FieldDecl) STypeLit {
@@ -110,6 +110,9 @@ func (p FGProgram) GetExpr() base.Expr {
 func (p FGProgram) String() string {
 	var b strings.Builder
 	b.WriteString("package main;\n")
+	if p.printf {
+		b.WriteString("import \"fmt\";\n")
+	}
 	for _, v := range p.ds {
 		b.WriteString(v.String())
 		b.WriteString(";\n")
