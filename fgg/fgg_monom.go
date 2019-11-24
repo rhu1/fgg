@@ -202,6 +202,8 @@ func monomMDecl(ds []Decl, omega WMap, md MDecl, wv WVal) (res []fg.MDecl) {
 }
 
 // N.B. return is empty, i.e., does not include wv.gs, if no u_I
+// N.B. return is a map, so "duplicate" add-meth-param type instans are implicitly setify-ed
+// ^E.g., Calling m(A()) on some struct separately via two interfaces T1 and T2 where T2 <: T1
 func collectZigZagMethInstans(ds []Decl, omega WMap, md MDecl, wv WVal) map[string][]Type {
 	empty := make(TEnv)
 	targs := make(map[string][]Type)
