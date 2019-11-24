@@ -102,5 +102,5 @@ func (d D(type )) _3(type )() Nat() { return D(){}._2()().Add()(D(){}._1()()) };
 func main() {
 	_ = compose(Nat(), Nat(), Nat()){incr(){D(){}._1()()}, incr(){D(){}._2()()}}.
 				Apply()(D(){}._3()()) // Main example (assertion unnecessary)
-				//.Add()(Zero(){}) // Extra
+				.Add()(Zero(){}) // Extra
 }
