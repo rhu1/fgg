@@ -148,7 +148,7 @@ func FgAdptrTranslate(p FGGProgram) fg.FGProgram { // TODO FIXME: FGR -- TODO al
 		ds = append(ds, adptr, getv)
 	}
 
-	return fg.NewFGProgram(ds, e)
+	return fg.NewFGProgram(ds, e, false) // FIXME: printf
 }
 
 /* TDecl */

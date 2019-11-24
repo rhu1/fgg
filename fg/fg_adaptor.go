@@ -60,10 +60,12 @@ func (a *FGAdaptor) ExitProgram(ctx *parser.ProgramContext) {
 	body := a.pop().(Expr)
 	var ds []Decl
 	offset := 0 // TODO: refactor
+	printf := false
 	c3 := ctx.GetChild(3)
-	if _, ok := c3.GetPayload().(*antlr.CommonToken); ok {
+	if _, ok := c3.GetPayload().(*antlr.CommonToken); ok {  // IMPORT
 		//c3.GetPayload().(*antlr.CommonToken).GetText() == "import" {
 		offset = 5
+		printf = true
 	}
 	//if ctx.GetChildCount() > offset+13 {  // well-typed program must have at least one decl?
 	tmp := ctx.GetChild(offset + 3)
@@ -74,7 +76,6 @@ func (a *FGAdaptor) ExitProgram(ctx *parser.ProgramContext) {
 			ds[i] = a.pop().(Decl) // Adding backwards
 		}
 	}
-	printf := false
 	a.push(FGProgram{ds, body, printf})
 }
 

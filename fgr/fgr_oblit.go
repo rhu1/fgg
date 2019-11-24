@@ -244,7 +244,7 @@ func oblitExpr(ds_fgg []Decl, delta fgg.TEnv, gamma fgg.Env,
 		e1 := NewCall(x, "getRep", []Expr{})
 		u := e.GetType()
 		e3 := NewAssert(x, toFgrTypeFromBounds(delta, u))
-		p_fgg := fgg.NewProgram(ds_fgg, fgg.NewVariable(fgg.Name("dummy")))
+		p_fgg := fgg.NewProgram(ds_fgg, fgg.NewVariable(fgg.Name("dummy")), false)
 		return IfThenElse{e1, mkRep(u), e3, p_fgg.String()} // TODO: New constructor
 	default:
 		panic("Unknown FGG Expr type: " + e_fgg.String())

@@ -16,15 +16,16 @@ var _ = reflect.Append
 
 /* Public constructors */
 
-func NewProgram(ds []Decl, e Expr) FGGProgram {
-	return FGGProgram{ds, e}
+func NewProgram(ds []Decl, e Expr, printf bool) FGGProgram {
+	return FGGProgram{ds, e, printf}
 }
 
 /* Program */
 
 type FGGProgram struct {
-	ds []Decl
-	e  Expr
+	ds     []Decl
+	e      Expr
+	printf bool
 }
 
 var _ base.Program = FGGProgram{}
@@ -54,7 +55,7 @@ func (p FGGProgram) Ok(allowStupid bool) {
 
 func (p FGGProgram) Eval() (base.Program, string) {
 	e, rule := p.e.Eval(p.ds)
-	return FGGProgram{p.ds, e.(Expr)}, rule
+	return FGGProgram{p.ds, e.(Expr), p.printf}, rule
 }
 
 func (p FGGProgram) GetDecls() []Decl {
@@ -68,12 +69,22 @@ func (p FGGProgram) GetExpr() base.Expr {
 func (p FGGProgram) String() string {
 	var b strings.Builder
 	b.WriteString("package main;\n")
+	if p.printf {
+		b.WriteString("import \"fmt\";\n")
+	}
 	for _, v := range p.ds {
 		b.WriteString(v.String())
 		b.WriteString(";\n")
 	}
-	b.WriteString("func main() { _ = ")
-	b.WriteString(p.e.String())
+	b.WriteString("func main() { ")
+	if p.printf {
+		b.WriteString("fmt.Printf(\"%#v\", ")
+		b.WriteString(p.e.String())
+		b.WriteString(")")
+	} else {
+		b.WriteString("_ = ")
+		b.WriteString(p.e.String())
+	}
 	b.WriteString(" }")
 	return b.String()
 }

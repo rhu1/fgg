@@ -3,11 +3,11 @@
 package main;
 
 type Any(type ) interface {};
-type Edge(type e Edge(e, v), v Vertex(e, v)) interface {
-	Source(type )() v;
-	Target(type )() v
+type Edge(type e Edge(e, v1), v1 Vertex(e, v1)) interface {
+	Source(type )() v1;
+	Target(type )() v1
 };
-type Vertex(type e Edge(e, v), v Vertex(e, v)) interface {
+type Vertex(type e Edge(e, v1), v1 Vertex(e, v1)) interface {
 	Edges(type )() List(e)
 };
 type A(type ) struct {};

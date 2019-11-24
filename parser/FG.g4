@@ -11,7 +11,6 @@ grammar FG;
 /* Keywords */
 
 FUNC      : 'func' ;
-IMPORT    : 'import' ;
 INTERFACE : 'interface' ;
 MAIN      : 'main' ;
 PACKAGE   : 'package' ;
@@ -19,6 +18,7 @@ RETURN    : 'return' ;
 STRUCT    : 'struct' ;
 TYPE      : 'type' ;
 
+IMPORT    : 'import' ;
 FMT       : 'fmt' ;
 PRINTF    : 'Printf' ;
 
