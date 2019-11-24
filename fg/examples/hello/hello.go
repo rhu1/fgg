@@ -8,9 +8,9 @@
 // (Newlines and other whitespace may be freely added, though.)
 package main;
 import "fmt";
-type Hello struct {};
-func (x0 Hello) world() Hello { return x0.world() };
+type World struct {};
+func (x0 World) hello() World { return x0.hello() };
 func main() {
-	//_ = Hello{}.world()
-	fmt.Printf("%#v", Hello{}.world())
+	//_ = World{}.hello()
+	fmt.Printf("%#v", World{}.hello())
 }

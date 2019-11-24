@@ -5,8 +5,8 @@
 // So the ';' are mandatory -- cannot replace by newlines (as in actual Go).
 // (Newlines and other whitespace may be freely added, though.)
 package main;
-type Hello(type ) struct {};
-func (x0 Hello(type )) world(type )() Hello() { return x0.world()() };
+type World(type ) struct {};
+func (x0 World(type )) hello(type )() World() { return x0.hello()() };
 func main() {
-	_ = Hello(){}.world()()
+	_ = World(){}.hello()()
 }
