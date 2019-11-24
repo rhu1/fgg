@@ -233,7 +233,7 @@ func eval(p base.Program, steps int) {
 			done = true
 		}
 	}
-	fmt.Println(p.GetExpr().String()) // Final result
+	fmt.Println(p.GetExpr().ToGoString()) // Final result
 }
 
 // Pre: (monom == true || compile != "") => -fgg is set
