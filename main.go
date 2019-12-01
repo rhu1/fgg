@@ -87,7 +87,7 @@ var (
 	evalSteps int  // number of steps to evaluate
 	verbose   bool // verbose mode
 
-	printf bool // Use fmt.Printf for main expr
+	printf bool // Use fmt.Printf for main expr  // CHECKME: currently unused?
 )
 
 func init() {
