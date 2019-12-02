@@ -8,6 +8,9 @@ FG and FGG are running.  Monomorphisation is WIP.  FGR is TODO.
 I mainly hacked it together the last couple of weekends, so apologies for
 bugs, etc.
 
+Go version 1.11 or later is needed.  Download this package to `github.com/rhu1/fgg` under 
+your `$GOPATH/src` directory.
+
 The [FG](https://github.com/rhu1/fgg/blob/master/parser/FG.g4) and
 [FGG](https://github.com/rhu1/fgg/blob/master/parser/FGG.g4) grammars are
 written using ANTLR 4.  
