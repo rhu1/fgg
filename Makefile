@@ -87,7 +87,7 @@ test-monom:
 
 	mkdir -p tmp/test/fg/irregular
 	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/irregular/irregular.go fgg/examples/popl20/irregular/irregular.fgg
-	go run github.com/rhu1/fgg -eval=-1 tmp/fg/irregular/irregular.go
+	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/irregular/irregular.go
 
 	mkdir -p tmp/test/fg/map
 	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/map/map.go fgg/examples/popl20/map/map.fgg
@@ -95,7 +95,7 @@ test-monom:
 
 	mkdir -p tmp/test/fg/monomorph
 	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/monomorph/monomorph.go fgg/examples/popl20/monomorph/monomorph.fgg
-	go run github.com/rhu1/fgg -eval=-1 tmp/fg/monomorph/monomorph.go
+	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monomorph/monomorph.go
 
 	mkdir -p tmp/test/fg/box
 	go run github.com/rhu1/fgg -fgg -eval=10 -monomc=tmp/test/fg/box/box2.go fgg/examples/monom/box/box2.fgg
