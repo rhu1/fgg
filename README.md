@@ -59,7 +59,7 @@ with `-fgg` and `-v`).
 E.g., `go run github.com/rhu1/fgg -fgg -monom -v fgg/examples/popl20/monomorph/monomorph.fgg`  
 The above prints out the monomorphised code using something close to the
 notation used in the paper.  
-The output can also be formatted to be valid Go using the `-compile` flag  
+The output can also be formatted to be valid Go using the `-monomc` flag  
 E.g., `go run github.com/rhu1/fgg -fgg -monomc=tmp/out.go -v fgg/examples/popl20/monomorph/monomorph.fgg`  
 Use `-monomc=--` to print to stdout instead of writing to a file.
 
