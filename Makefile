@@ -107,7 +107,7 @@ test-monom:
 	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/julien/ifacebox-nomethparam.go fgg/examples/monom/julien/ifacebox-nomethparam.fgg
 	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/julien/ifacebox-nomethparam.go
 
-# TODO: check simulation of -monom output (same result and number of eval steps)
+# TODO: check simulation of -monom output (same result and number of eval steps) -- or commutative diagram
 
 
 .PHONY: clean-test-monom

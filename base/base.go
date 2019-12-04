@@ -1,5 +1,7 @@
 package base
 
+/* Name */
+
 type Name = string // Type alias (cf. type def)
 
 /* AST Nodes */
