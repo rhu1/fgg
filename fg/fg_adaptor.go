@@ -57,12 +57,12 @@ func (a *FGAdaptor) Parse(strictParse bool, input string) base.Program {
 /* "program" */
 
 func (a *FGAdaptor) ExitProgram(ctx *parser.ProgramContext) {
-	body := a.pop().(Expr)
+	body := a.pop().(FGExpr)
 	var ds []Decl
 	offset := 0 // TODO: refactor
 	printf := false
 	c3 := ctx.GetChild(3)
-	if _, ok := c3.GetPayload().(*antlr.CommonToken); ok {  // IMPORT
+	if _, ok := c3.GetPayload().(*antlr.CommonToken); ok { // IMPORT
 		//c3.GetPayload().(*antlr.CommonToken).GetText() == "import" {
 		offset = 5
 		printf = true
@@ -122,7 +122,7 @@ func (a *FGAdaptor) ExitFieldDecl(ctx *parser.FieldDeclContext) {
 
 func (a *FGAdaptor) ExitMethDecl(ctx *parser.MethDeclContext) {
 	// Reverse order
-	e := a.pop().(Expr)
+	e := a.pop().(FGExpr)
 	g := a.pop().(Sig)
 	recv := a.pop().(ParamDecl)
 	a.push(MDecl{recv, g.m, g.pds, g.t, e})
@@ -186,39 +186,39 @@ func (a *FGAdaptor) ExitVariable(ctx *parser.VariableContext) {
 // N.B. ExprsContext is a "helper" Context, actual exprs are its children
 func (a *FGAdaptor) ExitStructLit(ctx *parser.StructLitContext) {
 	t := Type(ctx.GetChild(0).(*antlr.TerminalNodeImpl).GetText())
-	var es []Expr
+	var es []FGExpr
 	if ctx.GetChildCount() > 3 {
 		nes := (ctx.GetChild(2).GetChildCount() + 1) / 2 // e.g., 'x' ',' 'y' ',' 'z'
-		es = make([]Expr, nes)
+		es = make([]FGExpr, nes)
 		for i := nes - 1; i >= 0; i-- {
-			es[i] = a.pop().(Expr) // Adding backwards
+			es[i] = a.pop().(FGExpr) // Adding backwards
 		}
 	}
 	a.push(StructLit{t, es})
 }
 
 func (a *FGAdaptor) ExitSelect(ctx *parser.SelectContext) {
-	e := a.pop().(Expr)
+	e := a.pop().(FGExpr)
 	f := Name(ctx.GetChild(2).(*antlr.TerminalNodeImpl).GetText())
 	a.push(Select{e, f})
 }
 
 func (a *FGAdaptor) ExitCall(ctx *parser.CallContext) {
-	var args []Expr
+	var args []FGExpr
 	if ctx.GetChildCount() > 5 { // TODO: refactor as ctx.GetArgs() != nil -- and child-count-checks elsewhere
 		nargs := (ctx.GetChild(4).GetChildCount() + 1) / 2 // e.g., e ',' e ',' e
-		args = make([]Expr, nargs)
+		args = make([]FGExpr, nargs)
 		for i := nargs - 1; i >= 0; i-- {
-			args[i] = a.pop().(Expr) // Adding backwards
+			args[i] = a.pop().(FGExpr) // Adding backwards
 		}
 	}
 	m := Name(ctx.GetChild(2).(*antlr.TerminalNodeImpl).GetText())
-	e := a.pop().(Expr)
+	e := a.pop().(FGExpr)
 	a.push(Call{e, m, args})
 }
 
 func (a *FGAdaptor) ExitAssert(ctx *parser.AssertContext) {
 	t := Type(ctx.GetChild(3).(*antlr.TerminalNodeImpl).GetText())
-	e := a.pop().(Expr)
+	e := a.pop().(FGExpr)
 	a.push(Assert{e, t})
 }

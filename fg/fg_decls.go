@@ -13,7 +13,7 @@ import "github.com/rhu1/fgg/base"
 
 /* "Exported" constructors for fgg (monomorph) */
 
-func NewFGProgram(ds []Decl, e Expr, printf bool) FGProgram {
+func NewFGProgram(ds []Decl, e FGExpr, printf bool) FGProgram {
 	return FGProgram{ds, e, printf} // FIXME: extend FGGProgram and carry through to here for, e.g., monom
 }
 
@@ -25,7 +25,7 @@ func NewFieldDecl(f Name, t Type) FieldDecl {
 	return FieldDecl{f, t}
 }
 
-func NewMDecl(recv ParamDecl, m Name, pds []ParamDecl, t Type, e Expr) MDecl {
+func NewMDecl(recv ParamDecl, m Name, pds []ParamDecl, t Type, e FGExpr) MDecl {
 	return MDecl{recv, m, pds, t, e}
 }
 
@@ -49,7 +49,7 @@ func (g Sig) GetMethName() Name { // Hack
 
 type FGProgram struct {
 	ds     []Decl
-	e      Expr
+	e      FGExpr
 	printf bool
 }
 
@@ -96,7 +96,7 @@ func (p FGProgram) Ok(allowStupid bool) {
 // But doesn't affect FGPprogam.Ok() (i.e., Expr.Typing)
 func (p FGProgram) Eval() (base.Program, string) {
 	e, rule := p.e.Eval(p.ds)
-	return FGProgram{p.ds, e.(Expr), p.printf}, rule
+	return FGProgram{p.ds, e.(FGExpr), p.printf}, rule
 }
 
 func (p FGProgram) GetDecls() []Decl {
@@ -190,7 +190,7 @@ type MDecl struct {
 	m    Name // Not embedding Sig because Sig doesn't take xs
 	pds  []ParamDecl
 	t    Type // Return
-	e    Expr
+	e    FGExpr
 }
 
 var _ Decl = MDecl{}
@@ -212,7 +212,7 @@ func (md MDecl) ReturnType() Type {
 	return md.t
 }
 
-func (md MDecl) Impl() Expr {
+func (md MDecl) Impl() FGExpr {
 	return md.e
 }
 

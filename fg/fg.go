@@ -72,9 +72,9 @@ type Spec interface {
 	GetSigs(ds []Decl) []Sig
 }
 
-type Expr interface {
+type FGExpr interface {
 	base.Expr // Using the same name "Expr", maybe rename this type to FGExpr
-	Subs(subs map[Variable]Expr) Expr
+	Subs(subs map[Variable]FGExpr) FGExpr
 
 	// N.B. gamma should be effectively immutable (and ds, of course)
 	// (No typing rule modifies gamma, except the T-Func bootstrap)
@@ -82,7 +82,7 @@ type Expr interface {
 
 	// string is the type name of the "actually evaluated" expr (within the eval context)
 	// CHECKME: resulting Exprs are not "parsed" from source, OK?
-	Eval(ds []Decl) (Expr, string)
+	Eval(ds []Decl) (FGExpr, string)
 
 	//IsPanic() bool  // TODO "explicit" FG panic -- cf. underlying runtime panic
 }

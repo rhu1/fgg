@@ -39,7 +39,7 @@ func methods(ds []Decl, t Type) map[Name]Sig {
 }
 
 // Pre: t_S is a struct type
-func body(ds []Decl, t_S Type, m Name) (Name, []Name, Expr) {
+func body(ds []Decl, t_S Type, m Name) (Name, []Name, FGExpr) {
 	for _, v := range ds {
 		md, ok := v.(MDecl)
 		if ok && md.recv.t == t_S && md.m == m {

@@ -14,19 +14,19 @@ func NewVariable(id Name) Variable {
 	return Variable{id}
 }
 
-func NewStructLit(t Type, es []Expr) StructLit {
+func NewStructLit(t Type, es []FGExpr) StructLit {
 	return StructLit{t, es}
 }
 
-func NewSelect(e Expr, f Name) Select {
+func NewSelect(e FGExpr, f Name) Select {
 	return Select{e, f}
 }
 
-func NewCall(e Expr, m Name, es []Expr) Call {
+func NewCall(e FGExpr, m Name, es []FGExpr) Call {
 	return Call{e, m, es}
 }
 
-func NewAssert(e Expr, t Type) Assert {
+func NewAssert(e FGExpr, t Type) Assert {
 	return Assert{e, t}
 }
 
@@ -36,9 +36,9 @@ type Variable struct {
 	id Name
 }
 
-var _ Expr = Variable{}
+var _ FGExpr = Variable{}
 
-func (x Variable) Subs(subs map[Variable]Expr) Expr {
+func (x Variable) Subs(subs map[Variable]FGExpr) FGExpr {
 	res, ok := subs[x]
 	if !ok {
 		panic("Unknown var: " + x.String())
@@ -46,7 +46,7 @@ func (x Variable) Subs(subs map[Variable]Expr) Expr {
 	return res
 }
 
-func (x Variable) Eval(ds []Decl) (Expr, string) {
+func (x Variable) Eval(ds []Decl) (FGExpr, string) {
 	panic("Cannot evaluate free variable: " + x.id)
 }
 
@@ -74,24 +74,24 @@ func (x Variable) ToGoString() string {
 
 type StructLit struct {
 	t  Type
-	es []Expr
+	es []FGExpr
 }
 
-func (s StructLit) Type() Type         { return s.t }
-func (s StructLit) FieldExprs() []Expr { return s.es }
+func (s StructLit) Type() Type           { return s.t }
+func (s StructLit) FieldExprs() []FGExpr { return s.es }
 
-var _ Expr = StructLit{}
+var _ FGExpr = StructLit{}
 
-func (s StructLit) Subs(subs map[Variable]Expr) Expr {
-	es := make([]Expr, len(s.es))
+func (s StructLit) Subs(subs map[Variable]FGExpr) FGExpr {
+	es := make([]FGExpr, len(s.es))
 	for i := 0; i < len(s.es); i++ {
 		es[i] = s.es[i].Subs(subs)
 	}
 	return StructLit{s.t, es}
 }
 
-func (s StructLit) Eval(ds []Decl) (Expr, string) {
-	es := make([]Expr, len(s.es))
+func (s StructLit) Eval(ds []Decl) (FGExpr, string) {
+	es := make([]FGExpr, len(s.es))
 	done := false
 	var rule string
 	for i := 0; i < len(s.es); i++ {
@@ -165,23 +165,23 @@ func (s StructLit) ToGoString() string {
 /* Select */
 
 type Select struct {
-	e Expr
+	e FGExpr
 	f Name
 }
 
-var _ Expr = Select{}
+var _ FGExpr = Select{}
 
-func (s Select) Expr() Expr      { return s.e }
+func (s Select) Expr() FGExpr    { return s.e }
 func (s Select) FieldName() Name { return s.f }
 
-func (s Select) Subs(subs map[Variable]Expr) Expr {
+func (s Select) Subs(subs map[Variable]FGExpr) FGExpr {
 	return Select{s.e.Subs(subs), s.f}
 }
 
-func (s Select) Eval(ds []Decl) (Expr, string) {
+func (s Select) Eval(ds []Decl) (FGExpr, string) {
 	if !s.e.IsValue() {
 		e, rule := s.e.Eval(ds)
-		return Select{e.(Expr), s.f}, rule
+		return Select{e.(FGExpr), s.f}, rule
 	}
 	v := s.e.(StructLit)
 	fds := fields(ds, v.t)
@@ -222,32 +222,32 @@ func (s Select) ToGoString() string {
 /* Call */
 
 type Call struct {
-	e    Expr
+	e    FGExpr
 	m    Name
-	args []Expr
+	args []FGExpr
 }
 
-var _ Expr = Call{}
+var _ FGExpr = Call{}
 
-func (c Call) Expr() Expr       { return c.e }
+func (c Call) Expr() FGExpr     { return c.e }
 func (c Call) MethodName() Name { return c.m }
-func (c Call) Args() []Expr     { return c.args }
+func (c Call) Args() []FGExpr   { return c.args }
 
-func (c Call) Subs(subs map[Variable]Expr) Expr {
+func (c Call) Subs(subs map[Variable]FGExpr) FGExpr {
 	e := c.e.Subs(subs)
-	args := make([]Expr, len(c.args))
+	args := make([]FGExpr, len(c.args))
 	for i := 0; i < len(c.args); i++ {
 		args[i] = c.args[i].Subs(subs)
 	}
 	return Call{e, c.m, args}
 }
 
-func (c Call) Eval(ds []Decl) (Expr, string) {
+func (c Call) Eval(ds []Decl) (FGExpr, string) {
 	if !c.e.IsValue() {
 		e, rule := c.e.Eval(ds)
-		return Call{e.(Expr), c.m, c.args}, rule
+		return Call{e.(FGExpr), c.m, c.args}, rule
 	}
-	args := make([]Expr, len(c.args))
+	args := make([]FGExpr, len(c.args))
 	done := false
 	var rule string
 	for i := 0; i < len(c.args); i++ {
@@ -264,7 +264,7 @@ func (c Call) Eval(ds []Decl) (Expr, string) {
 	// c.e and c.args all values
 	s := c.e.(StructLit)
 	x0, xs, e := body(ds, s.t, c.m) // panics if method not found
-	subs := make(map[Variable]Expr)
+	subs := make(map[Variable]FGExpr)
 	subs[Variable{x0}] = c.e
 	for i := 0; i < len(xs); i++ {
 		subs[Variable{xs[i]}] = c.args[i]
@@ -328,23 +328,23 @@ func (c Call) ToGoString() string {
 /* Assert */
 
 type Assert struct {
-	e Expr
+	e FGExpr
 	t Type
 }
 
-var _ Expr = Assert{}
+var _ FGExpr = Assert{}
 
-func (a Assert) Expr() Expr       { return a.e }
+func (a Assert) Expr() FGExpr     { return a.e }
 func (a Assert) AssertType() Type { return a.t }
 
-func (a Assert) Subs(subs map[Variable]Expr) Expr {
+func (a Assert) Subs(subs map[Variable]FGExpr) FGExpr {
 	return Assert{a.e.Subs(subs), a.t}
 }
 
-func (a Assert) Eval(ds []Decl) (Expr, string) {
+func (a Assert) Eval(ds []Decl) (FGExpr, string) {
 	if !a.e.IsValue() {
 		e, rule := a.e.Eval(ds)
-		return Assert{e.(Expr), a.t}, rule
+		return Assert{e.(FGExpr), a.t}, rule
 	}
 	t_S := typ(ds, a.e.(StructLit)) // panics if StructLit.t is not a t_S
 	if t_S.Impls(ds, a.t) {
@@ -399,7 +399,7 @@ func (a Assert) ToGoString() string {
 
 /* Aux, helpers */
 
-func writeExprs(b *strings.Builder, es []Expr) {
+func writeExprs(b *strings.Builder, es []FGExpr) {
 	if len(es) > 0 {
 		b.WriteString(es[0].String())
 		for _, v := range es[1:] {
@@ -409,7 +409,7 @@ func writeExprs(b *strings.Builder, es []Expr) {
 	}
 }
 
-func writeToGoExprs(b *strings.Builder, es []Expr) {
+func writeToGoExprs(b *strings.Builder, es []FGExpr) {
 	if len(es) > 0 {
 		b.WriteString(es[0].ToGoString())
 		for _, v := range es[1:] {

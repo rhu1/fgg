@@ -240,12 +240,12 @@ func addMethInstans(wv WVal, m Name, targs map[string][]Type) {
 	}
 }
 
-func monomExpr(omega WMap, e Expr) fg.Expr {
+func monomExpr(omega WMap, e Expr) fg.FGExpr {
 	switch e1 := e.(type) {
 	case Variable:
 		return fg.NewVariable(e1.id)
 	case StructLit:
-		es := make([]fg.Expr, len(e1.es))
+		es := make([]fg.FGExpr, len(e1.es))
 		for i := 0; i < len(e1.es); i++ {
 			es[i] = monomExpr(omega, e1.es[i])
 		}
@@ -264,7 +264,7 @@ func monomExpr(omega WMap, e Expr) fg.Expr {
 		} else {
 			m = getMonomMethName(omega, e1.m, e1.targs)
 		}
-		es := make([]fg.Expr, len(e1.args))
+		es := make([]fg.FGExpr, len(e1.args))
 		for i := 0; i < len(e1.args); i++ {
 			es[i] = monomExpr(omega, e1.args[i])
 		}
