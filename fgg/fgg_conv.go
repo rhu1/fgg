@@ -70,7 +70,7 @@ func (c *fg2fgg) convertSTypeLit(s fg.STypeLit) (STypeLit, error) {
 	typeName, typeFormals := c.convertType(s.GetType())
 
 	var fieldDecls []FieldDecl
-	for _, f := range s.Fields() {
+	for _, f := range s.GetFieldDecls() {
 		fd, err := c.convertFieldDecl(f)
 		if err != nil {
 			return STypeLit{}, err

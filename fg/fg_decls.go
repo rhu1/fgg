@@ -117,10 +117,13 @@ type STypeLit struct {
 	fds []FieldDecl
 }
 
-func (s STypeLit) GetType() Type       { return s.t }
-func (s STypeLit) GetName() Name       { return Name(s.t) }
-func (s STypeLit) Fields() []FieldDecl { return s.fds }
+func (s STypeLit) GetType() Type              { return s.t }
+func (s STypeLit) GetFieldDecls() []FieldDecl { return s.fds }
 
+// From Decl
+func (s STypeLit) GetName() Name { return Name(s.t) }
+
+// From Decl
 func (s STypeLit) Ok(ds []Decl) {
 	// TODO
 }
@@ -139,18 +142,25 @@ func (s STypeLit) String() string {
 	return b.String()
 }
 
+var _ FGNode = FieldDecl{}
+
 type FieldDecl struct {
 	f Name
 	t Type
 }
 
-func (f FieldDecl) GetName() Name { return f.f }
 func (f FieldDecl) GetType() Type { return f.t }
 
-var _ FGNode = FieldDecl{}
+// From Decl
+func (f FieldDecl) GetName() Name { return f.f }
 
 func (fd FieldDecl) String() string {
 	return fd.f + " " + fd.t.String()
+	var b strings.Builder
+	b.WriteString(fd.f)
+	b.WriteString(" ")
+	b.WriteString(fd.t.String())
+	return b.String()
 }
 
 /* MDecl, ParamDecl */
