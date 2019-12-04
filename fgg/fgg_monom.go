@@ -229,7 +229,7 @@ func collectZigZagMethInstans(ds []Decl, omega WMap, md MDecl, wv WVal) map[stri
 // Add meth instans from `wv`, filtered by `m`, to `targs`
 func addMethInstans(wv WVal, m Name, targs map[string][]Type) {
 	for _, v := range wv.gs {
-		m1 := getOrigMethName(v.g.GetMethName())
+		m1 := getOrigMethName(v.g.MethodName())
 		if m1 == m && len(v.targs) > 0 {
 			hash := "" // Use WriteTypes?
 			for _, v1 := range v.targs {

@@ -346,8 +346,11 @@ func (a Assert) Eval(ds []Decl) (FGExpr, string) {
 		e, rule := a.e.Eval(ds)
 		return Assert{e.(FGExpr), a.t}, rule
 	}
-	t_S := typ(ds, a.e.(StructLit)) // panics if StructLit.t is not a t_S
-	if t_S.Impls(ds, a.t) {
+	t := a.e.(StructLit).t
+	if !isStructType(ds, t) {
+		panic("Non struct type found in struct lit: " + t)
+	}
+	if t.Impls(ds, a.t) {
 		return a.e, "Assert"
 	}
 	panic("Cannot reduce: " + a.String())

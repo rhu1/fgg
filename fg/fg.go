@@ -73,7 +73,7 @@ type Spec interface {
 }
 
 type FGExpr interface {
-	base.Expr // Using the same name "Expr", maybe rename this type to FGExpr
+	base.Expr
 	Subs(subs map[Variable]FGExpr) FGExpr
 
 	// N.B. gamma should be effectively immutable (and ds, of course)

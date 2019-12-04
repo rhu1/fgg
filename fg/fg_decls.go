@@ -14,36 +14,18 @@ import "github.com/rhu1/fgg/base"
 /* "Exported" constructors for fgg (monomorph) */
 
 func NewFGProgram(ds []Decl, e FGExpr, printf bool) FGProgram {
-	return FGProgram{ds, e, printf} // FIXME: extend FGGProgram and carry through to here for, e.g., monom
-}
-
-func NewSTypeLit(t Type, fds []FieldDecl) STypeLit {
-	return STypeLit{t, fds}
-}
-
-func NewFieldDecl(f Name, t Type) FieldDecl {
-	return FieldDecl{f, t}
+	return FGProgram{ds, e, printf}
 }
 
 func NewMDecl(recv ParamDecl, m Name, pds []ParamDecl, t Type, e FGExpr) MDecl {
 	return MDecl{recv, m, pds, t, e}
 }
 
-func NewParamDecl(x Name, t Type) ParamDecl { // For fgg_util.MakeWMap
-	return ParamDecl{x, t}
-}
-
-func NewITypeLit(t Type, ss []Spec) ITypeLit {
-	return ITypeLit{t, ss}
-}
-
-func NewSig(m Name, pds []ParamDecl, t Type) Sig { // For fgg_util.MakeWMap
-	return Sig{m, pds, t}
-}
-
-func (g Sig) GetMethName() Name { // Hack
-	return g.m
-}
+func NewSTypeLit(t Type, fds []FieldDecl) STypeLit { return STypeLit{t, fds} }
+func NewITypeLit(t Type, ss []Spec) ITypeLit       { return ITypeLit{t, ss} }
+func NewFieldDecl(f Name, t Type) FieldDecl        { return FieldDecl{f, t} }
+func NewParamDecl(x Name, t Type) ParamDecl        { return ParamDecl{x, t} } // For fgg_util.MakeWMap
+func NewSig(m Name, pds []ParamDecl, t Type) Sig   { return Sig{m, pds, t} }  // For fgg_util.MakeWMap
 
 /* Program */
 

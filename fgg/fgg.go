@@ -246,6 +246,7 @@ type Expr interface {
 
 /* Helpers */
 
+// Based on FG version -- but currently no FGG equiv of isInterfaceType
 func isStructType(ds []Decl, t Name) bool {
 	for _, v := range ds {
 		d, ok := v.(STypeLit)

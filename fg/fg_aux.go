@@ -53,14 +53,7 @@ func body(ds []Decl, t_S Type, m Name) (Name, []Name, FGExpr) {
 	panic("Method not found: " + t_S.String() + "." + m)
 }
 
-// Post: returns a struct type
-func typ(ds []Decl, s StructLit) Type {
-	t_S := s.t
-	if !isStructType(ds, t_S) {
-		panic("Non struct type found in struct lit: " + s.String())
-	}
-	return t_S
-}
+/* Additional */
 
 func getTDecl(ds []Decl, t Type) TDecl {
 	for _, v := range ds {
