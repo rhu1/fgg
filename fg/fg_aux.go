@@ -29,7 +29,7 @@ func methods(ds []Decl, t Type) map[Name]Sig {
 		td := getTDecl(ds, t).(ITypeLit)
 		for _, s := range td.specs {
 			for _, v := range s.GetSigs(ds) { // CHECKME: can this cycle indefinitely? (cf. submission version, recursive "methods")
-				res[v.name] = v
+				res[v.meth] = v
 			}
 		}
 	} else { // Perhaps redundant if all TDecl OK checked first
