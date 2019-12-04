@@ -44,7 +44,7 @@ func FgAdptrTranslate(p FGGProgram) fg.FGProgram { // TODO FIXME: FGR -- TODO al
 
 			// Add getValue/getTypeRep to all (existing) t_S -- every t_S must implement t_0 -- TODO: factor out with fgWrappers
 			//e_getv := fg.NewSelect(fg.NewVariable("x"), "value") // CHECKME: but t_S doesn't have value field, fgWrapper does?
-			e_getv := fg.NewStructLit(fg.Type("Dummy_0"), []fg.Expr{})
+			e_getv := fg.NewStructLit(fg.Type("Dummy_0"), []fg.FGExpr{})
 			getv := fg.NewMDecl(fg.NewParamDecl("x", fg.Type(d1.t)), "getValue",
 				[]fg.ParamDecl{}, fg.Type("Any_0"), e_getv)
 			// gettr := ...TODO...
@@ -134,9 +134,9 @@ func FgAdptrTranslate(p FGGProgram) fg.FGProgram { // TODO FIXME: FGR -- TODO al
 				pds[i] = fg.NewParamDecl(pd.x, fg.Type(fgErase(delta, pd.u)))
 			}
 			t := fg.Type(fgErase(delta, g.u)) // !!! tau_p typo, and delta'?
-			var e fg.Expr
-			e = fg.NewStructLit("Dummy_0", []fg.Expr{})
-			e = fg.NewStructLit("ToAny_0", []fg.Expr{e})
+			var e fg.FGExpr
+			e = fg.NewStructLit("Dummy_0", []fg.FGExpr{})
+			e = fg.NewStructLit("ToAny_0", []fg.FGExpr{e})
 			e = fg.NewSelect(e, "any")
 			e = fg.NewAssert(e, fg.Type(fgErase(delta, g.u)))
 			md := fg.NewMDecl(fg.NewParamDecl("x", k), g.m,
@@ -201,21 +201,21 @@ func fgAdaptSig(delta TEnv, g Sig) fg.Sig {
 
 // |e_FGG|_(\Delta; \Gamma) = e_FGR
 // TODO: rename
-func fgAdaptExpr(ds []Decl, delta TEnv, gamma Env, e Expr, fgWrappers map[fg.Type]fgAdaptPair) fg.Expr {
+func fgAdaptExpr(ds []Decl, delta TEnv, gamma Env, e Expr, fgWrappers map[fg.Type]fgAdaptPair) fg.FGExpr {
 	switch e1 := e.(type) {
 	case Variable:
 		u := e1.Typing(ds, delta, gamma, false)
-		var res fg.Expr
+		var res fg.FGExpr
 		res = fg.NewVariable(e1.id)
 		if isInterfaceTName(ds, u) {
 			// x.getValue().((mkRep u))
-			res = fg.NewCall(res, Name("getValue"), []fg.Expr{})
+			res = fg.NewCall(res, Name("getValue"), []fg.FGExpr{})
 			res = fg.NewAssert(res, fg.Type(fgErase(delta, u))) // TODO FIXME: mkRep -- "FG" for now, not FGR
 		}
 		return res
 	case StructLit:
 		t := e1.u.t
-		es := make([]fg.Expr, len(e1.es)) // TODO FIXME: additional mkRep args
+		es := make([]fg.FGExpr, len(e1.es)) // TODO FIXME: additional mkRep args
 		fds := fields(ds, e1.u)
 		subs := make(map[TParam]Type)
 		psi := getTDecl(ds, t).GetTFormals()
@@ -231,11 +231,11 @@ func fgAdaptExpr(ds []Decl, delta TEnv, gamma Env, e Expr, fgWrappers map[fg.Typ
 		return fg.NewStructLit(fg.Type(t), es)
 	case Select:
 		u := e1.Typing(ds, delta, gamma, false)
-		var res fg.Expr
+		var res fg.FGExpr
 		res = fg.NewSelect(fgAdaptExpr(ds, delta, gamma, e1.e, fgWrappers), e1.f)
 		if isInterfaceTName(ds, u) {
 			// TODO FIXME: factor out with Variable
-			res = fg.NewCall(res, Name("getValue"), []fg.Expr{})
+			res = fg.NewCall(res, Name("getValue"), []fg.FGExpr{})
 			res = fg.NewAssert(res, fg.Type(fgErase(delta, u))) // TODO FIXME: mkRep -- "FG" for now, not FGR
 		}
 		return res
@@ -247,14 +247,14 @@ func fgAdaptExpr(ds []Decl, delta TEnv, gamma Env, e Expr, fgWrappers map[fg.Typ
 			//subs[g.psi.tfs[i].a] = e1.targs[i]  // !!! cf. StructLit case
 			subs[g.psi.tfs[i].a] = bounds(delta, e1.targs[i])
 		}
-		args := make([]fg.Expr, len(e1.args))
+		args := make([]fg.FGExpr, len(e1.args))
 		for i := 0; i < len(e1.args); i++ {
 			u_i := g.pds[i].u.TSubs(subs)
 			args[i] = fgWrap(ds, delta, gamma, e1.args[i], u_i, fgWrappers)
 		}
 		//u := e1.Typing(ds, delta, gamma, false)
 		e_recv := fgAdaptExpr(ds, delta, gamma, e1.e, fgWrappers)
-		var res fg.Expr
+		var res fg.FGExpr
 		res = fg.NewCall(e_recv, e1.m, args)
 		//if isInterfaceTName(ds, fgErase(delta, u)) {  // !!! fgErase returns fg.Type (cf. fgWrap isStructTName)
 
@@ -282,7 +282,7 @@ func fgAdaptExpr(ds []Decl, delta TEnv, gamma Env, e Expr, fgWrappers map[fg.Typ
 		//if isInterfaceTName(ds, u_ret) {
 		if !isSTypeLit(ds, u_ret) {
 			// TODO FIXME: factor out with Variable
-			res = fg.NewCall(res, Name("getValue"), []fg.Expr{})
+			res = fg.NewCall(res, Name("getValue"), []fg.FGExpr{})
 			//res = fg.NewAssert(res, fg.Type(fgErase(delta, u_ret))) // TODO FIXME: mkRep -- "FG" for now, not FGR
 			res = fg.NewAssert(res, fg.Type(u_ret))
 		}
@@ -305,7 +305,7 @@ func fgErase(delta TEnv, u Type) Name { //fg.Type {  // CHECKME: change return b
 // Pre: u is a TName  // !!!
 // Pre: type of e <: u
 // `u` is "target type"
-func fgWrap(ds []fg.Decl, delta TEnv, gamma Env, e Expr, u Type, fgWrappers map[fg.Type]fgAdaptPair) fg.Expr {
+func fgWrap(ds []fg.Decl, delta TEnv, gamma Env, e Expr, u Type, fgWrappers map[fg.Type]fgAdaptPair) fg.FGExpr {
 	/*t := fgErase(u, delta)
 	if _, ok := fg.isStructType(t)*/
 	if isStructTName(ds, u) { // !!! differs slightly from def -- because there is no FG t_S decl (yet)?
@@ -321,14 +321,14 @@ func fgWrap(ds []fg.Decl, delta TEnv, gamma Env, e Expr, u Type, fgWrappers map[
 
 // targ is a t_I
 // TODO: rename, cf. fgWrap(ds, delta, gamma, e, u)
-func fgWrapper(delta TEnv, e fg.Expr, subj Type, targ Type, fgWrappers map[fg.Type]fgAdaptPair) fg.StructLit {
+func fgWrapper(delta TEnv, e fg.FGExpr, subj Type, targ Type, fgWrappers map[fg.Type]fgAdaptPair) fg.StructLit {
 	t1 := fg.Type(fgErase(delta, subj))
 	t_I := fg.Type(fgErase(delta, targ))
 	adptr := fg.Type("Adptr_" + t1 + "_" + t_I) // TODO: factor out naming
 	if _, ok := fgWrappers[adptr]; !ok {
 		fgWrappers[adptr] = fgAdaptPair{t1, t_I}
 	}
-	return fg.NewStructLit(adptr, []fg.Expr{e})
+	return fg.NewStructLit(adptr, []fg.FGExpr{e})
 }
 
 /* Helper */

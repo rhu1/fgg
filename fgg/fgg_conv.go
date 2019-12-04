@@ -52,7 +52,7 @@ func (c *fg2fgg) convert() error {
 		}
 	}
 
-	expr, err := c.convertExpr(c.fgProg.GetExpr())
+	expr, err := c.convertExpr(c.fgProg.GetMain())
 	if err != nil {
 		return err
 	}
@@ -70,7 +70,7 @@ func (c *fg2fgg) convertSTypeLit(s fg.STypeLit) (STypeLit, error) {
 	typeName, typeFormals := c.convertType(s.GetType())
 
 	var fieldDecls []FieldDecl
-	for _, f := range s.Fields() {
+	for _, f := range s.GetFieldDecls() {
 		fd, err := c.convertFieldDecl(f)
 		if err != nil {
 			return STypeLit{}, err
@@ -85,20 +85,20 @@ func (c *fg2fgg) convertITypeLit(i fg.ITypeLit) (ITypeLit, error) {
 	typeName, typeFormals := c.convertType(i.GetType())
 
 	var specs []Spec
-	for _, s := range i.Specs() {
+	for _, s := range i.GetSpecs() {
 		sig := s.(fg.Sig)
 		var paramDecls []ParamDecl
-		for _, p := range sig.MethodParams() {
+		for _, p := range sig.GetParamDecls() {
 			pd, err := c.convertParamDecl(p)
 			if err != nil {
 				return ITypeLit{}, nil
 			}
 			paramDecls = append(paramDecls, pd)
 		}
-		retTypeName, _ := c.convertType(sig.ReturnType())
+		retTypeName, _ := c.convertType(sig.GetReturn())
 
 		specs = append(specs, Sig{
-			m:   Name(sig.MethodName()),
+			m:   Name(sig.GetName()),
 			psi: TFormals{tfs: nil},
 			pds: paramDecls,
 			u:   TName{t: retTypeName},
@@ -119,10 +119,10 @@ func (c *fg2fgg) convertParamDecl(pd fg.ParamDecl) (ParamDecl, error) {
 }
 
 func (c *fg2fgg) convertMDecl(md fg.MDecl) (MDecl, error) {
-	recvTypeName, recvTypeFormals := c.convertType(md.Receiver().GetType())
+	recvTypeName, recvTypeFormals := c.convertType(md.GetReceiver().GetType())
 
 	var paramDecls []ParamDecl
-	for _, p := range md.MethodParams() {
+	for _, p := range md.GetParamDecls() {
 		pd, err := c.convertParamDecl(p)
 		if err != nil {
 			return MDecl{}, err
@@ -130,17 +130,17 @@ func (c *fg2fgg) convertMDecl(md fg.MDecl) (MDecl, error) {
 		paramDecls = append(paramDecls, pd)
 	}
 
-	retTypeName, _ := c.convertType(md.ReturnType())
-	methImpl, err := c.convertExpr(md.Impl())
+	retTypeName, _ := c.convertType(md.GetReturn())
+	methImpl, err := c.convertExpr(md.GetBody())
 	if err != nil {
 		return MDecl{}, err
 	}
 
 	return MDecl{
-		x_recv:   md.Receiver().GetName(),
+		x_recv:   md.GetReceiver().GetName(),
 		t_recv:   recvTypeName,
 		psi_recv: recvTypeFormals,
-		m:        Name(md.MethodName()),
+		m:        Name(md.GetName()),
 		psi:      TFormals{}, // empty parameter
 		pds:      paramDecls,
 		u:        TName{t: retTypeName},
@@ -187,10 +187,10 @@ func (c *fg2fgg) convertExpr(expr base.Expr) (Expr, error) {
 }
 
 func (c *fg2fgg) convertStructLit(sLit fg.StructLit) (StructLit, error) {
-	structType, _ := c.convertType(sLit.Type())
+	structType, _ := c.convertType(sLit.GetType())
 
 	var es []Expr
-	for _, expr := range sLit.FieldExprs() {
+	for _, expr := range sLit.GetElems() {
 		fieldExpr, err := c.convertExpr(expr)
 		if err != nil {
 			return StructLit{}, err

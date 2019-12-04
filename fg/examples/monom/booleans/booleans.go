@@ -1,0 +1,20 @@
+package main;
+type Any interface {};
+type Bool interface { Not() Bool; Equal(that Bool) Bool; Condt(br Branchest) t };
+type Branchest interface { IfTT() t; IfFF() t };
+type TT struct {};
+type FF struct {};
+func (this TT) Not() Bool { return FF{} };
+func (this FF) Not() Bool { return TT{} };
+func (this TT) Equal(that Bool) Bool { return that };
+func (this FF) Equal(that Bool) Bool { return that.Not() };
+func (this TT) Condt(br Branchest) t { return br.IfTT() };
+func (this FF) Condt(br Branchest) t { return br.IfFF() };
+type exampleBr struct { x t; y t };
+func (this exampleBr) IfTT() t { return this.x.m(this.y) };
+func (this exampleBr) IfFF() t { return this.x };
+type t struct {};
+func (x0 t) m(x1 t) t { return x1 };
+type Ex struct {};
+func (d Ex) example(b Bool, x t, y t) t { return b.Condt(exampleBr{x, y}).m(t{}) };
+func main() { _ = Ex{}.example(TT{}, t{}, t{}) }

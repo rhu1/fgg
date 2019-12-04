@@ -28,7 +28,7 @@ func Monomorph(p FGGProgram) fg.FGProgram {
 	var gamma1 ClosedEnv
 	ground := make(map[string]Ground)
 	//collectGroundFggTypes(p.GetDecls(), gamma1, p.GetExpr().(Expr), ground)
-	fix(p.GetDecls(), gamma1, p.GetExpr().(Expr), ground)
+	fix(p.GetDecls(), gamma1, p.GetMain().(Expr), ground)
 	MakeWMap2(p.GetDecls(), ground, omega)
 	//fmt.Println("2222:\n", ground)
 
@@ -57,7 +57,7 @@ func Monomorph(p FGGProgram) fg.FGProgram {
 		}
 	}
 	e := monomExpr(omega, p.e)
-	return fg.NewFGProgram(ds, e, p.printf)
+	return fg.NewFGProgram(ds, e, p.Printf)
 }
 
 // Pre: `wv` represents an instantiation of the `td` type  // TODO: refactor, decompose
@@ -229,7 +229,7 @@ func collectZigZagMethInstans(ds []Decl, omega WMap, md MDecl, wv WVal) map[stri
 // Add meth instans from `wv`, filtered by `m`, to `targs`
 func addMethInstans(wv WVal, m Name, targs map[string][]Type) {
 	for _, v := range wv.gs {
-		m1 := getOrigMethName(v.g.GetMethName())
+		m1 := getOrigMethName(v.g.GetName())
 		if m1 == m && len(v.targs) > 0 {
 			hash := "" // Use WriteTypes?
 			for _, v1 := range v.targs {
@@ -240,12 +240,12 @@ func addMethInstans(wv WVal, m Name, targs map[string][]Type) {
 	}
 }
 
-func monomExpr(omega WMap, e Expr) fg.Expr {
+func monomExpr(omega WMap, e Expr) fg.FGExpr {
 	switch e1 := e.(type) {
 	case Variable:
 		return fg.NewVariable(e1.id)
 	case StructLit:
-		es := make([]fg.Expr, len(e1.es))
+		es := make([]fg.FGExpr, len(e1.es))
 		for i := 0; i < len(e1.es); i++ {
 			es[i] = monomExpr(omega, e1.es[i])
 		}
@@ -264,7 +264,7 @@ func monomExpr(omega WMap, e Expr) fg.Expr {
 		} else {
 			m = getMonomMethName(omega, e1.m, e1.targs)
 		}
-		es := make([]fg.Expr, len(e1.args))
+		es := make([]fg.FGExpr, len(e1.args))
 		for i := 0; i < len(e1.args); i++ {
 			es[i] = monomExpr(omega, e1.args[i])
 		}

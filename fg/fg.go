@@ -4,11 +4,18 @@ import "reflect"
 
 import "github.com/rhu1/fgg/base"
 
+/* Aliases from base */
+// TODO: refactor?
+
+type Name = base.Name
+type FGNode = base.AstNode
+type Decl = base.Decl
+
 /* Name, Context, Type */
 
-type Name = base.Name // TODO: tidy up refactoring, due to introducing base
+// Name: see Aliases (at top)
 
-type Env map[Name]Type // TODO: should be Variable rather than Name -- though Variable is an Expr
+type Env map[Name]Type // TODO: should be Variable rather than Name? -- though Variable is an Expr
 
 type Type Name // Type definition (cf. alias)
 
@@ -33,6 +40,7 @@ func (t0 Type) Impls(ds []Decl, t Type) bool {
 }
 
 // t_I is a Spec, but not t_S -- this aspect is currently "dynamically typed"
+// From Spec
 func (t Type) GetSigs(ds []Decl) []Sig {
 	if !isInterfaceType(ds, t) { // isStructType would be more efficient
 		panic("Cannot use non-interface type as a Spec: " + t.String() +
@@ -40,7 +48,7 @@ func (t Type) GetSigs(ds []Decl) []Sig {
 	}
 	td := getTDecl(ds, t).(ITypeLit)
 	var res []Sig
-	for _, s := range td.ss {
+	for _, s := range td.specs {
 		res = append(res, s.GetSigs(ds)...)
 	}
 	return res
@@ -52,9 +60,7 @@ func (t Type) String() string {
 
 /* AST base intefaces: FGNode, Decl, TDecl, Spec, Expr */
 
-// TODO: tidy up refactoring, due to introducing base
-type FGNode = base.AstNode
-type Decl = base.Decl
+// FGNode, Decl: see Aliases (at top)
 
 type TDecl interface {
 	Decl
@@ -67,9 +73,9 @@ type Spec interface {
 	GetSigs(ds []Decl) []Sig
 }
 
-type Expr interface {
-	base.Expr // Using the same name "Expr", maybe rename this type to FGExpr
-	Subs(subs map[Variable]Expr) Expr
+type FGExpr interface {
+	base.Expr
+	Subs(subs map[Variable]FGExpr) FGExpr
 
 	// N.B. gamma should be effectively immutable (and ds, of course)
 	// (No typing rule modifies gamma, except the T-Func bootstrap)
@@ -77,7 +83,7 @@ type Expr interface {
 
 	// string is the type name of the "actually evaluated" expr (within the eval context)
 	// CHECKME: resulting Exprs are not "parsed" from source, OK?
-	Eval(ds []Decl) (Expr, string)
+	Eval(ds []Decl) (FGExpr, string)
 
 	//IsPanic() bool  // TODO "explicit" FG panic -- cf. underlying runtime panic
 }
@@ -87,7 +93,7 @@ type Expr interface {
 func isStructType(ds []Decl, t Type) bool {
 	for _, v := range ds {
 		d, ok := v.(STypeLit)
-		if ok && d.t == t {
+		if ok && d.t_S == t {
 			return true
 		}
 	}
@@ -97,7 +103,7 @@ func isStructType(ds []Decl, t Type) bool {
 func isInterfaceType(ds []Decl, t Type) bool {
 	for _, v := range ds {
 		d, ok := v.(ITypeLit)
-		if ok && d.t == t {
+		if ok && d.t_I == t {
 			return true
 		}
 	}
