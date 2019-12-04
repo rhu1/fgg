@@ -16,7 +16,7 @@ var _ = reflect.Append
 func Obliterate(p_fgg fgg.FGGProgram) FGRProgram { // CHECKME can also subsume existing FGG-FG trans?
 	ds_fgg := p_fgg.GetDecls()
 
-	e_fgg := p_fgg.GetExpr().(fgg.Expr)
+	e_fgg := p_fgg.GetMain().(fgg.Expr)
 	var delta fgg.TEnv
 	var gamma fgg.Env
 	e_fgr := oblitExpr(ds_fgg, delta, gamma, e_fgg)

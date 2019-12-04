@@ -47,7 +47,7 @@ func (t Type) GetSigs(ds []Decl) []Sig {
 	}
 	td := getTDecl(ds, t).(ITypeLit)
 	var res []Sig
-	for _, s := range td.ss {
+	for _, s := range td.specs {
 		res = append(res, s.GetSigs(ds)...)
 	}
 	return res
@@ -92,7 +92,7 @@ type FGExpr interface {
 func isStructType(ds []Decl, t Type) bool {
 	for _, v := range ds {
 		d, ok := v.(STypeLit)
-		if ok && d.t == t {
+		if ok && d.t_S == t {
 			return true
 		}
 	}
@@ -102,7 +102,7 @@ func isStructType(ds []Decl, t Type) bool {
 func isInterfaceType(ds []Decl, t Type) bool {
 	for _, v := range ds {
 		d, ok := v.(ITypeLit)
-		if ok && d.t == t {
+		if ok && d.t_I == t {
 			return true
 		}
 	}

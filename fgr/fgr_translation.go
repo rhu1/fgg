@@ -63,7 +63,7 @@ func Translate(p fgg.FGGProgram) FGRProgram { // TODO FIXME: FGR -- TODO also ca
 	}
 
 	// Translate main Expr (and collect wrappers)
-	e_fgg := p.GetExpr().(fgg.Expr)
+	e_fgg := p.GetMain().(fgg.Expr)
 	var delta fgg.TEnv // Empty envs for main -- duplicated from FGGProgram.OK
 	var gamma fgg.Env
 	e_fgg.Typing(ds_fgg, delta, gamma, false) // Populates delta and gamma

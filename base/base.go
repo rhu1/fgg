@@ -19,8 +19,8 @@ type Decl interface {
 type Program interface {
 	AstNode
 	GetDecls() []Decl
-	GetExpr() Expr
-	Ok(allowStupid bool)
+	GetMain() Expr
+	Ok(allowStupid bool)     // Set false for source check
 	Eval() (Program, string) // Eval one step; string is the name of the (innermost) applied rule
 }
 

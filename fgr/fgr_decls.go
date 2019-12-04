@@ -105,7 +105,7 @@ func (p FGRProgram) GetDecls() []Decl {
 	return p.ds // Returns a copy?
 }
 
-func (p FGRProgram) GetExpr() base.Expr {
+func (p FGRProgram) GetMain() base.Expr {
 	return p.e
 }
 

@@ -86,10 +86,10 @@ func (a *FGAdaptor) ExitTypeDecl(ctx *parser.TypeDeclContext) {
 	t := Type(ctx.GetChild(1).(*antlr.TerminalNodeImpl).GetText())
 	td := a.pop().(TDecl)
 	if s, ok := td.(STypeLit); ok { // N.B. s is a *copy* of td
-		s.t = t
+		s.t_S = t
 		a.push(s)
 	} else if c, ok := td.(ITypeLit); ok {
-		c.t = t
+		c.t_I = t
 		a.push(c)
 	} else {
 		panic("Unknown type decl: " + reflect.TypeOf(td).String())

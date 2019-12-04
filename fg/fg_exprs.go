@@ -186,7 +186,7 @@ func (s Select) Eval(ds []Decl) (FGExpr, string) {
 	v := s.e.(StructLit)
 	fds := fields(ds, v.t)
 	for i := 0; i < len(fds); i++ {
-		if fds[i].f == s.f {
+		if fds[i].name == s.f {
 			return v.es[i], "Select"
 		}
 	}
@@ -200,7 +200,7 @@ func (s Select) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
 	}
 	fds := fields(ds, t)
 	for _, v := range fds {
-		if v.f == s.f {
+		if v.name == s.f {
 			return v.t
 		}
 	}

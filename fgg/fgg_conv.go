@@ -52,7 +52,7 @@ func (c *fg2fgg) convert() error {
 		}
 	}
 
-	expr, err := c.convertExpr(c.fgProg.GetExpr())
+	expr, err := c.convertExpr(c.fgProg.GetMain())
 	if err != nil {
 		return err
 	}
@@ -119,10 +119,10 @@ func (c *fg2fgg) convertParamDecl(pd fg.ParamDecl) (ParamDecl, error) {
 }
 
 func (c *fg2fgg) convertMDecl(md fg.MDecl) (MDecl, error) {
-	recvTypeName, recvTypeFormals := c.convertType(md.Receiver().GetType())
+	recvTypeName, recvTypeFormals := c.convertType(md.GetReceiver().GetType())
 
 	var paramDecls []ParamDecl
-	for _, p := range md.MethodParams() {
+	for _, p := range md.GetParamDecls() {
 		pd, err := c.convertParamDecl(p)
 		if err != nil {
 			return MDecl{}, err
@@ -130,17 +130,17 @@ func (c *fg2fgg) convertMDecl(md fg.MDecl) (MDecl, error) {
 		paramDecls = append(paramDecls, pd)
 	}
 
-	retTypeName, _ := c.convertType(md.ReturnType())
-	methImpl, err := c.convertExpr(md.Impl())
+	retTypeName, _ := c.convertType(md.GetReturn())
+	methImpl, err := c.convertExpr(md.GetBody())
 	if err != nil {
 		return MDecl{}, err
 	}
 
 	return MDecl{
-		x_recv:   md.Receiver().GetName(),
+		x_recv:   md.GetReceiver().GetName(),
 		t_recv:   recvTypeName,
 		psi_recv: recvTypeFormals,
-		m:        Name(md.MethodName()),
+		m:        Name(md.GetName()),
 		psi:      TFormals{}, // empty parameter
 		pds:      paramDecls,
 		u:        TName{t: retTypeName},

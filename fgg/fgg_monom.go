@@ -28,7 +28,7 @@ func Monomorph(p FGGProgram) fg.FGProgram {
 	var gamma1 ClosedEnv
 	ground := make(map[string]Ground)
 	//collectGroundFggTypes(p.GetDecls(), gamma1, p.GetExpr().(Expr), ground)
-	fix(p.GetDecls(), gamma1, p.GetExpr().(Expr), ground)
+	fix(p.GetDecls(), gamma1, p.GetMain().(Expr), ground)
 	MakeWMap2(p.GetDecls(), ground, omega)
 	//fmt.Println("2222:\n", ground)
 

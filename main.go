@@ -218,22 +218,22 @@ func eval(p base.Program, steps int) {
 		vPrintln("\t" + v.String() + ";")
 	}
 	vPrintln("Eval steps:")
-	vPrintln(fmt.Sprintf("%6d: %8s %v", 0, "", p.GetExpr())) // Initial prog OK already checked
+	vPrintln(fmt.Sprintf("%6d: %8s %v", 0, "", p.GetMain())) // Initial prog OK already checked
 
 	done := steps > EVAL_TO_VAL || // Ignore 'done' if num steps fixed (set true, for `||!done` below)
-		p.GetExpr().IsValue() // O/w evaluate until a val -- here, check if init expr is already a val
+		p.GetMain().IsValue() // O/w evaluate until a val -- here, check if init expr is already a val
 	var rule string
 	for i := 1; i <= steps || !done; i++ {
 		p, rule = p.Eval()
-		vPrintln(fmt.Sprintf("%6d: %8s %v", i, "["+rule+"]", p.GetExpr()))
+		vPrintln(fmt.Sprintf("%6d: %8s %v", i, "["+rule+"]", p.GetMain()))
 		vPrintln("Checking OK:") // TODO: maybe disable by default, enable by flag
 		// TODO FIXME: check actual type preservation (not just typeability)
 		p.Ok(allowStupid)
-		if !done && p.GetExpr().IsValue() {
+		if !done && p.GetMain().IsValue() {
 			done = true
 		}
 	}
-	fmt.Println(p.GetExpr().ToGoString()) // Final result
+	fmt.Println(p.GetMain().ToGoString()) // Final result
 }
 
 // Pre: (monom == true || compile != "") => -fgg is set

@@ -39,9 +39,11 @@ type FGProgram struct {
 	printf bool // false = "original" `_ = e_main` syntax; true = import-fmt/printf syntax
 }
 
+// From base.Program
 func (p FGProgram) GetDecls() []Decl   { return p.decls } // Return a copy?
-func (p FGProgram) GetExpr() base.Expr { return p.e_main }
+func (p FGProgram) GetMain() base.Expr { return p.e_main }
 
+// From base.Program
 func (p FGProgram) Ok(allowStupid bool) {
 	if !allowStupid { // Hack, to print the following only for "top-level" programs (not during Eval)
 		fmt.Println("[Warning] Type/method decl OK not fully checked yet " +
@@ -80,6 +82,7 @@ func (p FGProgram) Ok(allowStupid bool) {
 
 // CHECKME: resulting FGProgram is not parsed from source, OK? -- cf. Expr.Eval
 // But doesn't affect FGPprogam.Ok() (i.e., Expr.Typing)
+// From base.Program
 func (p FGProgram) Eval() (base.Program, string) {
 	e, rule := p.e_main.Eval(p.decls)
 	return FGProgram{p.decls, e.(FGExpr), p.printf}, rule
@@ -113,15 +116,15 @@ func (p FGProgram) String() string {
 var _ TDecl = STypeLit{}
 
 type STypeLit struct {
-	t   Type
-	fds []FieldDecl
+	t_S        Type
+	fieldDecls []FieldDecl
 }
 
-func (s STypeLit) GetType() Type              { return s.t }
-func (s STypeLit) GetFieldDecls() []FieldDecl { return s.fds }
+func (s STypeLit) GetType() Type              { return s.t_S }
+func (s STypeLit) GetFieldDecls() []FieldDecl { return s.fieldDecls }
 
 // From Decl
-func (s STypeLit) GetName() Name { return Name(s.t) }
+func (s STypeLit) GetName() Name { return Name(s.t_S) }
 
 // From Decl
 func (s STypeLit) Ok(ds []Decl) {
@@ -131,11 +134,11 @@ func (s STypeLit) Ok(ds []Decl) {
 func (s STypeLit) String() string {
 	var b strings.Builder
 	b.WriteString("type ")
-	b.WriteString(s.t.String())
+	b.WriteString(s.t_S.String())
 	b.WriteString(" struct {")
-	if len(s.fds) > 0 {
+	if len(s.fieldDecls) > 0 {
 		b.WriteString(" ")
-		writeFieldDecls(&b, s.fds)
+		writeFieldDecls(&b, s.fieldDecls)
 		b.WriteString(" ")
 	}
 	b.WriteString("}")
@@ -145,19 +148,19 @@ func (s STypeLit) String() string {
 var _ FGNode = FieldDecl{}
 
 type FieldDecl struct {
-	f Name
-	t Type
+	name Name
+	t    Type
 }
 
 func (f FieldDecl) GetType() Type { return f.t }
 
 // From Decl
-func (f FieldDecl) GetName() Name { return f.f }
+func (f FieldDecl) GetName() Name { return f.name }
 
 func (fd FieldDecl) String() string {
-	return fd.f + " " + fd.t.String()
+	return fd.name + " " + fd.t.String()
 	var b strings.Builder
-	b.WriteString(fd.f)
+	b.WriteString(fd.name)
 	b.WriteString(" ")
 	b.WriteString(fd.t.String())
 	return b.String()
@@ -165,60 +168,43 @@ func (fd FieldDecl) String() string {
 
 /* MDecl, ParamDecl */
 
-type MDecl struct {
-	recv ParamDecl
-	m    Name // Not embedding Sig because Sig doesn't take xs
-	pds  []ParamDecl
-	t    Type // Return
-	e    FGExpr
-}
-
 var _ Decl = MDecl{}
 
-func (md MDecl) Receiver() ParamDecl {
-	return md.recv
+type MDecl struct {
+	recv   ParamDecl
+	name   Name // Not embedding Sig because Sig doesn't take xs
+	params []ParamDecl
+	t_ret  Type // Return
+	e_body FGExpr
 }
 
-func (md MDecl) MethodName() Name {
-	return md.m
-}
+func (md MDecl) GetReceiver() ParamDecl     { return md.recv }
+func (md MDecl) GetParamDecls() []ParamDecl { return md.params } // Returns non-receiver params
+func (md MDecl) GetReturn() Type            { return md.t_ret }
+func (md MDecl) GetBody() FGExpr            { return md.e_body }
 
-// MethodParams returns the non-receiver parameters
-func (md MDecl) MethodParams() []ParamDecl {
-	return md.pds
-}
-
-func (md MDecl) ReturnType() Type {
-	return md.t
-}
-
-func (md MDecl) Impl() FGExpr {
-	return md.e
-}
-
-func (md MDecl) ToSig() Sig {
-	return Sig{md.m, md.pds, md.t}
-}
+// From Decl
+func (md MDecl) GetName() Name { return md.name }
 
 func (md MDecl) Ok(ds []Decl) {
 	if !isStructType(ds, md.recv.t) {
 		panic("Receiver must be a struct type: not " + md.recv.t.String() +
 			"\n\t" + md.String())
 	}
-	env := Env{md.recv.x: md.recv.t}
-	for _, v := range md.pds {
-		env[v.x] = v.t
+	env := Env{md.recv.name: md.recv.t}
+	for _, v := range md.params {
+		env[v.name] = v.t
 	}
 	allowStupid := false
-	t := md.e.Typing(ds, env, allowStupid)
-	if !t.Impls(ds, md.t) {
+	t := md.e_body.Typing(ds, env, allowStupid)
+	if !t.Impls(ds, md.t_ret) {
 		panic("Method body type must implement declared return type: found=" +
-			t.String() + ", expected=" + md.t.String() + "\n\t" + md.String())
+			t.String() + ", expected=" + md.t_ret.String() + "\n\t" + md.String())
 	}
 }
 
-func (md MDecl) GetName() Name {
-	return md.m
+func (md MDecl) ToSig() Sig {
+	return Sig{md.name, md.params, md.t_ret}
 }
 
 func (md MDecl) String() string {
@@ -226,66 +212,67 @@ func (md MDecl) String() string {
 	b.WriteString("func (")
 	b.WriteString(md.recv.String())
 	b.WriteString(") ")
-	b.WriteString(md.m)
+	b.WriteString(md.name)
 	b.WriteString("(")
-	writeParamDecls(&b, md.pds)
+	writeParamDecls(&b, md.params)
 	b.WriteString(") ")
-	b.WriteString(md.t.String())
+	b.WriteString(md.t_ret.String())
 	b.WriteString(" { return ")
-	b.WriteString(md.e.String())
+	b.WriteString(md.e_body.String())
 	b.WriteString(" }")
 	return b.String()
 }
 
-// Cf. FieldDecl
-type ParamDecl struct {
-	x Name // CHECKME: Variable? (also Env key)
-	t Type
-}
-
-func (pd ParamDecl) GetName() Name { return pd.x }
-func (pd ParamDecl) GetType() Type { return pd.t }
-
 var _ FGNode = ParamDecl{}
 
+// Cf. FieldDecl
+type ParamDecl struct {
+	name Name // CHECKME: Variable? (also Env key)
+	t    Type
+}
+
+func (pd ParamDecl) GetType() Type { return pd.t }
+
+// From Decl
+func (pd ParamDecl) GetName() Name { return pd.name }
+
 func (pd ParamDecl) String() string {
-	return pd.x + " " + pd.t.String()
+	var b strings.Builder
+	b.WriteString(pd.name)
+	b.WriteString(" ")
+	b.WriteString(pd.t.String())
+	return b.String()
 }
 
 /* ITypeLit, Sig */
 
-type ITypeLit struct {
-	t  Type // Factor out embedded struct with STypeLit?  But constructor will need that struct?
-	ss []Spec
-}
-
 var _ TDecl = ITypeLit{}
 
+type ITypeLit struct {
+	t_I   Type // Factor out embedded struct with STypeLit?  But constructor will need that struct?
+	specs []Spec
+}
+
+func (c ITypeLit) GetType() Type { return c.t_I }
+func (c ITypeLit) Specs() []Spec { return c.specs }
+
+// From Decl
+func (c ITypeLit) GetName() Name { return Name(c.t_I) }
+
+// From Decl
 func (c ITypeLit) Ok(ds []Decl) {
 	// TODO
-}
-
-func (c ITypeLit) GetType() Type {
-	return c.t
-}
-
-func (c ITypeLit) GetName() Name {
-	return Name(c.t)
-}
-
-func (c ITypeLit) Specs() []Spec {
-	return c.ss
 }
 
 func (c ITypeLit) String() string {
 	var b strings.Builder
 	b.WriteString("type ")
-	b.WriteString(c.t.String())
+	b.WriteString(c.t_I.String())
 	b.WriteString(" interface {")
-	if len(c.ss) > 0 {
+	if len(c.specs) > 0 {
 		b.WriteString(" ")
-		b.WriteString(c.ss[0].String())
-		for _, v := range c.ss[1:] {
+		b.WriteString(c.specs[0].String())
+		for _, v := range c.specs[1:] {
 			b.WriteString("; ")
 			b.WriteString(v.String())
 		}
@@ -373,7 +360,7 @@ func isDistinctDecl(decl Decl, ds []Decl) bool {
 		case MDecl:
 			// checks that (method-type, method-name) is unique
 			// RH: CHECKME: this would allow (bad) "return overloading"? -- note, d.t is the method return type
-			if md, ok := decl.(MDecl); ok && d.t.String() == md.t.String() && d.GetName() == md.GetName() {
+			if md, ok := decl.(MDecl); ok && d.t_ret.String() == md.t_ret.String() && d.GetName() == md.GetName() {
 				count++
 			}
 		}

@@ -62,7 +62,7 @@ func (p FGGProgram) GetDecls() []Decl {
 	return p.ds // Returns a copy?
 }
 
-func (p FGGProgram) GetExpr() base.Expr {
+func (p FGGProgram) GetMain() base.Expr {
 	return p.e
 }
 
