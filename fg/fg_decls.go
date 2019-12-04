@@ -11,7 +11,7 @@ import "strings"
 
 import "github.com/rhu1/fgg/base"
 
-/* "Exported" constructors for fgg (monomorph) */
+/* "Exported" constructors for fgg (monom) */
 
 func NewFGProgram(ds []Decl, e FGExpr, printf bool) FGProgram {
 	return FGProgram{ds, e, printf}
