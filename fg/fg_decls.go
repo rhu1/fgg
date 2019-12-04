@@ -30,14 +30,17 @@ func NewSig(m Name, pds []ParamDecl, t Type) Sig { return Sig{m, pds, t} }  // F
 
 /* Program */
 
-type FGProgram struct {
-	ds     []Decl
-	e      FGExpr
-	Printf bool // false = "original" `_ = e_main` syntax; true = import-fmt/printf syntax
-}
-
 var _ base.Program = FGProgram{}
 var _ FGNode = FGProgram{}
+
+type FGProgram struct {
+	decls  []Decl
+	e_main FGExpr
+	printf bool // false = "original" `_ = e_main` syntax; true = import-fmt/printf syntax
+}
+
+func (p FGProgram) GetDecls() []Decl   { return p.decls } // Return a copy?
+func (p FGProgram) GetExpr() base.Expr { return p.e_main }
 
 func (p FGProgram) Ok(allowStupid bool) {
 	if !allowStupid { // Hack, to print the following only for "top-level" programs (not during Eval)
@@ -46,10 +49,10 @@ func (p FGProgram) Ok(allowStupid bool) {
 	}
 	tds := make(map[Type]TDecl)
 	mds := make(map[string]MDecl) // Hack, string = string(md.recv.t) + "." + md.GetName()
-	for _, v := range p.ds {
+	for _, v := range p.decls {
 		switch d := v.(type) {
 		case TDecl:
-			d.Ok(p.ds) // Currently empty -- TODO: check, e.g., unique field names -- cf., above [Warning]
+			d.Ok(p.decls) // Currently empty -- TODO: check, e.g., unique field names -- cf., above [Warning]
 			// N.B. checks also omitted from submission version
 			t := Type(d.GetName())
 			if _, ok := tds[t]; ok {
@@ -58,7 +61,7 @@ func (p FGProgram) Ok(allowStupid bool) {
 			}
 			tds[t] = d
 		case MDecl:
-			d.Ok(p.ds)
+			d.Ok(p.decls)
 			n := d.GetName()
 			hash := string(d.recv.t) + "." + n
 			if _, ok := mds[hash]; ok {
@@ -72,42 +75,34 @@ func (p FGProgram) Ok(allowStupid bool) {
 		}
 	}
 	var gamma Env // Empty env for main
-	p.e.Typing(p.ds, gamma, allowStupid)
+	p.e_main.Typing(p.decls, gamma, allowStupid)
 }
 
 // CHECKME: resulting FGProgram is not parsed from source, OK? -- cf. Expr.Eval
 // But doesn't affect FGPprogam.Ok() (i.e., Expr.Typing)
 func (p FGProgram) Eval() (base.Program, string) {
-	e, rule := p.e.Eval(p.ds)
-	return FGProgram{p.ds, e.(FGExpr), p.Printf}, rule
-}
-
-func (p FGProgram) GetDecls() []Decl {
-	return p.ds // Returns a copy?
-}
-
-func (p FGProgram) GetExpr() base.Expr {
-	return p.e
+	e, rule := p.e_main.Eval(p.decls)
+	return FGProgram{p.decls, e.(FGExpr), p.printf}, rule
 }
 
 func (p FGProgram) String() string {
 	var b strings.Builder
 	b.WriteString("package main;\n")
-	if p.Printf {
+	if p.printf {
 		b.WriteString("import \"fmt\";\n")
 	}
-	for _, v := range p.ds {
+	for _, v := range p.decls {
 		b.WriteString(v.String())
 		b.WriteString(";\n")
 	}
 	b.WriteString("func main() { ")
-	if p.Printf {
+	if p.printf {
 		b.WriteString("fmt.Printf(\"%#v\", ")
-		b.WriteString(p.e.String())
+		b.WriteString(p.e_main.String())
 		b.WriteString(")")
 	} else {
 		b.WriteString("_ = ")
-		b.WriteString(p.e.String())
+		b.WriteString(p.e_main.String())
 	}
 	b.WriteString(" }")
 	return b.String()
@@ -115,27 +110,19 @@ func (p FGProgram) String() string {
 
 /* STypeLit, FieldDecl */
 
+var _ TDecl = STypeLit{}
+
 type STypeLit struct {
 	t   Type
 	fds []FieldDecl
 }
 
-var _ TDecl = STypeLit{}
+func (s STypeLit) GetType() Type       { return s.t }
+func (s STypeLit) GetName() Name       { return Name(s.t) }
+func (s STypeLit) Fields() []FieldDecl { return s.fds }
 
 func (s STypeLit) Ok(ds []Decl) {
 	// TODO
-}
-
-func (s STypeLit) GetType() Type {
-	return s.t
-}
-
-func (s STypeLit) GetName() Name {
-	return Name(s.t)
-}
-
-func (s STypeLit) Fields() []FieldDecl {
-	return s.fds
 }
 
 func (s STypeLit) String() string {
