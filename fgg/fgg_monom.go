@@ -57,7 +57,7 @@ func Monomorph(p FGGProgram) fg.FGProgram {
 		}
 	}
 	e := monomExpr(omega, p.e)
-	return fg.NewFGProgram(ds, e, p.printf)
+	return fg.NewFGProgram(ds, e, p.Printf)
 }
 
 // Pre: `wv` represents an instantiation of the `td` type  // TODO: refactor, decompose

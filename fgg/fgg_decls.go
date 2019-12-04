@@ -25,7 +25,7 @@ func NewProgram(ds []Decl, e Expr, printf bool) FGGProgram {
 type FGGProgram struct {
 	ds     []Decl
 	e      Expr
-	printf bool
+	Printf bool // false = "original" `_ = e_main` syntax; true = import-fmt/printf syntax
 }
 
 var _ base.Program = FGGProgram{}
@@ -55,7 +55,7 @@ func (p FGGProgram) Ok(allowStupid bool) {
 
 func (p FGGProgram) Eval() (base.Program, string) {
 	e, rule := p.e.Eval(p.ds)
-	return FGGProgram{p.ds, e.(Expr), p.printf}, rule
+	return FGGProgram{p.ds, e.(Expr), p.Printf}, rule
 }
 
 func (p FGGProgram) GetDecls() []Decl {
@@ -69,7 +69,7 @@ func (p FGGProgram) GetExpr() base.Expr {
 func (p FGGProgram) String() string {
 	var b strings.Builder
 	b.WriteString("package main;\n")
-	if p.printf {
+	if p.Printf {
 		b.WriteString("import \"fmt\";\n")
 	}
 	for _, v := range p.ds {
@@ -77,7 +77,7 @@ func (p FGGProgram) String() string {
 		b.WriteString(";\n")
 	}
 	b.WriteString("func main() { ")
-	if p.printf {
+	if p.Printf {
 		b.WriteString("fmt.Printf(\"%#v\", ")
 		b.WriteString(p.e.String())
 		b.WriteString(")")

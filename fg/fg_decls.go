@@ -17,22 +17,23 @@ func NewFGProgram(ds []Decl, e FGExpr, printf bool) FGProgram {
 	return FGProgram{ds, e, printf}
 }
 
+func NewSTypeLit(t Type, fds []FieldDecl) STypeLit { return STypeLit{t, fds} }
+func NewITypeLit(t Type, ss []Spec) ITypeLit       { return ITypeLit{t, ss} }
+
 func NewMDecl(recv ParamDecl, m Name, pds []ParamDecl, t Type, e FGExpr) MDecl {
 	return MDecl{recv, m, pds, t, e}
 }
 
-func NewSTypeLit(t Type, fds []FieldDecl) STypeLit { return STypeLit{t, fds} }
-func NewITypeLit(t Type, ss []Spec) ITypeLit       { return ITypeLit{t, ss} }
-func NewFieldDecl(f Name, t Type) FieldDecl        { return FieldDecl{f, t} }
-func NewParamDecl(x Name, t Type) ParamDecl        { return ParamDecl{x, t} } // For fgg_util.MakeWMap
-func NewSig(m Name, pds []ParamDecl, t Type) Sig   { return Sig{m, pds, t} }  // For fgg_util.MakeWMap
+func NewFieldDecl(f Name, t Type) FieldDecl      { return FieldDecl{f, t} }
+func NewParamDecl(x Name, t Type) ParamDecl      { return ParamDecl{x, t} } // For fgg_monom.MakeWMap
+func NewSig(m Name, pds []ParamDecl, t Type) Sig { return Sig{m, pds, t} }  // For fgg_monom.MakeWMap
 
 /* Program */
 
 type FGProgram struct {
 	ds     []Decl
 	e      FGExpr
-	printf bool
+	Printf bool // false = "original" `_ = e_main` syntax; true = import-fmt/printf syntax
 }
 
 var _ base.Program = FGProgram{}
@@ -78,7 +79,7 @@ func (p FGProgram) Ok(allowStupid bool) {
 // But doesn't affect FGPprogam.Ok() (i.e., Expr.Typing)
 func (p FGProgram) Eval() (base.Program, string) {
 	e, rule := p.e.Eval(p.ds)
-	return FGProgram{p.ds, e.(FGExpr), p.printf}, rule
+	return FGProgram{p.ds, e.(FGExpr), p.Printf}, rule
 }
 
 func (p FGProgram) GetDecls() []Decl {
@@ -92,7 +93,7 @@ func (p FGProgram) GetExpr() base.Expr {
 func (p FGProgram) String() string {
 	var b strings.Builder
 	b.WriteString("package main;\n")
-	if p.printf {
+	if p.Printf {
 		b.WriteString("import \"fmt\";\n")
 	}
 	for _, v := range p.ds {
@@ -100,7 +101,7 @@ func (p FGProgram) String() string {
 		b.WriteString(";\n")
 	}
 	b.WriteString("func main() { ")
-	if p.printf {
+	if p.Printf {
 		b.WriteString("fmt.Printf(\"%#v\", ")
 		b.WriteString(p.e.String())
 		b.WriteString(")")
