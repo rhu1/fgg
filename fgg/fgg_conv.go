@@ -85,20 +85,20 @@ func (c *fg2fgg) convertITypeLit(i fg.ITypeLit) (ITypeLit, error) {
 	typeName, typeFormals := c.convertType(i.GetType())
 
 	var specs []Spec
-	for _, s := range i.Specs() {
+	for _, s := range i.GetSpecs() {
 		sig := s.(fg.Sig)
 		var paramDecls []ParamDecl
-		for _, p := range sig.MethodParams() {
+		for _, p := range sig.GetParamDecls() {
 			pd, err := c.convertParamDecl(p)
 			if err != nil {
 				return ITypeLit{}, nil
 			}
 			paramDecls = append(paramDecls, pd)
 		}
-		retTypeName, _ := c.convertType(sig.ReturnType())
+		retTypeName, _ := c.convertType(sig.GetReturn())
 
 		specs = append(specs, Sig{
-			m:   Name(sig.MethodName()),
+			m:   Name(sig.GetName()),
 			psi: TFormals{tfs: nil},
 			pds: paramDecls,
 			u:   TName{t: retTypeName},
@@ -187,10 +187,10 @@ func (c *fg2fgg) convertExpr(expr base.Expr) (Expr, error) {
 }
 
 func (c *fg2fgg) convertStructLit(sLit fg.StructLit) (StructLit, error) {
-	structType, _ := c.convertType(sLit.Type())
+	structType, _ := c.convertType(sLit.GetType())
 
 	var es []Expr
-	for _, expr := range sLit.FieldExprs() {
+	for _, expr := range sLit.GetElems() {
 		fieldExpr, err := c.convertExpr(expr)
 		if err != nil {
 			return StructLit{}, err

@@ -12,7 +12,7 @@ func fields(ds []Decl, t_S Type) []FieldDecl {
 	if !ok {
 		panic("Not a struct type: " + t_S.String())
 	}
-	return s.fieldDecls
+	return s.fDecls
 }
 
 // Go has no overloading, meth names are a unique key
@@ -29,7 +29,7 @@ func methods(ds []Decl, t Type) map[Name]Sig {
 		td := getTDecl(ds, t).(ITypeLit)
 		for _, s := range td.specs {
 			for _, v := range s.GetSigs(ds) { // CHECKME: can this cycle indefinitely? (cf. submission version, recursive "methods")
-				res[v.m] = v
+				res[v.name] = v
 			}
 		}
 	} else { // Perhaps redundant if all TDecl OK checked first
@@ -43,9 +43,9 @@ func body(ds []Decl, t_S Type, m Name) (Name, []Name, FGExpr) {
 	for _, v := range ds {
 		md, ok := v.(MDecl)
 		if ok && md.recv.t == t_S && md.name == m {
-			xs := make([]Name, len(md.params))
-			for i := 0; i < len(md.params); i++ {
-				xs[i] = md.params[i].name
+			xs := make([]Name, len(md.pDecls))
+			for i := 0; i < len(md.pDecls); i++ {
+				xs[i] = md.pDecls[i].name
 			}
 			return md.recv.name, xs, md.e_body
 		}

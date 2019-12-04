@@ -9,34 +9,19 @@ import "strings"
 
 /* "Exported" constructors for fgg (monomorph) */
 
-// TODO: compact (cf. Expr getters)
-func NewVariable(id Name) Variable {
-	return Variable{id}
-}
-
-func NewStructLit(t Type, es []FGExpr) StructLit {
-	return StructLit{t, es}
-}
-
-func NewSelect(e FGExpr, f Name) Select {
-	return Select{e, f}
-}
-
-func NewCall(e FGExpr, m Name, es []FGExpr) Call {
-	return Call{e, m, es}
-}
-
-func NewAssert(e FGExpr, t Type) Assert {
-	return Assert{e, t}
-}
+func NewVariable(id Name) Variable               { return Variable{id} }
+func NewStructLit(t Type, es []FGExpr) StructLit { return StructLit{t, es} }
+func NewSelect(e FGExpr, f Name) Select          { return Select{e, f} }
+func NewCall(e FGExpr, m Name, es []FGExpr) Call { return Call{e, m, es} }
+func NewAssert(e FGExpr, t Type) Assert          { return Assert{e, t} }
 
 /* Variable */
 
-type Variable struct {
-	id Name
-}
-
 var _ FGExpr = Variable{}
+
+type Variable struct {
+	name Name
+}
 
 func (x Variable) Subs(subs map[Variable]FGExpr) FGExpr {
 	res, ok := subs[x]
@@ -47,11 +32,11 @@ func (x Variable) Subs(subs map[Variable]FGExpr) FGExpr {
 }
 
 func (x Variable) Eval(ds []Decl) (FGExpr, string) {
-	panic("Cannot evaluate free variable: " + x.id)
+	panic("Cannot evaluate free variable: " + x.name)
 }
 
 func (x Variable) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
-	res, ok := gamma[x.id]
+	res, ok := gamma[x.name]
 	if !ok {
 		panic("Var not in env: " + x.String())
 	}
@@ -63,39 +48,39 @@ func (x Variable) IsValue() bool {
 }
 
 func (x Variable) String() string {
-	return x.id
+	return x.name
 }
 
 func (x Variable) ToGoString() string {
-	return x.id
+	return x.name
 }
 
 /* StructLit */
 
-type StructLit struct {
-	t  Type
-	es []FGExpr
-}
-
-func (s StructLit) Type() Type           { return s.t }
-func (s StructLit) FieldExprs() []FGExpr { return s.es }
-
 var _ FGExpr = StructLit{}
 
+type StructLit struct {
+	t_S   Type
+	elems []FGExpr
+}
+
+func (s StructLit) GetType() Type      { return s.t_S }
+func (s StructLit) GetElems() []FGExpr { return s.elems }
+
 func (s StructLit) Subs(subs map[Variable]FGExpr) FGExpr {
-	es := make([]FGExpr, len(s.es))
-	for i := 0; i < len(s.es); i++ {
-		es[i] = s.es[i].Subs(subs)
+	es := make([]FGExpr, len(s.elems))
+	for i := 0; i < len(s.elems); i++ {
+		es[i] = s.elems[i].Subs(subs)
 	}
-	return StructLit{s.t, es}
+	return StructLit{s.t_S, es}
 }
 
 func (s StructLit) Eval(ds []Decl) (FGExpr, string) {
-	es := make([]FGExpr, len(s.es))
+	es := make([]FGExpr, len(s.elems))
 	done := false
 	var rule string
-	for i := 0; i < len(s.es); i++ {
-		v := s.es[i]
+	for i := 0; i < len(s.elems); i++ {
+		v := s.elems[i]
 		if !done && !v.IsValue() {
 			v, rule = v.Eval(ds)
 			done = true
@@ -103,37 +88,38 @@ func (s StructLit) Eval(ds []Decl) (FGExpr, string) {
 		es[i] = v
 	}
 	if done {
-		return StructLit{s.t, es}, rule
+		return StructLit{s.t_S, es}, rule
 	} else {
 		panic("Cannot reduce: " + s.String())
 	}
 }
 
 func (s StructLit) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
-	fs := fields(ds, s.t)
-	if len(s.es) != len(fs) {
+	fs := fields(ds, s.t_S)
+	if len(s.elems) != len(fs) {
 		var b strings.Builder
 		b.WriteString("Arity mismatch: args=[")
-		writeExprs(&b, s.es)
+		writeExprs(&b, s.elems)
 		b.WriteString("], fields=[")
 		writeFieldDecls(&b, fs)
 		b.WriteString("]\n\t")
 		b.WriteString(s.String())
 		panic(b.String())
 	}
-	for i := 0; i < len(s.es); i++ {
-		t := s.es[i].Typing(ds, gamma, allowStupid)
+	for i := 0; i < len(s.elems); i++ {
+		t := s.elems[i].Typing(ds, gamma, allowStupid)
 		u := fs[i].t
 		if !t.Impls(ds, u) {
 			panic("Arg expr must implement field type: arg=" + t.String() +
 				", field=" + u.String() + "\n\t" + s.String())
 		}
 	}
-	return s.t
+	return s.t_S
 }
 
+// From base.Expr
 func (s StructLit) IsValue() bool {
-	for _, v := range s.es {
+	for _, v := range s.elems {
 		if !v.IsValue() {
 			return false
 		}
@@ -143,11 +129,11 @@ func (s StructLit) IsValue() bool {
 
 func (s StructLit) String() string {
 	var b strings.Builder
-	b.WriteString(s.t.String())
+	b.WriteString(s.t_S.String())
 	b.WriteString("{")
 	//b.WriteString(strings.Trim(strings.Join(strings.Split(fmt.Sprint(s.es), " "), ", "), "[]"))
 	// ^ No: broken for nested structs
-	writeExprs(&b, s.es)
+	writeExprs(&b, s.elems)
 	b.WriteString("}")
 	return b.String()
 }
@@ -155,9 +141,9 @@ func (s StructLit) String() string {
 func (s StructLit) ToGoString() string {
 	var b strings.Builder
 	b.WriteString("main.")
-	b.WriteString(s.t.String())
+	b.WriteString(s.t_S.String())
 	b.WriteString("{")
-	writeToGoExprs(&b, s.es)
+	writeToGoExprs(&b, s.elems)
 	b.WriteString("}")
 	return b.String()
 }
@@ -184,10 +170,10 @@ func (s Select) Eval(ds []Decl) (FGExpr, string) {
 		return Select{e.(FGExpr), s.f}, rule
 	}
 	v := s.e.(StructLit)
-	fds := fields(ds, v.t)
+	fds := fields(ds, v.t_S)
 	for i := 0; i < len(fds); i++ {
 		if fds[i].name == s.f {
-			return v.es[i], "Select"
+			return v.elems[i], "Select"
 		}
 	}
 	panic("Field not found: " + s.f)
@@ -263,7 +249,7 @@ func (c Call) Eval(ds []Decl) (FGExpr, string) {
 	}
 	// c.e and c.args all values
 	s := c.e.(StructLit)
-	x0, xs, e := body(ds, s.t, c.m) // panics if method not found
+	x0, xs, e := body(ds, s.t_S, c.m) // panics if method not found
 	subs := make(map[Variable]FGExpr)
 	subs[Variable{x0}] = c.e
 	for i := 0; i < len(xs); i++ {
@@ -280,23 +266,23 @@ func (c Call) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
 	} else {
 		g = tmp
 	}
-	if len(c.args) != len(g.pds) {
+	if len(c.args) != len(g.pDecls) {
 		var b strings.Builder
 		b.WriteString("Arity mismatch: args=[")
 		writeExprs(&b, c.args)
 		b.WriteString("], params=[")
-		writeParamDecls(&b, g.pds)
+		writeParamDecls(&b, g.pDecls)
 		b.WriteString("]")
 		panic(b.String())
 	}
 	for i := 0; i < len(c.args); i++ {
 		t := c.args[i].Typing(ds, gamma, allowStupid)
-		if !t.Impls(ds, g.pds[i].t) {
+		if !t.Impls(ds, g.pDecls[i].t) {
 			panic("Arg expr type must implement param type: arg=" + t + ", param=" +
-				g.pds[i].t)
+				g.pDecls[i].t)
 		}
 	}
-	return g.t
+	return g.t_ret
 }
 
 func (c Call) IsValue() bool {
@@ -346,7 +332,7 @@ func (a Assert) Eval(ds []Decl) (FGExpr, string) {
 		e, rule := a.e.Eval(ds)
 		return Assert{e.(FGExpr), a.t}, rule
 	}
-	t := a.e.(StructLit).t
+	t := a.e.(StructLit).t_S
 	if !isStructType(ds, t) {
 		panic("Non struct type found in struct lit: " + t)
 	}

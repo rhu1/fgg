@@ -40,6 +40,7 @@ func (t0 Type) Impls(ds []Decl, t Type) bool {
 }
 
 // t_I is a Spec, but not t_S -- this aspect is currently "dynamically typed"
+// From Spec
 func (t Type) GetSigs(ds []Decl) []Sig {
 	if !isInterfaceType(ds, t) { // isStructType would be more efficient
 		panic("Cannot use non-interface type as a Spec: " + t.String() +

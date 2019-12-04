@@ -116,12 +116,12 @@ func (p FGProgram) String() string {
 var _ TDecl = STypeLit{}
 
 type STypeLit struct {
-	t_S        Type
-	fieldDecls []FieldDecl
+	t_S    Type
+	fDecls []FieldDecl
 }
 
 func (s STypeLit) GetType() Type              { return s.t_S }
-func (s STypeLit) GetFieldDecls() []FieldDecl { return s.fieldDecls }
+func (s STypeLit) GetFieldDecls() []FieldDecl { return s.fDecls }
 
 // From Decl
 func (s STypeLit) GetName() Name { return Name(s.t_S) }
@@ -136,9 +136,9 @@ func (s STypeLit) String() string {
 	b.WriteString("type ")
 	b.WriteString(s.t_S.String())
 	b.WriteString(" struct {")
-	if len(s.fieldDecls) > 0 {
+	if len(s.fDecls) > 0 {
 		b.WriteString(" ")
-		writeFieldDecls(&b, s.fieldDecls)
+		writeFieldDecls(&b, s.fDecls)
 		b.WriteString(" ")
 	}
 	b.WriteString("}")
@@ -173,13 +173,13 @@ var _ Decl = MDecl{}
 type MDecl struct {
 	recv   ParamDecl
 	name   Name // Not embedding Sig because Sig doesn't take xs
-	params []ParamDecl
+	pDecls []ParamDecl
 	t_ret  Type // Return
 	e_body FGExpr
 }
 
 func (md MDecl) GetReceiver() ParamDecl     { return md.recv }
-func (md MDecl) GetParamDecls() []ParamDecl { return md.params } // Returns non-receiver params
+func (md MDecl) GetParamDecls() []ParamDecl { return md.pDecls } // Returns non-receiver params
 func (md MDecl) GetReturn() Type            { return md.t_ret }
 func (md MDecl) GetBody() FGExpr            { return md.e_body }
 
@@ -192,7 +192,7 @@ func (md MDecl) Ok(ds []Decl) {
 			"\n\t" + md.String())
 	}
 	env := Env{md.recv.name: md.recv.t}
-	for _, v := range md.params {
+	for _, v := range md.pDecls {
 		env[v.name] = v.t
 	}
 	allowStupid := false
@@ -204,7 +204,7 @@ func (md MDecl) Ok(ds []Decl) {
 }
 
 func (md MDecl) ToSig() Sig {
-	return Sig{md.name, md.params, md.t_ret}
+	return Sig{md.name, md.pDecls, md.t_ret}
 }
 
 func (md MDecl) String() string {
@@ -214,7 +214,7 @@ func (md MDecl) String() string {
 	b.WriteString(") ")
 	b.WriteString(md.name)
 	b.WriteString("(")
-	writeParamDecls(&b, md.params)
+	writeParamDecls(&b, md.pDecls)
 	b.WriteString(") ")
 	b.WriteString(md.t_ret.String())
 	b.WriteString(" { return ")
@@ -253,8 +253,8 @@ type ITypeLit struct {
 	specs []Spec
 }
 
-func (c ITypeLit) GetType() Type { return c.t_I }
-func (c ITypeLit) Specs() []Spec { return c.specs }
+func (c ITypeLit) GetType() Type    { return c.t_I }
+func (c ITypeLit) GetSpecs() []Spec { return c.specs }
 
 // From Decl
 func (c ITypeLit) GetName() Name { return Name(c.t_I) }
@@ -282,42 +282,43 @@ func (c ITypeLit) String() string {
 	return b.String()
 }
 
+var _ Spec = Sig{}
+
 type Sig struct {
-	m   Name
-	pds []ParamDecl
-	t   Type
+	name   Name
+	pDecls []ParamDecl
+	t_ret  Type
 }
 
-func (s Sig) MethodName() Name          { return s.m }
-func (s Sig) MethodParams() []ParamDecl { return s.pds }
-func (s Sig) ReturnType() Type          { return s.t }
-
-var _ Spec = Sig{}
+func (s Sig) GetName() Name              { return s.name }
+func (s Sig) GetParamDecls() []ParamDecl { return s.pDecls }
+func (s Sig) GetReturn() Type            { return s.t_ret }
 
 // !!! Sig in FG (also, Go spec) includes ~x, which naively breaks "impls"
 func (g0 Sig) EqExceptVars(g Sig) bool {
-	if len(g0.pds) != len(g.pds) {
+	if len(g0.pDecls) != len(g.pDecls) {
 		return false
 	}
-	for i := 0; i < len(g0.pds); i++ {
-		if g0.pds[i].t != g.pds[i].t {
+	for i := 0; i < len(g0.pDecls); i++ {
+		if g0.pDecls[i].t != g.pDecls[i].t {
 			return false
 		}
 	}
-	return g0.m == g.m && g0.t == g.t
+	return g0.name == g.name && g0.t_ret == g.t_ret
 }
 
+// From Spec
 func (g Sig) GetSigs(_ []Decl) []Sig {
 	return []Sig{g}
 }
 
 func (g Sig) String() string {
 	var b strings.Builder
-	b.WriteString(g.m)
+	b.WriteString(g.name)
 	b.WriteString("(")
-	writeParamDecls(&b, g.pds)
+	writeParamDecls(&b, g.pDecls)
 	b.WriteString(") ")
-	b.WriteString(g.t.String())
+	b.WriteString(g.t_ret.String())
 	return b.String()
 }
 
