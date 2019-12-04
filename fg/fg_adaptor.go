@@ -125,7 +125,7 @@ func (a *FGAdaptor) ExitMethDecl(ctx *parser.MethDeclContext) {
 	e := a.pop().(FGExpr)
 	g := a.pop().(Sig)
 	recv := a.pop().(ParamDecl)
-	a.push(MDecl{recv, g.name, g.pDecls, g.t_ret, e})
+	a.push(MDecl{recv, g.meth, g.pDecls, g.t_ret, e})
 }
 
 // Cf. ExitFieldDecl

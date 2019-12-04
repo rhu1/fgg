@@ -150,88 +150,89 @@ func (s StructLit) ToGoString() string {
 
 /* Select */
 
-type Select struct {
-	e FGExpr
-	f Name
-}
-
 var _ FGExpr = Select{}
 
-func (s Select) Expr() FGExpr    { return s.e }
-func (s Select) FieldName() Name { return s.f }
+type Select struct {
+	e_S   FGExpr
+	field Name
+}
+
+func (s Select) GetExpr() FGExpr { return s.e_S }
+func (s Select) GetField() Name  { return s.field }
 
 func (s Select) Subs(subs map[Variable]FGExpr) FGExpr {
-	return Select{s.e.Subs(subs), s.f}
+	return Select{s.e_S.Subs(subs), s.field}
 }
 
 func (s Select) Eval(ds []Decl) (FGExpr, string) {
-	if !s.e.IsValue() {
-		e, rule := s.e.Eval(ds)
-		return Select{e.(FGExpr), s.f}, rule
+	if !s.e_S.IsValue() {
+		e, rule := s.e_S.Eval(ds)
+		return Select{e.(FGExpr), s.field}, rule
 	}
-	v := s.e.(StructLit)
+	v := s.e_S.(StructLit)
 	fds := fields(ds, v.t_S)
 	for i := 0; i < len(fds); i++ {
-		if fds[i].name == s.f {
+		if fds[i].name == s.field {
 			return v.elems[i], "Select"
 		}
 	}
-	panic("Field not found: " + s.f)
+	panic("Field not found: " + s.field)
 }
 
 func (s Select) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
-	t := s.e.Typing(ds, gamma, allowStupid)
+	t := s.e_S.Typing(ds, gamma, allowStupid)
 	if !isStructType(ds, t) {
 		panic("Illegal select on non-struct type expr: " + t)
 	}
 	fds := fields(ds, t)
 	for _, v := range fds {
-		if v.name == s.f {
+		if v.name == s.field {
 			return v.t
 		}
 	}
-	panic("Field not found: " + s.f + " in " + t.String())
+	panic("Field not found: " + s.field + " in " + t.String())
 }
 
+// From base.Expr
 func (s Select) IsValue() bool {
 	return false
 }
 
 func (s Select) String() string {
-	return s.e.String() + "." + s.f
+	return s.e_S.String() + "." + s.field
 }
 
 func (s Select) ToGoString() string {
-	return s.e.ToGoString() + "." + s.f
+	return s.e_S.ToGoString() + "." + s.field
 }
 
 /* Call */
 
-type Call struct {
-	e    FGExpr
-	m    Name
-	args []FGExpr
-}
-
 var _ FGExpr = Call{}
 
-func (c Call) Expr() FGExpr     { return c.e }
-func (c Call) MethodName() Name { return c.m }
-func (c Call) Args() []FGExpr   { return c.args }
+type Call struct {
+	e_recv FGExpr
+	meth   Name
+	args   []FGExpr
+}
+
+func (c Call) GetReceiver() FGExpr { return c.e_recv }
+func (c Call) GetMethod() Name     { return c.meth }
+func (c Call) GetArgs() []FGExpr   { return c.args }
 
 func (c Call) Subs(subs map[Variable]FGExpr) FGExpr {
-	e := c.e.Subs(subs)
+	e := c.e_recv.Subs(subs)
 	args := make([]FGExpr, len(c.args))
 	for i := 0; i < len(c.args); i++ {
 		args[i] = c.args[i].Subs(subs)
 	}
-	return Call{e, c.m, args}
+	return Call{e, c.meth, args}
 }
 
 func (c Call) Eval(ds []Decl) (FGExpr, string) {
-	if !c.e.IsValue() {
-		e, rule := c.e.Eval(ds)
-		return Call{e.(FGExpr), c.m, c.args}, rule
+	if !c.e_recv.IsValue() {
+		e, rule := c.e_recv.Eval(ds)
+		return Call{e.(FGExpr), c.meth, c.args}, rule
 	}
 	args := make([]FGExpr, len(c.args))
 	done := false
@@ -245,13 +246,13 @@ func (c Call) Eval(ds []Decl) (FGExpr, string) {
 		args[i] = e
 	}
 	if done {
-		return Call{c.e, c.m, args}, rule
+		return Call{c.e_recv, c.meth, args}, rule
 	}
 	// c.e and c.args all values
-	s := c.e.(StructLit)
-	x0, xs, e := body(ds, s.t_S, c.m) // panics if method not found
+	s := c.e_recv.(StructLit)
+	x0, xs, e := body(ds, s.t_S, c.meth) // panics if method not found
 	subs := make(map[Variable]FGExpr)
-	subs[Variable{x0}] = c.e
+	subs[Variable{x0}] = c.e_recv
 	for i := 0; i < len(xs); i++ {
 		subs[Variable{xs[i]}] = c.args[i]
 	}
@@ -259,10 +260,10 @@ func (c Call) Eval(ds []Decl) (FGExpr, string) {
 }
 
 func (c Call) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
-	t0 := c.e.Typing(ds, gamma, allowStupid)
+	t0 := c.e_recv.Typing(ds, gamma, allowStupid)
 	var g Sig
-	if tmp, ok := methods(ds, t0)[c.m]; !ok { // !!! submission version had "methods(m)"
-		panic("Method not found: " + c.m + " in " + t0.String() + "\n\t" + c.String())
+	if tmp, ok := methods(ds, t0)[c.meth]; !ok { // !!! submission version had "methods(m)"
+		panic("Method not found: " + c.meth + " in " + t0.String() + "\n\t" + c.String())
 	} else {
 		g = tmp
 	}
@@ -285,15 +286,16 @@ func (c Call) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
 	return g.t_ret
 }
 
+// From base.Expr
 func (c Call) IsValue() bool {
 	return false
 }
 
 func (c Call) String() string {
 	var b strings.Builder
-	b.WriteString(c.e.String())
+	b.WriteString(c.e_recv.String())
 	b.WriteString(".")
-	b.WriteString(c.m)
+	b.WriteString(c.meth)
 	b.WriteString("(")
 	writeExprs(&b, c.args)
 	b.WriteString(")")
@@ -302,9 +304,9 @@ func (c Call) String() string {
 
 func (c Call) ToGoString() string {
 	var b strings.Builder
-	b.WriteString(c.e.ToGoString())
+	b.WriteString(c.e_recv.ToGoString())
 	b.WriteString(".")
-	b.WriteString(c.m)
+	b.WriteString(c.meth)
 	b.WriteString("(")
 	writeToGoExprs(&b, c.args)
 	b.WriteString(")")
@@ -313,37 +315,37 @@ func (c Call) ToGoString() string {
 
 /* Assert */
 
-type Assert struct {
-	e FGExpr
-	t Type
-}
-
 var _ FGExpr = Assert{}
 
-func (a Assert) Expr() FGExpr     { return a.e }
-func (a Assert) AssertType() Type { return a.t }
+type Assert struct {
+	e_I FGExpr
+	t   Type
+}
+
+func (a Assert) GetExpr() FGExpr { return a.e_I }
+func (a Assert) GetType() Type   { return a.t }
 
 func (a Assert) Subs(subs map[Variable]FGExpr) FGExpr {
-	return Assert{a.e.Subs(subs), a.t}
+	return Assert{a.e_I.Subs(subs), a.t}
 }
 
 func (a Assert) Eval(ds []Decl) (FGExpr, string) {
-	if !a.e.IsValue() {
-		e, rule := a.e.Eval(ds)
+	if !a.e_I.IsValue() {
+		e, rule := a.e_I.Eval(ds)
 		return Assert{e.(FGExpr), a.t}, rule
 	}
-	t := a.e.(StructLit).t_S
+	t := a.e_I.(StructLit).t_S
 	if !isStructType(ds, t) {
 		panic("Non struct type found in struct lit: " + t)
 	}
 	if t.Impls(ds, a.t) {
-		return a.e, "Assert"
+		return a.e_I, "Assert"
 	}
 	panic("Cannot reduce: " + a.String())
 }
 
 func (a Assert) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
-	t := a.e.Typing(ds, gamma, allowStupid)
+	t := a.e_I.Typing(ds, gamma, allowStupid)
 	if isStructType(ds, t) {
 		if allowStupid {
 			return a.t
@@ -364,13 +366,14 @@ func (a Assert) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
 		a.t.String() + ", expr=" + t.String())
 }
 
+// From base.Expr
 func (a Assert) IsValue() bool {
 	return false
 }
 
 func (a Assert) String() string {
 	var b strings.Builder
-	b.WriteString(a.e.String())
+	b.WriteString(a.e_I.String())
 	b.WriteString(".(")
 	b.WriteString(a.t.String())
 	b.WriteString(")")
@@ -379,7 +382,7 @@ func (a Assert) String() string {
 
 func (a Assert) ToGoString() string {
 	var b strings.Builder
-	b.WriteString(a.e.ToGoString())
+	b.WriteString(a.e_I.ToGoString())
 	b.WriteString(".(main.")
 	b.WriteString(a.t.String())
 	b.WriteString(")")

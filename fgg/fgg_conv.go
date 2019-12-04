@@ -168,18 +168,18 @@ func (c *fg2fgg) convertExpr(expr base.Expr) (Expr, error) {
 		return callExpr, nil
 
 	case fg.Select:
-		selExpr, err := c.convertExpr(expr.Expr())
+		selExpr, err := c.convertExpr(expr.GetExpr())
 		if err != nil {
 			return nil, err
 		}
-		return Select{e: selExpr, f: Name(expr.FieldName())}, nil
+		return Select{e: selExpr, f: Name(expr.GetField())}, nil
 
 	case fg.Assert:
-		assertExpr, err := c.convertExpr(expr.Expr())
+		assertExpr, err := c.convertExpr(expr.GetExpr())
 		if err != nil {
 			return nil, err
 		}
-		assType, _ := c.convertType(expr.AssertType())
+		assType, _ := c.convertType(expr.GetType())
 		return Assert{e: assertExpr, u: TName{t: assType}}, nil
 	}
 
@@ -202,13 +202,13 @@ func (c *fg2fgg) convertStructLit(sLit fg.StructLit) (StructLit, error) {
 }
 
 func (c *fg2fgg) convertCall(call fg.Call) (Call, error) {
-	e, err := c.convertExpr(call.Expr())
+	e, err := c.convertExpr(call.GetReceiver())
 	if err != nil {
 		return Call{}, err
 	}
 
 	var args []Expr
-	for _, arg := range call.Args() {
+	for _, arg := range call.GetArgs() {
 		argExpr, err := c.convertExpr(arg)
 		if err != nil {
 			return Call{}, err
@@ -216,5 +216,5 @@ func (c *fg2fgg) convertCall(call fg.Call) (Call, error) {
 		args = append(args, argExpr)
 	}
 
-	return Call{e: e, m: Name(call.MethodName()), args: args}, nil
+	return Call{e: e, m: Name(call.GetMethod()), args: args}, nil
 }

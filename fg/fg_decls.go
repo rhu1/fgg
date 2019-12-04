@@ -285,12 +285,12 @@ func (c ITypeLit) String() string {
 var _ Spec = Sig{}
 
 type Sig struct {
-	name   Name
+	meth   Name
 	pDecls []ParamDecl
 	t_ret  Type
 }
 
-func (s Sig) GetName() Name              { return s.name }
+func (s Sig) GetName() Name              { return s.meth }
 func (s Sig) GetParamDecls() []ParamDecl { return s.pDecls }
 func (s Sig) GetReturn() Type            { return s.t_ret }
 
@@ -304,7 +304,7 @@ func (g0 Sig) EqExceptVars(g Sig) bool {
 			return false
 		}
 	}
-	return g0.name == g.name && g0.t_ret == g.t_ret
+	return g0.meth == g.meth && g0.t_ret == g.t_ret
 }
 
 // From Spec
@@ -314,7 +314,7 @@ func (g Sig) GetSigs(_ []Decl) []Sig {
 
 func (g Sig) String() string {
 	var b strings.Builder
-	b.WriteString(g.name)
+	b.WriteString(g.meth)
 	b.WriteString("(")
 	writeParamDecls(&b, g.pDecls)
 	b.WriteString(") ")
