@@ -16,74 +16,69 @@ var _ = reflect.Append
 
 /* Public constructors */
 
-func NewProgram(ds []Decl, e Expr, printf bool) FGGProgram {
+func NewProgram(ds []Decl, e FGGExpr, printf bool) FGGProgram {
 	return FGGProgram{ds, e, printf}
 }
 
 /* Program */
 
-type FGGProgram struct {
-	ds     []Decl
-	e      Expr
-	Printf bool // false = "original" `_ = e_main` syntax; true = import-fmt/printf syntax
-}
-
 var _ base.Program = FGGProgram{}
 var _ FGGNode = FGGProgram{}
+
+type FGGProgram struct {
+	decls  []Decl
+	e_main FGGExpr
+	printf bool // false = "original" `_ = e_main` syntax; true = import-fmt/printf syntax
+}
+
+func (p FGGProgram) GetDecls() []Decl   { return p.decls } // Return a copy?
+func (p FGGProgram) GetMain() base.Expr { return p.e_main }
 
 func (p FGGProgram) Ok(allowStupid bool) {
 	if !allowStupid { // Hack, to print only "top-level" programs (not during Eval)
 		fmt.Println("[Warning] Type lit OK (\"T ok\") not fully implemented yet " +
 			"(e.g., distinct type/field/method names, etc.)")
 	}
-	for _, v := range p.ds {
+	for _, v := range p.decls {
 		switch d := v.(type) {
 		case TDecl:
-			d.Ok(p.ds)
+			d.Ok(p.decls)
 		case MDecl:
-			d.Ok(p.ds)
+			d.Ok(p.decls)
 		default:
 			panic("Unknown decl: " + reflect.TypeOf(v).String() + "\n\t" +
 				v.String())
 		}
 	}
 	// Empty envs for main
-	var delta TEnv
-	var gamma Env
-	p.e.Typing(p.ds, delta, gamma, allowStupid)
+	var delta Delta
+	var gamma Gamma
+	p.e_main.Typing(p.decls, delta, gamma, allowStupid)
 }
 
 func (p FGGProgram) Eval() (base.Program, string) {
-	e, rule := p.e.Eval(p.ds)
-	return FGGProgram{p.ds, e.(Expr), p.Printf}, rule
-}
-
-func (p FGGProgram) GetDecls() []Decl {
-	return p.ds // Returns a copy?
-}
-
-func (p FGGProgram) GetMain() base.Expr {
-	return p.e
+	e, rule := p.e_main.Eval(p.decls)
+	return FGGProgram{p.decls, e.(FGGExpr), p.printf}, rule
 }
 
 func (p FGGProgram) String() string {
 	var b strings.Builder
 	b.WriteString("package main;\n")
-	if p.Printf {
+	if p.printf {
 		b.WriteString("import \"fmt\";\n")
 	}
-	for _, v := range p.ds {
+	for _, v := range p.decls {
 		b.WriteString(v.String())
 		b.WriteString(";\n")
 	}
 	b.WriteString("func main() { ")
-	if p.Printf {
+	if p.printf {
 		b.WriteString("fmt.Printf(\"%#v\", ")
-		b.WriteString(p.e.String())
+		b.WriteString(p.e_main.String())
 		b.WriteString(")")
 	} else {
 		b.WriteString("_ = ")
-		b.WriteString(p.e.String())
+		b.WriteString(p.e_main.String())
 	}
 	b.WriteString(" }")
 	return b.String()
@@ -93,41 +88,39 @@ func (p FGGProgram) String() string {
 
 // Pre: len(as) == len(us)
 // Wrapper for []TFormal (cf. e.g., FieldDecl), only because of "(type ...)" syntax
-type TFormals struct {
-	tfs []TFormal
+type pDecls struct {
+	tFormals []TFormal
 }
 
-func (psi TFormals) Ok(ds []Decl) {
-	for _, v := range psi.tfs {
-		u, ok := v.u.(TName)
+func (psi pDecls) GetTFormals() []TFormal { return psi.tFormals }
+
+func (psi pDecls) Ok(ds []Decl) {
+	for _, v := range psi.tFormals {
+		u, ok := v.u_I.(TNamed)
 		if !ok {
-			panic("Upper bound must be of the form \"t_I(type ...)\": not " + v.u.String())
+			panic("Upper bound must be of the form \"t_I(type ...)\": not " +
+				v.u_I.String())
 		}
-		if !isInterfaceTName(ds, u) { // CHECKME: subsumes above TName check (looks for \tau_S)
+		if !IsNamedIfaceType(ds, u) { // CHECKME: subsumes above TName check (looks for \tau_S)
 			panic("Upper bound must be an interface type: not " + u.String())
 		}
 	}
 }
 
-func (psi TFormals) ToTEnv() TEnv {
+func (psi pDecls) ToDelta() Delta {
 	delta := make(map[TParam]Type)
-	for _, v := range psi.tfs {
-		delta[v.a] = v.u
+	for _, v := range psi.tFormals {
+		delta[v.name] = v.u_I
 	}
 	return delta
 }
 
-// TODO: refactor
-func (psi TFormals) GetFormals() []TFormal {
-	return psi.tfs
-}
-
-func (psi TFormals) String() string {
+func (psi pDecls) String() string {
 	var b strings.Builder
 	b.WriteString("(type ") // Includes "(...)" -- cf. e.g., writeFieldDecls
-	if len(psi.tfs) > 0 {
-		b.WriteString(psi.tfs[0].String())
-		for _, v := range psi.tfs[1:] {
+	if len(psi.tFormals) > 0 {
+		b.WriteString(psi.tFormals[0].String())
+		for _, v := range psi.tFormals[1:] {
 			b.WriteString(", ")
 			b.WriteString(v.String())
 		}
@@ -137,185 +130,134 @@ func (psi TFormals) String() string {
 }
 
 type TFormal struct {
-	a TParam
-	u Type
+	name TParam
+	u_I  Type
 	// CHECKME: submission version, upper bound \tau_I is only "of the form t_I(~\tau)"? -- i.e., not \alpha?
 	// ^If so, then can refine to TName
 }
 
-// TODO refactor
-func (tf TFormal) GetTParam() TParam {
-	return tf.a
-}
-
-// TODO refactor
-func (tf TFormal) GetType() Type {
-	return tf.u
-}
+func (tf TFormal) GetTParam() TParam   { return tf.name }
+func (tf TFormal) GetUpperBound() Type { return tf.u_I }
 
 func (tf TFormal) String() string {
-	return string(tf.a) + " " + tf.u.String()
+	return string(tf.name) + " " + tf.u_I.String()
 }
 
 /* STypeLit, FieldDecl */
 
+var _ TDecl = STypeLit{}
+
 type STypeLit struct {
-	t   Name
-	psi TFormals
-	fds []FieldDecl
+	t_name Name
+	psi    pDecls
+	fDecls []FieldDecl
 }
 
-var _ TDecl = STypeLit{}
+func (s STypeLit) GetName() Name              { return s.t_name }
+func (s STypeLit) GetPsi() pDecls             { return s.psi }
+func (s STypeLit) GetFieldDecls() []FieldDecl { return s.fDecls }
 
 func (s STypeLit) Ok(ds []Decl) {
 	TDeclOk(ds, s)
 }
 
-// TODO: compact (cf. fg.Expr getters)
-func (s STypeLit) GetName() Name { return s.t }
-
-func (s STypeLit) GetTFormals() TFormals {
-	return s.psi
-}
-
-func (s STypeLit) GetFieldDecls() []FieldDecl {
-	return s.fds
-}
-
 func (s STypeLit) String() string {
 	var b strings.Builder
 	b.WriteString("type ")
-	b.WriteString(string(s.t))
+	b.WriteString(string(s.t_name))
 	b.WriteString(s.psi.String())
 	b.WriteString(" struct {")
-	if len(s.fds) > 0 {
+	if len(s.fDecls) > 0 {
 		b.WriteString(" ")
-		writeFieldDecls(&b, s.fds)
+		writeFieldDecls(&b, s.fDecls)
 		b.WriteString(" ")
 	}
 	b.WriteString("}")
 	return b.String()
 }
 
-type FieldDecl struct {
-	f Name
-	u Type
-}
-
 var _ FGGNode = FieldDecl{}
 
-// TODO refactor
-func (fd FieldDecl) GetName() Name {
-	return fd.f
+type FieldDecl struct {
+	field Name
+	u     Type // u=tau
 }
 
-// TODO refactor
-func (fd FieldDecl) GetType() Type {
-	return fd.u
-}
+func (fd FieldDecl) GetName() Name { return fd.field }
+func (fd FieldDecl) GetType() Type { return fd.u }
 
 func (fd FieldDecl) Subs(subs map[TParam]Type) FieldDecl {
-	return FieldDecl{fd.f, fd.u.TSubs(subs)}
+	return FieldDecl{fd.field, fd.u.TSubs(subs)}
 }
 
 func (fd FieldDecl) String() string {
-	return fd.f + " " + fd.u.String()
+	return fd.field + " " + fd.u.String()
 }
 
 /* MDecl, ParamDecl */
 
+var _ Decl = MDecl{}
+
 type MDecl struct {
 	x_recv   Name // CHECKME: better to be Variable?  (etc. for other such Names)
 	t_recv   Name // N.B. t_S
-	psi_recv TFormals
-	// N.B. receiver elements "decomposed" because TFormals (not TName, cf. fg.MDecl uses ParamDecl)
-	m   Name // Refactor to embed Sig?
-	psi TFormals
-	pds []ParamDecl
-	u   Type // Return
-	e   Expr
+	psi_recv pDecls
+	// N.B. receiver elements "decomposed" because Psi (not TNamed, cf. fg.MDecl uses ParamDecl)
+	name     Name // Refactor to embed Sig?
+	psi_meth pDecls
+	pDecls   []ParamDecl
+	u_ret    Type // Return
+	e_body   FGGExpr
 }
 
-var _ Decl = MDecl{}
-
-func (md MDecl) ToSig() Sig {
-	return Sig{md.m, md.psi, md.pds, md.u}
-}
+func (md MDecl) GetRecvName() Name          { return md.x_recv }
+func (md MDecl) GetRecvTypeName() Name      { return md.t_recv }
+func (md MDecl) GetRecvPsi() pDecls         { return md.psi_recv }
+func (md MDecl) GetName() Name              { return md.name }
+func (md MDecl) GetMDeclPsi() pDecls        { return md.psi_meth } // MDecl in name to prevent false capture by TDecl interface
+func (md MDecl) GetParamDecls() []ParamDecl { return md.pDecls }
+func (md MDecl) GetReturn() Type            { return md.u_ret }
+func (md MDecl) GetBody() FGGExpr           { return md.e_body }
 
 func (md MDecl) Ok(ds []Decl) {
-	if !isStructType(ds, md.t_recv) {
+	if !isStructName(ds, md.t_recv) {
 		panic("Receiver must be a struct type: not " + md.t_recv +
 			"\n\t" + md.String())
 	}
 	md.psi_recv.Ok(ds)
-	md.psi.Ok(ds)
+	md.psi_meth.Ok(ds)
 
-	delta := md.psi_recv.ToTEnv()
-	for _, v := range md.psi_recv.tfs {
-		v.u.Ok(ds, delta)
+	delta := md.psi_recv.ToDelta()
+	for _, v := range md.psi_recv.tFormals {
+		v.u_I.Ok(ds, delta)
 	}
 
-	delta1 := md.psi.ToTEnv()
+	delta1 := md.psi_meth.ToDelta()
 	for k, v := range delta {
 		delta1[k] = v
 	}
-	for _, v := range md.psi.tfs {
-		v.u.Ok(ds, delta1)
+	for _, v := range md.psi_meth.tFormals {
+		v.u_I.Ok(ds, delta1)
 	}
 
-	as := make([]Type, len(md.psi_recv.tfs)) // !!! submission version, x:t_S(a) => x:t_S(~a)
-	for i := 0; i < len(md.psi_recv.tfs); i++ {
-		as[i] = md.psi_recv.tfs[i].a
+	as := make([]Type, len(md.psi_recv.tFormals)) // !!! submission version, x:t_S(a) => x:t_S(~a)
+	for i := 0; i < len(md.psi_recv.tFormals); i++ {
+		as[i] = md.psi_recv.tFormals[i].name
 	}
-	gamma := Env{md.x_recv: TName{md.t_recv, as}} // CHECKME: can we give the bounds directly here instead of 'as'?
-	for _, v := range md.pds {
-		gamma[v.x] = v.u
+	gamma := Gamma{md.x_recv: TNamed{md.t_recv, as}} // CHECKME: can we give the bounds directly here instead of 'as'?
+	for _, v := range md.pDecls {
+		gamma[v.name] = v.u
 	}
 	allowStupid := false
-	u := md.e.Typing(ds, delta1, gamma, allowStupid)
-	if !u.Impls(ds, delta1, md.u) {
+	u := md.e_body.Typing(ds, delta1, gamma, allowStupid)
+	if !u.Impls(ds, delta1, md.u_ret) {
 		panic("Method body type must implement declared return type: found=" +
-			u.String() + ", expected=" + md.u.String() + "\n\t" + md.String())
+			u.String() + ", expected=" + md.u_ret.String() + "\n\t" + md.String())
 	}
 }
 
-// TODO refactor
-func (md MDecl) GetRecvName() Name {
-	return md.x_recv
-}
-
-// TODO refactor
-func (md MDecl) GetRecvTypeName() Name {
-	return md.t_recv
-}
-
-// TODO refactor
-func (md MDecl) GetRecvTFormals() TFormals {
-	return md.psi_recv
-}
-
-func (md MDecl) GetName() Name {
-	return md.m
-}
-
-// TODO refactor // TODO: MDecl in name to prevent false capture by TDecl interface
-func (md MDecl) GetMDeclTFormals() TFormals {
-	return md.psi
-}
-
-// TODO refactor
-func (md MDecl) GetParamDecls() []ParamDecl {
-	return md.pds
-}
-
-// TODO refactor
-func (md MDecl) GetReturn() Type {
-	return md.u
-}
-
-// TODO refactor
-func (md MDecl) GetExpr() Expr {
-	return md.e
+func (md MDecl) ToSig() Sig {
+	return Sig{md.name, md.psi_meth, md.pDecls, md.u_ret}
 }
 
 func (md MDecl) String() string {
@@ -327,53 +269,50 @@ func (md MDecl) String() string {
 	b.WriteString(md.t_recv)
 	b.WriteString(md.psi_recv.String())
 	b.WriteString(") ")
-	b.WriteString(md.m)
-	b.WriteString(md.psi.String())
+	b.WriteString(md.name)
+	b.WriteString(md.psi_meth.String())
 	b.WriteString("(")
-	writeParamDecls(&b, md.pds)
+	writeParamDecls(&b, md.pDecls)
 	b.WriteString(") ")
-	b.WriteString(md.u.String())
+	b.WriteString(md.u_ret.String())
 	b.WriteString(" { return ")
-	b.WriteString(md.e.String())
+	b.WriteString(md.e_body.String())
 	b.WriteString(" }")
 	return b.String()
 }
 
-// Cf. FieldDecl
-type ParamDecl struct {
-	x Name // CHECKME: Variable?
-	u Type
-}
-
 var _ FGGNode = ParamDecl{}
 
-// TODO refactor
-func (pd ParamDecl) GetName() Name {
-	return pd.x
+// Cf. FieldDecl
+type ParamDecl struct {
+	name Name // CHECKME: Variable?
+	u    Type
 }
 
-// TODO refactor
-func (pd ParamDecl) GetType() Type {
-	return pd.u
-}
+func (pd ParamDecl) GetName() Name { return pd.name }
+func (pd ParamDecl) GetType() Type { return pd.u }
 
 func (pd ParamDecl) String() string {
-	return pd.x + " " + pd.u.String()
+	return pd.name + " " + pd.u.String()
 }
 
 /* ITypeLit, Sig */
 
+var _ TDecl = ITypeLit{}
+
 type ITypeLit struct {
-	t   Name
-	psi TFormals
-	ss  []Spec
+	t_I   Name
+	psi   pDecls
+	specs []Spec
 }
 
-var _ TDecl = ITypeLit{}
+func (c ITypeLit) GetName() Name    { return c.t_I }
+func (c ITypeLit) GetPsi() pDecls   { return c.psi }
+func (c ITypeLit) GetSpecs() []Spec { return c.specs }
 
 func (c ITypeLit) Ok(ds []Decl) {
 	TDeclOk(ds, c)
-	for _, v := range c.ss {
+	for _, v := range c.specs {
 		// TODO: check Sigs OK?  e.g., "type IA(type ) interface { m1(type )() Any };" while missing Any
 		if g, ok := v.(Sig); ok {
 			g.Ok(ds)
@@ -382,29 +321,16 @@ func (c ITypeLit) Ok(ds []Decl) {
 	// In general, also missing checks for, e.g., unique type/field/method names -- cf., TDeclOk
 }
 
-func (c ITypeLit) GetName() Name {
-	return c.t
-}
-
-func (c ITypeLit) GetTFormals() TFormals {
-	return c.psi
-}
-
-// TODO refactor
-func (c ITypeLit) GetSpecs() []Spec {
-	return c.ss
-}
-
 func (c ITypeLit) String() string {
 	var b strings.Builder
 	b.WriteString("type ")
-	b.WriteString(string(c.t))
+	b.WriteString(string(c.t_I))
 	b.WriteString(c.psi.String())
 	b.WriteString(" interface {")
-	if len(c.ss) > 0 {
+	if len(c.specs) > 0 {
 		b.WriteString(" ")
-		b.WriteString(c.ss[0].String())
-		for _, v := range c.ss[1:] {
+		b.WriteString(c.specs[0].String())
+		for _, v := range c.specs[1:] {
 			b.WriteString("; ")
 			b.WriteString(v.String())
 		}
@@ -414,48 +340,33 @@ func (c ITypeLit) String() string {
 	return b.String()
 }
 
-type Sig struct {
-	m   Name
-	psi TFormals
-	pds []ParamDecl
-	u   Type
-}
-
 var _ Spec = Sig{}
 
-// TODO: refactor
-func (g Sig) GetName() Name {
-	return g.m
+type Sig struct {
+	meth   Name
+	psi    pDecls
+	pDecls []ParamDecl
+	u_ret  Type
 }
 
-// TODO: refactor
-func (g Sig) GetTFormals() TFormals {
-	return g.psi
-}
-
-// TODO: refactor
-func (g Sig) GetParamDecls() []ParamDecl {
-	return g.pds
-}
-
-// TODO: refactor
-func (g Sig) GetType() Type {
-	return g.u
-}
+func (g Sig) GetName() Name              { return g.meth }
+func (g Sig) GetPsi() pDecls             { return g.psi }
+func (g Sig) GetParamDecls() []ParamDecl { return g.pDecls }
+func (g Sig) GetType() Type              { return g.u_ret }
 
 func (g Sig) TSubs(subs map[TParam]Type) Sig {
-	tfs := make([]TFormal, len(g.psi.tfs))
-	for i := 0; i < len(g.psi.tfs); i++ {
-		tf := g.psi.tfs[i]
-		tfs[i] = TFormal{tf.a, tf.u.TSubs(subs)}
+	tfs := make([]TFormal, len(g.psi.tFormals))
+	for i := 0; i < len(g.psi.tFormals); i++ {
+		tf := g.psi.tFormals[i]
+		tfs[i] = TFormal{tf.name, tf.u_I.TSubs(subs)}
 	}
-	ps := make([]ParamDecl, len(g.pds))
+	ps := make([]ParamDecl, len(g.pDecls))
 	for i := 0; i < len(ps); i++ {
-		pd := g.pds[i]
-		ps[i] = ParamDecl{pd.x, pd.u.TSubs(subs)}
+		pd := g.pDecls[i]
+		ps[i] = ParamDecl{pd.name, pd.u.TSubs(subs)}
 	}
-	u := g.u.TSubs(subs)
-	return Sig{g.m, TFormals{tfs}, ps, u}
+	u := g.u_ret.TSubs(subs)
+	return Sig{g.meth, pDecls{tfs}, ps, u}
 }
 
 func (g Sig) Ok(ds []Decl) {
@@ -469,42 +380,42 @@ func (g Sig) GetSigs(_ []Decl) []Sig {
 
 // !!! Sig in FGG includes ~a and ~x, which naively breaks "impls"
 func (g0 Sig) EqExceptTParamsAndVars(g Sig) bool {
-	if len(g0.psi.tfs) != len(g.psi.tfs) || len(g0.pds) != len(g.pds) {
+	if len(g0.psi.tFormals) != len(g.psi.tFormals) || len(g0.pDecls) != len(g.pDecls) {
 		return false
 	}
-	for i := 0; i < len(g0.psi.tfs); i++ {
-		if !g0.psi.tfs[i].u.Equals(g.psi.tfs[i].u) {
+	for i := 0; i < len(g0.psi.tFormals); i++ {
+		if !g0.psi.tFormals[i].u_I.Equals(g.psi.tFormals[i].u_I) {
 			return false
 		}
 	}
-	for i := 0; i < len(g0.pds); i++ {
-		if !g0.pds[i].u.Equals(g.pds[i].u) {
+	for i := 0; i < len(g0.pDecls); i++ {
+		if !g0.pDecls[i].u.Equals(g.pDecls[i].u) {
 			return false
 		}
 	}
-	return g0.m == g.m && g0.u.Equals(g.u)
+	return g0.meth == g.meth && g0.u_ret.Equals(g.u_ret)
 }
 
 func (g Sig) String() string {
 	var b strings.Builder
-	b.WriteString(g.m)
+	b.WriteString(g.meth)
 	b.WriteString(g.psi.String())
 	b.WriteString("(")
-	writeParamDecls(&b, g.pds)
+	writeParamDecls(&b, g.pDecls)
 	b.WriteString(") ")
-	b.WriteString(g.u.String())
+	b.WriteString(g.u_ret.String())
 	return b.String()
 }
 
 /* Aux, helpers */
 
 func TDeclOk(ds []Decl, td TDecl) {
-	psi := td.GetTFormals()
+	psi := td.GetPsi()
 	psi.Ok(ds)
-	delta := psi.ToTEnv()
-	for _, v := range psi.tfs {
-		u, _ := v.u.(TName) // \tau_I, checked by psi.Ok
-		u.Ok(ds, delta)     // !!! Submission version T-Type, t_i => t_I
+	delta := psi.ToDelta()
+	for _, v := range psi.tFormals {
+		u, _ := v.u_I.(TNamed) // \tau_I, checked by psi.Ok
+		u.Ok(ds, delta)        // !!! Submission version T-Type, t_i => t_I
 	}
 	// TODO: Check, e.g., unique type/field/method names -- cf., FGGProgram.OK [Warning]
 }

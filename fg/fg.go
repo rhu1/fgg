@@ -15,7 +15,7 @@ type Decl = base.Decl
 
 // Name: see Aliases (at top)
 
-type Env map[Name]Type // TODO: should be Variable rather than Name? -- though Variable is an Expr
+type Gamma map[Name]Type // TODO: should be Variable rather than Name? -- though Variable is an Expr
 
 type Type Name // Type definition (cf. alias)
 
@@ -77,9 +77,9 @@ type FGExpr interface {
 	base.Expr
 	Subs(subs map[Variable]FGExpr) FGExpr
 
-	// N.B. gamma should be effectively immutable (and ds, of course)
+	// N.B. gamma should be treated immutably (and ds, of course)
 	// (No typing rule modifies gamma, except the T-Func bootstrap)
-	Typing(ds []Decl, gamma Env, allowStupid bool) Type
+	Typing(ds []Decl, gamma Gamma, allowStupid bool) Type
 
 	// string is the type name of the "actually evaluated" expr (within the eval context)
 	// CHECKME: resulting Exprs are not "parsed" from source, OK?

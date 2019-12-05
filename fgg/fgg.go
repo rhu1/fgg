@@ -11,7 +11,9 @@ var _ = reflect.Append
 
 /* Export */
 
-func NewTName(t Name, us []Type) TName { return TName{t, us} }
+func NewTName(t Name, us []Type) TNamed       { return TNamed{t, us} }
+func IsStructType(ds []Decl, u Type) bool     { return isStructType(ds, u) }
+func IsNamedIfaceType(ds []Decl, u Type) bool { return isNamedIfaceType(ds, u) }
 
 /* Aliases from base */
 // TODO: refactor?
@@ -25,17 +27,17 @@ type Decl = base.Decl
 // Name: see Aliases (at top)
 
 type Type interface {
-	TSubs(subs map[TParam]Type) Type // TODO: factor out Subs type? -- N.B. map is TEnv
-	Impls(ds []Decl, delta TEnv, u Type) bool
-	Ok(ds []Decl, delta TEnv)
+	TSubs(subs map[TParam]Type) Type // N.B. map is Delta -- TODO: factor out Subs type?
+	Impls(ds []Decl, delta Delta, u Type) bool
+	Ok(ds []Decl, delta Delta)
 	Equals(u Type) bool
 	String() string
 	ToGoString() string
 }
 
-type TParam Name
-
 var _ Type = TParam("")
+
+type TParam Name
 
 func (a TParam) TSubs(subs map[TParam]Type) Type {
 	res, ok := subs[a]
@@ -48,7 +50,7 @@ func (a TParam) TSubs(subs map[TParam]Type) Type {
 }
 
 // u0 <: u
-func (a TParam) Impls(ds []Decl, delta TEnv, u Type) bool {
+func (a TParam) Impls(ds []Decl, delta Delta, u Type) bool {
 	if a1, ok := u.(TParam); ok {
 		return a == a1
 	} else {
@@ -56,7 +58,7 @@ func (a TParam) Impls(ds []Decl, delta TEnv, u Type) bool {
 	}
 }
 
-func (a TParam) Ok(ds []Decl, delta TEnv) {
+func (a TParam) Ok(ds []Decl, delta Delta) {
 	if _, ok := delta[a]; !ok {
 		panic("Unknown type param: " + a.String())
 	}
@@ -77,40 +79,34 @@ func (a TParam) ToGoString() string {
 	return string(a)
 }
 
-// TODO: rename TNamed
-type TName struct {
-	t  Name
-	us []Type
+var _ Type = TNamed{}
+var _ Spec = TNamed{}
+
+// Convention: t=type name (t), u=FGG type (tau)
+type TNamed struct {
+	t_name Name
+	u_args []Type
 }
 
-var _ Type = TName{}
-var _ Spec = TName{}
+func (u0 TNamed) GetName() Name    { return u0.t_name }
+func (u0 TNamed) GetTArgs() []Type { return u0.u_args }
 
-// TODO: refactor
-func (u0 TName) GetName() Name {
-	return u0.t
-}
-
-// TODO: refactor
-func (u0 TName) GetTArgs() []Type {
-	return u0.us
-}
-
-func (u0 TName) TSubs(subs map[TParam]Type) Type {
-	us := make([]Type, len(u0.us))
+func (u0 TNamed) TSubs(subs map[TParam]Type) Type {
+	us := make([]Type, len(u0.u_args))
 	for i := 0; i < len(us); i++ {
-		us[i] = u0.us[i].TSubs(subs)
+		us[i] = u0.u_args[i].TSubs(subs)
 	}
-	return TName{u0.t, us}
+	return TNamed{u0.t_name, us}
 }
 
-// u0 <: 1
-func (u0 TName) Impls(ds []Decl, delta TEnv, u Type) bool {
-	if isStructTName(ds, u) {
-		return isStructTName(ds, u0) && u0.Equals(u) // Asks equality of nested TParam
+// u0 <: u
+func (u0 TNamed) Impls(ds []Decl, delta Delta, u Type) bool {
+	if isStructType(ds, u) {
+		return isStructType(ds, u0) && u0.Equals(u) // Asks equality of nested TParam
 	}
 	if _, ok := u.(TParam); ok { // e.g., fgg_test.go, Test014
-		panic("Type name does not implement open type param: found=" + u0.String() + ", expected=" + u.String())
+		panic("Type name does not implement open type param: found=" +
+			u0.String() + ", expected=" + u.String())
 	}
 
 	gs := methods(ds, u)   // u is a t_I
@@ -126,93 +122,93 @@ func (u0 TName) Impls(ds []Decl, delta TEnv, u Type) bool {
 	return true
 }
 
-func (u0 TName) Ok(ds []Decl, delta TEnv) {
-	td := getTDecl(ds, u0.t)
-	psi := td.GetTFormals()
-	if len(psi.tfs) != len(u0.us) {
+func (u0 TNamed) Ok(ds []Decl, delta Delta) {
+	td := GetTDecl(ds, u0.t_name)
+	psi := td.GetPsi()
+	if len(psi.tFormals) != len(u0.u_args) {
 		var b strings.Builder
 		b.WriteString("Arity mismatch between type formals and actuals: formals=")
 		b.WriteString(psi.String())
 		b.WriteString(" actuals=")
-		writeTypes(&b, u0.us)
+		writeTypes(&b, u0.u_args)
 		b.WriteString("\n\t")
 		b.WriteString(u0.String())
 		panic(b.String())
 	}
 	subs := make(map[TParam]Type)
-	for i := 0; i < len(psi.tfs); i++ {
-		subs[psi.tfs[i].a] = u0.us[i]
+	for i := 0; i < len(psi.tFormals); i++ {
+		subs[psi.tFormals[i].name] = u0.u_args[i]
 	}
-	for i := 0; i < len(psi.tfs); i++ {
-		actual := psi.tfs[i].a.TSubs(subs) // CHECKME: submission version T-Named, subs applied to Delta?
-		formal := psi.tfs[i].u.TSubs(subs)
+	for i := 0; i < len(psi.tFormals); i++ {
+		actual := psi.tFormals[i].name.TSubs(subs) // CHECKME: submission version T-Named, subs applied to Delta?
+		formal := psi.tFormals[i].u_I.TSubs(subs)
 		if !actual.Impls(ds, delta, formal) { // tfs[i].u is a \tau_I, checked by TDecl.Ok
-			panic("Type actual must implement type formal: actual=" + actual.String() +
-				" formal=" + formal.String())
+			panic("Type actual must implement type formal: actual=" +
+				actual.String() + " formal=" + formal.String())
 		}
 	}
-	for _, v := range u0.us {
+	for _, v := range u0.u_args {
 		v.Ok(ds, delta)
 	}
 }
 
 // \tau_I is a Spec, but not \tau_S -- this aspect is currently "dynamically typed"
-func (u TName) GetSigs(ds []Decl) []Sig {
-	if !isInterfaceTName(ds, u) { // isStructType would be more efficient
+// From Spec
+func (u TNamed) GetSigs(ds []Decl) []Sig {
+	if !isNamedIfaceType(ds, u) { // isStructType would be more efficient
 		panic("Cannot use non-interface type as a Spec: " + u.String() +
 			" is a " + reflect.TypeOf(u).String())
 	}
-	td := getTDecl(ds, u.t).(ITypeLit)
+	td := GetTDecl(ds, u.t_name).(ITypeLit)
 	var res []Sig
-	for _, s := range td.ss {
+	for _, s := range td.specs {
 		res = append(res, s.GetSigs(ds)...)
 	}
 	return res
 }
 
-func (u0 TName) Equals(u Type) bool {
-	if _, ok := u.(TName); !ok {
+func (u0 TNamed) Equals(u Type) bool {
+	if _, ok := u.(TNamed); !ok {
 		return false
 	}
-	u1 := u.(TName)
-	if u0.t != u1.t || len(u0.us) != len(u1.us) {
+	u1 := u.(TNamed)
+	if u0.t_name != u1.t_name || len(u0.u_args) != len(u1.u_args) {
 		return false
 	}
-	for i := 0; i < len(u0.us); i++ {
-		if !u0.us[i].Equals(u1.us[i]) { // Asks equality of nested TParam
+	for i := 0; i < len(u0.u_args); i++ {
+		if !u0.u_args[i].Equals(u1.u_args[i]) { // Asks equality of nested TParam
 			return false
 		}
 	}
 	return true
 }
 
-func (u TName) String() string {
+func (u TNamed) String() string {
 	var b strings.Builder
-	b.WriteString(string(u.t))
+	b.WriteString(string(u.t_name))
 	b.WriteString("(")
-	writeTypes(&b, u.us)
+	writeTypes(&b, u.u_args)
 	b.WriteString(")")
 	return b.String()
 }
 
-func (u TName) ToGoString() string {
+func (u TNamed) ToGoString() string {
 	var b strings.Builder
 	b.WriteString("main.")
-	b.WriteString(string(u.t))
+	b.WriteString(string(u.t_name))
 	b.WriteString("(")
-	writeToGoTypes(&b, u.us)
+	writeToGoTypes(&b, u.u_args)
 	b.WriteString(")")
 	return b.String()
 }
 
 /* Context, Type context */
 
-//type Env map[Variable]Type  // CHECKME: refactor?
-type Env map[Name]Type
+//type Gamma map[Variable]Type  // CHECKME: refactor?
+type Gamma map[Name]Type
+type Delta map[TParam]Type
 
-type TEnv map[TParam]Type
-
-func (delta TEnv) String() string {
+func (delta Delta) String() string {
 	res := "["
 	first := true
 	for k, v := range delta {
@@ -232,7 +228,7 @@ func (delta TEnv) String() string {
 
 type TDecl interface {
 	Decl
-	GetTFormals() TFormals // TODO: rename? potential clash with, e.g., MDecl, can cause "false" interface satisfaction
+	GetPsi() pDecls // TODO: rename? potential clash with, e.g., MDecl, can cause "false" interface satisfaction
 }
 
 type Spec interface {
@@ -240,35 +236,35 @@ type Spec interface {
 	GetSigs(ds []Decl) []Sig
 }
 
-type Expr interface {
-	base.Expr // Using the same name "Expr", maybe rename this type to FGGExpr
-	Subs(subs map[Variable]Expr) Expr
-	TSubs(subs map[TParam]Type) Expr
-	// Like gamma, delta is effectively immutable
-	Typing(ds []Decl, delta TEnv, gamma Env, allowStupid bool) Type
-	Eval(ds []Decl) (Expr, string)
+type FGGExpr interface {
+	base.Expr
+	Subs(subs map[Variable]FGGExpr) FGGExpr
+	TSubs(subs map[TParam]Type) FGGExpr
+	// gamma and delta should be treated immutably
+	Typing(ds []Decl, delta Delta, gamma Gamma, allowStupid bool) Type
+	Eval(ds []Decl) (FGGExpr, string)
 }
 
 /* Helpers */
 
 // Based on FG version -- but currently no FGG equiv of isInterfaceType
 // Helpful for MDecl.t_recv
-func isStructType(ds []Decl, t Name) bool {
+func isStructName(ds []Decl, t Name) bool {
 	for _, v := range ds {
 		d, ok := v.(STypeLit)
-		if ok && d.t == t {
+		if ok && d.t_name == t {
 			return true
 		}
 	}
 	return false
 }
 
-// Check if u is a \tau_S -- implicitly must be a TName
-func isStructTName(ds []Decl, u Type) bool {
-	if u1, ok := u.(TName); ok {
+// Check if u is a \tau_S -- implicitly must be a TNamed
+func isStructType(ds []Decl, u Type) bool {
+	if u1, ok := u.(TNamed); ok {
 		for _, v := range ds {
 			d, ok := v.(STypeLit)
-			if ok && d.t == u1.t {
+			if ok && d.t_name == u1.t_name {
 				return true
 			}
 		}
@@ -276,27 +272,17 @@ func isStructTName(ds []Decl, u Type) bool {
 	return false
 }
 
-// TODO FIXME -- temp for visibility
-func IsStructTName1(ds []Decl, u Type) bool {
-	return isStructTName(ds, u)
-}
-
-// Check if u is a \tau_I -- N.B. looks for a *TName*, i.e., not a TParam
-func isInterfaceTName(ds []Decl, u Type) bool {
-	if u1, ok := u.(TName); ok {
+// Check if u is a \tau_I -- N.B. looks for a *TNamed*, i.e., not a TParam
+func isNamedIfaceType(ds []Decl, u Type) bool {
+	if u1, ok := u.(TNamed); ok {
 		for _, v := range ds {
 			d, ok := v.(ITypeLit)
-			if ok && d.t == u1.t {
+			if ok && d.t_I == u1.t_name {
 				return true
 			}
 		}
 	}
 	return false
-}
-
-// TODO: refactor
-func IsInterfaceTName1(ds []Decl, u Type) bool {
-	return isInterfaceTName(ds, u)
 }
 
 func writeTypes(b *strings.Builder, us []Type) {

@@ -465,7 +465,7 @@ func (c IfThenElse) Eval(ds []Decl) (Expr, string) {
 
 	tt1 := c.e1.(TypeTree)
 	tt2 := c.e2.(TypeTree)
-	if tt1.Reify().Impls(ds_fgg, make(fgg.TEnv), tt2.Reify()) {
+	if tt1.Reify().Impls(ds_fgg, make(fgg.Delta), tt2.Reify()) {
 		return c.e3, "If-true"
 	} else {
 		return Panic{}, "If-false"
@@ -509,7 +509,7 @@ type TypeTree struct {
 
 var _ Expr = TypeTree{}
 
-func (tt TypeTree) Reify() fgg.TName {
+func (tt TypeTree) Reify() fgg.TNamed {
 	if !tt.IsValue() {
 		panic("Cannot refiy non-ground TypeTree: " + tt.String())
 	}
