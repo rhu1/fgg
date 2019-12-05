@@ -63,9 +63,9 @@ func Translate(p fgg.FGGProgram) FGRProgram { // TODO FIXME: FGR -- TODO also ca
 	}
 
 	// Translate main Expr (and collect wrappers)
-	e_fgg := p.GetMain().(fgg.Expr)
-	var delta fgg.TEnv // Empty envs for main -- duplicated from FGGProgram.OK
-	var gamma fgg.Env
+	e_fgg := p.GetMain().(fgg.FGGExpr)
+	var delta fgg.Delta // Empty envs for main -- duplicated from FGGProgram.OK
+	var gamma fgg.Gamma
 	e_fgg.Typing(ds_fgg, delta, gamma, false) // Populates delta and gamma
 	e := fgrTransExpr(ds_fgg, delta, gamma, e_fgg, wrappers)
 
@@ -84,23 +84,23 @@ func Translate(p fgg.FGGProgram) FGRProgram { // TODO FIXME: FGR -- TODO also ca
 		ds_fgr = append(ds_fgr, adptr, getv)
 
 		// Add duck-typing meths
-		c := fgg.GetTDecl1(ds_fgg, string(v.super)).(fgg.ITypeLit)
-		tfs := c.GetTFormals().GetFormals()
+		c := fgg.GetTDecl(ds_fgg, string(v.super)).(fgg.ITypeLit)
+		tfs := c.GetPsi().GetTFormals()
 		us := make([]fgg.Type, len(tfs))
 		for i := 0; i < len(us); i++ {
 			us[i] = tfs[i].GetTParam()
 		}
 		dummy := fgg.NewTName(c.GetName(), us) // `us` are just the decl TParams, args not actually needed for `methods` or below
-		gs := fgg.Methods1(ds_fgg, dummy)      // !!! all meths of t_I target
+		gs := fgg.Methods(ds_fgg, dummy)       // !!! all meths of t_I target
 		//for _, s := range c.ss {
 		for _, g := range gs {
-			delta := make(fgg.TEnv)
+			delta := make(fgg.Delta)
 			for _, v1 := range tfs {
-				delta[v1.GetTParam()] = v1.GetType()
+				delta[v1.GetTParam()] = v1.GetUpperBound()
 			}
-			tfs := g.GetTFormals().GetFormals()
+			tfs := g.GetPsi().GetTFormals()
 			for _, v1 := range tfs {
-				delta[v1.GetTParam()] = v1.GetType()
+				delta[v1.GetTParam()] = v1.GetUpperBound()
 			}
 			/*delta1 := make(TEnv)
 			psi := getTDecl(p.ds, string(v.sub)).GetTFormals()
@@ -140,11 +140,11 @@ func Translate(p fgg.FGGProgram) FGRProgram { // TODO FIXME: FGR -- TODO also ca
 /* TDecl */
 
 func fgrTransSTypeLit(s fgg.STypeLit) STypeLit {
-	delta := s.GetTFormals().ToTEnv()
-	tfs := s.GetTFormals().GetFormals()
+	delta := s.GetPsi().ToDelta()
+	tfs := s.GetPsi().GetTFormals()
 	rds := make([]RepDecl, len(tfs))
 	for i := 0; i < len(tfs); i++ {
-		rds[i] = RepDecl{tfs[i].GetTParam(), Rep{tfs[i].GetType()}}
+		rds[i] = RepDecl{tfs[i].GetTParam(), Rep{tfs[i].GetUpperBound()}}
 	}
 	fds_fgg := s.GetFieldDecls()
 	fds := make([]FieldDecl, len(fds_fgg))
@@ -156,14 +156,14 @@ func fgrTransSTypeLit(s fgg.STypeLit) STypeLit {
 }
 
 func fgrTransITypeLit(c fgg.ITypeLit) ITypeLit {
-	delta := c.GetTFormals().ToTEnv()
+	delta := c.GetPsi().ToDelta()
 	ss_fgg := c.GetSpecs()
 	ss := make([]Spec, len(ss_fgg)+1)
 	ss[0] = Type("t_0") // TODO: factor out
 	for i := 1; i <= len(ss_fgg); i++ {
 		s := ss_fgg[i-1]
 		switch s1 := s.(type) {
-		case fgg.TName:
+		case fgg.TNamed:
 			ss[i] = Type(s1.GetName())
 		case fgg.Sig:
 			ss[i] = fgrTransSig(delta, s1)
@@ -174,13 +174,13 @@ func fgrTransITypeLit(c fgg.ITypeLit) ITypeLit {
 	return NewITypeLit(Type(c.GetName()), ss)
 }
 
-func fgrTransSig(delta fgg.TEnv, g fgg.Sig) Sig {
-	delta1 := make(fgg.TEnv)
+func fgrTransSig(delta fgg.Delta, g fgg.Sig) Sig {
+	delta1 := make(fgg.Delta)
 	for k, v := range delta {
 		delta1[k] = v
 	}
-	for _, v := range g.GetTFormals().GetFormals() {
-		delta1[v.GetTParam()] = v.GetType()
+	for _, v := range g.GetPsi().GetTFormals() {
+		delta1[v.GetTParam()] = v.GetUpperBound()
 	}
 	pds_fgg := g.GetParamDecls()
 	pds := make([]ParamDecl, len(pds_fgg))
@@ -196,19 +196,19 @@ func fgrTransSig(delta fgg.TEnv, g fgg.Sig) Sig {
 func fgrTransMDecl(ds []Decl, d1 fgg.MDecl, wrappers map[Type]adptrPair) MDecl {
 	x_recv := d1.GetRecvName()
 	t_recv := d1.GetRecvTypeName()
-	psi_recv := d1.GetRecvTFormals()
+	psi_recv := d1.GetRecvPsi()
 	m := d1.GetName()
-	psi := d1.GetMDeclTFormals()
+	psi := d1.GetMDeclPsi()
 	pds_fgg := d1.GetParamDecls()
 	u := d1.GetReturn()
-	e_fgg := d1.GetExpr()
+	e_fgg := d1.GetBody()
 
-	delta := psi_recv.ToTEnv()
-	tfs := psi.GetFormals()
+	delta := psi_recv.ToDelta()
+	tfs := psi.GetTFormals()
 	for _, v := range tfs {
-		delta[v.GetTParam()] = v.GetType()
+		delta[v.GetTParam()] = v.GetUpperBound()
 	}
-	gamma := make(fgg.Env)
+	gamma := make(fgg.Gamma)
 	us := make([]fgg.Type, len(tfs))
 	for i := 0; i < len(us); i++ {
 		us[i] = tfs[i].GetTParam()
@@ -233,7 +233,7 @@ func fgrTransMDecl(ds []Decl, d1 fgg.MDecl, wrappers map[Type]adptrPair) MDecl {
 		x := NewVariable(pd.GetName())
 		subs[x] = x
 	}
-	tfs_recv := psi_recv.GetFormals()
+	tfs_recv := psi_recv.GetTFormals()
 	for _, tf := range tfs_recv {
 		a := tf.GetTParam().String()
 		subs[NewVariable(a)] = NewSelect(NewVariable(x_recv), a)
@@ -249,7 +249,7 @@ func fgrTransMDecl(ds []Decl, d1 fgg.MDecl, wrappers map[Type]adptrPair) MDecl {
 
 // TODO: rename ds -> ds_fgg
 // |e_FGG|_(\Delta; \Gamma) = e_FGR
-func fgrTransExpr(ds []Decl, delta fgg.TEnv, gamma fgg.Env, e fgg.Expr,
+func fgrTransExpr(ds []Decl, delta fgg.Delta, gamma fgg.Gamma, e fgg.FGGExpr,
 	wrappers map[Type]adptrPair) Expr {
 	switch e1 := e.(type) {
 	case fgg.Variable:
@@ -264,20 +264,20 @@ func fgrTransExpr(ds []Decl, delta fgg.TEnv, gamma fgg.Env, e fgg.Expr,
 		}
 		return res
 	case fgg.StructLit:
-		u := e1.GetTName()
+		u := e1.GetNamedType()
 		t := u.GetName()
 		us := u.GetTArgs()
-		es_fgg := e1.GetArgs()
+		es_fgg := e1.GetElems()
 		es := make([]Expr, (len(us) + len(es_fgg)))
 		for i := 0; i < len(us); i++ {
 			es[i] = mkRep(us[i])
 		}
-		fds_fgg := fgg.Fields1(ds, u)
+		fds_fgg := fgg.Fields(ds, u)
 		subs := make(map[fgg.TParam]fgg.Type)
-		tfs := fgg.GetTDecl1(ds, t).GetTFormals().GetFormals()
+		tfs := fgg.GetTDecl(ds, t).GetPsi().GetTFormals()
 		for i := 0; i < len(tfs); i++ {
 			subs[tfs[i].GetTParam()] = //us[i]  // !!! Cf. ParamDecls in Call
-				tfs[i].GetType()
+				tfs[i].GetUpperBound()
 		}
 		for i := 0; i < len(es_fgg); i++ {
 			u_i := fds_fgg[i].GetType().TSubs(subs)
@@ -286,13 +286,13 @@ func fgrTransExpr(ds []Decl, delta fgg.TEnv, gamma fgg.Env, e fgg.Expr,
 		return NewStructLit(Type(t), es)
 	case fgg.Select:
 		e_fgg := e1.GetExpr()
-		f := e1.GetName()
+		f := e1.GetField()
 		u := e1.Typing(ds, delta, gamma, false)
 		var res Expr
 		res = NewSelect(fgrTransExpr(ds, delta, gamma, e_fgg, wrappers), f)
 
-		u_expr := fgg.Bounds1(delta, e1.GetExpr().Typing(ds, delta, gamma, false)).(fgg.TName)
-		td := fgg.GetTDecl1(ds, u_expr.GetName()).(fgg.STypeLit)
+		u_expr := fgg.Bounds(delta, e1.GetExpr().Typing(ds, delta, gamma, false)).(fgg.TNamed)
+		td := fgg.GetTDecl(ds, u_expr.GetName()).(fgg.STypeLit)
 		fds := td.GetFieldDecls() // Could use fields aux using a "dummy" type, cf. Call using methods
 		var u_f fgg.Type = nil
 		for _, fd := range fds {
@@ -303,7 +303,7 @@ func fgrTransExpr(ds []Decl, delta fgg.TEnv, gamma fgg.Env, e fgg.Expr,
 		if u_f == nil {
 			panic("Field not found in " + u_expr.String() + ": " + f)
 		}
-		delta1 := td.GetTFormals().ToTEnv()
+		delta1 := td.GetPsi().ToDelta()
 
 		////if isInterfaceTName(ds, u) {
 		//if isFggITypeLit(ds, toFgTypeFromBounds(delta, u)) {
@@ -316,7 +316,7 @@ func fgrTransExpr(ds []Decl, delta fgg.TEnv, gamma fgg.Env, e fgg.Expr,
 		return res
 	case fgg.Call:
 		e_recv_fgg := e1.GetRecv()
-		m := e1.GetName()
+		m := e1.GetMethod()
 		//targs := e1.GetTArgs()
 		args_fgg := e1.GetArgs()
 
@@ -329,8 +329,8 @@ func fgrTransExpr(ds []Decl, delta fgg.TEnv, gamma fgg.Env, e fgg.Expr,
 		}*/
 		// !!! wrap target should be "raw" FGR decl, not FGG type -- don't want type arg instantiation, which may be t_S, we always want upper bound t_I(?)
 		//t_recv := toFgTypeFromBounds(delta, u_recv)
-		td := fgg.GetTDecl1(ds, fgg.Bounds1(delta, u_recv).(fgg.TName).GetName())
-		tfs_recv := td.GetTFormals().GetFormals()
+		td := fgg.GetTDecl(ds, fgg.Bounds(delta, u_recv).(fgg.TNamed).GetName())
+		tfs_recv := td.GetPsi().GetTFormals()
 		//md := getMDecl(ds, t_recv, m)
 
 		// TODO factor out -- cf. add-wrapper-meths part in Translate
@@ -339,18 +339,18 @@ func fgrTransExpr(ds []Decl, delta fgg.TEnv, gamma fgg.Env, e fgg.Expr,
 			us[i] = tfs_recv[i].GetTParam()
 		}
 		dummy := fgg.NewTName(td.GetName(), us) // From the "base" type decl, not the instantiated type -- TODO: dtype
-		g := fgg.Methods1(ds, dummy)[m]
+		g := fgg.Methods(ds, dummy)[m]
 
 		delta1 := make(map[fgg.TParam]fgg.Type)
 		for i := 0; i < len(tfs_recv); i++ {
 			tf := tfs_recv[i]
-			delta1[tf.GetTParam()] = tf.GetType()
+			delta1[tf.GetTParam()] = tf.GetUpperBound()
 		}
 		//tfs := md.GetTFormals().GetFormals()
-		tfs := g.GetTFormals().GetFormals()
+		tfs := g.GetPsi().GetTFormals()
 		for i := 0; i < len(tfs); i++ {
 			tf := tfs[i]
-			delta1[tf.GetTParam()] = tf.GetType()
+			delta1[tf.GetTParam()] = tf.GetUpperBound()
 		}
 
 		args := make([]Expr, len(args_fgg))
@@ -396,8 +396,8 @@ func fgrTransExpr(ds []Decl, delta fgg.TEnv, gamma fgg.Env, e fgg.Expr,
 // TODO: rename toFgrType...
 // |\tau|_\Delta = t
 // Basically, type name from bounds
-func toFgTypeFromBounds(delta fgg.TEnv, u fgg.Type) Type {
-	return Type(fgg.Bounds1(delta, u).(fgg.TName).GetName())
+func toFgTypeFromBounds(delta fgg.Delta, u fgg.Type) Type {
+	return Type(fgg.Bounds(delta, u).(fgg.TNamed).GetName())
 }
 
 type adptrPair struct {
@@ -407,7 +407,7 @@ type adptrPair struct {
 
 // Pre: type of e <: u
 // u is "target type"
-func wrapExpr(ds []Decl, delta fgg.TEnv, gamma fgg.Env, e fgg.Expr, u fgg.Type,
+func wrapExpr(ds []Decl, delta fgg.Delta, gamma fgg.Gamma, e fgg.FGGExpr, u fgg.Type,
 	wrappers map[Type]adptrPair) Expr {
 	t := toFgTypeFromBounds(delta, u)
 	if isFggSTypeLit(ds, t) {
@@ -426,7 +426,7 @@ func mkRep(u fgg.Type) Expr {
 	switch u1 := u.(type) {
 	case fgg.TParam:
 		return TmpTParam{u1.String()}
-	case fgg.TName:
+	case fgg.TNamed:
 		us := u1.GetTArgs()
 		es := make([]Expr, len(us))
 		for i := 0; i < len(us); i++ {
@@ -442,7 +442,7 @@ func mkRep(u fgg.Type) Expr {
 
 // targ is a t_I
 // TODO: rename, cf. wrap(ds, delta, gamma, e, u)
-func makeAdptr(delta fgg.TEnv, e Expr, subj fgg.Type, targ fgg.Type,
+func makeAdptr(delta fgg.Delta, e Expr, subj fgg.Type, targ fgg.Type,
 	wrappers map[Type]adptrPair) StructLit {
 	t1 := Type(toFgTypeFromBounds(delta, subj))
 	t_I := Type(toFgTypeFromBounds(delta, targ))
@@ -487,7 +487,7 @@ func getMDecl(ds []Decl, t Type, m Name) fgg.MDecl {
 	panic("Method not found for type " + string(t) + ": " + m)
 }
 
-func addGetValueCast(delta fgg.TEnv, e Expr, u fgg.Type) Expr {
+func addGetValueCast(delta fgg.Delta, e Expr, u fgg.Type) Expr {
 	e3 := NewCall(e, Name("getValue"), []Expr{})
 	//e = NewAssert(e, toFgTypeFromBounds(delta, u)) // TODO FIXME: mkRep -- "FG" for now, not FGR
 	e2 := mkRep(u)

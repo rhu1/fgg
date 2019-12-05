@@ -31,21 +31,21 @@ func (c *fg2fgg) convert() error {
 			if err != nil {
 				return err
 			}
-			c.fggProg.ds = append(c.fggProg.ds, sTypeLit)
+			c.fggProg.decls = append(c.fggProg.decls, sTypeLit)
 
 		case fg.ITypeLit:
 			iTypeLit, err := c.convertITypeLit(decl)
 			if err != nil {
 				return err
 			}
-			c.fggProg.ds = append(c.fggProg.ds, iTypeLit)
+			c.fggProg.decls = append(c.fggProg.decls, iTypeLit)
 
 		case fg.MDecl:
 			mDecl, err := c.convertMDecl(decl)
 			if err != nil {
 				return err
 			}
-			c.fggProg.ds = append(c.fggProg.ds, mDecl)
+			c.fggProg.decls = append(c.fggProg.decls, mDecl)
 
 		default:
 			return fmt.Errorf("unknown declaration type: %T", decl)
@@ -56,14 +56,14 @@ func (c *fg2fgg) convert() error {
 	if err != nil {
 		return err
 	}
-	c.fggProg.e = expr
+	c.fggProg.e_main = expr
 
 	return nil
 }
 
 // convertType converts a plain type to a parameterised type
-func (c *fg2fgg) convertType(t fg.Type) (Name, TFormals) {
-	return Name(t.String()), TFormals{tfs: nil} // 0 formal parameters
+func (c *fg2fgg) convertType(t fg.Type) (Name, pDecls) {
+	return Name(t.String()), pDecls{tFormals: nil} // 0 formal parameters
 }
 
 func (c *fg2fgg) convertSTypeLit(s fg.STypeLit) (STypeLit, error) {
@@ -78,7 +78,7 @@ func (c *fg2fgg) convertSTypeLit(s fg.STypeLit) (STypeLit, error) {
 		fieldDecls = append(fieldDecls, fd)
 	}
 
-	return STypeLit{t: typeName, psi: typeFormals, fds: fieldDecls}, nil
+	return STypeLit{t_name: typeName, psi: typeFormals, fDecls: fieldDecls}, nil
 }
 
 func (c *fg2fgg) convertITypeLit(i fg.ITypeLit) (ITypeLit, error) {
@@ -98,24 +98,24 @@ func (c *fg2fgg) convertITypeLit(i fg.ITypeLit) (ITypeLit, error) {
 		retTypeName, _ := c.convertType(sig.GetReturn())
 
 		specs = append(specs, Sig{
-			m:   Name(sig.GetName()),
-			psi: TFormals{tfs: nil},
-			pds: paramDecls,
-			u:   TName{t: retTypeName},
+			meth:   Name(sig.GetName()),
+			psi:    pDecls{tFormals: nil},
+			pDecls: paramDecls,
+			u_ret:  TNamed{t_name: retTypeName},
 		})
 	}
 
-	return ITypeLit{t: typeName, psi: typeFormals, ss: specs}, nil
+	return ITypeLit{t_I: typeName, psi: typeFormals, specs: specs}, nil
 }
 
 func (c *fg2fgg) convertFieldDecl(fd fg.FieldDecl) (FieldDecl, error) {
 	typeName, _ := c.convertType(fd.GetType())
-	return FieldDecl{f: fd.GetName(), u: TName{t: typeName}}, nil
+	return FieldDecl{field: fd.GetName(), u: TNamed{t_name: typeName}}, nil
 }
 
 func (c *fg2fgg) convertParamDecl(pd fg.ParamDecl) (ParamDecl, error) {
 	typeName, _ := c.convertType(pd.GetType())
-	return ParamDecl{x: pd.GetName(), u: TName{t: typeName}}, nil
+	return ParamDecl{name: pd.GetName(), u: TNamed{t_name: typeName}}, nil
 }
 
 func (c *fg2fgg) convertMDecl(md fg.MDecl) (MDecl, error) {
@@ -140,18 +140,18 @@ func (c *fg2fgg) convertMDecl(md fg.MDecl) (MDecl, error) {
 		x_recv:   md.GetReceiver().GetName(),
 		t_recv:   recvTypeName,
 		psi_recv: recvTypeFormals,
-		m:        Name(md.GetName()),
-		psi:      TFormals{}, // empty parameter
-		pds:      paramDecls,
-		u:        TName{t: retTypeName},
-		e:        methImpl,
+		name:     Name(md.GetName()),
+		psi_meth: pDecls{}, // empty parameter
+		pDecls:   paramDecls,
+		u_ret:    TNamed{t_name: retTypeName},
+		e_body:   methImpl,
 	}, nil
 }
 
-func (c *fg2fgg) convertExpr(expr base.Expr) (Expr, error) {
+func (c *fg2fgg) convertExpr(expr base.Expr) (FGGExpr, error) {
 	switch expr := expr.(type) {
 	case fg.Variable:
-		return Variable{id: expr.String()}, nil
+		return Variable{name: expr.String()}, nil
 
 	case fg.StructLit:
 		sLitExpr, err := c.convertStructLit(expr)
@@ -172,7 +172,7 @@ func (c *fg2fgg) convertExpr(expr base.Expr) (Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		return Select{e: selExpr, f: Name(expr.GetField())}, nil
+		return Select{e_S: selExpr, field: Name(expr.GetField())}, nil
 
 	case fg.Assert:
 		assertExpr, err := c.convertExpr(expr.GetExpr())
@@ -180,7 +180,7 @@ func (c *fg2fgg) convertExpr(expr base.Expr) (Expr, error) {
 			return nil, err
 		}
 		assType, _ := c.convertType(expr.GetType())
-		return Assert{e: assertExpr, u: TName{t: assType}}, nil
+		return Assert{expr: assertExpr, u_cast: TNamed{t_name: assType}}, nil
 	}
 
 	return nil, fmt.Errorf("unknown expression type: %T", expr)
@@ -189,7 +189,7 @@ func (c *fg2fgg) convertExpr(expr base.Expr) (Expr, error) {
 func (c *fg2fgg) convertStructLit(sLit fg.StructLit) (StructLit, error) {
 	structType, _ := c.convertType(sLit.GetType())
 
-	var es []Expr
+	var es []FGGExpr
 	for _, expr := range sLit.GetElems() {
 		fieldExpr, err := c.convertExpr(expr)
 		if err != nil {
@@ -198,7 +198,7 @@ func (c *fg2fgg) convertStructLit(sLit fg.StructLit) (StructLit, error) {
 		es = append(es, fieldExpr)
 	}
 
-	return StructLit{u: TName{t: structType}, es: es}, nil
+	return StructLit{u_S: TNamed{t_name: structType}, elems: es}, nil
 }
 
 func (c *fg2fgg) convertCall(call fg.Call) (Call, error) {
@@ -207,7 +207,7 @@ func (c *fg2fgg) convertCall(call fg.Call) (Call, error) {
 		return Call{}, err
 	}
 
-	var args []Expr
+	var args []FGGExpr
 	for _, arg := range call.GetArgs() {
 		argExpr, err := c.convertExpr(arg)
 		if err != nil {
@@ -216,5 +216,5 @@ func (c *fg2fgg) convertCall(call fg.Call) (Call, error) {
 		args = append(args, argExpr)
 	}
 
-	return Call{e: e, m: Name(call.GetMethod()), args: args}, nil
+	return Call{e_recv: e, meth: Name(call.GetMethod()), args: args}, nil
 }

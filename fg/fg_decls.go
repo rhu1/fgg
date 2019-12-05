@@ -76,7 +76,7 @@ func (p FGProgram) Ok(allowStupid bool) {
 				v.String())
 		}
 	}
-	var gamma Env // Empty env for main
+	var gamma Gamma // Empty env for main
 	p.e_main.Typing(p.decls, gamma, allowStupid)
 }
 
@@ -191,7 +191,7 @@ func (md MDecl) Ok(ds []Decl) {
 		panic("Receiver must be a struct type: not " + md.recv.t.String() +
 			"\n\t" + md.String())
 	}
-	env := Env{md.recv.name: md.recv.t}
+	env := Gamma{md.recv.name: md.recv.t}
 	for _, v := range md.pDecls {
 		env[v.name] = v.t
 	}

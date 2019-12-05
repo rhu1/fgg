@@ -35,7 +35,7 @@ func (x Variable) Eval(ds []Decl) (FGExpr, string) {
 	panic("Cannot evaluate free variable: " + x.name)
 }
 
-func (x Variable) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
+func (x Variable) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 	res, ok := gamma[x.name]
 	if !ok {
 		panic("Var not in env: " + x.String())
@@ -94,7 +94,7 @@ func (s StructLit) Eval(ds []Decl) (FGExpr, string) {
 	}
 }
 
-func (s StructLit) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
+func (s StructLit) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 	fs := fields(ds, s.t_S)
 	if len(s.elems) != len(fs) {
 		var b strings.Builder
@@ -179,7 +179,7 @@ func (s Select) Eval(ds []Decl) (FGExpr, string) {
 	panic("Field not found: " + s.field)
 }
 
-func (s Select) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
+func (s Select) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 	t := s.e_S.Typing(ds, gamma, allowStupid)
 	if !isStructType(ds, t) {
 		panic("Illegal select on non-struct type expr: " + t)
@@ -259,7 +259,7 @@ func (c Call) Eval(ds []Decl) (FGExpr, string) {
 	return e.Subs(subs), "Call" // N.B. single combined substitution map slightly different to R-Call
 }
 
-func (c Call) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
+func (c Call) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 	t0 := c.e_recv.Typing(ds, gamma, allowStupid)
 	var g Sig
 	if tmp, ok := methods(ds, t0)[c.meth]; !ok { // !!! submission version had "methods(m)"
@@ -318,52 +318,52 @@ func (c Call) ToGoString() string {
 var _ FGExpr = Assert{}
 
 type Assert struct {
-	e_I FGExpr
-	t   Type
+	e_I    FGExpr
+	t_cast Type
 }
 
 func (a Assert) GetExpr() FGExpr { return a.e_I }
-func (a Assert) GetType() Type   { return a.t }
+func (a Assert) GetType() Type   { return a.t_cast }
 
 func (a Assert) Subs(subs map[Variable]FGExpr) FGExpr {
-	return Assert{a.e_I.Subs(subs), a.t}
+	return Assert{a.e_I.Subs(subs), a.t_cast}
 }
 
 func (a Assert) Eval(ds []Decl) (FGExpr, string) {
 	if !a.e_I.IsValue() {
 		e, rule := a.e_I.Eval(ds)
-		return Assert{e.(FGExpr), a.t}, rule
+		return Assert{e.(FGExpr), a.t_cast}, rule
 	}
-	t := a.e_I.(StructLit).t_S
-	if !isStructType(ds, t) {
-		panic("Non struct type found in struct lit: " + t)
+	t_S := a.e_I.(StructLit).t_S
+	if !isStructType(ds, t_S) {
+		panic("Non struct type found in struct lit: " + t_S)
 	}
-	if t.Impls(ds, a.t) {
+	if t_S.Impls(ds, a.t_cast) {
 		return a.e_I, "Assert"
 	}
 	panic("Cannot reduce: " + a.String())
 }
 
-func (a Assert) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
+func (a Assert) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 	t := a.e_I.Typing(ds, gamma, allowStupid)
 	if isStructType(ds, t) {
 		if allowStupid {
-			return a.t
+			return a.t_cast
 		} else {
 			panic("Expr must be an interface type (in a non-stupid context): found " +
 				t.String() + " for\n\t" + a.String())
 		}
 	}
 	// t is an interface type
-	if isInterfaceType(ds, a.t) {
-		return a.t // No further checks -- N.B., Robert said they are looking to refine this
+	if isInterfaceType(ds, a.t_cast) {
+		return a.t_cast // No further checks -- N.B., Robert said they are looking to refine this
 	}
 	// a.t is a struct type
-	if a.t.Impls(ds, t) {
-		return a.t
+	if a.t_cast.Impls(ds, t) {
+		return a.t_cast
 	}
 	panic("Struct type assertion must implement expr type: asserted=" +
-		a.t.String() + ", expr=" + t.String())
+		a.t_cast.String() + ", expr=" + t.String())
 }
 
 // From base.Expr
@@ -375,7 +375,7 @@ func (a Assert) String() string {
 	var b strings.Builder
 	b.WriteString(a.e_I.String())
 	b.WriteString(".(")
-	b.WriteString(a.t.String())
+	b.WriteString(a.t_cast.String())
 	b.WriteString(")")
 	return b.String()
 }
@@ -384,7 +384,7 @@ func (a Assert) ToGoString() string {
 	var b strings.Builder
 	b.WriteString(a.e_I.ToGoString())
 	b.WriteString(".(main.")
-	b.WriteString(a.t.String())
+	b.WriteString(a.t_cast.String())
 	b.WriteString(")")
 	return b.String()
 }

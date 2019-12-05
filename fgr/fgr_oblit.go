@@ -16,9 +16,9 @@ var _ = reflect.Append
 func Obliterate(p_fgg fgg.FGGProgram) FGRProgram { // CHECKME can also subsume existing FGG-FG trans?
 	ds_fgg := p_fgg.GetDecls()
 
-	e_fgg := p_fgg.GetMain().(fgg.Expr)
-	var delta fgg.TEnv
-	var gamma fgg.Env
+	e_fgg := p_fgg.GetMain().(fgg.FGGExpr)
+	var delta fgg.Delta
+	var gamma fgg.Gamma
 	e_fgr := oblitExpr(ds_fgg, delta, gamma, e_fgg)
 
 	// Translate Decls
@@ -31,7 +31,7 @@ func Obliterate(p_fgg fgg.FGGProgram) FGRProgram { // CHECKME can also subsume e
 		case fgg.STypeLit:
 			recv_getRep := NewParamDecl("x0", Type(d.GetName())) // TODO: factor out constant
 			t_S := d.GetName()
-			tfs := d.GetTFormals().GetFormals()
+			tfs := d.GetPsi().GetTFormals()
 			es := make([]Expr, len(tfs))
 			for i := 0; i < len(es); i++ {
 				es[i] = NewSelect(NewVariable("x0"), tfs[i].GetTParam().String())
@@ -55,8 +55,8 @@ func Obliterate(p_fgg fgg.FGGProgram) FGRProgram { // CHECKME can also subsume e
 
 func oblitSTypeLit(s fgg.STypeLit) STypeLit {
 	t := Type(s.GetName())
-	psi := s.GetTFormals()
-	tfs := psi.GetFormals()
+	psi := s.GetPsi()
+	tfs := psi.GetTFormals()
 	/*rds := make([]RepDecl, len(tfs))
 	for i := 0; i < len(rds); i++ {
 		tf := tfs[i]
@@ -67,7 +67,7 @@ func oblitSTypeLit(s fgg.STypeLit) STypeLit {
 	for i := 0; i < len(tfs); i++ {
 		fds_fgr[i] = NewFieldDecl(tfs[i].GetTParam().String(), TRep)
 	}
-	delta := psi.ToTEnv()
+	delta := psi.ToDelta()
 	for i := 0; i < len(fds_fgg); i++ {
 		fd_fgg := fds_fgg[i]
 		erased := toFgrTypeFromBounds(delta, fd_fgg.GetType())
@@ -95,7 +95,7 @@ func oblitITypeLit(c fgg.ITypeLit) ITypeLit {
 
 func oblitSig(g_fgg fgg.Sig) Sig {
 	m := g_fgg.GetName()
-	tfs := g_fgg.GetTFormals().GetFormals()
+	tfs := g_fgg.GetPsi().GetTFormals()
 	pds_fgg := g_fgg.GetParamDecls()
 	pds_fgr := make([]ParamDecl, len(tfs)+len(pds_fgg))
 	for i := 0; i < len(tfs); i++ {
@@ -117,8 +117,8 @@ func oblitMDecl(ds_fgg []Decl, d fgg.MDecl) MDecl {
 	t_recv := Type(d.GetRecvTypeName())
 	recv_fgr := NewParamDecl(x_recv, t_recv)
 	m := d.GetName()
-	tfs := d.GetMDeclTFormals().GetFormals()
-	recv_tfs := d.GetRecvTFormals().GetFormals()
+	tfs := d.GetMDeclPsi().GetTFormals()
+	recv_tfs := d.GetRecvPsi().GetTFormals()
 	/*rds := make([]RepDecl, len(tfs))
 	for i := 0; i < len(tfs); i++ {
 		tf := tfs[i]
@@ -131,11 +131,11 @@ func oblitMDecl(ds_fgg []Decl, d fgg.MDecl) MDecl {
 		pds_fgr[i] = NewParamDecl(tf.GetTParam().String(), TRep)
 	}
 	t_fgr := Type("GetRep")
-	delta := d.GetRecvTFormals().ToTEnv()
+	delta := d.GetRecvPsi().ToDelta()
 	for i := 0; i < len(tfs); i++ {
 		tf := tfs[i]
 		a := tf.GetTParam()
-		delta[a] = tf.GetType() // CHECKME: bounds on GetType?
+		delta[a] = tf.GetUpperBound() // CHECKME: bounds on GetType?
 	}
 	subs := make(map[Variable]Expr)
 	v_recv := NewVariable(x_recv)
@@ -154,8 +154,8 @@ func oblitMDecl(ds_fgg []Decl, d fgg.MDecl) MDecl {
 		//if _, ok := u.(fgg.TParam); ok || fgg.IsInterfaceTName1(ds_fgg, u) { // !!! cf. y := y.(erase(\sigma)) -- no: allowStupid
 		subs[v] = NewAssert(v, toFgrTypeFromBounds(delta, u))
 	}
-	gamma := make(fgg.Env)
-	tfs_recv := d.GetRecvTFormals().GetFormals()
+	gamma := make(fgg.Gamma)
+	tfs_recv := d.GetRecvPsi().GetTFormals()
 	us_fgg := make([]fgg.Type, len(tfs_recv))
 	for i := 0; i < len(tfs_recv); i++ {
 		us_fgg[i] = tfs_recv[i].GetTParam()
@@ -165,21 +165,20 @@ func oblitMDecl(ds_fgg []Decl, d fgg.MDecl) MDecl {
 		pd := pds_fgg[i]
 		gamma[pd.GetName()] = pd.GetType()
 	}
-	e_fgr := oblitExpr(ds_fgg, delta, gamma, d.GetExpr())
+	e_fgr := oblitExpr(ds_fgg, delta, gamma, d.GetBody())
 	e_fgr = e_fgr.Subs(subs)
 	return NewMDecl(recv_fgr, m /*rds,*/, pds_fgr, t_fgr, e_fgr)
 }
 
-func oblitExpr(ds_fgg []Decl, delta fgg.TEnv, gamma fgg.Env,
-	e_fgg fgg.Expr) Expr {
+func oblitExpr(ds_fgg []Decl, delta fgg.Delta, gamma fgg.Gamma, e_fgg fgg.FGGExpr) Expr {
 	switch e := e_fgg.(type) {
 	case fgg.Variable:
 		return NewVariable(e.GetName())
 	case fgg.StructLit:
-		u := e.GetTName()
+		u := e.GetNamedType()
 		t := Type(u.GetName())
 		us := u.GetTArgs()
-		es_fgg := e.GetArgs()
+		es_fgg := e.GetElems()
 		es_fgr := make([]Expr, len(us)+len(es_fgg))
 		for i := 0; i < len(us); i++ {
 			es_fgr[i] = oblitMkRep(us[i])
@@ -191,9 +190,9 @@ func oblitExpr(ds_fgg []Decl, delta fgg.TEnv, gamma fgg.Env,
 	case fgg.Select:
 		e_fgg := e.GetExpr() // Shadows original e_fgg
 		e_fgr := oblitExpr(ds_fgg, delta, gamma, e_fgg)
-		f := e.GetName()
-		u := e_fgg.Typing(ds_fgg, delta, gamma, true).(fgg.TName)
-		fds_fgg := fgg.Fields1(ds_fgg, u)
+		f := e.GetField()
+		u := e_fgg.Typing(ds_fgg, delta, gamma, true).(fgg.TNamed)
+		fds_fgg := fgg.Fields(ds_fgg, u)
 		var u_f fgg.Type = nil
 		for _, fd_fgg := range fds_fgg {
 			if fd_fgg.GetName() == f {
@@ -208,14 +207,14 @@ func oblitExpr(ds_fgg []Decl, delta fgg.TEnv, gamma fgg.Env,
 		res = NewSelect(e_fgr, f)
 		du := dtype(ds_fgg, delta, gamma, e)
 		//if !fgg.IsStructTName1(ds_fgg, u_f) { // !!! don't add cast when field type is a struct
-		if !fgg.IsStructTName1(ds_fgg, du) { // if the FGR field decl type is (erased) non-struct, in general need to cast the select result to the (erasure of the) expected FGG type
+		if !fgg.IsStructType(ds_fgg, du) { // if the FGR field decl type is (erased) non-struct, in general need to cast the select result to the (erasure of the) expected FGG type
 			res = NewAssert(res, toFgrTypeFromBounds(delta, u_f))
 		}
 		return res
 	case fgg.Call:
 		e_fgg := e.GetRecv() // Shadows original e_fgg
 		e_fgr := oblitExpr(ds_fgg, delta, gamma, e_fgg)
-		m := e.GetName()
+		m := e.GetMethod()
 		targs := e.GetTArgs()
 		es_fgg := e.GetArgs()
 		es_fgr := make([]Expr, len(targs)+len(es_fgg))
@@ -227,9 +226,9 @@ func oblitExpr(ds_fgg []Decl, delta fgg.TEnv, gamma fgg.Env,
 		}
 
 		u_recv := e_fgg.Typing(ds_fgg, delta, gamma, true)
-		g := fgg.Methods1(ds_fgg, fgg.Bounds1(delta, u_recv))[m]
+		g := fgg.Methods(ds_fgg, fgg.Bounds(delta, u_recv))[m]
 		tsubs := make(map[fgg.TParam]fgg.Type)
-		tfs := g.GetTFormals().GetFormals()
+		tfs := g.GetPsi().GetTFormals()
 		for i := 0; i < len(targs); i++ {
 			tsubs[tfs[i].GetTParam()] = targs[i]
 		}
@@ -254,28 +253,28 @@ func oblitExpr(ds_fgg []Decl, delta fgg.TEnv, gamma fgg.Env,
 /* Helper */
 
 // i.e., "erase" -- cf. oblit
-func toFgrTypeFromBounds(delta fgg.TEnv, u fgg.Type) Type {
-	return Type(fgg.Bounds1(delta, u).(fgg.TName).GetName())
+func toFgrTypeFromBounds(delta fgg.Delta, u fgg.Type) Type {
+	return Type(fgg.Bounds(delta, u).(fgg.TNamed).GetName())
 }
 
 // TODO: check where dtype should be used in wrapper translation -- and add unit tests (when return type is type param, don't want the FGG type arg, which may be struct; want the FGR target decl type as the wrapper target)
-func dtype(ds []Decl, delta fgg.TEnv, gamma fgg.Env, d fgg.Expr) fgg.Type {
+func dtype(ds []Decl, delta fgg.Delta, gamma fgg.Gamma, d fgg.FGGExpr) fgg.Type {
 	switch e := d.(type) {
 	case fgg.Variable:
 		return gamma[e.GetName()]
 	case fgg.StructLit:
-		t_S := e.GetTName().GetName()
-		td := fgg.GetTDecl1(ds, t_S).(fgg.STypeLit)
-		tfs := td.GetTFormals().GetFormals()
+		t_S := e.GetNamedType().GetName()
+		td := fgg.GetTDecl(ds, t_S).(fgg.STypeLit)
+		tfs := td.GetPsi().GetTFormals()
 		us := make([]fgg.Type, len(tfs))
 		for i := 0; i < len(us); i++ {
 			us[i] = fgg.TParam(tfs[i].GetTParam().String())
 		}
 		return fgg.NewTName(t_S, us)
 	case fgg.Select:
-		u := dtype(ds, delta, gamma, e.GetExpr()).(fgg.TName)
-		fds := fgg.Fields1(ds, u)
-		f := e.GetName()
+		u := dtype(ds, delta, gamma, e.GetExpr()).(fgg.TNamed)
+		fds := fgg.Fields(ds, u)
+		f := e.GetField()
 		for _, fd := range fds {
 			if fd.GetName() == f {
 				return fd.GetType()
@@ -283,8 +282,8 @@ func dtype(ds []Decl, delta fgg.TEnv, gamma fgg.Env, d fgg.Expr) fgg.Type {
 		}
 		panic("Field " + f + "not found in: " + u.String())
 	case fgg.Call:
-		u := fgg.Bounds1(delta, dtype(ds, delta, gamma, e.GetRecv()))
-		g := fgg.Methods1(ds, u)[e.GetName()]
+		u := fgg.Bounds(delta, dtype(ds, delta, gamma, e.GetRecv()))
+		g := fgg.Methods(ds, u)[e.GetMethod()]
 		return g.GetType()
 	case fgg.Assert:
 		return e.GetType()
@@ -299,7 +298,7 @@ func oblitMkRep(u fgg.Type) Expr {
 	switch u1 := u.(type) {
 	case fgg.TParam:
 		return TmpTParam{u1.String()}
-	case fgg.TName:
+	case fgg.TNamed:
 		return makeTypeTree(u1)
 	default:
 		panic("Unknown fgg.Type kind " + reflect.TypeOf(u).String() + ": " +
@@ -307,7 +306,7 @@ func oblitMkRep(u fgg.Type) Expr {
 	}
 }
 
-func makeTypeTree(u1 fgg.TName) TypeTree {
+func makeTypeTree(u1 fgg.TNamed) TypeTree {
 	us := u1.GetTArgs()
 	es := make([]Expr, len(us))
 	for i := 0; i < len(us); i++ {

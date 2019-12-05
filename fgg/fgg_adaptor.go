@@ -71,7 +71,7 @@ func (a *FGGAdaptor) ExitTypeName(ctx *parser.TypeNameContext) {
 			us[i] = a.pop().(Type) // Adding backwards
 		}
 	}
-	a.push(TName{t, us})
+	a.push(TNamed{t, us})
 }
 
 func (a *FGGAdaptor) ExitTypeFormals(ctx *parser.TypeFormalsContext) {
@@ -83,7 +83,7 @@ func (a *FGGAdaptor) ExitTypeFormals(ctx *parser.TypeFormalsContext) {
 			tfs[i] = a.pop().(TFormal) // Adding backwards
 		}
 	}
-	a.push(TFormals{tfs})
+	a.push(pDecls{tfs})
 }
 
 func (a *FGGAdaptor) ExitTypeFDecl(ctx *parser.TypeFDeclContext) {
@@ -96,7 +96,7 @@ func (a *FGGAdaptor) ExitTypeFDecl(ctx *parser.TypeFDeclContext) {
 
 // Same as FG
 func (a *FGGAdaptor) ExitProgram(ctx *parser.ProgramContext) {
-	body := a.pop().(Expr)
+	body := a.pop().(FGGExpr)
 	var ds []Decl
 	offset := 0 // TODO: refactor
 	printf := false
@@ -124,13 +124,13 @@ func (a *FGGAdaptor) ExitProgram(ctx *parser.ProgramContext) {
 func (a *FGGAdaptor) ExitTypeDecl(ctx *parser.TypeDeclContext) {
 	t := Name(ctx.GetChild(1).(*antlr.TerminalNodeImpl).GetText())
 	td := a.pop().(TDecl)
-	psi := a.pop().(TFormals)
+	psi := a.pop().(pDecls)
 	if s, ok := td.(STypeLit); ok { // N.B. s is a *copy* of td
-		s.t = t
+		s.t_name = t
 		s.psi = psi
 		a.push(s)
 	} else if c, ok := td.(ITypeLit); ok {
-		c.t = t
+		c.t_I = t
 		c.psi = psi
 		a.push(c)
 	} else {
@@ -151,7 +151,7 @@ func (a *FGGAdaptor) ExitStructTypeLit(ctx *parser.StructTypeLitContext) {
 			fds[i] = fd // Adding backwards
 		}
 	}
-	a.push(STypeLit{"^", TFormals{}, fds}) // "^" and TFormals{} to be overwritten in ExitTypeDecl
+	a.push(STypeLit{"^", pDecls{}, fds}) // "^" and TFormals{} to be overwritten in ExitTypeDecl
 }
 
 func (a *FGGAdaptor) ExitFieldDecl(ctx *parser.FieldDeclContext) {
@@ -165,12 +165,12 @@ func (a *FGGAdaptor) ExitFieldDecl(ctx *parser.FieldDeclContext) {
 
 func (a *FGGAdaptor) ExitMethDecl(ctx *parser.MethDeclContext) {
 	// Reverse order
-	e := a.pop().(Expr)
+	e := a.pop().(FGGExpr)
 	g := a.pop().(Sig)
-	psi := a.pop().(TFormals)
+	psi := a.pop().(pDecls)
 	t := Name(ctx.GetTypn().GetText())
 	recv := Name(ctx.GetRecv().GetText())
-	a.push(MDecl{recv, t, psi, g.m, g.psi, g.pds, g.u, e})
+	a.push(MDecl{recv, t, psi, g.meth, g.psi, g.pDecls, g.u_ret, e})
 }
 
 // Cf. ExitFieldDecl
@@ -193,7 +193,7 @@ func (a *FGGAdaptor) ExitInterfaceTypeLit(ctx *parser.InterfaceTypeLitContext) {
 			ss[i] = s // Adding backwards
 		}
 	}
-	a.push(ITypeLit{"^", TFormals{}, ss}) // "^" and TFormals{} to be overwritten in ExitTypeDecl
+	a.push(ITypeLit{"^", pDecls{}, ss}) // "^" and TFormals{} to be overwritten in ExitTypeDecl
 }
 
 func (a *FGGAdaptor) ExitSigSpec(ctx *parser.SigSpecContext) {
@@ -201,7 +201,7 @@ func (a *FGGAdaptor) ExitSigSpec(ctx *parser.SigSpecContext) {
 }
 
 func (a *FGGAdaptor) ExitInterfaceSpec(ctx *parser.InterfaceSpecContext) {
-	a.push(a.pop().(TName)) // Check TName (should specifically be a \tau_I) -- CHECKME: enforce in BNF?
+	a.push(a.pop().(TNamed)) // Check TName (should specifically be a \tau_I) -- CHECKME: enforce in BNF?
 }
 
 func (a *FGGAdaptor) ExitSig(ctx *parser.SigContext) {
@@ -217,7 +217,7 @@ func (a *FGGAdaptor) ExitSig(ctx *parser.SigContext) {
 			pds[i] = a.pop().(ParamDecl) // Adding backwards
 		}
 	}
-	psi := a.pop().(TFormals)
+	psi := a.pop().(pDecls)
 	a.push(Sig{m, psi, pds, t})
 }
 
@@ -231,34 +231,34 @@ func (a *FGGAdaptor) ExitVariable(ctx *parser.VariableContext) {
 
 // Children: 0=typ (*antlr.TerminalNodeImpl), 1='{', 2=exprs (*parser.ExprsContext), 3='}'
 func (a *FGGAdaptor) ExitStructLit(ctx *parser.StructLitContext) {
-	var es []Expr
+	var es []FGGExpr
 	if ctx.GetChildCount() > 3 {
 		nes := (ctx.GetChild(2).GetChildCount() + 1) / 2 // e.g., 'x' ',' 'y' ',' 'z'
-		es = make([]Expr, nes)
+		es = make([]FGGExpr, nes)
 		for i := nes - 1; i >= 0; i-- {
-			es[i] = a.pop().(Expr) // Adding backwards
+			es[i] = a.pop().(FGGExpr) // Adding backwards
 		}
 	}
 	// If targs omitted, following will fail attempting to cast the non-param name parsed as a TParam
-	u := a.pop().(TName) // N.B. \tau_S, means "of the form t_S(~\tau)" (so a TName) -- i.e., not \alpha
+	u := a.pop().(TNamed) // N.B. \tau_S, means "of the form t_S(~\tau)" (so a TName) -- i.e., not \alpha
 	a.push(StructLit{u, es})
 }
 
 // Same as Fg
 func (a *FGGAdaptor) ExitSelect(ctx *parser.SelectContext) {
-	e := a.pop().(Expr)
+	e := a.pop().(FGGExpr)
 	f := Name(ctx.GetChild(2).(*antlr.TerminalNodeImpl).GetText())
 	a.push(Select{e, f})
 }
 
 func (a *FGGAdaptor) ExitCall(ctx *parser.CallContext) {
 	argCs := ctx.GetArgs()
-	var args []Expr
+	var args []FGGExpr
 	if argCs != nil {
 		nargs := (argCs.GetChildCount() + 1) / 2 // e.g., e ',' e ',' e
-		args = make([]Expr, nargs)
+		args = make([]FGGExpr, nargs)
 		for i := nargs - 1; i >= 0; i-- {
-			args[i] = a.pop().(Expr) // Adding backwards
+			args[i] = a.pop().(FGGExpr) // Adding backwards
 		}
 	}
 	targCs := ctx.GetTargs()
@@ -271,12 +271,12 @@ func (a *FGGAdaptor) ExitCall(ctx *parser.CallContext) {
 		}
 	}
 	m := Name(ctx.GetChild(2).(*antlr.TerminalNodeImpl).GetText())
-	e := a.pop().(Expr)
+	e := a.pop().(FGGExpr)
 	a.push(Call{e, m, targs, args})
 }
 
 func (a *FGGAdaptor) ExitAssert(ctx *parser.AssertContext) {
 	u := a.pop().(Type)
-	e := a.pop().(Expr)
+	e := a.pop().(FGGExpr)
 	a.push(Assert{e, u})
 }
