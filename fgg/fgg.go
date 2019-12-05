@@ -13,9 +13,16 @@ var _ = reflect.Append
 
 func NewTName(t Name, us []Type) TName { return TName{t, us} }
 
+/* Aliases from base */
+// TODO: refactor?
+
+type Name = base.Name
+type FGGNode = base.AstNode
+type Decl = base.Decl
+
 /* Name, Type, Type param, Type name -- !!! submission version, "Type name" overloaded */
 
-type Name = base.Name // TODO: tidy up refactoring, due to introducing base
+// Name: see Aliases (at top)
 
 type Type interface {
 	TSubs(subs map[TParam]Type) Type // TODO: factor out Subs type? -- N.B. map is TEnv
@@ -221,9 +228,7 @@ func (delta TEnv) String() string {
 
 /* AST base intefaces: FGGNode, Decl, TDecl, Spec, Expr */
 
-// TODO: tidy up refactoring, due to introducing base
-type FGGNode = base.AstNode
-type Decl = base.Decl
+// FGGNode, Decl: see Aliases (at top)
 
 type TDecl interface {
 	Decl
@@ -247,6 +252,7 @@ type Expr interface {
 /* Helpers */
 
 // Based on FG version -- but currently no FGG equiv of isInterfaceType
+// Helpful for MDecl.t_recv
 func isStructType(ds []Decl, t Name) bool {
 	for _, v := range ds {
 		d, ok := v.(STypeLit)
