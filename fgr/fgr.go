@@ -6,9 +6,16 @@ import "github.com/rhu1/fgg/base"
 
 import "github.com/rhu1/fgg/fgg"
 
+/* Aliases from base */
+// TODO: refactor?
+
+type Name = base.Name
+type FGRNode = base.AstNode
+type Decl = base.Decl
+
 /* Name, Context, Type */
 
-type Name = base.Name // TODO: tidy up refactoring, due to introducing base
+// Name: see Aliases (at top)
 
 type Env map[Name]Type // TODO: should be Variable rather than Name -- though Variable is an Expr
 
@@ -69,9 +76,7 @@ func (r Rep) String() string {
 
 /* AST base intefaces: FGRNode, Decl, TDecl, Spec, Expr */
 
-// TODO: tidy up refactoring, due to introducing base
-type FGRNode = base.AstNode
-type Decl = base.Decl
+// FGNode, Decl: see Aliases (at top)
 
 type TDecl interface {
 	Decl
