@@ -17,9 +17,9 @@ type Decl = base.Decl
 
 // Name: see Aliases (at top)
 
-type Env map[Name]Type // TODO: should be Variable rather than Name -- though Variable is an Expr
+type Gamma map[Name]Type // TODO: should be Variable rather than Name -- though Variable is an Expr
 
-// Same as FGR
+// Same as FG
 type Type Name // should be based on fgg.Type -- no: Rep now not parameterised
 
 var _ Spec = Type("")
@@ -76,14 +76,12 @@ func (r Rep) String() string {
 
 /* AST base intefaces: FGRNode, Decl, TDecl, Spec, Expr */
 
-// FGNode, Decl: see Aliases (at top)
+// FGRNode, Decl: see Aliases (at top)
 
 type TDecl interface {
 	Decl
 	GetType() Type // In FGR, GetType() == Type(GetName())
 }
-
-//0800 0287034
 
 // A Sig or a Type (specifically a t_I -- bad t_S usage raises a run-time error, cf. Type.GetSigs)
 type Spec interface {
@@ -91,17 +89,17 @@ type Spec interface {
 	GetSigs(ds []Decl) []Sig
 }
 
-type Expr interface {
+type FGRExpr interface {
 	base.Expr // Using the same name "Expr", maybe rename this type to FGRExpr
-	Subs(subs map[Variable]Expr) Expr
+	Subs(subs map[Variable]FGRExpr) FGRExpr
 
 	// N.B. gamma should be effectively immutable (and ds, of course)
 	// (No typing rule modifies gamma, except the T-Func bootstrap)
-	Typing(ds []Decl, gamma Env, allowStupid bool) Type
+	Typing(ds []Decl, gamma Gamma, allowStupid bool) Type
 
 	// string is the type name of the "actually evaluated" expr (within the eval context)
 	// CHECKME: resulting Exprs are not "parsed" from source, OK?
-	Eval(ds []Decl) (Expr, string)
+	Eval(ds []Decl) (FGRExpr, string)
 
 	//IsPanic() bool  // TODO "explicit" FGR panic -- cf. underlying runtime panic
 }

@@ -39,7 +39,7 @@ func methods(ds []Decl, t Type) map[Name]Sig {
 }
 
 // Pre: t_S is a struct type
-func body(ds []Decl, t_S Type, m Name) (Name, []Name, Expr) {
+func body(ds []Decl, t_S Type, m Name) (Name, []Name, FGRExpr) {
 	for _, v := range ds {
 		md, ok := v.(MDecl)
 		if ok && md.recv.t == t_S && md.m == m {
@@ -51,15 +51,6 @@ func body(ds []Decl, t_S Type, m Name) (Name, []Name, Expr) {
 		}
 	}
 	panic("Method not found: " + t_S.String() + "." + m)
-}
-
-// Post: returns a struct type
-func typ(ds []Decl, s StructLit) Type {
-	t_S := s.t
-	if !isStructType(ds, t_S) {
-		panic("Non struct type found in struct lit: " + s.String())
-	}
-	return t_S
 }
 
 func getTDecl(ds []Decl, t Type) TDecl {

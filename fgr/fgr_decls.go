@@ -15,7 +15,7 @@ import "github.com/rhu1/fgg/fgg"
 /* "Exported" constructors for fgg (monomorph) */
 
 // TODO: compact
-func NewFGRProgram(ds []Decl, e Expr) FGRProgram {
+func NewFGRProgram(ds []Decl, e FGRExpr) FGRProgram {
 	return FGRProgram{ds, e}
 }
 
@@ -28,7 +28,7 @@ func NewFieldDecl(f Name, t Type) FieldDecl {
 }
 
 func NewMDecl(recv ParamDecl, m Name /*rds []RepDecl,*/, pds []ParamDecl, t Type,
-	e Expr) MDecl {
+	e FGRExpr) MDecl {
 	return MDecl{recv, m /*rds,*/, pds, t, e}
 }
 
@@ -52,7 +52,7 @@ func (g Sig) GetMethName() Name { // Hack
 
 type FGRProgram struct {
 	ds []Decl
-	e  Expr
+	e  FGRExpr
 }
 
 var _ base.Program = FGRProgram{}
@@ -90,7 +90,7 @@ func (p FGRProgram) Ok(allowStupid bool) {
 				v.String())
 		}
 	}
-	var gamma Env // Empty env for main
+	var gamma Gamma // Empty env for main
 	p.e.Typing(p.ds, gamma, allowStupid)
 }
 
@@ -98,7 +98,7 @@ func (p FGRProgram) Ok(allowStupid bool) {
 // But doesn't affect FGRPprogam.Ok() (i.e., Expr.Typing)
 func (p FGRProgram) Eval() (base.Program, string) {
 	e, rule := p.e.Eval(p.ds)
-	return FGRProgram{p.ds, e.(Expr)}, rule
+	return FGRProgram{p.ds, e.(FGRExpr)}, rule
 }
 
 func (p FGRProgram) GetDecls() []Decl {
@@ -194,7 +194,7 @@ type MDecl struct {
 	//rds  []RepDecl
 	pds []ParamDecl
 	t   Type // Return
-	e   Expr
+	e   FGRExpr
 }
 
 var _ Decl = MDecl{}
@@ -207,7 +207,7 @@ func (md MDecl) MethodName() Name    { return md.m }
 // MethodParams returns the non-receiver parameters
 func (md MDecl) MethodParams() []ParamDecl { return md.pds }
 func (md MDecl) ReturnType() Type          { return md.t }
-func (md MDecl) Impl() Expr                { return md.e }
+func (md MDecl) Impl() FGRExpr             { return md.e }
 
 func (md MDecl) ToSig() Sig {
 	return Sig{md.m, md.pds, md.t}
@@ -218,7 +218,7 @@ func (md MDecl) Ok(ds []Decl) {
 		panic("Receiver must be a struct type: not " + md.recv.t.String() +
 			"\n\t" + md.String())
 	}
-	env := Env{md.recv.x: md.recv.t}
+	env := Gamma{md.recv.x: md.recv.t}
 	// TODO: rds
 	for _, v := range md.pds {
 		env[v.x] = v.t

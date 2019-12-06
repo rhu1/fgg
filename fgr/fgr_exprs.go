@@ -14,11 +14,11 @@ var _ = fmt.Errorf
 
 /* "Exported" constructors for fgg (translation) */
 
-func NewVariable(id Name) Variable             { return Variable{id} }
-func NewStructLit(t Type, es []Expr) StructLit { return StructLit{t, es} }
-func NewSelect(e Expr, f Name) Select          { return Select{e, f} }
-func NewCall(e Expr, m Name, es []Expr) Call   { return Call{e, m, es} }
-func NewAssert(e Expr, t Type) Assert          { return Assert{e, t} }
+func NewVariable(id Name) Variable                 { return Variable{id} }
+func NewStructLit(t Type, es []FGRExpr) StructLit  { return StructLit{t, es} }
+func NewSelect(e FGRExpr, f Name) Select           { return Select{e, f} }
+func NewCall(e FGRExpr, m Name, es []FGRExpr) Call { return Call{e, m, es} }
+func NewAssert(e FGRExpr, t Type) Assert           { return Assert{e, t} }
 
 /* Variable */
 
@@ -26,9 +26,9 @@ type Variable struct {
 	id Name
 }
 
-var _ Expr = Variable{}
+var _ FGRExpr = Variable{}
 
-func (x Variable) Subs(subs map[Variable]Expr) Expr {
+func (x Variable) Subs(subs map[Variable]FGRExpr) FGRExpr {
 	res, ok := subs[x]
 	if !ok {
 		panic("Unknown var: " + x.String())
@@ -36,11 +36,11 @@ func (x Variable) Subs(subs map[Variable]Expr) Expr {
 	return res
 }
 
-func (x Variable) Eval(ds []Decl) (Expr, string) {
+func (x Variable) Eval(ds []Decl) (FGRExpr, string) {
 	panic("Cannot reduce free variable: " + x.id)
 }
 
-func (x Variable) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
+func (x Variable) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 	res, ok := gamma[x.id]
 	if !ok {
 		panic("Var not in env: " + x.String())
@@ -64,24 +64,24 @@ func (x Variable) ToGoString() string {
 
 type StructLit struct {
 	t  Type
-	es []Expr
+	es []FGRExpr
 }
 
-func (s StructLit) Type() Type         { return s.t }
-func (s StructLit) FieldExprs() []Expr { return s.es }
+func (s StructLit) Type() Type            { return s.t }
+func (s StructLit) FieldExprs() []FGRExpr { return s.es }
 
-var _ Expr = StructLit{}
+var _ FGRExpr = StructLit{}
 
-func (s StructLit) Subs(subs map[Variable]Expr) Expr {
-	es := make([]Expr, len(s.es))
+func (s StructLit) Subs(subs map[Variable]FGRExpr) FGRExpr {
+	es := make([]FGRExpr, len(s.es))
 	for i := 0; i < len(s.es); i++ {
 		es[i] = s.es[i].Subs(subs)
 	}
 	return StructLit{s.t, es}
 }
 
-func (s StructLit) Eval(ds []Decl) (Expr, string) {
-	es := make([]Expr, len(s.es))
+func (s StructLit) Eval(ds []Decl) (FGRExpr, string) {
+	es := make([]FGRExpr, len(s.es))
 	done := false
 	var rule string
 	for i := 0; i < len(s.es); i++ {
@@ -99,7 +99,7 @@ func (s StructLit) Eval(ds []Decl) (Expr, string) {
 	}
 }
 
-func (s StructLit) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
+func (s StructLit) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 	fs := fields(ds, s.t)
 	if len(s.es) != len(fs) {
 		var b strings.Builder
@@ -155,23 +155,23 @@ func (s StructLit) ToGoString() string {
 /* Select */
 
 type Select struct {
-	e Expr
+	e FGRExpr
 	f Name
 }
 
-var _ Expr = Select{}
+var _ FGRExpr = Select{}
 
-func (s Select) Expr() Expr      { return s.e }
+func (s Select) Expr() FGRExpr   { return s.e }
 func (s Select) FieldName() Name { return s.f }
 
-func (s Select) Subs(subs map[Variable]Expr) Expr {
+func (s Select) Subs(subs map[Variable]FGRExpr) FGRExpr {
 	return Select{s.e.Subs(subs), s.f}
 }
 
-func (s Select) Eval(ds []Decl) (Expr, string) {
+func (s Select) Eval(ds []Decl) (FGRExpr, string) {
 	if !s.e.IsValue() {
 		e, rule := s.e.Eval(ds)
-		return Select{e.(Expr), s.f}, rule
+		return Select{e.(FGRExpr), s.f}, rule
 	}
 	v := s.e.(StructLit)
 	fds := fields(ds, v.t)
@@ -183,7 +183,7 @@ func (s Select) Eval(ds []Decl) (Expr, string) {
 	panic("Field not found: " + s.f)
 }
 
-func (s Select) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
+func (s Select) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 	t := s.e.Typing(ds, gamma, allowStupid)
 	if !isStructType(ds, t) {
 		panic("Illegal select on non-struct type expr: " + t)
@@ -212,32 +212,32 @@ func (s Select) ToGoString() string {
 /* Call */
 
 type Call struct {
-	e    Expr
+	e    FGRExpr
 	m    Name
-	args []Expr
+	args []FGRExpr
 }
 
-var _ Expr = Call{}
+var _ FGRExpr = Call{}
 
-func (c Call) Expr() Expr       { return c.e }
+func (c Call) Expr() FGRExpr    { return c.e }
 func (c Call) MethodName() Name { return c.m }
-func (c Call) Args() []Expr     { return c.args }
+func (c Call) Args() []FGRExpr  { return c.args }
 
-func (c Call) Subs(subs map[Variable]Expr) Expr {
+func (c Call) Subs(subs map[Variable]FGRExpr) FGRExpr {
 	e := c.e.Subs(subs)
-	args := make([]Expr, len(c.args))
+	args := make([]FGRExpr, len(c.args))
 	for i := 0; i < len(c.args); i++ {
 		args[i] = c.args[i].Subs(subs)
 	}
 	return Call{e, c.m, args}
 }
 
-func (c Call) Eval(ds []Decl) (Expr, string) {
+func (c Call) Eval(ds []Decl) (FGRExpr, string) {
 	if !c.e.IsValue() {
 		e, rule := c.e.Eval(ds)
-		return Call{e.(Expr), c.m, c.args}, rule
+		return Call{e.(FGRExpr), c.m, c.args}, rule
 	}
-	args := make([]Expr, len(c.args))
+	args := make([]FGRExpr, len(c.args))
 	done := false
 	var rule string
 	for i := 0; i < len(c.args); i++ {
@@ -254,7 +254,7 @@ func (c Call) Eval(ds []Decl) (Expr, string) {
 	// c.e and c.args all values
 	s := c.e.(StructLit)
 	x0, xs, e := body(ds, s.t, c.m) // panics if method not found
-	subs := make(map[Variable]Expr)
+	subs := make(map[Variable]FGRExpr)
 	subs[Variable{x0}] = c.e
 	for i := 0; i < len(xs); i++ {
 		subs[Variable{xs[i]}] = c.args[i]
@@ -262,7 +262,7 @@ func (c Call) Eval(ds []Decl) (Expr, string) {
 	return e.Subs(subs), "Call" // N.B. single combined substitution map slightly different to R-Call
 }
 
-func (c Call) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
+func (c Call) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 	t0 := c.e.Typing(ds, gamma, allowStupid)
 	var g Sig
 	if tmp, ok := methods(ds, t0)[c.m]; !ok { // !!! submission version had "methods(m)"
@@ -318,32 +318,35 @@ func (c Call) ToGoString() string {
 /* Assert */
 
 type Assert struct {
-	e Expr
+	e FGRExpr
 	t Type
 }
 
-var _ Expr = Assert{}
+var _ FGRExpr = Assert{}
 
-func (a Assert) Expr() Expr       { return a.e }
+func (a Assert) Expr() FGRExpr    { return a.e }
 func (a Assert) AssertType() Type { return a.t }
 
-func (a Assert) Subs(subs map[Variable]Expr) Expr {
+func (a Assert) Subs(subs map[Variable]FGRExpr) FGRExpr {
 	return Assert{a.e.Subs(subs), a.t}
 }
 
-func (a Assert) Eval(ds []Decl) (Expr, string) {
+func (a Assert) Eval(ds []Decl) (FGRExpr, string) {
 	if !a.e.IsValue() {
 		e, rule := a.e.Eval(ds)
-		return Assert{e.(Expr), a.t}, rule
+		return Assert{e.(FGRExpr), a.t}, rule
 	}
-	t_S := typ(ds, a.e.(StructLit)) // panics if StructLit.t is not a t_S
+	t_S := a.e.(StructLit).t
+	if !isStructType(ds, t_S) {
+		panic("Non struct type found in struct lit: " + t_S.String())
+	}
 	if t_S.Impls(ds, a.t) {
 		return a.e, "Assert"
 	}
 	panic("Cannot reduce: " + a.String())
 }
 
-func (a Assert) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
+func (a Assert) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 	t := a.e.Typing(ds, gamma, allowStupid)
 	if isStructType(ds, t) {
 		if allowStupid {
@@ -391,17 +394,17 @@ func (a Assert) ToGoString() string {
 
 type Panic struct{}
 
-var _ Expr = Panic{}
+var _ FGRExpr = Panic{}
 
-func (p Panic) Subs(subs map[Variable]Expr) Expr {
+func (p Panic) Subs(subs map[Variable]FGRExpr) FGRExpr {
 	return p
 }
 
-func (p Panic) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
+func (p Panic) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 	panic("TODO: " + p.String()) // FIXME: allow any t
 }
 
-func (p Panic) Eval(ds []Decl) (Expr, string) {
+func (p Panic) Eval(ds []Decl) (FGRExpr, string) {
 	panic("Cannot reduce panic.")
 }
 
@@ -420,21 +423,21 @@ func (p Panic) ToGoString() string {
 /* IfThenElse */
 
 type IfThenElse struct {
-	e1 Expr // Cannot hardcode Call, needs to be a general eval context
-	e2 Expr // TmpTParam (Variable) or TypeTree
-	e3 Expr
+	e1 FGRExpr // Cannot hardcode Call, needs to be a general eval context
+	e2 FGRExpr // TmpTParam (Variable) or TypeTree
+	e3 FGRExpr
 	//rho Map[fgg.Type]([]fgg.Sig)
 	src string // Original FGG source
 }
 
-var _ Expr = IfThenElse{}
+var _ FGRExpr = IfThenElse{}
 
-func (c IfThenElse) Subs(subs map[Variable]Expr) Expr {
+func (c IfThenElse) Subs(subs map[Variable]FGRExpr) FGRExpr {
 	return IfThenElse{c.e1.Subs(subs), c.e2.Subs(subs),
 		c.e3.Subs(subs), c.src}
 }
 
-func (c IfThenElse) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
+func (c IfThenElse) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 	if t1 := c.e1.Typing(ds, gamma, allowStupid); t1 != TRep {
 		panic("IfThenElse comparison LHS must be of type " + string(TRep) +
 			": found " + t1.String())
@@ -448,14 +451,14 @@ func (c IfThenElse) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
 	return t3
 }
 
-func (c IfThenElse) Eval(ds []Decl) (Expr, string) {
+func (c IfThenElse) Eval(ds []Decl) (FGRExpr, string) {
 	if !c.e1.IsValue() {
 		e, rule := c.e1.Eval(ds)
-		return IfThenElse{e.(Expr), c.e2, c.e3, c.src}, rule
+		return IfThenElse{e.(FGRExpr), c.e2, c.e3, c.src}, rule
 	}
 	if !c.e2.IsValue() {
 		e, rule := c.e2.Eval(ds)
-		return IfThenElse{c.e1, e.(Expr), c.e3, c.src}, rule
+		return IfThenElse{c.e1, e.(FGRExpr), c.e3, c.src}, rule
 	}
 
 	// TODO: refactor
@@ -504,10 +507,10 @@ func (c IfThenElse) ToGoString() string {
 
 type TypeTree struct {
 	t  Type
-	es []Expr // TypeTree or TmpTParam -- CHECKME: TmpTParam still needed?
+	es []FGRExpr // TypeTree or TmpTParam -- CHECKME: TmpTParam still needed?
 }
 
-var _ Expr = TypeTree{}
+var _ FGRExpr = TypeTree{}
 
 func (tt TypeTree) Reify() fgg.TNamed {
 	if !tt.IsValue() {
@@ -520,22 +523,22 @@ func (tt TypeTree) Reify() fgg.TNamed {
 	return fgg.NewTName(string(tt.t), us)
 }
 
-func (tt TypeTree) Subs(subs map[Variable]Expr) Expr {
-	es := make([]Expr, len(tt.es))
+func (tt TypeTree) Subs(subs map[Variable]FGRExpr) FGRExpr {
+	es := make([]FGRExpr, len(tt.es))
 	for i := 0; i < len(es); i++ {
 		es[i] = tt.es[i].Subs(subs)
 	}
 	return TypeTree{tt.t, es}
 }
 
-func (tt TypeTree) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
+func (tt TypeTree) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 	return TRep
 }
 
 // !!! TypeTree evaluation contexts vs. reify aux?
-func (tt TypeTree) Eval(ds []Decl) (Expr, string) {
+func (tt TypeTree) Eval(ds []Decl) (FGRExpr, string) {
 	// Cf. StructLit.Eval
-	es := make([]Expr, len(tt.es))
+	es := make([]FGRExpr, len(tt.es))
 	done := false
 	var rule string
 	for i := 0; i < len(es); i++ {
@@ -588,9 +591,9 @@ type TmpTParam struct {
 	id Name
 }
 
-var _ Expr = TmpTParam{}
+var _ FGRExpr = TmpTParam{}
 
-func (tmp TmpTParam) Subs(subs map[Variable]Expr) Expr {
+func (tmp TmpTParam) Subs(subs map[Variable]FGRExpr) FGRExpr {
 	a := NewVariable(tmp.id) // FIXME -- should just make Variable earlier? -- or make a Disamb pass?
 	if e, ok := subs[a]; ok {
 		return e
@@ -598,11 +601,11 @@ func (tmp TmpTParam) Subs(subs map[Variable]Expr) Expr {
 	return a // FIXME -- should not depend on calling Subs to disamb?
 }
 
-func (tmp TmpTParam) Typing(ds []Decl, gamma Env, allowStupid bool) Type {
+func (tmp TmpTParam) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 	panic("TODO: " + tmp.String()) // CHECKME?
 }
 
-func (tmp TmpTParam) Eval(ds []Decl) (Expr, string) {
+func (tmp TmpTParam) Eval(ds []Decl) (FGRExpr, string) {
 	panic("Shouldn't get in here: " + tmp.String())
 }
 
@@ -620,7 +623,7 @@ func (tmp TmpTParam) ToGoString() string {
 
 /* Aux, helpers */
 
-func writeExprs(b *strings.Builder, es []Expr) {
+func writeExprs(b *strings.Builder, es []FGRExpr) {
 	if len(es) > 0 {
 		b.WriteString(es[0].String())
 		for _, v := range es[1:] {
@@ -630,7 +633,7 @@ func writeExprs(b *strings.Builder, es []Expr) {
 	}
 }
 
-func writeToGoExprs(b *strings.Builder, es []Expr) {
+func writeToGoExprs(b *strings.Builder, es []FGRExpr) {
 	if len(es) > 0 {
 		b.WriteString(es[0].ToGoString())
 		for _, v := range es[1:] {

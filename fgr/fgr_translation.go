@@ -44,7 +44,7 @@ func Translate(p fgg.FGGProgram) FGRProgram { // TODO FIXME: FGR -- TODO also ca
 
 			// Add getValue/getTypeRep to all (existing) t_S -- every t_S must implement t_0 -- TODO: factor out with wrappers
 			//e_getv := fg.NewSelect(fg.NewVariable("x"), "value") // CHECKME: but t_S doesn't have value field, wrapper does?
-			e_getv := NewStructLit(Type("Dummy_0"), []Expr{})
+			e_getv := NewStructLit(Type("Dummy_0"), []FGRExpr{})
 			t := Type(d1.GetName())
 			getv := NewMDecl(NewParamDecl("x", t), "getValue",
 				//[]RepDecl{}, // FIXME
@@ -120,9 +120,9 @@ func Translate(p fgg.FGGProgram) FGRProgram { // TODO FIXME: FGR -- TODO also ca
 			}
 			u := g.GetType()
 			t := toFgTypeFromBounds(delta, u) // !!! tau_p typo, and delta'?
-			var e Expr
-			e = NewStructLit("Dummy_0", []Expr{})
-			e = NewStructLit("ToAny_0", []Expr{e})
+			var e FGRExpr
+			e = NewStructLit("Dummy_0", []FGRExpr{})
+			e = NewStructLit("ToAny_0", []FGRExpr{e})
 			e = NewSelect(e, "any")
 			//e = NewAssert(e, toFgTypeFromBounds(delta, u))
 			e = addGetValueCast(delta, e, u)
@@ -227,7 +227,7 @@ func fgrTransMDecl(ds []Decl, d1 fgg.MDecl, wrappers map[Type]adptrPair) MDecl {
 	e := wrapExpr(ds, delta, gamma, e_fgg, u, wrappers) // TODO FIXME: subs ~alpha?
 
 	// Substituting TmpTParam's
-	subs := make(map[Variable]Expr) // FIXME: Variable hack, actually subbing TmpTParam -- do as a separate disamb pass?
+	subs := make(map[Variable]FGRExpr) // FIXME: Variable hack, actually subbing TmpTParam -- do as a separate disamb pass?
 	subs[NewVariable(x_recv)] = NewVariable(x_recv)
 	for _, pd := range pds_fgg {
 		x := NewVariable(pd.GetName())
@@ -250,11 +250,11 @@ func fgrTransMDecl(ds []Decl, d1 fgg.MDecl, wrappers map[Type]adptrPair) MDecl {
 // TODO: rename ds -> ds_fgg
 // |e_FGG|_(\Delta; \Gamma) = e_FGR
 func fgrTransExpr(ds []Decl, delta fgg.Delta, gamma fgg.Gamma, e fgg.FGGExpr,
-	wrappers map[Type]adptrPair) Expr {
+	wrappers map[Type]adptrPair) FGRExpr {
 	switch e1 := e.(type) {
 	case fgg.Variable:
 		u := e1.Typing(ds, delta, gamma, false) // FIXME: should target type be `u` (possibly struct), or "base" (always i/face)?
-		var res Expr
+		var res FGRExpr
 		res = NewVariable(e1.GetName())
 		//if isInterfaceTName(ds, u) {
 		if isFggITypeLit(ds, toFgTypeFromBounds(delta, u)) { // CHECKME FIXME: should check "base" type, not `u` instantiated FGG type?
@@ -268,7 +268,7 @@ func fgrTransExpr(ds []Decl, delta fgg.Delta, gamma fgg.Gamma, e fgg.FGGExpr,
 		t := u.GetName()
 		us := u.GetTArgs()
 		es_fgg := e1.GetElems()
-		es := make([]Expr, (len(us) + len(es_fgg)))
+		es := make([]FGRExpr, (len(us) + len(es_fgg)))
 		for i := 0; i < len(us); i++ {
 			es[i] = mkRep(us[i])
 		}
@@ -288,7 +288,7 @@ func fgrTransExpr(ds []Decl, delta fgg.Delta, gamma fgg.Gamma, e fgg.FGGExpr,
 		e_fgg := e1.GetExpr()
 		f := e1.GetField()
 		u := e1.Typing(ds, delta, gamma, false)
-		var res Expr
+		var res FGRExpr
 		res = NewSelect(fgrTransExpr(ds, delta, gamma, e_fgg, wrappers), f)
 
 		u_expr := fgg.Bounds(delta, e1.GetExpr().Typing(ds, delta, gamma, false)).(fgg.TNamed)
@@ -353,7 +353,7 @@ func fgrTransExpr(ds []Decl, delta fgg.Delta, gamma fgg.Gamma, e fgg.FGGExpr,
 			delta1[tf.GetTParam()] = tf.GetUpperBound()
 		}
 
-		args := make([]Expr, len(args_fgg))
+		args := make([]FGRExpr, len(args_fgg))
 		//pds_fgg := md.GetParamDecls()
 		pds_fgg := g.GetParamDecls()
 		for i := 0; i < len(args_fgg); i++ {
@@ -364,7 +364,7 @@ func fgrTransExpr(ds []Decl, delta fgg.Delta, gamma fgg.Gamma, e fgg.FGGExpr,
 		//u := e1.Typing(ds, delta, gamma, false)
 		e_recv := fgrTransExpr(ds, delta, gamma, e_recv_fgg, wrappers)
 
-		var res Expr
+		var res FGRExpr
 		res = NewCall(e_recv, m, args)
 
 		u := g.GetType()
@@ -385,7 +385,7 @@ func fgrTransExpr(ds []Decl, delta fgg.Delta, gamma fgg.Gamma, e fgg.FGGExpr,
 	case fgg.Assert:
 		u := e1.GetType()
 		e2 := fgrTransExpr(ds, delta, gamma, e1.GetExpr(), wrappers)
-		return IfThenElse{NewCall(e2, "getTypeRep", []Expr{}), mkRep(u), e2, "TODO"}
+		return IfThenElse{NewCall(e2, "getTypeRep", []FGRExpr{}), mkRep(u), e2, "TODO"}
 	default:
 		panic("Unknown Expr type " + reflect.TypeOf(e).String() + ": " + e.String())
 	}
@@ -408,7 +408,7 @@ type adptrPair struct {
 // Pre: type of e <: u
 // u is "target type"
 func wrapExpr(ds []Decl, delta fgg.Delta, gamma fgg.Gamma, e fgg.FGGExpr, u fgg.Type,
-	wrappers map[Type]adptrPair) Expr {
+	wrappers map[Type]adptrPair) FGRExpr {
 	t := toFgTypeFromBounds(delta, u)
 	if isFggSTypeLit(ds, t) {
 		return fgrTransExpr(ds, delta, gamma, e, wrappers)
@@ -422,13 +422,13 @@ func wrapExpr(ds []Decl, delta fgg.Delta, gamma fgg.Gamma, e fgg.FGGExpr, u fgg.
 }
 
 // Post: TypeTree or TmpTParam
-func mkRep(u fgg.Type) Expr {
+func mkRep(u fgg.Type) FGRExpr {
 	switch u1 := u.(type) {
 	case fgg.TParam:
 		return TmpTParam{u1.String()}
 	case fgg.TNamed:
 		us := u1.GetTArgs()
-		es := make([]Expr, len(us))
+		es := make([]FGRExpr, len(us))
 		for i := 0; i < len(us); i++ {
 			es[i] = mkRep(us[i])
 		}
@@ -442,7 +442,7 @@ func mkRep(u fgg.Type) Expr {
 
 // targ is a t_I
 // TODO: rename, cf. wrap(ds, delta, gamma, e, u)
-func makeAdptr(delta fgg.Delta, e Expr, subj fgg.Type, targ fgg.Type,
+func makeAdptr(delta fgg.Delta, e FGRExpr, subj fgg.Type, targ fgg.Type,
 	wrappers map[Type]adptrPair) StructLit {
 	t1 := Type(toFgTypeFromBounds(delta, subj))
 	t_I := Type(toFgTypeFromBounds(delta, targ))
@@ -450,7 +450,7 @@ func makeAdptr(delta fgg.Delta, e Expr, subj fgg.Type, targ fgg.Type,
 	if _, ok := wrappers[adptr]; !ok {
 		wrappers[adptr] = adptrPair{t1, t_I}
 	}
-	return NewStructLit(adptr, []Expr{e})
+	return NewStructLit(adptr, []FGRExpr{e})
 }
 
 // ds are from FGG source (t is from toFgTypeFromBounds)
@@ -487,11 +487,11 @@ func getMDecl(ds []Decl, t Type, m Name) fgg.MDecl {
 	panic("Method not found for type " + string(t) + ": " + m)
 }
 
-func addGetValueCast(delta fgg.Delta, e Expr, u fgg.Type) Expr {
-	e3 := NewCall(e, Name("getValue"), []Expr{})
+func addGetValueCast(delta fgg.Delta, e FGRExpr, u fgg.Type) FGRExpr {
+	e3 := NewCall(e, Name("getValue"), []FGRExpr{})
 	//e = NewAssert(e, toFgTypeFromBounds(delta, u)) // TODO FIXME: mkRep -- "FG" for now, not FGR
 	e2 := mkRep(u)
-	e1 := NewCall(e3, "getTypeRep", []Expr{})
+	e1 := NewCall(e3, "getTypeRep", []FGRExpr{})
 	e = IfThenElse{e1, e2, e3, "TODO"}
 	return e
 }
