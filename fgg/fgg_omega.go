@@ -12,7 +12,7 @@ var _ = fmt.Errorf
 func MakeWMap2(ds []Decl, ground map[string]Ground, omega WMap) {
 	for _, v := range ground {
 		wk := toWKey(v.u)
-		gs := make(map[string]MonoSig)
+		gs := make(map[string]MonomSig)
 		omega[wk] = WVal{v.u, toMonomId(v.u), gs}
 		/*}
 
@@ -31,7 +31,7 @@ func MakeWMap2(ds []Decl, ground map[string]Ground, omega WMap) {
 			ret := pair.g.u_ret.(TNamed)
 			m := getMonomMethName(omega, pair.g.meth, pair.targs)
 			//gs := omega[toWKey(v.u)].gs
-			gs[hash] = MonoSig{fg.NewSig(m, pds_fg, toMonomId(ret)), pair.targs, ret}
+			gs[hash] = MonomSig{fg.NewSig(m, pds_fg, toMonomId(ret)), pair.targs, ret}
 		}
 	}
 }
@@ -46,6 +46,8 @@ type GroundPair struct {
 	g     Sig
 	targs []Type
 }
+
+type ClosedEnv map[Name]TNamed // Pre: forall TName, isClosed
 
 func fix(ds []Decl, gamma ClosedEnv, e FGGExpr, ground map[string]Ground) {
 	empty := make(Delta)
