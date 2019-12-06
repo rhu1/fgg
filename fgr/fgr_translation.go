@@ -141,11 +141,11 @@ func Translate(p fgg.FGGProgram) FGRProgram { // TODO FIXME: FGR -- TODO also ca
 
 func fgrTransSTypeLit(s fgg.STypeLit) STypeLit {
 	delta := s.GetPsi().ToDelta()
-	tfs := s.GetPsi().GetTFormals()
+	/*tfs := s.GetPsi().GetTFormals()
 	rds := make([]RepDecl, len(tfs))
 	for i := 0; i < len(tfs); i++ {
 		rds[i] = RepDecl{tfs[i].GetTParam(), Rep{tfs[i].GetUpperBound()}}
-	}
+	}*/
 	fds_fgg := s.GetFieldDecls()
 	fds := make([]FieldDecl, len(fds_fgg))
 	for i := 0; i < len(fds_fgg); i++ {

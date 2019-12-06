@@ -60,7 +60,7 @@ func (t Type) String() string {
 	return string(t)
 }
 
-/* Reps */
+/* Type reps */
 
 const TRep = Type("Rep")
 

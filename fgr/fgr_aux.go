@@ -4,7 +4,7 @@ import "fmt"
 
 var _ = fmt.Errorf
 
-/* fields(t_S), methods(t), body(t_S, m), type(v_S) */
+/* fields(t_S), methods(t), body(t_S, m) */
 
 // Pre: t_S is a struct type
 func fields(ds []Decl, t_S Type) []FieldDecl {
@@ -52,6 +52,8 @@ func body(ds []Decl, t_S Type, m Name) (Name, []Name, FGRExpr) {
 	}
 	panic("Method not found: " + t_S.String() + "." + m)
 }
+
+/* Additional */
 
 func getTDecl(ds []Decl, t Type) TDecl {
 	for _, v := range ds {

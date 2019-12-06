@@ -11,7 +11,7 @@ import "strings"
 
 import "github.com/rhu1/fgg/base"
 
-/* "Exported" constructors for fgg (monom) */
+/* "Exported" constructors (e.g., for fgg_monom)*/
 
 func NewFGProgram(ds []Decl, e FGExpr, printf bool) FGProgram {
 	return FGProgram{ds, e, printf}
@@ -19,11 +19,9 @@ func NewFGProgram(ds []Decl, e FGExpr, printf bool) FGProgram {
 
 func NewSTypeLit(t Type, fds []FieldDecl) STypeLit { return STypeLit{t, fds} }
 func NewITypeLit(t Type, ss []Spec) ITypeLit       { return ITypeLit{t, ss} }
-
 func NewMDecl(recv ParamDecl, m Name, pds []ParamDecl, t Type, e FGExpr) MDecl {
 	return MDecl{recv, m, pds, t, e}
 }
-
 func NewFieldDecl(f Name, t Type) FieldDecl      { return FieldDecl{f, t} }
 func NewParamDecl(x Name, t Type) ParamDecl      { return ParamDecl{x, t} } // For fgg_monom.MakeWMap
 func NewSig(m Name, pds []ParamDecl, t Type) Sig { return Sig{m, pds, t} }  // For fgg_monom.MakeWMap

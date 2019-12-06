@@ -10,53 +10,35 @@ import "reflect"
 import "strings"
 
 import "github.com/rhu1/fgg/base"
-import "github.com/rhu1/fgg/fgg"
 
-/* "Exported" constructors for fgg (monomorph) */
+//import "github.com/rhu1/fgg/fgg"
 
-// TODO: compact
-func NewFGRProgram(ds []Decl, e FGRExpr) FGRProgram {
-	return FGRProgram{ds, e}
-}
+/* "Exported" constructors (e.g., for fgg_oblit) */
 
-func NewSTypeLit(t Type /*rds []RepDecl,*/, fds []FieldDecl) STypeLit {
-	return STypeLit{t /*rds,*/, fds}
-}
+func NewFGRProgram(ds []Decl, e FGRExpr) FGRProgram { return FGRProgram{ds, e} }
 
-func NewFieldDecl(f Name, t Type) FieldDecl {
-	return FieldDecl{f, t}
-}
-
-func NewMDecl(recv ParamDecl, m Name /*rds []RepDecl,*/, pds []ParamDecl, t Type,
+func NewSTypeLit(t Type, fds []FieldDecl) STypeLit { return STypeLit{t, fds} }
+func NewFieldDecl(f Name, t Type) FieldDecl        { return FieldDecl{f, t} }
+func NewMDecl(recv ParamDecl, m Name, pds []ParamDecl, t Type,
 	e FGRExpr) MDecl {
-	return MDecl{recv, m /*rds,*/, pds, t, e}
+	return MDecl{recv, m, pds, t, e}
 }
-
-func NewParamDecl(x Name, t Type) ParamDecl { // For fgg_util.MakeWMap
-	return ParamDecl{x, t}
-}
-
-func NewITypeLit(t Type, ss []Spec) ITypeLit {
-	return ITypeLit{t, ss}
-}
-
-func NewSig(m Name, pds []ParamDecl, t Type) Sig { // For fgg_util.MakeWMap
-	return Sig{m, pds, t}
-}
-
-func (g Sig) GetMethName() Name { // Hack
-	return g.m
-}
+func NewParamDecl(x Name, t Type) ParamDecl      { return ParamDecl{x, t} }
+func NewITypeLit(t Type, ss []Spec) ITypeLit     { return ITypeLit{t, ss} }
+func NewSig(m Name, pds []ParamDecl, t Type) Sig { return Sig{m, pds, t} }
 
 /* Program */
 
 type FGRProgram struct {
-	ds []Decl
-	e  FGRExpr
+	decls  []Decl
+	e_main FGRExpr
 }
 
 var _ base.Program = FGRProgram{}
 var _ FGRNode = FGRProgram{}
+
+func (p FGRProgram) GetDecls() []Decl   { return p.decls } // Return a copy?
+func (p FGRProgram) GetMain() base.Expr { return p.e_main }
 
 func (p FGRProgram) Ok(allowStupid bool) {
 	if !allowStupid { // Hack, to print the following only for "top-level" programs (not during Eval)
@@ -65,10 +47,10 @@ func (p FGRProgram) Ok(allowStupid bool) {
 	}
 	tds := make(map[Type]TDecl)
 	mds := make(map[string]MDecl) // Hack, string = string(md.recv.t) + "." + md.GetName()
-	for _, v := range p.ds {
+	for _, v := range p.decls {
 		switch d := v.(type) {
 		case TDecl:
-			d.Ok(p.ds) // Currently empty -- TODO: check, e.g., unique field names -- cf., above [Warning]
+			d.Ok(p.decls) // Currently empty -- TODO: check, e.g., unique field names -- cf., above [Warning]
 			// N.B. checks also omitted from submission version
 			t := Type(d.GetName())
 			if _, ok := tds[t]; ok {
@@ -77,7 +59,7 @@ func (p FGRProgram) Ok(allowStupid bool) {
 			}
 			tds[t] = d
 		case MDecl:
-			d.Ok(p.ds)
+			d.Ok(p.decls)
 			n := d.GetName()
 			hash := string(d.recv.t) + "." + n
 			if _, ok := mds[hash]; ok {
@@ -91,33 +73,25 @@ func (p FGRProgram) Ok(allowStupid bool) {
 		}
 	}
 	var gamma Gamma // Empty env for main
-	p.e.Typing(p.ds, gamma, allowStupid)
+	p.e_main.Typing(p.decls, gamma, allowStupid)
 }
 
 // CHECKME: resulting FGRProgram is not parsed from source, OK? -- cf. Expr.Eval
 // But doesn't affect FGRPprogam.Ok() (i.e., Expr.Typing)
 func (p FGRProgram) Eval() (base.Program, string) {
-	e, rule := p.e.Eval(p.ds)
-	return FGRProgram{p.ds, e.(FGRExpr)}, rule
-}
-
-func (p FGRProgram) GetDecls() []Decl {
-	return p.ds // Returns a copy?
-}
-
-func (p FGRProgram) GetMain() base.Expr {
-	return p.e
+	e, rule := p.e_main.Eval(p.decls)
+	return FGRProgram{p.decls, e.(FGRExpr)}, rule
 }
 
 func (p FGRProgram) String() string {
 	var b strings.Builder
 	b.WriteString("package main;\n")
-	for _, v := range p.ds {
+	for _, v := range p.decls {
 		b.WriteString(v.String())
 		b.WriteString(";\n")
 	}
 	b.WriteString("func main() { _ = ")
-	b.WriteString(p.e.String())
+	b.WriteString(p.e_main.String())
 	b.WriteString(" }")
 	return b.String()
 }
@@ -161,7 +135,7 @@ func (s STypeLit) String() string {
 	return b.String()
 }
 
-type RepDecl struct {
+/*type RepDecl struct {
 	a fgg.TParam
 	r Rep // TODO: Rep shouldn't be parameterised
 }
@@ -170,7 +144,7 @@ var _ FGRNode = RepDecl{}
 
 func (rd RepDecl) String() string {
 	return rd.a.String() + " " + rd.r.String()
-}
+}*/
 
 type FieldDecl struct {
 	f Name
@@ -355,14 +329,14 @@ func (g Sig) String() string {
 /* Helpers */
 
 // Doesn't include "(...)" -- slightly more convenient for debug messages
-func writeRepDecls(b *strings.Builder, rds []RepDecl) {
+/*func writeRepDecls(b *strings.Builder, rds []RepDecl) {
 	if len(rds) > 0 {
 		b.WriteString(rds[0].String())
 		for _, v := range rds[1:] {
 			b.WriteString("; " + v.String())
 		}
 	}
-}
+}*/
 
 func writeFieldDecls(b *strings.Builder, fds []FieldDecl) {
 	if len(fds) > 0 {

@@ -9,6 +9,10 @@ import (
 	//"github.com/rhu1/fgg/fgg"
 )
 
+/**
+ * Deprecated
+ */
+
 var _ = fmt.Errorf
 
 /* FGGProgram */
