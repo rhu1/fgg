@@ -50,10 +50,7 @@ type MonomSig struct {
 // TODO: reformat (e.g., "<...>") to make an actual FG program
 func Monomorph(p FGGProgram) fg.FGProgram {
 	omega := make(WMap)
-	var gamma ClosedEnv
-	ground := make(map[string]Ground)
-	fix(p.GetDecls(), gamma, p.GetMain().(FGGExpr), ground)
-	MakeWMap2(p.GetDecls(), ground, omega)
+	MakeWMap2(p, omega) // TODO: rename
 
 	var ds []Decl
 	for _, v := range p.decls {
@@ -305,6 +302,41 @@ func monomExpr(omega WMap, e FGGExpr) fg.FGExpr {
 	}
 }
 
+/* Temp */
+
+// TODO: refactor
+func MakeWMap2(p FGGProgram, omega WMap) {
+	ds := p.GetDecls()
+	var gamma GroundEnv
+	ground := make(map[string]Ground)
+	fixOmega(ds, gamma, p.GetMain().(FGGExpr), ground)
+
+	for _, v := range ground {
+		wk := toWKey(v.u)
+		gs := make(map[string]MonomSig)
+		omega[wk] = WVal{v.u, toMonomId(v.u), gs}
+		/*}
+
+		for _, v := range ground {*/
+		for _, pair := range v.gs {
+			if len(pair.targs) == 0 {
+				continue
+			}
+			hash := pair.g.String()
+			pds := pair.g.GetParamDecls()
+			pds_fg := make([]fg.ParamDecl, len(pds))
+			for i := 0; i < len(pds); i++ {
+				pd := pds[i]
+				pds_fg[i] = fg.NewParamDecl(pd.name, toMonomId(pd.u.(TNamed)))
+			}
+			ret := pair.g.u_ret.(TNamed)
+			m := getMonomMethName(omega, pair.g.meth, pair.targs)
+			//gs := omega[toWKey(v.u)].gs
+			gs[hash] = MonomSig{fg.NewSig(m, pds_fg, toMonomId(ret)), pair.targs, ret}
+		}
+	}
+}
+
 /* Helpers */
 
 // Pre: isClosed(u)
@@ -328,14 +360,12 @@ func toMonomId(u TNamed) fg.Type {
 	return fg.Type(res)
 }
 
-func isClosed(u TNamed) bool {
+func isGround(u TNamed) bool {
 	for _, v := range u.u_args {
 		if u1, ok := v.(TNamed); !ok {
 			return false
-		} else {
-			if !isClosed(u1) {
-				return false
-			}
+		} else if !isGround(u1) {
+			return false
 		}
 	}
 	return true
@@ -382,35 +412,6 @@ func GetParameterisedSigs(wv WVal) []fg.Sig {
 }
 */
 
-/* IGNORE */
-
-/*
-	// TODO: factor out with Call case
-	u_ret := v.u.(TName) // Closed, since u closed and no meth-params
-	key1 := toWKey(u_ret)
-	if _, ok := omega[key1]; !ok {
-		omega[key1] = WVal{u_ret, toMonomId(u_ret), make(map[string]MonoSig)}
-		todo = append(todo, u_ret)
-	}
-	for i := 0; i < len(v.pds); i++ {
-		u_p := v.pds[i].u.(TName)
-		key2 := toWKey(u_p)
-		if _, ok := omega[key2]; !ok {
-			omega[key2] = WVal{u_p, toMonomId(u_p), make(map[string]MonoSig)}
-			todo = append(todo, u_ret)
-		}
-	}
-	if isStructTName(ds, u) {
-		x0, xs, e := body(ds, u, v.m, empty)
-		gamma1 := make(Env)
-		gamma1[x0] = u
-		for i := 0; i < len(xs); i++ {
-			gamma1[xs[i]] = v.pds[i].u.(TName)
-		}
-		MakeWMap(ds, gamma1, e, omega)
-	}
-*/
-
 /* Old -- deprecated */
 
 //type WEnv map[TParam]Type // Pre: Type is closed
@@ -430,7 +431,7 @@ func (wv WVal) GetMonomId() fg.Type {
 //
 // N.B. mutates omega -- i.e., omega is populated with the results
 // Pre: `e` is typeable under an empty TEnv, i.e., does not feature any TParams
-func MakeWMap(ds []Decl, gamma ClosedEnv, e FGGExpr, omega WMap) (res Type) {
+func MakeWMap(ds []Decl, gamma GroundEnv, e FGGExpr, omega WMap) (res Type) {
 	var todo []TNamed // Pre: forall u, isClosed(u)
 	// Usage contract: if addTypeToWMap true, then append `u` to `todo`
 
@@ -467,11 +468,11 @@ func MakeWMap(ds []Decl, gamma ClosedEnv, e FGGExpr, omega WMap) (res Type) {
 		}
 		g := methods(ds, u0)[e1.meth]
 		res = g.u_ret // May be a TParam, e.g., `Cond(type a Any())(br Branches(a)) a` (map.fgg) -- then below is skipped
-		if u0_closed, ok := u0.(TNamed); ok && isClosed(u0_closed) &&
+		if u0_closed, ok := u0.(TNamed); ok && isGround(u0_closed) &&
 			len(e1.t_args) > 0 {
 			isC := true
 			for _, v := range e1.t_args {
-				if u, ok := v.(TNamed); !ok || !isClosed(u) { // CHECKME: do recursively on targs?
+				if u, ok := v.(TNamed); !ok || !isGround(u) { // CHECKME: do recursively on targs?
 					isC = false
 					break
 				}
@@ -532,7 +533,7 @@ func MakeWMap(ds []Decl, gamma ClosedEnv, e FGGExpr, omega WMap) (res Type) {
 // N.B. mutates omega -- adds WKey, WVal pair (if `u` closed)
 // @return `true` if type added, `false` o/w
 func addTypeToWMap(u TNamed, omega WMap) bool {
-	if !isClosed(u) { // CHECKME: necessary?
+	if !isGround(u) { // CHECKME: necessary?
 		return false
 	}
 	wk := toWKey(u)
@@ -563,7 +564,7 @@ func visitSig(ds []Decl, u0 TNamed, g Sig, targs []Type, omega WMap) (res TNamed
 	}
 	if IsStructType(ds, u0) { // CHECKME: for interface types, visit all possible methods?  Or visiting all struct types already enough?
 		x0, xs, e := body(ds, u0, g.meth, targs)
-		gamma1 := ClosedEnv{x0: u0}
+		gamma1 := GroundEnv{x0: u0}
 		for i := 0; i < len(xs); i++ {
 			gamma1[xs[i]] = g.pDecls[i].u.(TNamed)
 		}
@@ -573,3 +574,32 @@ func visitSig(ds []Decl, u0 TNamed, g Sig, targs []Type, omega WMap) (res TNamed
 	}
 	return res, todo
 }
+
+/* IGNORE */
+
+/*
+	// TODO: factor out with Call case
+	u_ret := v.u.(TName) // Closed, since u closed and no meth-params
+	key1 := toWKey(u_ret)
+	if _, ok := omega[key1]; !ok {
+		omega[key1] = WVal{u_ret, toMonomId(u_ret), make(map[string]MonoSig)}
+		todo = append(todo, u_ret)
+	}
+	for i := 0; i < len(v.pds); i++ {
+		u_p := v.pds[i].u.(TName)
+		key2 := toWKey(u_p)
+		if _, ok := omega[key2]; !ok {
+			omega[key2] = WVal{u_p, toMonomId(u_p), make(map[string]MonoSig)}
+			todo = append(todo, u_ret)
+		}
+	}
+	if isStructTName(ds, u) {
+		x0, xs, e := body(ds, u, v.m, empty)
+		gamma1 := make(Env)
+		gamma1[x0] = u
+		for i := 0; i < len(xs); i++ {
+			gamma1[xs[i]] = v.pds[i].u.(TName)
+		}
+		MakeWMap(ds, gamma1, e, omega)
+	}
+*/

@@ -3,53 +3,29 @@ package fgg
 import (
 	"fmt"
 	"reflect"
-
-	"github.com/rhu1/fgg/fg"
 )
 
 var _ = fmt.Errorf
 
-func MakeWMap2(ds []Decl, ground map[string]Ground, omega WMap) {
-	for _, v := range ground {
-		wk := toWKey(v.u)
-		gs := make(map[string]MonomSig)
-		omega[wk] = WVal{v.u, toMonomId(v.u), gs}
-		/*}
+/* GroundEnv */
 
-		for _, v := range ground {*/
-		for _, pair := range v.gs {
-			if len(pair.targs) == 0 {
-				continue
-			}
-			hash := pair.g.String()
-			pds := pair.g.GetParamDecls()
-			pds_fg := make([]fg.ParamDecl, len(pds))
-			for i := 0; i < len(pds); i++ {
-				pd := pds[i]
-				pds_fg[i] = fg.NewParamDecl(pd.name, toMonomId(pd.u.(TNamed)))
-			}
-			ret := pair.g.u_ret.(TNamed)
-			m := getMonomMethName(omega, pair.g.meth, pair.targs)
-			//gs := omega[toWKey(v.u)].gs
-			gs[hash] = MonomSig{fg.NewSig(m, pds_fg, toMonomId(ret)), pair.targs, ret}
-		}
-	}
-}
+// Basically Gamma for TNamed only.
+type GroundEnv map[Name]TNamed // Pre: forall TName, isClosed
 
 // Cf. WVal
 type Ground struct {
-	u  TNamed                // Pre: isClosed(u)
-	gs map[string]GroundPair // // HACK: string key is Sig.String
+	u  TNamed                 // Pre: isClosed(u)
+	gs map[string]GroundEntry // Morally, Sig->[]Type -- HACK: string key is Sig.String
 }
 
-type GroundPair struct {
+// The actual map entry, because g cannot be used as map key directly
+type GroundEntry struct {
 	g     Sig
 	targs []Type
 }
 
-type ClosedEnv map[Name]TNamed // Pre: forall TName, isClosed
-
-func fix(ds []Decl, gamma ClosedEnv, e FGGExpr, ground map[string]Ground) {
+// Collects ground types in `ground`.
+func fixOmega(ds []Decl, gamma GroundEnv, e FGGExpr, ground map[string]Ground) {
 	empty := make(Delta)
 
 	again := true
@@ -105,7 +81,7 @@ func fix(ds []Decl, gamma ClosedEnv, e FGGExpr, ground map[string]Ground) {
 							}
 
 							x0, xs, e := body(ds, u_S, gp.g.meth, gp.targs)
-							gamma1 := make(ClosedEnv)
+							gamma1 := make(GroundEnv)
 							gamma1[x0] = u_S
 							for i := 0; i < len(xs); i++ { // xs = ys in pds
 								gamma1[xs[i]] = pds[i].GetType().TSubs(subs).(TNamed)
@@ -127,9 +103,9 @@ func fix(ds []Decl, gamma ClosedEnv, e FGGExpr, ground map[string]Ground) {
 	}
 }
 
-// gamma needed when we're visiting an e of a "standalone" meth decl (via collectGroundFggType)
+// gamma needed when we're visiting an `e` of a "standalone" meth decl (via collectGroundFggType)
 // CHECKME: Post: res already collected?
-func collectGroundFggTypes(ds []Decl, gamma ClosedEnv, e FGGExpr, ground map[string]Ground) (res Type) {
+func collectGroundFggTypes(ds []Decl, gamma GroundEnv, e FGGExpr, ground map[string]Ground) (res Type) {
 	switch e1 := e.(type) {
 	case Variable:
 		res = gamma[e1.name]
@@ -141,6 +117,7 @@ func collectGroundFggTypes(ds []Decl, gamma ClosedEnv, e FGGExpr, ground map[str
 		res = e1.u_S
 	case Select:
 		u_S := collectGroundFggTypes(ds, gamma, e1.e_S, ground).(TNamed) // Field types already collected via the structlit?
+		// !!! we don't just visit e1.e_S, we also visit the type of e_S
 		collectGroundFggType(ds, u_S, ground)
 		for _, v := range fields(ds, u_S) {
 			if v.field == e1.field {
@@ -162,6 +139,7 @@ func collectGroundFggTypes(ds []Decl, gamma ClosedEnv, e FGGExpr, ground map[str
 		for k, v := range gamma {
 			gamma1[k] = v
 		}
+		// !!! CHECKME: "actual" vs. "declared -- declared is highest, most exhaustive? -- or need both?
 		res = e1.Typing(ds, make(Delta), gamma1, true) // CHECKME: typing vs. sig? -- CHECKME: currently this typing mixed with res
 		//res = g.u // May be a TParam, e.g., `Cond(type a Any())(br Branches(a)) a` (map.fgg)
 	case Assert:
@@ -180,13 +158,13 @@ func collectGroundFggType(ds []Decl, u Type, ground map[string]Ground) {
 	if _, ok := ground[u.String()]; ok {
 		return
 	}
-	if cast, ok := u.(TNamed); !ok || !isClosed(cast) {
+	if cast, ok := u.(TNamed); !ok || !isGround(cast) {
 		return
 	}
 
 	u1 := u.(TNamed)
 
-	gs := make(map[string]GroundPair)
+	gs := make(map[string]GroundEntry)
 	ground[u.String()] = Ground{u1, gs}
 	if IsStructType(ds, u1) {
 		u_S := u1
@@ -211,7 +189,7 @@ func collectGroundFggType(ds []Decl, u Type, ground map[string]Ground) {
 			// visit body
 			if len(g.GetPsi().GetTFormals()) == 0 {
 				x_recv, xs, e := body(ds, u_S, g.meth, []Type{})
-				gamma := make(ClosedEnv)
+				gamma := make(GroundEnv)
 				gamma[x_recv] = u_S
 				for i := 0; i < len(pds); i++ {
 					gamma[xs[i]] = pds[i].GetType().(TNamed)
@@ -254,13 +232,13 @@ func collectGroundFggType(ds []Decl, u Type, ground map[string]Ground) {
 }
 
 // Pre: if u0 is ground, then already in `ground` -- no XXX
+// can proceed when u0 is ground without a Delta as we also have add type args here
 func collectGroundFggCall(ds []Decl, u0 Type, c Call, ground map[string]Ground) {
-	//fmt.Println("666:", u0, c)
-	if cast, ok := u0.(TNamed); !ok || !isClosed(cast) {
+	if cast, ok := u0.(TNamed); !ok || !isGround(cast) {
 		return
 	}
 	for _, v := range c.t_args {
-		if cast, ok := v.(TNamed); !ok || !isClosed(cast) {
+		if cast, ok := v.(TNamed); !ok || !isGround(cast) {
 			return
 		}
 	}
@@ -281,7 +259,7 @@ func collectGroundFggCall(ds []Decl, u0 Type, c Call, ground map[string]Ground) 
 	}
 	/*targs := make([]Type, len(c.targs)) // CHECKME: unnecessary to copy?
 	copy(targs, c.targs)*/
-	gs[g.String()] = GroundPair{g, c.t_args}
+	gs[g.String()] = GroundEntry{g, c.t_args}
 	//}
 	pds := g.GetParamDecls()
 	for _, v := range pds {
@@ -309,7 +287,7 @@ func collectGroundFggCall(ds []Decl, u0 Type, c Call, ground map[string]Ground) 
 		}
 
 		x0, xs, e := body(ds, u_S, c.meth, c.t_args)
-		gamma1 := make(ClosedEnv)
+		gamma1 := make(GroundEnv)
 		gamma1[x0] = u_S
 		for i := 0; i < len(xs); i++ { // xs = ys in pds
 			gamma1[xs[i]] = pds[i].GetType().TSubs(subs).(TNamed) // Param names in g should be same as actual MDecl
