@@ -10,11 +10,7 @@ import (
 
 var _ = fmt.Errorf
 
-/*HERE
-- getTypeReps
-- add meth-param RepDecls
-- FGR eval
-*/
+/* [WIP] Wrapper translation -- TODO: not functional yet */
 
 /* FGGProgram */
 

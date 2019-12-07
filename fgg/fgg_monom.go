@@ -10,15 +10,16 @@ import (
 
 var _ = fmt.Errorf
 
-/* TODO: isMonomorphisable
-
-// func isMonomorphisable(p FGGProgram) bool { ... }
-
 /**
- * [WIP] Overall, naive monomorph [WIP]
-*/
+ * [WIP] Naive monomorph -- `isMonomophisable` check not implemented yet
+ *
+ * CHECKME: -monom skips any meth with add-param that isn't instantiated?  is
+ * that sound? (any previously failing cast now permitted by this "relaxed
+ * interface constraint"? i.e., increased duck typing potential)
+ */
 
-// CHECKME: -monom skips any meth with add-param that isn't instantiated?  is that sound? (any previously failing cast now permitted by this "relaxed interface constraint"? i.e., increased duck typing potential)
+// TODO: isMonomorphisable
+// func isMonomorphisable(p FGGProgram) bool { ... }
 
 /* Omega -- implemented as WMap */
 
@@ -26,14 +27,14 @@ type WMap map[WKey]WVal
 
 // Hack, because TNamed cannot be used as map key directly
 type WKey struct {
-	t_name Name   // `t` of the WVal.u
-	hash   string // "Hash" of the WVal.u -- a closed TName
+	t_name Name   // `t` of the WVal.u_closed
+	hash   string // "Hash" of the WVal.u_closed -- a closed TName
 }
 
 type WVal struct {
-	u_closed TNamed              // Pre: isClosed(u)
-	monomid  fg.Type             // Monom'd (FG) identifier
-	gs       map[string]MonomSig // Only records methods with "additional params"
+	u_closed TNamed              // Pre: isClosed(u_closed)
+	t_monom  fg.Type             // Monom'd (i.e., FG) type name
+	gs       map[string]MonomSig // Sigs on u_closed receiver with add-meth-args
 	// ^HACK: string key is MonoSig.g.String()
 }
 
@@ -47,7 +48,22 @@ type MonomSig struct {
 	// ..method under targs (and the TEnv of the parent TDecl instance)
 }
 
-// TODO: reformat (e.g., "<...>") to make an actual FG program
+// Add meth instans from `wv`, filtered by `m`, to `targs`
+func addMethInstans(wv WVal, m Name, targs map[string][]Type) {
+	for _, v := range wv.gs {
+		m1 := getOrigMethName(v.g.GetMethod())
+		if m1 == m && len(v.targs) > 0 {
+			hash := "" // Use WriteTypes?
+			for _, v1 := range v.targs {
+				hash = hash + v1.String()
+			}
+			targs[hash] = v.targs
+		}
+	}
+}
+
+/* Monomoprh: FGGProgram -> FGProgram */
+
 func Monomorph(p FGGProgram) fg.FGProgram {
 	omega := make(WMap)
 	MakeWMap2(p, omega) // TODO: rename
@@ -96,9 +112,9 @@ func monomTDecl(ds []Decl, omega WMap, td TDecl, wv WVal) fg.TDecl {
 			if _, ok := omega[toWKey(u)]; !ok { // Cf. MakeWMap2, extra loop over non-param TDecls, for those non seen o/w
 				panic("Unknown type: " + u.String())
 			}
-			fds[i] = fg.NewFieldDecl(tmp.field, omega[toWKey(u)].monomid)
+			fds[i] = fg.NewFieldDecl(tmp.field, omega[toWKey(u)].t_monom)
 		}
-		return fg.NewSTypeLit(wv.monomid, fds)
+		return fg.NewSTypeLit(wv.t_monom, fds)
 	case ITypeLit:
 		var ss []fg.Spec
 		for _, v := range d.specs {
@@ -109,10 +125,10 @@ func monomTDecl(ds []Decl, omega WMap, td TDecl, wv WVal) fg.TDecl {
 					for i := 0; i < len(s.pDecls); i++ {
 						tmp := s.pDecls[i]
 						u_p := tmp.u.TSubs(subs).(TNamed)
-						pds[i] = fg.NewParamDecl(tmp.name, omega[toWKey(u_p)].monomid)
+						pds[i] = fg.NewParamDecl(tmp.name, omega[toWKey(u_p)].t_monom)
 					}
 					u := s.u_ret.TSubs(subs).(TNamed)
-					ss = append(ss, fg.NewSig(s.meth, pds, omega[toWKey(u)].monomid))
+					ss = append(ss, fg.NewSig(s.meth, pds, omega[toWKey(u)].t_monom))
 				} else {
 					// forall u_S s.t. u_S <: wv.u, collect m.targs for all wv.m and mono(u_S.m)
 					// ^Correction: forall u, not only u_S, i.e., including interface type receivers
@@ -152,22 +168,22 @@ func monomTDecl(ds []Decl, omega WMap, td TDecl, wv WVal) fg.TDecl {
 						for i := 0; i < len(s.pDecls); i++ {
 							tmp := s.pDecls[i]
 							u_p := tmp.u.TSubs(subs1).(TNamed)
-							pds[i] = fg.NewParamDecl(tmp.name, omega[toWKey(u_p)].monomid)
+							pds[i] = fg.NewParamDecl(tmp.name, omega[toWKey(u_p)].t_monom)
 						}
 						u := s.u_ret.TSubs(subs1).(TNamed)
 						g1 := fg.NewSig(getMonomMethName(omega, s.meth, v), pds,
-							omega[toWKey(u)].monomid)
+							omega[toWKey(u)].t_monom)
 						ss = append(ss, g1)
 					}
 				}
 			case TNamed:
-				ss = append(ss, omega[toWKey(s)].monomid)
+				ss = append(ss, omega[toWKey(s)].t_monom)
 			default:
 				panic("Unknown Spec kind: " + reflect.TypeOf(v).String() +
 					"\n\t" + v.String())
 			}
 		}
-		return fg.NewITypeLit(wv.monomid, ss)
+		return fg.NewITypeLit(wv.t_monom, ss)
 	default:
 		panic("Unknown TDecl kind: " + reflect.TypeOf(d).String() +
 			"\n\t" + d.String())
@@ -180,15 +196,15 @@ func monomMDecl(ds []Decl, omega WMap, md MDecl, wv WVal) (res []fg.MDecl) {
 	for i := 0; i < len(md.psi_recv.tFormals); i++ {
 		subs[md.psi_recv.tFormals[i].name] = wv.u_closed.u_args[i]
 	}
-	recv := fg.NewParamDecl(md.x_recv, wv.monomid)
+	recv := fg.NewParamDecl(md.x_recv, wv.t_monom)
 	if len(md.psi_meth.tFormals) == 0 {
 		pds := make([]fg.ParamDecl, len(md.pDecls))
 		for i := 0; i < len(md.pDecls); i++ {
 			tmp := md.pDecls[i]
 			u := tmp.u.TSubs(subs).(TNamed) // "Inlined" substitution actions here -- cf. TDecl.TSubs
-			pds[i] = fg.NewParamDecl(tmp.name, omega[toWKey(u)].monomid)
+			pds[i] = fg.NewParamDecl(tmp.name, omega[toWKey(u)].t_monom)
 		}
-		t := omega[toWKey(md.u_ret.TSubs(subs).(TNamed))].monomid
+		t := omega[toWKey(md.u_ret.TSubs(subs).(TNamed))].t_monom
 		e := monomExpr(omega, md.e_body.TSubs(subs))
 		res = append(res, fg.NewMDecl(recv, md.name, pds, t, e))
 	} else {
@@ -204,17 +220,17 @@ func monomMDecl(ds []Decl, omega WMap, md MDecl, wv WVal) (res []fg.MDecl) {
 			for i := 0; i < len(v); i++ {
 				subs1[md.psi_meth.tFormals[i].name] = v[i]
 			}
-			recv := fg.NewParamDecl(md.x_recv, wv.monomid)
+			recv := fg.NewParamDecl(md.x_recv, wv.t_monom)
 			pds := make([]fg.ParamDecl, len(md.pDecls))
 			for i := 0; i < len(md.pDecls); i++ {
 				tmp := md.pDecls[i]
 				u_p := tmp.u.TSubs(subs1).(TNamed)
-				pds[i] = fg.NewParamDecl(tmp.name, omega[toWKey(u_p)].monomid)
+				pds[i] = fg.NewParamDecl(tmp.name, omega[toWKey(u_p)].t_monom)
 			}
 			u := md.u_ret.TSubs(subs1).(TNamed)
 			e := monomExpr(omega, md.e_body.TSubs(subs1))
 			md1 := fg.NewMDecl(recv, getMonomMethName(omega, md.name, v), pds,
-				omega[toWKey(u)].monomid, e)
+				omega[toWKey(u)].t_monom, e)
 			res = append(res, md1)
 		}
 	}
@@ -246,20 +262,6 @@ func collectZigZagMethInstans(ds []Decl, omega WMap, md MDecl, wv WVal) map[stri
 	return targs
 }
 
-// Add meth instans from `wv`, filtered by `m`, to `targs`
-func addMethInstans(wv WVal, m Name, targs map[string][]Type) {
-	for _, v := range wv.gs {
-		m1 := getOrigMethName(v.g.GetMethod())
-		if m1 == m && len(v.targs) > 0 {
-			hash := "" // Use WriteTypes?
-			for _, v1 := range v.targs {
-				hash = hash + v1.String()
-			}
-			targs[hash] = v.targs
-		}
-	}
-}
-
 func monomExpr(omega WMap, e FGGExpr) fg.FGExpr {
 	switch e1 := e.(type) {
 	case Variable:
@@ -273,7 +275,7 @@ func monomExpr(omega WMap, e FGGExpr) fg.FGExpr {
 		if _, ok := omega[wk]; !ok {
 			//panic("Unknown type: " + e1.u.String())
 		}
-		return fg.NewStructLit(omega[wk].monomid, es)
+		return fg.NewStructLit(omega[wk].t_monom, es)
 	case Select:
 		return fg.NewSelect(monomExpr(omega, e1.e_S), e1.field)
 	case Call:
@@ -295,16 +297,17 @@ func monomExpr(omega WMap, e FGGExpr) fg.FGExpr {
 			panic("Unknown type: " + e1.u_cast.String())
 		}
 		return fg.NewAssert(monomExpr(omega, e1.e_I),
-			omega[wk].monomid)
+			omega[wk].t_monom)
 	default:
 		panic("Unknown Expr kind: " + reflect.TypeOf(e).String() + "\n\t" +
 			e.String())
 	}
 }
 
-/* Temp */
-
-// TODO: refactor
+/* TODO: refactor below
+ * Temp. workaround code to interface older "apply-omega" (this file) and
+ * newer "build-omega" (fgg_omega).
+ */
 func MakeWMap2(p FGGProgram, omega WMap) {
 	ds := p.GetDecls()
 	var gamma GroundEnv
@@ -373,9 +376,9 @@ func isGround(u TNamed) bool {
 
 // Pre: len(targs) > 0
 func getMonomMethName(omega WMap, m Name, targs []Type) Name {
-	res := m + "<" + omega[toWKey(targs[0].(TNamed))].monomid.String()
+	res := m + "<" + omega[toWKey(targs[0].(TNamed))].t_monom.String()
 	for _, v := range targs[1:] {
-		res = res + "," + omega[toWKey(v.(TNamed))].monomid.String()
+		res = res + "," + omega[toWKey(v.(TNamed))].t_monom.String()
 	}
 	res = res + ">"
 	return Name(res)

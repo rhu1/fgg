@@ -520,8 +520,8 @@ func (c IfThenElse) ToGoString() string {
 /* TRep -- the result of mkRep, i.e., an FGR expr/value (of type FggType) that represents a (parameterised) FGG type */
 
 type TRep struct {
-	name Name
-	args []FGRExpr // TRep or TmpTParam -- CHECKME: TmpTParam still needed? (wrappers only?)
+	t_name Name
+	args   []FGRExpr // TRep or TmpTParam -- CHECKME: TmpTParam still needed? (wrappers only?)
 	// CHECKME: factor out TArg?
 }
 
@@ -535,7 +535,7 @@ func (r TRep) Reify() fgg.TNamed {
 	for i := 0; i < len(us); i++ {
 		us[i] = r.args[i].(TRep).Reify() // CHECKME: guaranteed TRep?
 	}
-	return fgg.NewTName(r.name, us)
+	return fgg.NewTName(r.t_name, us)
 }
 
 func (r TRep) Subs(subs map[Variable]FGRExpr) FGRExpr {
@@ -543,7 +543,7 @@ func (r TRep) Subs(subs map[Variable]FGRExpr) FGRExpr {
 	for i := 0; i < len(es); i++ {
 		es[i] = r.args[i].Subs(subs)
 	}
-	return TRep{r.name, es}
+	return TRep{r.t_name, es}
 }
 
 func (r TRep) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
@@ -565,7 +565,7 @@ func (r TRep) Eval(ds []Decl) (FGRExpr, string) {
 		es[i] = v
 	}
 	if done {
-		return TRep{r.name, es}, rule
+		return TRep{r.t_name, es}, rule
 	} else {
 		panic("Cannot reduce: " + r.String())
 	}
@@ -583,7 +583,7 @@ func (r TRep) IsValue() bool {
 
 func (r TRep) String() string {
 	var b strings.Builder
-	b.WriteString(r.name)
+	b.WriteString(r.t_name)
 	b.WriteString("[[")
 	writeExprs(&b, r.args)
 	b.WriteString("]]")
@@ -593,7 +593,7 @@ func (r TRep) String() string {
 func (r TRep) ToGoString() string {
 	var b strings.Builder
 	b.WriteString("main.")
-	b.WriteString(r.name)
+	b.WriteString(r.t_name)
 	b.WriteString("[[")
 	writeToGoExprs(&b, r.args)
 	b.WriteString("]]")
