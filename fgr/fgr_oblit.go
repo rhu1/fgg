@@ -36,7 +36,7 @@ func Obliterate(p_fgg fgg.FGGProgram) FGRProgram { // CHECKME can also subsume e
 			for i := 0; i < len(es); i++ {
 				es[i] = NewSelect(NewVariable("x0"), tfs[i].GetTParam().String())
 			}
-			e_getFggType := TRep{Type(t_S), es} // TODO: New constructor
+			e_getFggType := TRep{Name(t_S), es} // TODO: New constructor
 			getFggType := NewMDecl(recv_getFggType, "getFggType" /*[]RepDecl{},*/, []ParamDecl{},
 				FggType, e_getFggType) // TODO: factor out constants
 			ds_fgr = append(ds_fgr, oblitSTypeLit(d), getFggType)
@@ -312,5 +312,5 @@ func makeTypeTree(u1 fgg.TNamed) TRep {
 	for i := 0; i < len(us); i++ {
 		es[i] = mkRep(us[i])
 	}
-	return TRep{Type(u1.GetName()), es}
+	return TRep{Name(u1.GetName()), es}
 }

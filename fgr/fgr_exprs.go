@@ -520,8 +520,9 @@ func (c IfThenElse) ToGoString() string {
 /* TRep -- the result of mkRep, i.e., an FGR expr/value (of type FggType) that represents a (parameterised) FGG type */
 
 type TRep struct {
-	t  Type
-	es []FGRExpr // TRep or TmpTParam -- CHECKME: TmpTParam still needed?
+	name Name
+	args []FGRExpr // TRep or TmpTParam -- CHECKME: TmpTParam still needed?
+	// TODO: factor out TArg?
 }
 
 var _ FGRExpr = TRep{}
@@ -530,19 +531,19 @@ func (tt TRep) Reify() fgg.TNamed {
 	if !tt.IsValue() {
 		panic("Cannot refiy non-ground TypeTree: " + tt.String())
 	}
-	us := make([]fgg.Type, len(tt.es)) // All TName
+	us := make([]fgg.Type, len(tt.args)) // All TName
 	for i := 0; i < len(us); i++ {
-		us[i] = tt.es[i].(TRep).Reify() // CHECKME: guaranteed TypeTree?
+		us[i] = tt.args[i].(TRep).Reify() // CHECKME: guaranteed TypeTree?
 	}
-	return fgg.NewTName(string(tt.t), us)
+	return fgg.NewTName(string(tt.name), us)
 }
 
 func (tt TRep) Subs(subs map[Variable]FGRExpr) FGRExpr {
-	es := make([]FGRExpr, len(tt.es))
+	es := make([]FGRExpr, len(tt.args))
 	for i := 0; i < len(es); i++ {
-		es[i] = tt.es[i].Subs(subs)
+		es[i] = tt.args[i].Subs(subs)
 	}
-	return TRep{tt.t, es}
+	return TRep{tt.name, es}
 }
 
 func (tt TRep) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
@@ -552,11 +553,11 @@ func (tt TRep) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 // !!! TypeTree evaluation contexts vs. reify aux?
 func (tt TRep) Eval(ds []Decl) (FGRExpr, string) {
 	// Cf. StructLit.Eval
-	es := make([]FGRExpr, len(tt.es))
+	es := make([]FGRExpr, len(tt.args))
 	done := false
 	var rule string
 	for i := 0; i < len(es); i++ {
-		v := tt.es[i]
+		v := tt.args[i]
 		if !done && !v.IsValue() {
 			v, rule = v.Eval(ds)
 			done = true
@@ -564,15 +565,15 @@ func (tt TRep) Eval(ds []Decl) (FGRExpr, string) {
 		es[i] = v
 	}
 	if done {
-		return TRep{tt.t, es}, rule
+		return TRep{tt.name, es}, rule
 	} else {
 		panic("Cannot reduce: " + tt.String())
 	}
 }
 
 func (tt TRep) IsValue() bool {
-	for i := 0; i < len(tt.es); i++ {
-		if !tt.es[i].IsValue() {
+	for i := 0; i < len(tt.args); i++ {
+		if !tt.args[i].IsValue() {
 			return false
 		}
 	}
@@ -581,9 +582,9 @@ func (tt TRep) IsValue() bool {
 
 func (tt TRep) String() string {
 	var b strings.Builder
-	b.WriteString(string(tt.t))
+	b.WriteString(string(tt.name))
 	b.WriteString("[[")
-	writeExprs(&b, tt.es)
+	writeExprs(&b, tt.args)
 	b.WriteString("]]")
 	return b.String()
 }
@@ -591,14 +592,14 @@ func (tt TRep) String() string {
 func (tt TRep) ToGoString() string {
 	var b strings.Builder
 	b.WriteString("main.")
-	b.WriteString(string(tt.t))
+	b.WriteString(string(tt.name))
 	b.WriteString("[[")
-	writeToGoExprs(&b, tt.es)
+	writeToGoExprs(&b, tt.args)
 	b.WriteString("]]")
 	return b.String()
 }
 
-/* Intermediate TParam */
+/* Intermediate TParam -- for WIP wrappers (fgr_translation), not oblit */
 
 // Cf. Variable
 type TmpTParam struct {
