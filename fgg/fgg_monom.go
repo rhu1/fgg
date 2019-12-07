@@ -81,12 +81,13 @@ func Monomorph(p FGGProgram) fg.FGProgram {
 
 /* Monom TDecl */
 
-// Pre: `wv` represents an instantiation of the `td` type  // TODO: refactor, decompose
-func monomTDecl(ds []Decl, omega WMap, td TDecl, wv MonomTypeAndSigs) fg.TDecl {
+// Pre: `wval` represents an instantiation of the `td` type  // TODO: refactor, decompose
+func monomTDecl(ds []Decl, omega WMap, td TDecl,
+	wval MonomTypeAndSigs) fg.TDecl {
 	subs := make(map[TParam]Type) // Type is a TName
 	psi := td.GetPsi()
 	for i := 0; i < len(psi.tFormals); i++ {
-		subs[psi.tFormals[i].name] = wv.u_ground.u_args[i]
+		subs[psi.tFormals[i].name] = wval.u_ground.u_args[i]
 	}
 	switch d := td.(type) {
 	case STypeLit:
@@ -99,7 +100,7 @@ func monomTDecl(ds []Decl, omega WMap, td TDecl, wv MonomTypeAndSigs) fg.TDecl {
 			}
 			fds[i] = fg.NewFieldDecl(tmp.field, omega[toWKey(u)].t_monom)
 		}
-		return fg.NewSTypeLit(wv.t_monom, fds)
+		return fg.NewSTypeLit(wval.t_monom, fds)
 	case ITypeLit:
 		var ss []fg.Spec
 		for _, v := range d.specs {
@@ -118,11 +119,11 @@ func monomTDecl(ds []Decl, omega WMap, td TDecl, wv MonomTypeAndSigs) fg.TDecl {
 					// forall u_S s.t. u_S <: wv.u, collect m.targs for all wv.m and mono(u_S.m)
 					// ^Correction: forall u, not only u_S, i.e., including interface type receivers
 					// (Cf. map.fgg, Bool().Cond(Bool())(...))
-					gs := methods(ds, wv.u_ground)
+					gs := methods(ds, wval.u_ground)
 					empty := make(Delta)
 					targs := make(map[string][]Type)
 					for _, v := range omega {
-						if /*IsStructType(ds, v.u.t) &&*/ v.u_ground.Impls(ds, empty, wv.u_ground) { // N.B. now adding reflexively
+						if /*IsStructType(ds, v.u.t) &&*/ v.u_ground.Impls(ds, empty, wval.u_ground) { // N.B. now adding reflexively
 							// Collect meth instans from *all* subtypes, i.e., including calls on interface receivers
 							for _, v1 := range gs {
 								addMethInstans(v, v1.meth, targs)
@@ -157,7 +158,7 @@ func monomTDecl(ds []Decl, omega WMap, td TDecl, wv MonomTypeAndSigs) fg.TDecl {
 					"\n\t" + v.String())
 			}
 		}
-		return fg.NewITypeLit(wv.t_monom, ss)
+		return fg.NewITypeLit(wval.t_monom, ss)
 	default:
 		panic("Unknown TDecl kind: " + reflect.TypeOf(d).String() +
 			"\n\t" + d.String())
@@ -166,13 +167,14 @@ func monomTDecl(ds []Decl, omega WMap, td TDecl, wv MonomTypeAndSigs) fg.TDecl {
 
 /* Monom MDecl */
 
-// Pre: `wv` represents an instantiation of `md.t_recv`  // TODO: refactor, decompose
-func monomMDecl(ds []Decl, omega WMap, md MDecl, wv MonomTypeAndSigs) (res []fg.MDecl) {
+// Pre: `wval` represents an instantiation of `md.t_recv`  // TODO: refactor, decompose
+func monomMDecl(ds []Decl, omega WMap, md MDecl,
+	wval MonomTypeAndSigs) (res []fg.MDecl) {
 	subs := make(map[TParam]Type) // Type is a TName
 	for i := 0; i < len(md.psi_recv.tFormals); i++ {
-		subs[md.psi_recv.tFormals[i].name] = wv.u_ground.u_args[i]
+		subs[md.psi_recv.tFormals[i].name] = wval.u_ground.u_args[i]
 	}
-	recv := fg.NewParamDecl(md.x_recv, wv.t_monom)
+	recv := fg.NewParamDecl(md.x_recv, wval.t_monom)
 	if len(md.psi_meth.tFormals) == 0 {
 		pds := make([]fg.ParamDecl, len(md.pDecls))
 		for i := 0; i < len(md.pDecls); i++ {
@@ -184,9 +186,9 @@ func monomMDecl(ds []Decl, omega WMap, md MDecl, wv MonomTypeAndSigs) (res []fg.
 		e := monomExpr(omega, md.e_body.TSubs(subs))
 		res = append(res, fg.NewMDecl(recv, md.name, pds, t, e))
 	} else {
-		targs := collectZigZagMethInstans(ds, omega, md, wv)
+		targs := collectZigZagMethInstans(ds, omega, md, wval)
 		if len(targs) == 0 { // Means no u_I, if len(wv.gs)>0 -- targs doesn't (yet) include wv.gs
-			addMethInstans(wv, md.name, targs)
+			addMethInstans(wval, md.name, targs)
 		}
 		for _, v := range targs { // CHECKME: factor out with ITypeLit?
 			subs1 := make(map[TParam]Type)
@@ -196,7 +198,7 @@ func monomMDecl(ds []Decl, omega WMap, md MDecl, wv MonomTypeAndSigs) (res []fg.
 			for i := 0; i < len(v); i++ {
 				subs1[md.psi_meth.tFormals[i].name] = v[i]
 			}
-			recv := fg.NewParamDecl(md.x_recv, wv.t_monom)
+			recv := fg.NewParamDecl(md.x_recv, wval.t_monom)
 			pds := make([]fg.ParamDecl, len(md.pDecls))
 			for i := 0; i < len(md.pDecls); i++ {
 				tmp := md.pDecls[i]
@@ -218,14 +220,15 @@ func monomMDecl(ds []Decl, omega WMap, md MDecl, wv MonomTypeAndSigs) (res []fg.
 // N.B. return is empty, i.e., does not include wv.gs, if no u_I
 // N.B. return is a map, so "duplicate" add-meth-param type instans are implicitly setify-ed
 // ^E.g., Calling m(A()) on some struct separately via two interfaces T1 and T2 where T2 <: T1
-func collectZigZagMethInstans(ds []Decl, omega WMap, md MDecl, wv MonomTypeAndSigs) map[string][]Type {
+func collectZigZagMethInstans(ds []Decl, omega WMap, md MDecl,
+	wval MonomTypeAndSigs) map[string][]Type {
 	empty := make(Delta)
 	targs := make(map[string][]Type)
 	// Given m = md.m, forall u_I s.t. m in meths(u_I) && wv.u <: u_I, ..
 	// ..forall u_S s.t. u_S <: u_I, collect targs for all mono(u_S.m)
 	// ^Correction: forall u, not only u_S
 	for _, v := range omega {
-		if IsNamedIfaceType(ds, v.u_ground) && wv.u_ground.Impls(ds, empty, v.u_ground) {
+		if IsNamedIfaceType(ds, v.u_ground) && wval.u_ground.Impls(ds, empty, v.u_ground) {
 			gs := methods(ds, v.u_ground)
 			if _, ok := gs[md.name]; ok {
 				addMethInstans(v, md.name, targs)
@@ -240,9 +243,9 @@ func collectZigZagMethInstans(ds []Decl, omega WMap, md MDecl, wv MonomTypeAndSi
 	return targs
 }
 
-// Add meth instans from `wv`, filtered by `m`, to `targs`
-func addMethInstans(wv MonomTypeAndSigs, m Name, targs map[string][]Type) {
-	for _, v := range wv.sigs {
+// Add meth instans from `wval`, filtered by `m`, to `targs`
+func addMethInstans(wval MonomTypeAndSigs, m Name, targs map[string][]Type) {
+	for _, v := range wval.sigs {
 		m1 := getOrigMethName(v.sig.GetMethod())
 		if m1 == m && len(v.targs) > 0 {
 			hash := "" // Use WriteTypes?
@@ -476,14 +479,14 @@ func MakeWMap(ds []Decl, gamma GroundEnv, e FGGExpr, omega WMap) (res Type) {
 		res = g.u_ret // May be a TParam, e.g., `Cond(type a Any())(br Branches(a)) a` (map.fgg) -- then below is skipped
 		if u0_closed, ok := u0.(TNamed); ok && isGround(u0_closed) &&
 			len(e1.t_args) > 0 {
-			isC := true
+			isClosed := true
 			for _, v := range e1.t_args {
 				if u, ok := v.(TNamed); !ok || !isGround(u) { // CHECKME: do recursively on targs?
-					isC = false
+					isClosed = false
 					break
 				}
 			}
-			if isC {
+			if isClosed {
 				subs := make(map[TParam]Type)
 				for i := 0; i < len(g.psi.tFormals); i++ {
 					subs[g.psi.tFormals[i].name] = e1.t_args[i]
