@@ -59,11 +59,6 @@ func oblitSTypeLit(s fgg.STypeLit) STypeLit {
 	t := Type(s.GetName())
 	psi := s.GetPsi()
 	tfs := psi.GetTFormals()
-	/*rds := make([]RepDecl, len(tfs))
-	for i := 0; i < len(rds); i++ {
-		tf := tfs[i]
-		rds[i] = RepDecl{tf.GetTParam(), Rep{tf.GetType()}} // TODO: make `New` constructor
-	}*/
 	fds_fgg := s.GetFieldDecls()
 	fds_fgr := make([]FieldDecl, len(tfs)+len(fds_fgg))
 	for i := 0; i < len(tfs); i++ {
@@ -103,7 +98,6 @@ func oblitSig(g_fgg fgg.Sig) Sig {
 	for i := 0; i < len(tfs); i++ {
 		tf := tfs[i]
 		pds_fgr[i] = NewParamDecl(tf.GetTParam().String(),
-			//Rep{tf.GetType()}) // TODO: !!! Rep `New` constructor
 			FggType)
 	}
 	for i := 0; i < len(pds_fgg); i++ {
@@ -111,7 +105,6 @@ func oblitSig(g_fgg fgg.Sig) Sig {
 		pds_fgr[len(tfs)+i] = NewParamDecl(pd_fgg.GetName(), Type("HasFggType")) // TODO: factor out constant
 	}
 	return NewSig(m, pds_fgr, Type("HasFggType")) // TODO: constant
-	// FIXME: need RepDecl in Sig?
 }
 
 /* Obliterate MDecl */
@@ -123,11 +116,6 @@ func oblitMDecl(ds_fgg []Decl, d fgg.MDecl) MDecl {
 	m := d.GetName()
 	tfs := d.GetMDeclPsi().GetTFormals()
 	recv_tfs := d.GetRecvPsi().GetTFormals()
-	/*rds := make([]RepDecl, len(tfs))
-	for i := 0; i < len(tfs); i++ {
-		tf := tfs[i]
-		rds[i] = RepDecl{tf.GetTParam(), Rep{tf.GetType()}} // TODO: `New` constructors
-	}*/
 	pds_fgg := d.GetParamDecls()
 	pds_fgr := make([]ParamDecl, len(tfs)+len(pds_fgg)) // Cf. TStructLit
 	for i := 0; i < len(tfs); i++ {

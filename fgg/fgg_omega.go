@@ -229,7 +229,7 @@ func collectGroundTypesFromType(ds []Decl, u Type, ground map[string]GroundTypeA
 			}
 		}
 
-		// Visit all meths of sub-structs? -- no
+		// Visit all meths of subtype structs? -- no
 	}
 }
 
