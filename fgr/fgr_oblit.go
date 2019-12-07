@@ -206,7 +206,7 @@ func oblitExpr(ds_fgg []Decl, delta fgg.Delta, gamma fgg.Gamma, e_fgg fgg.FGGExp
 		var res FGRExpr
 		res = NewSelect(e_fgr, f)
 		du := dtype(ds_fgg, delta, gamma, e)
-		//if !fgg.IsStructTName1(ds_fgg, u_f) { // !!! don't add cast when field type is a struct
+		//if !fgg.IsStrucrName1(ds_fgg, u_f) { // !!! don't add cast when field type is a struct
 		if !fgg.IsStructType(ds_fgg, du) { // if the FGR field decl type is (erased) non-struct, in general need to cast the select result to the (erasure of the) expected FGG type
 			res = NewAssert(res, toFgrTypeFromBounds(delta, u_f))
 		}

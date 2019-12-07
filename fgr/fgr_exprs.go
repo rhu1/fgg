@@ -70,7 +70,7 @@ type StructLit struct {
 
 var _ FGRExpr = StructLit{}
 
-func (s StructLit) GetType() Type       { return s.t_S }
+func (s StructLit) Gerype() Type        { return s.t_S }
 func (s StructLit) GetElems() []FGRExpr { return s.elems }
 
 func (s StructLit) Subs(subs map[Variable]FGRExpr) FGRExpr {
@@ -336,7 +336,7 @@ type Assert struct {
 var _ FGRExpr = Assert{}
 
 func (a Assert) GetExpr() FGRExpr { return a.e_I }
-func (a Assert) GetType() Type    { return a.t_cast }
+func (a Assert) Gerype() Type     { return a.t_cast }
 
 func (a Assert) Subs(subs map[Variable]FGRExpr) FGRExpr {
 	return Assert{a.e_I.Subs(subs), a.t_cast}
@@ -479,9 +479,9 @@ func (c IfThenElse) Eval(ds []Decl) (FGRExpr, string) {
 	p_fgg := a.Parse(true, c.src).(fgg.FGGProgram)
 	ds_fgg := p_fgg.GetDecls()
 
-	tt1 := c.e1.(TRep)
-	tt2 := c.e2.(TRep)
-	if tt1.Reify().Impls(ds_fgg, make(fgg.Delta), tt2.Reify()) {
+	r1 := c.e1.(TRep)
+	r2 := c.e2.(TRep)
+	if r1.Reify().Impls(ds_fgg, make(fgg.Delta), r2.Reify()) {
 		return c.e3, "If-true"
 	} else {
 		return Panic{}, "If-false"
@@ -521,43 +521,43 @@ func (c IfThenElse) ToGoString() string {
 
 type TRep struct {
 	name Name
-	args []FGRExpr // TRep or TmpTParam -- CHECKME: TmpTParam still needed?
-	// TODO: factor out TArg?
+	args []FGRExpr // TRep or TmpTParam -- CHECKME: TmpTParam still needed? (wrappers only?)
+	// CHECKME: factor out TArg?
 }
 
 var _ FGRExpr = TRep{}
 
-func (tt TRep) Reify() fgg.TNamed {
-	if !tt.IsValue() {
-		panic("Cannot refiy non-ground TypeTree: " + tt.String())
+func (r TRep) Reify() fgg.TNamed {
+	if !r.IsValue() {
+		panic("Cannot refiy non-ground TypeTree: " + r.String())
 	}
-	us := make([]fgg.Type, len(tt.args)) // All TName
+	us := make([]fgg.Type, len(r.args)) // All TName
 	for i := 0; i < len(us); i++ {
-		us[i] = tt.args[i].(TRep).Reify() // CHECKME: guaranteed TypeTree?
+		us[i] = r.args[i].(TRep).Reify() // CHECKME: guaranteed TRep?
 	}
-	return fgg.NewTName(string(tt.name), us)
+	return fgg.NewTName(string(r.name), us)
 }
 
-func (tt TRep) Subs(subs map[Variable]FGRExpr) FGRExpr {
-	es := make([]FGRExpr, len(tt.args))
+func (r TRep) Subs(subs map[Variable]FGRExpr) FGRExpr {
+	es := make([]FGRExpr, len(r.args))
 	for i := 0; i < len(es); i++ {
-		es[i] = tt.args[i].Subs(subs)
+		es[i] = r.args[i].Subs(subs)
 	}
-	return TRep{tt.name, es}
+	return TRep{r.name, es}
 }
 
-func (tt TRep) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
+func (r TRep) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 	return FggType
 }
 
-// !!! TypeTree evaluation contexts vs. reify aux?
-func (tt TRep) Eval(ds []Decl) (FGRExpr, string) {
+// !!! TRep evaluation contexts vs. reify aux?
+func (r TRep) Eval(ds []Decl) (FGRExpr, string) {
 	// Cf. StructLit.Eval
-	es := make([]FGRExpr, len(tt.args))
+	es := make([]FGRExpr, len(r.args))
 	done := false
 	var rule string
 	for i := 0; i < len(es); i++ {
-		v := tt.args[i]
+		v := r.args[i]
 		if !done && !v.IsValue() {
 			v, rule = v.Eval(ds)
 			done = true
@@ -565,36 +565,36 @@ func (tt TRep) Eval(ds []Decl) (FGRExpr, string) {
 		es[i] = v
 	}
 	if done {
-		return TRep{tt.name, es}, rule
+		return TRep{r.name, es}, rule
 	} else {
-		panic("Cannot reduce: " + tt.String())
+		panic("Cannot reduce: " + r.String())
 	}
 }
 
-func (tt TRep) IsValue() bool {
-	for i := 0; i < len(tt.args); i++ {
-		if !tt.args[i].IsValue() {
+func (r TRep) IsValue() bool {
+	for i := 0; i < len(r.args); i++ {
+		if !r.args[i].IsValue() {
 			return false
 		}
 	}
 	return true
 }
 
-func (tt TRep) String() string {
+func (r TRep) String() string {
 	var b strings.Builder
-	b.WriteString(string(tt.name))
+	b.WriteString(string(r.name))
 	b.WriteString("[[")
-	writeExprs(&b, tt.args)
+	writeExprs(&b, r.args)
 	b.WriteString("]]")
 	return b.String()
 }
 
-func (tt TRep) ToGoString() string {
+func (r TRep) ToGoString() string {
 	var b strings.Builder
 	b.WriteString("main.")
-	b.WriteString(string(tt.name))
+	b.WriteString(string(r.name))
 	b.WriteString("[[")
-	writeToGoExprs(&b, tt.args)
+	writeToGoExprs(&b, r.args)
 	b.WriteString("]]")
 	return b.String()
 }
