@@ -126,7 +126,7 @@ func Translate(p fgg.FGGProgram) FGRProgram { // TODO FIXME: FGR -- TODO also ca
 			e = NewSelect(e, "any")
 			//e = NewAssert(e, toFgTypeFromBounds(delta, u))
 			e = addGetValueCast(delta, e, u)
-			md := NewMDecl(NewParamDecl("x", k), g.GetName(),
+			md := NewMDecl(NewParamDecl("x", k), g.GetMethod(),
 				//[]RepDecl{}, // FIXME
 				pds, t, e)
 			ds_fgr = append(ds_fgr, md)
@@ -188,7 +188,7 @@ func fgrTransSig(delta fgg.Delta, g fgg.Sig) Sig {
 		pds[i] = NewParamDecl(pds_fgg[i].GetName(), toFgTypeFromBounds(delta1, pds_fgg[i].GetType()))
 	}
 	t := toFgTypeFromBounds(delta1, g.GetType())
-	return NewSig(g.GetName(), pds, t)
+	return NewSig(g.GetMethod(), pds, t)
 }
 
 /* MDecl */

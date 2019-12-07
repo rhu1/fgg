@@ -94,7 +94,7 @@ func oblitITypeLit(c fgg.ITypeLit) ITypeLit {
 }
 
 func oblitSig(g_fgg fgg.Sig) Sig {
-	m := g_fgg.GetName()
+	m := g_fgg.GetMethod()
 	tfs := g_fgg.GetPsi().GetTFormals()
 	pds_fgg := g_fgg.GetParamDecls()
 	pds_fgr := make([]ParamDecl, len(tfs)+len(pds_fgg))

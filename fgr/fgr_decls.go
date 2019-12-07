@@ -175,15 +175,11 @@ type MDecl struct {
 
 var _ Decl = MDecl{}
 
-func (md MDecl) Receiver() ParamDecl       { return md.recv }
-func (md MDecl) MethodName() Name          { return md.name }
-func (md MDecl) MethodParams() []ParamDecl { return md.pDecls } // Returns non-receiver params
-func (md MDecl) ReturnType() Type          { return md.t_ret }
-func (md MDecl) Impl() FGRExpr             { return md.e_body }
-
-func (md MDecl) ToSig() Sig {
-	return Sig{md.name, md.pDecls, md.t_ret}
-}
+func (md MDecl) GetReceiver() ParamDecl     { return md.recv }
+func (md MDecl) GetName() Name              { return md.name }   // From Decl
+func (md MDecl) GetParamDecls() []ParamDecl { return md.pDecls } // Returns non-receiver params
+func (md MDecl) GetReturn() Type            { return md.t_ret }
+func (md MDecl) GetImpl() FGRExpr           { return md.e_body }
 
 func (md MDecl) Ok(ds []Decl) {
 	if !isStructType(ds, md.recv.t) {
@@ -202,8 +198,8 @@ func (md MDecl) Ok(ds []Decl) {
 	}
 }
 
-func (md MDecl) GetName() Name {
-	return md.name
+func (md MDecl) ToSig() Sig {
+	return Sig{md.name, md.pDecls, md.t_ret}
 }
 
 func (md MDecl) String() string {
@@ -213,10 +209,6 @@ func (md MDecl) String() string {
 	b.WriteString(") ")
 	b.WriteString(md.name)
 	b.WriteString("(")
-	/*writeRepDecls(&b, md.rds)
-	if len(md.rds) > 0 && len(md.pds) > 0 {
-		b.WriteString("; ")
-	}*/
 	writeParamDecls(&b, md.pDecls)
 	b.WriteString(") ")
 	b.WriteString(md.t_ret.String())
@@ -249,37 +241,29 @@ func (pd ParamDecl) String() string {
 /* ITypeLit, Sig */
 
 type ITypeLit struct {
-	t  Type // Factor out embedded struct with STypeLit?  But constructor will need that struct?
-	ss []Spec
+	t_I   Type // Factor out embedded struct with STypeLit?  But constructor will need that struct?
+	specs []Spec
 }
 
 var _ TDecl = ITypeLit{}
+
+func (c ITypeLit) GetType() Type    { return c.t_I }       // From TDecl
+func (c ITypeLit) GetName() Name    { return Name(c.t_I) } // From Decl
+func (c ITypeLit) GetSpecs() []Spec { return c.specs }
 
 func (c ITypeLit) Ok(ds []Decl) {
 	// TODO
 }
 
-func (c ITypeLit) GetType() Type {
-	return c.t
-}
-
-func (c ITypeLit) GetName() Name {
-	return Name(c.t)
-}
-
-func (c ITypeLit) Specs() []Spec {
-	return c.ss
-}
-
 func (c ITypeLit) String() string {
 	var b strings.Builder
 	b.WriteString("type ")
-	b.WriteString(c.t.String())
+	b.WriteString(c.t_I.String())
 	b.WriteString(" interface {")
-	if len(c.ss) > 0 {
+	if len(c.specs) > 0 {
 		b.WriteString(" ")
-		b.WriteString(c.ss[0].String())
-		for _, v := range c.ss[1:] {
+		b.WriteString(c.specs[0].String())
+		for _, v := range c.specs[1:] {
 			b.WriteString("; ")
 			b.WriteString(v.String())
 		}
@@ -290,28 +274,28 @@ func (c ITypeLit) String() string {
 }
 
 type Sig struct {
-	m   Name
-	pds []ParamDecl
-	t   Type
+	meth   Name
+	pDecls []ParamDecl
+	t_ret  Type
 }
-
-func (s Sig) MethodName() Name          { return s.m }
-func (s Sig) MethodParams() []ParamDecl { return s.pds }
-func (s Sig) ReturnType() Type          { return s.t }
 
 var _ Spec = Sig{}
 
+func (g Sig) GetMethod() Name            { return g.meth }
+func (g Sig) GetParamDecls() []ParamDecl { return g.pDecls }
+func (g Sig) GetReturn() Type            { return g.t_ret }
+
 // !!! Sig in FGR (also, Go spec) includes ~x, which naively breaks "impls"
 func (g0 Sig) EqExceptVars(g Sig) bool {
-	if len(g0.pds) != len(g.pds) {
+	if len(g0.pDecls) != len(g.pDecls) {
 		return false
 	}
-	for i := 0; i < len(g0.pds); i++ {
-		if g0.pds[i].t != g.pds[i].t {
+	for i := 0; i < len(g0.pDecls); i++ {
+		if g0.pDecls[i].t != g.pDecls[i].t {
 			return false
 		}
 	}
-	return g0.m == g.m && g0.t == g.t
+	return g0.meth == g.meth && g0.t_ret == g.t_ret
 }
 
 func (g Sig) GetSigs(_ []Decl) []Sig {
@@ -320,11 +304,11 @@ func (g Sig) GetSigs(_ []Decl) []Sig {
 
 func (g Sig) String() string {
 	var b strings.Builder
-	b.WriteString(g.m)
+	b.WriteString(g.meth)
 	b.WriteString("(")
-	writeParamDecls(&b, g.pds)
+	writeParamDecls(&b, g.pDecls)
 	b.WriteString(") ")
-	b.WriteString(g.t.String())
+	b.WriteString(g.t_ret.String())
 	return b.String()
 }
 
@@ -358,7 +342,7 @@ func writeParamDecls(b *strings.Builder, pds []ParamDecl) {
 	}
 }
 
-/* Old */
+/* Old -- deprecated */
 
 //*/
 

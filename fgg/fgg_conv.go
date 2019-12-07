@@ -98,7 +98,7 @@ func (c *fg2fgg) convertITypeLit(i fg.ITypeLit) (ITypeLit, error) {
 		retTypeName, _ := c.convertType(sig.GetReturn())
 
 		specs = append(specs, Sig{
-			meth:   Name(sig.GetName()),
+			meth:   Name(sig.GetMethod()),
 			psi:    pDecls{tFormals: nil},
 			pDecls: paramDecls,
 			u_ret:  TNamed{t_name: retTypeName},

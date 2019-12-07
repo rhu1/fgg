@@ -349,7 +349,7 @@ type Sig struct {
 
 var _ Spec = Sig{}
 
-func (g Sig) GetName() Name              { return g.meth }
+func (g Sig) GetMethod() Name            { return g.meth }
 func (g Sig) GetPsi() pDecls             { return g.psi }
 func (g Sig) GetParamDecls() []ParamDecl { return g.pDecls }
 func (g Sig) GetType() Type              { return g.u_ret }

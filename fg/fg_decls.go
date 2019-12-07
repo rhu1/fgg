@@ -177,12 +177,10 @@ type MDecl struct {
 var _ Decl = MDecl{}
 
 func (md MDecl) GetReceiver() ParamDecl     { return md.recv }
+func (md MDecl) GetName() Name              { return md.name }   // From Decl
 func (md MDecl) GetParamDecls() []ParamDecl { return md.pDecls } // Returns non-receiver params
 func (md MDecl) GetReturn() Type            { return md.t_ret }
 func (md MDecl) GetBody() FGExpr            { return md.e_body }
-
-// From Decl
-func (md MDecl) GetName() Name { return md.name }
 
 func (md MDecl) Ok(ds []Decl) {
 	if !isStructType(ds, md.recv.t) {
@@ -229,10 +227,8 @@ type ParamDecl struct {
 
 var _ FGNode = ParamDecl{}
 
+func (pd ParamDecl) GetName() Name { return pd.name } // From Decl
 func (pd ParamDecl) GetType() Type { return pd.t }
-
-// From Decl
-func (pd ParamDecl) GetName() Name { return pd.name }
 
 func (pd ParamDecl) String() string {
 	var b strings.Builder
@@ -288,9 +284,9 @@ type Sig struct {
 
 var _ Spec = Sig{}
 
-func (s Sig) GetName() Name              { return s.meth }
-func (s Sig) GetParamDecls() []ParamDecl { return s.pDecls }
-func (s Sig) GetReturn() Type            { return s.t_ret }
+func (g Sig) GetMethod() Name            { return g.meth }
+func (g Sig) GetParamDecls() []ParamDecl { return g.pDecls }
+func (g Sig) GetReturn() Type            { return g.t_ret }
 
 // !!! Sig in FG (also, Go spec) includes ~x, which naively breaks "impls"
 func (g0 Sig) EqExceptVars(g Sig) bool {
