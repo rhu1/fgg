@@ -35,9 +35,9 @@ type Type interface {
 	ToGoString() string
 }
 
-var _ Type = TParam("")
-
 type TParam Name
+
+var _ Type = TParam("")
 
 func (a TParam) TSubs(subs map[TParam]Type) Type {
 	res, ok := subs[a]
@@ -79,14 +79,14 @@ func (a TParam) ToGoString() string {
 	return string(a)
 }
 
-var _ Type = TNamed{}
-var _ Spec = TNamed{}
-
 // Convention: t=type name (t), u=FGG type (tau)
 type TNamed struct {
 	t_name Name
 	u_args []Type
 }
+
+var _ Type = TNamed{}
+var _ Spec = TNamed{}
 
 func (u0 TNamed) GetName() Name    { return u0.t_name }
 func (u0 TNamed) GetTArgs() []Type { return u0.u_args }

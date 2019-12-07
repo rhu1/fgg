@@ -17,11 +17,11 @@ func NewAssert(e FGExpr, t Type) Assert          { return Assert{e, t} }
 
 /* Variable */
 
-var _ FGExpr = Variable{}
-
 type Variable struct {
 	name Name
 }
+
+var _ FGExpr = Variable{}
 
 func (x Variable) Subs(subs map[Variable]FGExpr) FGExpr {
 	res, ok := subs[x]
@@ -57,12 +57,12 @@ func (x Variable) ToGoString() string {
 
 /* StructLit */
 
-var _ FGExpr = StructLit{}
-
 type StructLit struct {
 	t_S   Type
 	elems []FGExpr
 }
+
+var _ FGExpr = StructLit{}
 
 func (s StructLit) GetType() Type      { return s.t_S }
 func (s StructLit) GetElems() []FGExpr { return s.elems }
@@ -150,12 +150,12 @@ func (s StructLit) ToGoString() string {
 
 /* Select */
 
-var _ FGExpr = Select{}
-
 type Select struct {
 	e_S   FGExpr
 	field Name
 }
+
+var _ FGExpr = Select{}
 
 func (s Select) GetExpr() FGExpr { return s.e_S }
 func (s Select) GetField() Name  { return s.field }
@@ -208,13 +208,13 @@ func (s Select) ToGoString() string {
 
 /* Call */
 
-var _ FGExpr = Call{}
-
 type Call struct {
 	e_recv FGExpr
 	meth   Name
 	args   []FGExpr
 }
+
+var _ FGExpr = Call{}
 
 func (c Call) GetReceiver() FGExpr { return c.e_recv }
 func (c Call) GetMethod() Name     { return c.meth }
@@ -315,12 +315,12 @@ func (c Call) ToGoString() string {
 
 /* Assert */
 
-var _ FGExpr = Assert{}
-
 type Assert struct {
 	e_I    FGExpr
 	t_cast Type
 }
+
+var _ FGExpr = Assert{}
 
 func (a Assert) GetExpr() FGExpr { return a.e_I }
 func (a Assert) GetType() Type   { return a.t_cast }

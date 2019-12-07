@@ -109,7 +109,7 @@ type FGRExpr interface {
 func isStructType(ds []Decl, t Type) bool {
 	for _, v := range ds {
 		d, ok := v.(STypeLit)
-		if ok && d.t == t {
+		if ok && d.t_S == t {
 			return true
 		}
 	}

@@ -19,11 +19,11 @@ func NewVariable(id Name) Variable { return Variable{id} }
 
 /* Variable */
 
-var _ FGGExpr = Variable{}
-
 type Variable struct {
 	name Name
 }
+
+var _ FGGExpr = Variable{}
 
 func (x Variable) GetName() Name { return x.name }
 
@@ -68,12 +68,12 @@ func (x Variable) ToGoString() string {
 
 /* StructLit */
 
-var _ FGGExpr = StructLit{}
-
 type StructLit struct {
 	u_S   TNamed // u.t is a t_S
 	elems []FGGExpr
 }
+
+var _ FGGExpr = StructLit{}
 
 func (s StructLit) GetNamedType() TNamed { return s.u_S }
 func (s StructLit) GetElems() []FGGExpr  { return s.elems }
@@ -168,12 +168,12 @@ func (s StructLit) ToGoString() string {
 
 /* Select */
 
-var _ FGGExpr = Select{}
-
 type Select struct {
 	e_S   FGGExpr
 	field Name
 }
+
+var _ FGGExpr = Select{}
 
 func (s Select) GetExpr() FGGExpr { return s.e_S }
 func (s Select) GetField() Name   { return s.field }
@@ -231,14 +231,14 @@ func (s Select) ToGoString() string {
 
 /* Call */
 
-var _ FGGExpr = Call{}
-
 type Call struct {
 	e_recv FGGExpr
 	meth   Name
 	t_args []Type
 	args   []FGGExpr
 }
+
+var _ FGGExpr = Call{}
 
 func (c Call) GetRecv() FGGExpr   { return c.e_recv }
 func (c Call) GetMethod() Name    { return c.meth }
@@ -384,12 +384,12 @@ func (c Call) ToGoString() string {
 
 /* Assert */
 
-var _ FGGExpr = Assert{}
-
 type Assert struct {
 	expr   FGGExpr
 	u_cast Type
 }
+
+var _ FGGExpr = Assert{}
 
 func (a Assert) GetExpr() FGGExpr { return a.expr }
 func (a Assert) GetType() Type    { return a.u_cast }

@@ -22,14 +22,14 @@ func NewProgram(ds []Decl, e FGGExpr, printf bool) FGGProgram {
 
 /* Program */
 
-var _ base.Program = FGGProgram{}
-var _ FGGNode = FGGProgram{}
-
 type FGGProgram struct {
 	decls  []Decl
 	e_main FGGExpr
 	printf bool // false = "original" `_ = e_main` syntax; true = import-fmt/printf syntax
 }
+
+var _ base.Program = FGGProgram{}
+var _ FGGNode = FGGProgram{}
 
 func (p FGGProgram) GetDecls() []Decl   { return p.decls } // Return a copy?
 func (p FGGProgram) GetMain() base.Expr { return p.e_main }
@@ -145,13 +145,13 @@ func (tf TFormal) String() string {
 
 /* STypeLit, FieldDecl */
 
-var _ TDecl = STypeLit{}
-
 type STypeLit struct {
 	t_name Name
 	psi    pDecls
 	fDecls []FieldDecl
 }
+
+var _ TDecl = STypeLit{}
 
 func (s STypeLit) GetName() Name              { return s.t_name }
 func (s STypeLit) GetPsi() pDecls             { return s.psi }
@@ -176,12 +176,12 @@ func (s STypeLit) String() string {
 	return b.String()
 }
 
-var _ FGGNode = FieldDecl{}
-
 type FieldDecl struct {
 	field Name
 	u     Type // u=tau
 }
+
+var _ FGGNode = FieldDecl{}
 
 func (fd FieldDecl) GetName() Name { return fd.field }
 func (fd FieldDecl) GetType() Type { return fd.u }
@@ -196,8 +196,6 @@ func (fd FieldDecl) String() string {
 
 /* MDecl, ParamDecl */
 
-var _ Decl = MDecl{}
-
 type MDecl struct {
 	x_recv   Name // CHECKME: better to be Variable?  (etc. for other such Names)
 	t_recv   Name // N.B. t_S
@@ -209,6 +207,8 @@ type MDecl struct {
 	u_ret    Type // Return
 	e_body   FGGExpr
 }
+
+var _ Decl = MDecl{}
 
 func (md MDecl) GetRecvName() Name          { return md.x_recv }
 func (md MDecl) GetRecvTypeName() Name      { return md.t_recv }
@@ -281,13 +281,13 @@ func (md MDecl) String() string {
 	return b.String()
 }
 
-var _ FGGNode = ParamDecl{}
-
 // Cf. FieldDecl
 type ParamDecl struct {
 	name Name // CHECKME: Variable?
 	u    Type
 }
+
+var _ FGGNode = ParamDecl{}
 
 func (pd ParamDecl) GetName() Name { return pd.name }
 func (pd ParamDecl) GetType() Type { return pd.u }
@@ -298,13 +298,13 @@ func (pd ParamDecl) String() string {
 
 /* ITypeLit, Sig */
 
-var _ TDecl = ITypeLit{}
-
 type ITypeLit struct {
 	t_I   Name
 	psi   pDecls
 	specs []Spec
 }
+
+var _ TDecl = ITypeLit{}
 
 func (c ITypeLit) GetName() Name    { return c.t_I }
 func (c ITypeLit) GetPsi() pDecls   { return c.psi }
@@ -340,14 +340,14 @@ func (c ITypeLit) String() string {
 	return b.String()
 }
 
-var _ Spec = Sig{}
-
 type Sig struct {
 	meth   Name
 	psi    pDecls
 	pDecls []ParamDecl
 	u_ret  Type
 }
+
+var _ Spec = Sig{}
 
 func (g Sig) GetName() Name              { return g.meth }
 func (g Sig) GetPsi() pDecls             { return g.psi }

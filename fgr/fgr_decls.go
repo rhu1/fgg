@@ -96,19 +96,18 @@ func (p FGRProgram) String() string {
 	return b.String()
 }
 
-/* STypeLit, RepDecl, FieldDecl */
+/* STypeLit, FieldDecl */
 
 type STypeLit struct {
-	t Type
-	//rds []RepDecl
-	fds []FieldDecl
+	t_S    Type
+	fDecls []FieldDecl
 }
 
 var _ TDecl = STypeLit{}
 
-func (s STypeLit) GetType() Type       { return s.t }
-func (s STypeLit) GetName() Name       { return Name(s.t) }
-func (s STypeLit) Fields() []FieldDecl { return s.fds }
+func (s STypeLit) GetType() Type       { return s.t_S }
+func (s STypeLit) Fields() []FieldDecl { return s.fDecls }
+func (s STypeLit) GetName() Name       { return Name(s.t_S) } // From base.Decl
 
 func (s STypeLit) Ok(ds []Decl) {
 	// TODO
@@ -117,7 +116,7 @@ func (s STypeLit) Ok(ds []Decl) {
 func (s STypeLit) String() string {
 	var b strings.Builder
 	b.WriteString("type ")
-	b.WriteString(s.t.String())
+	b.WriteString(s.t_S.String())
 	b.WriteString(" struct {")
 	/*if len(s.rds) > 0 {
 		b.WriteString(" ")
@@ -126,9 +125,9 @@ func (s STypeLit) String() string {
 			b.WriteString(";")
 		}
 	}*/
-	if len(s.fds) > 0 {
+	if len(s.fDecls) > 0 {
 		b.WriteString(" ")
-		writeFieldDecls(&b, s.fds)
+		writeFieldDecls(&b, s.fDecls)
 	}
 	b.WriteString(" ")
 	b.WriteString("}")
@@ -147,44 +146,43 @@ func (rd RepDecl) String() string {
 }*/
 
 type FieldDecl struct {
-	f Name
-	t Type
+	name Name
+	t    Type
 }
 
-func (f FieldDecl) GetName() Name { return f.f }
+func (f FieldDecl) GetName() Name { return f.name }
 func (f FieldDecl) GetType() Type { return f.t }
 
 var _ FGRNode = FieldDecl{}
 
 func (fd FieldDecl) String() string {
-	return fd.f + " " + fd.t.String()
+	var b strings.Builder
+	b.WriteString(fd.name)
+	b.WriteString(" ")
+	b.WriteString(fd.t.String())
+	return b.String()
 }
 
 /* MDecl, ParamDecl */
 
 type MDecl struct {
-	recv ParamDecl
-	m    Name // Not embedding Sig because Sig doesn't take xs
-	//rds  []RepDecl
-	pds []ParamDecl
-	t   Type // Return
-	e   FGRExpr
+	recv   ParamDecl
+	name   Name // Not embedding Sig because Sig doesn't take xs
+	pDecls []ParamDecl
+	t_ret  Type // Return
+	e_body FGRExpr
 }
 
 var _ Decl = MDecl{}
 
-func (md MDecl) Receiver() ParamDecl { return md.recv }
-func (md MDecl) MethodName() Name    { return md.m }
-
-//func (md MDecl) GetRepDecls() []RepDecl { return md.rds }
-
-// MethodParams returns the non-receiver parameters
-func (md MDecl) MethodParams() []ParamDecl { return md.pds }
-func (md MDecl) ReturnType() Type          { return md.t }
-func (md MDecl) Impl() FGRExpr             { return md.e }
+func (md MDecl) Receiver() ParamDecl       { return md.recv }
+func (md MDecl) MethodName() Name          { return md.name }
+func (md MDecl) MethodParams() []ParamDecl { return md.pDecls } // Returns non-receiver params
+func (md MDecl) ReturnType() Type          { return md.t_ret }
+func (md MDecl) Impl() FGRExpr             { return md.e_body }
 
 func (md MDecl) ToSig() Sig {
-	return Sig{md.m, md.pds, md.t}
+	return Sig{md.name, md.pDecls, md.t_ret}
 }
 
 func (md MDecl) Ok(ds []Decl) {
@@ -192,21 +190,20 @@ func (md MDecl) Ok(ds []Decl) {
 		panic("Receiver must be a struct type: not " + md.recv.t.String() +
 			"\n\t" + md.String())
 	}
-	env := Gamma{md.recv.x: md.recv.t}
-	// TODO: rds
-	for _, v := range md.pds {
-		env[v.x] = v.t
+	env := Gamma{md.recv.name: md.recv.t}
+	for _, v := range md.pDecls {
+		env[v.name] = v.t
 	}
 	allowStupid := false
-	t := md.e.Typing(ds, env, allowStupid)
-	if !t.Impls(ds, md.t) {
+	t := md.e_body.Typing(ds, env, allowStupid)
+	if !t.Impls(ds, md.t_ret) {
 		panic("Method body type must implement declared return type: found=" +
-			t.String() + ", expected=" + md.t.String() + "\n\t" + md.String())
+			t.String() + ", expected=" + md.t_ret.String() + "\n\t" + md.String())
 	}
 }
 
 func (md MDecl) GetName() Name {
-	return md.m
+	return md.name
 }
 
 func (md MDecl) String() string {
@@ -214,34 +211,39 @@ func (md MDecl) String() string {
 	b.WriteString("func (")
 	b.WriteString(md.recv.String())
 	b.WriteString(") ")
-	b.WriteString(md.m)
+	b.WriteString(md.name)
 	b.WriteString("(")
 	/*writeRepDecls(&b, md.rds)
 	if len(md.rds) > 0 && len(md.pds) > 0 {
 		b.WriteString("; ")
 	}*/
-	writeParamDecls(&b, md.pds)
+	writeParamDecls(&b, md.pDecls)
 	b.WriteString(") ")
-	b.WriteString(md.t.String())
+	b.WriteString(md.t_ret.String())
 	b.WriteString(" { return ")
-	b.WriteString(md.e.String())
+	b.WriteString(md.e_body.String())
 	b.WriteString(" }")
 	return b.String()
 }
 
 // Cf. FieldDecl
 type ParamDecl struct {
-	x Name // CHECKME: Variable? (also Env key)
-	t Type
+	name Name // CHECKME: Variable? (also Env key)
+	t    Type
 }
-
-func (pd ParamDecl) GetName() Name { return pd.x }
-func (pd ParamDecl) GetType() Type { return pd.t }
 
 var _ FGRNode = ParamDecl{}
 
+func (pd ParamDecl) GetName() Name { return pd.name }
+func (pd ParamDecl) GetType() Type { return pd.t }
+
 func (pd ParamDecl) String() string {
-	return pd.x + " " + pd.t.String()
+	return pd.name + " " + pd.t.String()
+	var b strings.Builder
+	b.WriteString(pd.name)
+	b.WriteString(" ")
+	b.WriteString(pd.t.String())
+	return b.String()
 }
 
 /* ITypeLit, Sig */
@@ -374,7 +376,7 @@ func isDistinctDecl(decl Decl, ds []Decl) bool {
 		case MDecl:
 			// checks that (method-type, method-name) is unique
 			// RH: CHECKME: this would allow (bad) "return overloading"? -- note, d.t is the method return type
-			if md, ok := decl.(MDecl); ok && d.t.String() == md.t.String() && d.GetName() == md.GetName() {
+			if md, ok := decl.(MDecl); ok && d.t_ret.String() == md.t_ret.String() && d.GetName() == md.GetName() {
 				count++
 			}
 		}
