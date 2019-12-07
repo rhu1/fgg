@@ -19,11 +19,11 @@ func NewVariable(id Name) Variable { return Variable{id} }
 
 /* Variable */
 
-var _ FGGExpr = Variable{}
-
 type Variable struct {
 	name Name
 }
+
+var _ FGGExpr = Variable{}
 
 func (x Variable) GetName() Name { return x.name }
 
@@ -68,12 +68,12 @@ func (x Variable) ToGoString() string {
 
 /* StructLit */
 
-var _ FGGExpr = StructLit{}
-
 type StructLit struct {
 	u_S   TNamed // u.t is a t_S
 	elems []FGGExpr
 }
+
+var _ FGGExpr = StructLit{}
 
 func (s StructLit) GetNamedType() TNamed { return s.u_S }
 func (s StructLit) GetElems() []FGGExpr  { return s.elems }
@@ -168,12 +168,12 @@ func (s StructLit) ToGoString() string {
 
 /* Select */
 
-var _ FGGExpr = Select{}
-
 type Select struct {
 	e_S   FGGExpr
 	field Name
 }
+
+var _ FGGExpr = Select{}
 
 func (s Select) GetExpr() FGGExpr { return s.e_S }
 func (s Select) GetField() Name   { return s.field }
@@ -231,14 +231,14 @@ func (s Select) ToGoString() string {
 
 /* Call */
 
-var _ FGGExpr = Call{}
-
 type Call struct {
 	e_recv FGGExpr
 	meth   Name
 	t_args []Type
 	args   []FGGExpr
 }
+
+var _ FGGExpr = Call{}
 
 func (c Call) GetRecv() FGGExpr   { return c.e_recv }
 func (c Call) GetMethod() Name    { return c.meth }
@@ -384,41 +384,41 @@ func (c Call) ToGoString() string {
 
 /* Assert */
 
-var _ FGGExpr = Assert{}
-
 type Assert struct {
-	expr   FGGExpr
+	e_I    FGGExpr
 	u_cast Type
 }
 
-func (a Assert) GetExpr() FGGExpr { return a.expr }
+var _ FGGExpr = Assert{}
+
+func (a Assert) GetExpr() FGGExpr { return a.e_I }
 func (a Assert) GetType() Type    { return a.u_cast }
 
 func (a Assert) Subs(subs map[Variable]FGGExpr) FGGExpr {
-	return Assert{a.expr.Subs(subs), a.u_cast}
+	return Assert{a.e_I.Subs(subs), a.u_cast}
 }
 
 func (a Assert) TSubs(subs map[TParam]Type) FGGExpr {
-	return Assert{a.expr.TSubs(subs), a.u_cast.TSubs(subs)}
+	return Assert{a.e_I.TSubs(subs), a.u_cast.TSubs(subs)}
 }
 
 func (a Assert) Eval(ds []Decl) (FGGExpr, string) {
-	if !a.expr.IsValue() {
-		e, rule := a.expr.Eval(ds)
+	if !a.e_I.IsValue() {
+		e, rule := a.e_I.Eval(ds)
 		return Assert{e, a.u_cast}, rule
 	}
-	u_S := a.expr.(StructLit).u_S
+	u_S := a.e_I.(StructLit).u_S
 	if !IsStructType(ds, u_S) {
 		panic("Non struct type found in struct lit: " + u_S.String())
 	}
 	if u_S.Impls(ds, make(map[TParam]Type), a.u_cast) { // Empty Delta -- not super clear in submission version
-		return a.expr, "Assert"
+		return a.e_I, "Assert"
 	}
 	panic("Cannot reduce: " + a.String())
 }
 
 func (a Assert) Typing(ds []Decl, delta Delta, gamma Gamma, allowStupid bool) Type {
-	u := a.expr.Typing(ds, delta, gamma, allowStupid)
+	u := a.e_I.Typing(ds, delta, gamma, allowStupid)
 	if IsStructType(ds, u) {
 		if allowStupid {
 			return a.u_cast
@@ -446,7 +446,7 @@ func (a Assert) IsValue() bool {
 
 func (a Assert) String() string {
 	var b strings.Builder
-	b.WriteString(a.expr.String())
+	b.WriteString(a.e_I.String())
 	b.WriteString(".(")
 	b.WriteString(a.u_cast.String())
 	b.WriteString(")")
@@ -455,7 +455,7 @@ func (a Assert) String() string {
 
 func (a Assert) ToGoString() string {
 	var b strings.Builder
-	b.WriteString(a.expr.ToGoString())
+	b.WriteString(a.e_I.ToGoString())
 	b.WriteString(".(")
 	b.WriteString(a.u_cast.ToGoString())
 	b.WriteString(")")

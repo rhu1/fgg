@@ -10,6 +10,7 @@ type AstNode interface {
 	String() string
 }
 
+// Top-level decls -- not Field/ParamDecl
 type Decl interface {
 	AstNode
 	GetName() Name

@@ -11,7 +11,7 @@ import "strings"
 
 import "github.com/rhu1/fgg/base"
 
-/* "Exported" constructors for fgg (monom) */
+/* "Exported" constructors (e.g., for fgg_monom)*/
 
 func NewFGProgram(ds []Decl, e FGExpr, printf bool) FGProgram {
 	return FGProgram{ds, e, printf}
@@ -19,25 +19,23 @@ func NewFGProgram(ds []Decl, e FGExpr, printf bool) FGProgram {
 
 func NewSTypeLit(t Type, fds []FieldDecl) STypeLit { return STypeLit{t, fds} }
 func NewITypeLit(t Type, ss []Spec) ITypeLit       { return ITypeLit{t, ss} }
-
 func NewMDecl(recv ParamDecl, m Name, pds []ParamDecl, t Type, e FGExpr) MDecl {
 	return MDecl{recv, m, pds, t, e}
 }
-
 func NewFieldDecl(f Name, t Type) FieldDecl      { return FieldDecl{f, t} }
 func NewParamDecl(x Name, t Type) ParamDecl      { return ParamDecl{x, t} } // For fgg_monom.MakeWMap
 func NewSig(m Name, pds []ParamDecl, t Type) Sig { return Sig{m, pds, t} }  // For fgg_monom.MakeWMap
 
 /* Program */
 
-var _ base.Program = FGProgram{}
-var _ FGNode = FGProgram{}
-
 type FGProgram struct {
 	decls  []Decl
 	e_main FGExpr
 	printf bool // false = "original" `_ = e_main` syntax; true = import-fmt/printf syntax
 }
+
+var _ base.Program = FGProgram{}
+var _ FGNode = FGProgram{}
 
 // From base.Program
 func (p FGProgram) GetDecls() []Decl   { return p.decls } // Return a copy?
@@ -113,12 +111,12 @@ func (p FGProgram) String() string {
 
 /* STypeLit, FieldDecl */
 
-var _ TDecl = STypeLit{}
-
 type STypeLit struct {
 	t_S    Type
 	fDecls []FieldDecl
 }
+
+var _ TDecl = STypeLit{}
 
 func (s STypeLit) GetType() Type              { return s.t_S }
 func (s STypeLit) GetFieldDecls() []FieldDecl { return s.fDecls }
@@ -145,12 +143,12 @@ func (s STypeLit) String() string {
 	return b.String()
 }
 
-var _ FGNode = FieldDecl{}
-
 type FieldDecl struct {
 	name Name
 	t    Type
 }
+
+var _ FGNode = FieldDecl{}
 
 func (f FieldDecl) GetType() Type { return f.t }
 
@@ -168,8 +166,6 @@ func (fd FieldDecl) String() string {
 
 /* MDecl, ParamDecl */
 
-var _ Decl = MDecl{}
-
 type MDecl struct {
 	recv   ParamDecl
 	name   Name // Not embedding Sig because Sig doesn't take xs
@@ -178,13 +174,13 @@ type MDecl struct {
 	e_body FGExpr
 }
 
+var _ Decl = MDecl{}
+
 func (md MDecl) GetReceiver() ParamDecl     { return md.recv }
+func (md MDecl) GetName() Name              { return md.name }   // From Decl
 func (md MDecl) GetParamDecls() []ParamDecl { return md.pDecls } // Returns non-receiver params
 func (md MDecl) GetReturn() Type            { return md.t_ret }
 func (md MDecl) GetBody() FGExpr            { return md.e_body }
-
-// From Decl
-func (md MDecl) GetName() Name { return md.name }
 
 func (md MDecl) Ok(ds []Decl) {
 	if !isStructType(ds, md.recv.t) {
@@ -223,18 +219,16 @@ func (md MDecl) String() string {
 	return b.String()
 }
 
-var _ FGNode = ParamDecl{}
-
 // Cf. FieldDecl
 type ParamDecl struct {
 	name Name // CHECKME: Variable? (also Env key)
 	t    Type
 }
 
-func (pd ParamDecl) GetType() Type { return pd.t }
+var _ FGNode = ParamDecl{}
 
-// From Decl
-func (pd ParamDecl) GetName() Name { return pd.name }
+func (pd ParamDecl) GetName() Name { return pd.name } // From Decl
+func (pd ParamDecl) GetType() Type { return pd.t }
 
 func (pd ParamDecl) String() string {
 	var b strings.Builder
@@ -246,12 +240,12 @@ func (pd ParamDecl) String() string {
 
 /* ITypeLit, Sig */
 
-var _ TDecl = ITypeLit{}
-
 type ITypeLit struct {
 	t_I   Type // Factor out embedded struct with STypeLit?  But constructor will need that struct?
 	specs []Spec
 }
+
+var _ TDecl = ITypeLit{}
 
 func (c ITypeLit) GetType() Type    { return c.t_I }
 func (c ITypeLit) GetSpecs() []Spec { return c.specs }
@@ -282,17 +276,17 @@ func (c ITypeLit) String() string {
 	return b.String()
 }
 
-var _ Spec = Sig{}
-
 type Sig struct {
 	meth   Name
 	pDecls []ParamDecl
 	t_ret  Type
 }
 
-func (s Sig) GetName() Name              { return s.meth }
-func (s Sig) GetParamDecls() []ParamDecl { return s.pDecls }
-func (s Sig) GetReturn() Type            { return s.t_ret }
+var _ Spec = Sig{}
+
+func (g Sig) GetMethod() Name            { return g.meth }
+func (g Sig) GetParamDecls() []ParamDecl { return g.pDecls }
+func (g Sig) GetReturn() Type            { return g.t_ret }
 
 // !!! Sig in FG (also, Go spec) includes ~x, which naively breaks "impls"
 func (g0 Sig) EqExceptVars(g Sig) bool {
