@@ -294,7 +294,7 @@ func monomExpr(omega WMap, e FGGExpr) fg.FGExpr {
 		if _, ok := omega[wk]; !ok {
 			panic("Unknown type: " + e1.u_cast.String())
 		}
-		return fg.NewAssert(monomExpr(omega, e1.expr),
+		return fg.NewAssert(monomExpr(omega, e1.e_I),
 			omega[wk].monomid)
 	default:
 		panic("Unknown Expr kind: " + reflect.TypeOf(e).String() + "\n\t" +
@@ -506,7 +506,7 @@ func MakeWMap(ds []Decl, gamma GroundEnv, e FGGExpr, omega WMap) (res Type) {
 		if addTypeToWMap(u, omega) {
 			todo = append(todo, u)
 		}
-		MakeWMap(ds, gamma, e1.expr, omega)
+		MakeWMap(ds, gamma, e1.e_I, omega)
 		res = e1.u_cast.(TNamed) // Factor out
 	default:
 		panic("Unknown Expr kind: " + reflect.TypeOf(e).String() + "\n\t" +

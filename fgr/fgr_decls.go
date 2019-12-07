@@ -179,7 +179,7 @@ func (md MDecl) GetReceiver() ParamDecl     { return md.recv }
 func (md MDecl) GetName() Name              { return md.name }   // From Decl
 func (md MDecl) GetParamDecls() []ParamDecl { return md.pDecls } // Returns non-receiver params
 func (md MDecl) GetReturn() Type            { return md.t_ret }
-func (md MDecl) GetImpl() FGRExpr           { return md.e_body }
+func (md MDecl) GetBody() FGRExpr           { return md.e_body }
 
 func (md MDecl) Ok(ds []Decl) {
 	if !isStructType(ds, md.recv.t) {

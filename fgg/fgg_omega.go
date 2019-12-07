@@ -145,7 +145,7 @@ func collectGroundFggTypes(ds []Decl, gamma GroundEnv, e FGGExpr, ground map[str
 	case Assert:
 		u := e1.u_cast.(TNamed) // CHECKME: guaranteed?
 		collectGroundFggType(ds, u, ground)
-		collectGroundFggTypes(ds, gamma, e1.expr, ground)
+		collectGroundFggTypes(ds, gamma, e1.e_I, ground)
 		res = u
 	default:
 		panic("Unknown Expr kind: " + reflect.TypeOf(e).String() + "\n\t" +

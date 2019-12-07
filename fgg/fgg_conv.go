@@ -180,7 +180,7 @@ func (c *fg2fgg) convertExpr(expr base.Expr) (FGGExpr, error) {
 			return nil, err
 		}
 		assType, _ := c.convertType(expr.GetType())
-		return Assert{expr: assertExpr, u_cast: TNamed{t_name: assType}}, nil
+		return Assert{e_I: assertExpr, u_cast: TNamed{t_name: assType}}, nil
 	}
 
 	return nil, fmt.Errorf("unknown expression type: %T", expr)
