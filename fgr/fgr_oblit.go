@@ -160,7 +160,7 @@ func oblitMDecl(ds_fgg []Decl, d fgg.MDecl) MDecl {
 	for i := 0; i < len(tfs_recv); i++ {
 		us_fgg[i] = tfs_recv[i].GetTParam()
 	}
-	gamma[x_recv] = fgg.NewTName(string(t_recv), us_fgg)
+	gamma[x_recv] = fgg.NewTName(t_recv.String(), us_fgg)
 	for i := 0; i < len(pds_fgg); i++ {
 		pd := pds_fgg[i]
 		gamma[pd.GetName()] = pd.GetType()

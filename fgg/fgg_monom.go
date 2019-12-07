@@ -373,9 +373,9 @@ func isGround(u TNamed) bool {
 
 // Pre: len(targs) > 0
 func getMonomMethName(omega WMap, m Name, targs []Type) Name {
-	res := m + "<" + string(omega[toWKey(targs[0].(TNamed))].monomid)
+	res := m + "<" + omega[toWKey(targs[0].(TNamed))].monomid.String()
 	for _, v := range targs[1:] {
-		res = res + "," + string(omega[toWKey(v.(TNamed))].monomid)
+		res = res + "," + omega[toWKey(v.(TNamed))].monomid.String()
 	}
 	res = res + ">"
 	return Name(res)

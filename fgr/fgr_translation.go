@@ -84,7 +84,7 @@ func Translate(p fgg.FGGProgram) FGRProgram { // TODO FIXME: FGR -- TODO also ca
 		ds_fgr = append(ds_fgr, adptr, getv)
 
 		// Add duck-typing meths
-		c := fgg.GetTDecl(ds_fgg, string(v.super)).(fgg.ITypeLit)
+		c := fgg.GetTDecl(ds_fgg, v.super.String()).(fgg.ITypeLit)
 		tfs := c.GetPsi().GetTFormals()
 		us := make([]fgg.Type, len(tfs))
 		for i := 0; i < len(us); i++ {
@@ -456,7 +456,7 @@ func makeAdptr(delta fgg.Delta, e FGRExpr, subj fgg.Type, targ fgg.Type,
 // ds are from FGG source (t is from toFgTypeFromBounds)
 func isFggSTypeLit(ds []Decl, t Type) bool {
 	for _, v := range ds {
-		if _, ok := v.(fgg.STypeLit); ok && v.GetName() == string(t) {
+		if _, ok := v.(fgg.STypeLit); ok && v.GetName() == t.String() {
 			return true
 		}
 	}
@@ -466,7 +466,7 @@ func isFggSTypeLit(ds []Decl, t Type) bool {
 // ds are from FGG source (t is from toFgTypeFromBounds)
 func isFggITypeLit(ds []Decl, t Type) bool {
 	for _, v := range ds {
-		if _, ok := v.(fgg.ITypeLit); ok && (v.GetName() == string(t)) {
+		if _, ok := v.(fgg.ITypeLit); ok && (v.GetName() == t.String()) {
 			return true
 		}
 	}
@@ -478,13 +478,13 @@ func getMDecl(ds []Decl, t Type, m Name) fgg.MDecl {
 	for _, v := range ds {
 		md, ok := v.(fgg.MDecl)
 		if ok {
-			fmt.Println("bbb:", v.String(), (md.GetRecvTypeName() == string(t)), (md.GetName() == m))
+			fmt.Println("bbb:", v.String(), (md.GetRecvTypeName() == t.String()), (md.GetName() == m))
 		}
-		if ok && md.GetRecvTypeName() == string(t) && md.GetName() == m {
+		if ok && md.GetRecvTypeName() == t.String() && md.GetName() == m {
 			return md
 		}
 	}
-	panic("Method not found for type " + string(t) + ": " + m)
+	panic("Method not found for type " + t.String() + ": " + m)
 }
 
 func addGetValueCast(delta fgg.Delta, e FGRExpr, u fgg.Type) FGRExpr {

@@ -10,7 +10,7 @@ import (
 )
 
 /**
- * Deprecated
+ * !!! Deprecated !!!
  */
 
 var _ = fmt.Errorf

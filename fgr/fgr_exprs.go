@@ -440,7 +440,7 @@ type IfThenElse struct {
 	e2 FGRExpr // TmpTParam (Variable) or TypeTree
 	e3 FGRExpr
 	//rho Map[fgg.Type]([]fgg.Sig)  // !!!
-	src string // Original FGG source
+	src string // Original FGG source  // TODO store as a top-level comment or so?
 }
 
 var _ FGRExpr = IfThenElse{}
@@ -452,11 +452,11 @@ func (c IfThenElse) Subs(subs map[Variable]FGRExpr) FGRExpr {
 
 func (c IfThenElse) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 	if t1 := c.e1.Typing(ds, gamma, allowStupid); t1 != FggType {
-		panic("IfThenElse comparison LHS must be of type " + string(FggType) +
+		panic("IfThenElse comparison LHS must be of type " + FggType.String() +
 			": found " + t1.String())
 	}
 	if t2 := c.e2.Typing(ds, gamma, allowStupid); t2 != FggType {
-		panic("IfThenElse comparison RHS must be of type " + string(FggType) +
+		panic("IfThenElse comparison RHS must be of type " + FggType.String() +
 			": found " + t2.String())
 	}
 	t3 := c.e3.Typing(ds, gamma, allowStupid)
@@ -535,7 +535,7 @@ func (r TRep) Reify() fgg.TNamed {
 	for i := 0; i < len(us); i++ {
 		us[i] = r.args[i].(TRep).Reify() // CHECKME: guaranteed TRep?
 	}
-	return fgg.NewTName(string(r.name), us)
+	return fgg.NewTName(r.name, us)
 }
 
 func (r TRep) Subs(subs map[Variable]FGRExpr) FGRExpr {
@@ -571,6 +571,7 @@ func (r TRep) Eval(ds []Decl) (FGRExpr, string) {
 	}
 }
 
+// From base.Expr
 func (r TRep) IsValue() bool {
 	for i := 0; i < len(r.args); i++ {
 		if !r.args[i].IsValue() {
@@ -582,7 +583,7 @@ func (r TRep) IsValue() bool {
 
 func (r TRep) String() string {
 	var b strings.Builder
-	b.WriteString(string(r.name))
+	b.WriteString(r.name)
 	b.WriteString("[[")
 	writeExprs(&b, r.args)
 	b.WriteString("]]")
@@ -592,7 +593,7 @@ func (r TRep) String() string {
 func (r TRep) ToGoString() string {
 	var b strings.Builder
 	b.WriteString("main.")
-	b.WriteString(string(r.name))
+	b.WriteString(r.name)
 	b.WriteString("[[")
 	writeToGoExprs(&b, r.args)
 	b.WriteString("]]")
