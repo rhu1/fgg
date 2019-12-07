@@ -4,7 +4,7 @@ import "reflect"
 
 import "github.com/rhu1/fgg/base"
 
-import "github.com/rhu1/fgg/fgg"
+//import "github.com/rhu1/fgg/fgg"
 
 /* Aliases from base */
 // TODO: refactor?
@@ -60,19 +60,10 @@ func (t Type) String() string {
 	return string(t)
 }
 
-/* Type reps */
+/* The Rep type -- the type of all type rep values (TReps) */
 
-const TRep = Type("Rep")
-
-type Rep struct {
-	u fgg.Type // FIXME: Rep doesn't carry u any more
-}
-
-//var _ Type = Rep{}  // TODO FIXME -- no: this "Rep" is not a String/Type
-
-func (r Rep) String() string {
-	return "Rep(" + r.u.String() + ")"
-}
+// Was called RepType
+const FggType = Type("FggType")
 
 /* AST base intefaces: FGRNode, Decl, TDecl, Spec, Expr */
 
@@ -125,3 +116,15 @@ func isInterfaceType(ds []Decl, t Type) bool {
 	}
 	return false
 }
+
+/* Old */
+
+/*type Rep struct {
+	u fgg.Type // FIXME: Rep doesn't carry u any more
+}
+
+//var _ Type = Rep{}  // FIXME -- no: this "Rep" is not a String/Type
+
+func (r Rep) String() string {
+	return "Rep(" + r.u.String() + ")"
+}*/

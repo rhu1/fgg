@@ -451,12 +451,12 @@ func (c IfThenElse) Subs(subs map[Variable]FGRExpr) FGRExpr {
 }
 
 func (c IfThenElse) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
-	if t1 := c.e1.Typing(ds, gamma, allowStupid); t1 != TRep {
-		panic("IfThenElse comparison LHS must be of type " + string(TRep) +
+	if t1 := c.e1.Typing(ds, gamma, allowStupid); t1 != FggType {
+		panic("IfThenElse comparison LHS must be of type " + string(FggType) +
 			": found " + t1.String())
 	}
-	if t2 := c.e2.Typing(ds, gamma, allowStupid); t2 != TRep {
-		panic("IfThenElse comparison RHS must be of type " + string(TRep) +
+	if t2 := c.e2.Typing(ds, gamma, allowStupid); t2 != FggType {
+		panic("IfThenElse comparison RHS must be of type " + string(FggType) +
 			": found " + t2.String())
 	}
 	t3 := c.e3.Typing(ds, gamma, allowStupid)
@@ -479,8 +479,8 @@ func (c IfThenElse) Eval(ds []Decl) (FGRExpr, string) {
 	p_fgg := a.Parse(true, c.src).(fgg.FGGProgram)
 	ds_fgg := p_fgg.GetDecls()
 
-	tt1 := c.e1.(TypeTree)
-	tt2 := c.e2.(TypeTree)
+	tt1 := c.e1.(TRep)
+	tt2 := c.e2.(TRep)
 	if tt1.Reify().Impls(ds_fgg, make(fgg.Delta), tt2.Reify()) {
 		return c.e3, "If-true"
 	} else {
@@ -517,40 +517,40 @@ func (c IfThenElse) ToGoString() string {
 	return b.String()
 }
 
-/* TypeTree -- the result of mkRep, i.e., run-time type rep value */
+/* TRep -- the result of mkRep, i.e., an FGR expr/value (of type FggType) that represents a (parameterised) FGG type */
 
-type TypeTree struct {
+type TRep struct {
 	t  Type
-	es []FGRExpr // TypeTree or TmpTParam -- CHECKME: TmpTParam still needed?
+	es []FGRExpr // TRep or TmpTParam -- CHECKME: TmpTParam still needed?
 }
 
-var _ FGRExpr = TypeTree{}
+var _ FGRExpr = TRep{}
 
-func (tt TypeTree) Reify() fgg.TNamed {
+func (tt TRep) Reify() fgg.TNamed {
 	if !tt.IsValue() {
 		panic("Cannot refiy non-ground TypeTree: " + tt.String())
 	}
 	us := make([]fgg.Type, len(tt.es)) // All TName
 	for i := 0; i < len(us); i++ {
-		us[i] = tt.es[i].(TypeTree).Reify() // CHECKME: guaranteed TypeTree?
+		us[i] = tt.es[i].(TRep).Reify() // CHECKME: guaranteed TypeTree?
 	}
 	return fgg.NewTName(string(tt.t), us)
 }
 
-func (tt TypeTree) Subs(subs map[Variable]FGRExpr) FGRExpr {
+func (tt TRep) Subs(subs map[Variable]FGRExpr) FGRExpr {
 	es := make([]FGRExpr, len(tt.es))
 	for i := 0; i < len(es); i++ {
 		es[i] = tt.es[i].Subs(subs)
 	}
-	return TypeTree{tt.t, es}
+	return TRep{tt.t, es}
 }
 
-func (tt TypeTree) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
-	return TRep
+func (tt TRep) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
+	return FggType
 }
 
 // !!! TypeTree evaluation contexts vs. reify aux?
-func (tt TypeTree) Eval(ds []Decl) (FGRExpr, string) {
+func (tt TRep) Eval(ds []Decl) (FGRExpr, string) {
 	// Cf. StructLit.Eval
 	es := make([]FGRExpr, len(tt.es))
 	done := false
@@ -564,13 +564,13 @@ func (tt TypeTree) Eval(ds []Decl) (FGRExpr, string) {
 		es[i] = v
 	}
 	if done {
-		return TypeTree{tt.t, es}, rule
+		return TRep{tt.t, es}, rule
 	} else {
 		panic("Cannot reduce: " + tt.String())
 	}
 }
 
-func (tt TypeTree) IsValue() bool {
+func (tt TRep) IsValue() bool {
 	for i := 0; i < len(tt.es); i++ {
 		if !tt.es[i].IsValue() {
 			return false
@@ -579,7 +579,7 @@ func (tt TypeTree) IsValue() bool {
 	return true
 }
 
-func (tt TypeTree) String() string {
+func (tt TRep) String() string {
 	var b strings.Builder
 	b.WriteString(string(tt.t))
 	b.WriteString("[[")
@@ -588,7 +588,7 @@ func (tt TypeTree) String() string {
 	return b.String()
 }
 
-func (tt TypeTree) ToGoString() string {
+func (tt TRep) ToGoString() string {
 	var b strings.Builder
 	b.WriteString("main.")
 	b.WriteString(string(tt.t))

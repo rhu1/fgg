@@ -432,7 +432,7 @@ func mkRep(u fgg.Type) FGRExpr {
 		for i := 0; i < len(us); i++ {
 			es[i] = mkRep(us[i])
 		}
-		return TypeTree{Type(u1.GetName()), es}
+		return TRep{Type(u1.GetName()), es}
 	default:
 		panic("Unknown fgg.Type kind " + reflect.TypeOf(u).String() + ": " + u.String())
 	}
