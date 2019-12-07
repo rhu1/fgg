@@ -417,6 +417,8 @@ func wrapExpr(ds []Decl, delta fgg.Delta, gamma fgg.Gamma, e fgg.FGGExpr, u fgg.
 	}
 }
 
+/* Aux */
+
 // Post: TypeTree or TmpTParam
 func mkRep(u fgg.Type) FGRExpr {
 	switch u1 := u.(type) {

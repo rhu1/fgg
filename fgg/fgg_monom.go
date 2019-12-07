@@ -12,61 +12,44 @@ var _ = fmt.Errorf
 
 /**
  * [WIP] Naive monomorph -- `isMonomophisable` check not implemented yet
- *
- * CHECKME: -monom skips any meth with add-param that isn't instantiated?  is
- * that sound? (any previously failing cast now permitted by this "relaxed
- * interface constraint"? i.e., increased duck typing potential)
  */
 
 // TODO: isMonomorphisable
 // func isMonomorphisable(p FGGProgram) bool { ... }
 
-/* Omega -- implemented as WMap */
+/* Omega -- implemented as WMap, MonomTypeAndSigs, MonomSig */
 
-type WMap map[WKey]WVal
+type WMap map[WKey]MonomTypeAndSigs
 
 // Hack, because TNamed cannot be used as map key directly
 type WKey struct {
-	t_name Name   // `t` of the WVal.u_closed
+	t_name Name   // Just the `t` of the WVal.u_closed
 	hash   string // "Hash" of the WVal.u_closed -- a closed TName
 }
 
-type WVal struct {
-	u_closed TNamed              // Pre: isClosed(u_closed)
+// MonomTypeAndSigs = closed FGG type, it's monom-name, and monom's sigs with add-meth-targs on this receiver
+// TODO: integrate with GroundTypeAndSigs
+type MonomTypeAndSigs struct {
+	u_ground TNamed              // Pre: isGround(u_ground) -- the source (ground) FGG type
 	t_monom  fg.Type             // Monom'd (i.e., FG) type name
-	gs       map[string]MonomSig // Sigs on u_closed receiver with add-meth-args
-	// ^HACK: string key is MonoSig.g.String()
+	sigs     map[string]MonomSig // *FG* sigs on t_monom receiver -- HACK: key is MonomSig.sig.String()
+	// ^Also tracks the FGG add-meth-args that gave the sigs
 }
 
 type MonomSig struct {
-	g     fg.Sig
-	targs []Type // "Additional method type actuals" that give 'g'
+	sig   fg.Sig
+	targs []Type // FGG add-meth-targs that gave 'g'
 
-	u_act TNamed // Deprecated -- Old
+	u_act TNamed // Deprecated -- see Old
 	// The "actual" return type -- cf. "declared" return type
 	// "Actual" return type means the (static) type of body 'e' of the source..
 	// ..method under targs (and the TEnv of the parent TDecl instance)
 }
 
-// Add meth instans from `wv`, filtered by `m`, to `targs`
-func addMethInstans(wv WVal, m Name, targs map[string][]Type) {
-	for _, v := range wv.gs {
-		m1 := getOrigMethName(v.g.GetMethod())
-		if m1 == m && len(v.targs) > 0 {
-			hash := "" // Use WriteTypes?
-			for _, v1 := range v.targs {
-				hash = hash + v1.String()
-			}
-			targs[hash] = v.targs
-		}
-	}
-}
-
 /* Monomoprh: FGGProgram -> FGProgram */
 
 func Monomorph(p FGGProgram) fg.FGProgram {
-	omega := make(WMap)
-	MakeWMap2(p, omega) // TODO: rename
+	omega := BuildWMap(p)
 
 	var ds []Decl
 	for _, v := range p.decls {
@@ -96,12 +79,14 @@ func Monomorph(p FGGProgram) fg.FGProgram {
 	return fg.NewFGProgram(ds, e, p.printf)
 }
 
+/* Monom TDecl */
+
 // Pre: `wv` represents an instantiation of the `td` type  // TODO: refactor, decompose
-func monomTDecl(ds []Decl, omega WMap, td TDecl, wv WVal) fg.TDecl {
+func monomTDecl(ds []Decl, omega WMap, td TDecl, wv MonomTypeAndSigs) fg.TDecl {
 	subs := make(map[TParam]Type) // Type is a TName
 	psi := td.GetPsi()
 	for i := 0; i < len(psi.tFormals); i++ {
-		subs[psi.tFormals[i].name] = wv.u_closed.u_args[i]
+		subs[psi.tFormals[i].name] = wv.u_ground.u_args[i]
 	}
 	switch d := td.(type) {
 	case STypeLit:
@@ -109,7 +94,7 @@ func monomTDecl(ds []Decl, omega WMap, td TDecl, wv WVal) fg.TDecl {
 		for i := 0; i < len(d.fDecls); i++ {
 			tmp := d.fDecls[i]
 			u := tmp.u.TSubs(subs).(TNamed)     // "Inlined" substitution actions here -- cf. TDecl.TSubs
-			if _, ok := omega[toWKey(u)]; !ok { // Cf. MakeWMap2, extra loop over non-param TDecls, for those non seen o/w
+			if _, ok := omega[toWKey(u)]; !ok { // Cf. BuildWMap, extra loop over non-param TDecls, for those non seen o/w
 				panic("Unknown type: " + u.String())
 			}
 			fds[i] = fg.NewFieldDecl(tmp.field, omega[toWKey(u)].t_monom)
@@ -133,26 +118,15 @@ func monomTDecl(ds []Decl, omega WMap, td TDecl, wv WVal) fg.TDecl {
 					// forall u_S s.t. u_S <: wv.u, collect m.targs for all wv.m and mono(u_S.m)
 					// ^Correction: forall u, not only u_S, i.e., including interface type receivers
 					// (Cf. map.fgg, Bool().Cond(Bool())(...))
-					gs := methods(ds, wv.u_closed)
+					gs := methods(ds, wv.u_ground)
 					empty := make(Delta)
 					targs := make(map[string][]Type)
 					for _, v := range omega {
-						if /*IsStructType(ds, v.u.t) &&*/ v.u_closed.Impls(ds, empty, wv.u_closed) { // N.B. now adding reflexively
+						if /*IsStructType(ds, v.u.t) &&*/ v.u_ground.Impls(ds, empty, wv.u_ground) { // N.B. now adding reflexively
 							// Collect meth instans from *all* subtypes, i.e., including calls on interface receivers
 							for _, v1 := range gs {
 								addMethInstans(v, v1.meth, targs)
 							}
-							/*for _, v1 := range v.gs {
-								// TODO: factor out with addMethInstans? but here, adding all m's, not filtering
-								m1 := getOrigMethName(v1.g.GetMethName())
-								if _, ok := gs[m1]; ok && len(v1.targs) > 0 { // len check redundant?
-									hash := "" // Use WriteTypes?
-									for _, v2 := range v1.targs {
-										hash = hash + v2.String()
-									}
-									targs[hash] = v1.targs
-								}
-							}*/
 						}
 					}
 					// CHECKME: if targs empty, methods "discarded" -- replace meth-params by bounds?
@@ -190,11 +164,13 @@ func monomTDecl(ds []Decl, omega WMap, td TDecl, wv WVal) fg.TDecl {
 	}
 }
 
+/* Monom MDecl */
+
 // Pre: `wv` represents an instantiation of `md.t_recv`  // TODO: refactor, decompose
-func monomMDecl(ds []Decl, omega WMap, md MDecl, wv WVal) (res []fg.MDecl) {
+func monomMDecl(ds []Decl, omega WMap, md MDecl, wv MonomTypeAndSigs) (res []fg.MDecl) {
 	subs := make(map[TParam]Type) // Type is a TName
 	for i := 0; i < len(md.psi_recv.tFormals); i++ {
-		subs[md.psi_recv.tFormals[i].name] = wv.u_closed.u_args[i]
+		subs[md.psi_recv.tFormals[i].name] = wv.u_ground.u_args[i]
 	}
 	recv := fg.NewParamDecl(md.x_recv, wv.t_monom)
 	if len(md.psi_meth.tFormals) == 0 {
@@ -237,22 +213,24 @@ func monomMDecl(ds []Decl, omega WMap, md MDecl, wv WVal) (res []fg.MDecl) {
 	return res
 }
 
+// CHECKME: is this still needed now?  (given revised fgg_omega?)
+//
 // N.B. return is empty, i.e., does not include wv.gs, if no u_I
 // N.B. return is a map, so "duplicate" add-meth-param type instans are implicitly setify-ed
 // ^E.g., Calling m(A()) on some struct separately via two interfaces T1 and T2 where T2 <: T1
-func collectZigZagMethInstans(ds []Decl, omega WMap, md MDecl, wv WVal) map[string][]Type {
+func collectZigZagMethInstans(ds []Decl, omega WMap, md MDecl, wv MonomTypeAndSigs) map[string][]Type {
 	empty := make(Delta)
 	targs := make(map[string][]Type)
 	// Given m = md.m, forall u_I s.t. m in meths(u_I) && wv.u <: u_I, ..
 	// ..forall u_S s.t. u_S <: u_I, collect targs for all mono(u_S.m)
 	// ^Correction: forall u, not only u_S
 	for _, v := range omega {
-		if IsNamedIfaceType(ds, v.u_closed) && wv.u_closed.Impls(ds, empty, v.u_closed) {
-			gs := methods(ds, v.u_closed)
+		if IsNamedIfaceType(ds, v.u_ground) && wv.u_ground.Impls(ds, empty, v.u_ground) {
+			gs := methods(ds, v.u_ground)
 			if _, ok := gs[md.name]; ok {
 				addMethInstans(v, md.name, targs)
 				for _, v1 := range omega {
-					if /*isStructTName(ds, v1.u) &&*/ v1.u_closed.Impls(ds, empty, v.u_closed) {
+					if /*isStructTName(ds, v1.u) &&*/ v1.u_ground.Impls(ds, empty, v.u_ground) {
 						addMethInstans(v1, md.name, targs)
 					}
 				}
@@ -261,6 +239,22 @@ func collectZigZagMethInstans(ds []Decl, omega WMap, md MDecl, wv WVal) map[stri
 	}
 	return targs
 }
+
+// Add meth instans from `wv`, filtered by `m`, to `targs`
+func addMethInstans(wv MonomTypeAndSigs, m Name, targs map[string][]Type) {
+	for _, v := range wv.sigs {
+		m1 := getOrigMethName(v.sig.GetMethod())
+		if m1 == m && len(v.targs) > 0 {
+			hash := "" // Use WriteTypes?
+			for _, v1 := range v.targs {
+				hash = hash + v1.String()
+			}
+			targs[hash] = v.targs
+		}
+	}
+}
+
+/* Monom FGGExprs */
 
 func monomExpr(omega WMap, e FGGExpr) fg.FGExpr {
 	switch e1 := e.(type) {
@@ -273,7 +267,7 @@ func monomExpr(omega WMap, e FGGExpr) fg.FGExpr {
 		}
 		wk := toWKey(e1.u_S)
 		if _, ok := omega[wk]; !ok {
-			//panic("Unknown type: " + e1.u.String())
+			panic("Unknown type: " + e1.u_S.String())
 		}
 		return fg.NewStructLit(omega[wk].t_monom, es)
 	case Select:
@@ -304,40 +298,41 @@ func monomExpr(omega WMap, e FGGExpr) fg.FGExpr {
 	}
 }
 
-/* TODO: refactor below
- * Temp. workaround code to interface older "apply-omega" (this file) and
- * newer "build-omega" (fgg_omega).
- */
-func MakeWMap2(p FGGProgram, omega WMap) {
+/* Convert (FGG) GroundTypeAndSigs to MonomTypeAndSigs -- temp workaround */
+
+// TODO: refactor below
+// Temp. workaround code to interface older "apply-omega" (this file) and
+// newer "build-omega" (fgg_omega).
+func BuildWMap(p FGGProgram) WMap {
+	omega := make(WMap)
 	ds := p.GetDecls()
 	var gamma GroundEnv
-	ground := make(map[string]Ground)
+	ground := make(map[string]GroundTypeAndSigs)
 	fixOmega(ds, gamma, p.GetMain().(FGGExpr), ground)
 
 	for _, v := range ground {
-		wk := toWKey(v.u)
+		wk := toWKey(v.u_ground)
 		gs := make(map[string]MonomSig)
-		omega[wk] = WVal{v.u, toMonomId(v.u), gs}
-		/*}
+		omega[wk] = MonomTypeAndSigs{v.u_ground, toMonomId(v.u_ground), gs}
 
-		for _, v := range ground {*/
-		for _, pair := range v.gs {
+		for _, pair := range v.sigs {
 			if len(pair.targs) == 0 {
 				continue
 			}
-			hash := pair.g.String()
-			pds := pair.g.GetParamDecls()
+			hash := pair.sig.String()
+			pds := pair.sig.GetParamDecls()
 			pds_fg := make([]fg.ParamDecl, len(pds))
 			for i := 0; i < len(pds); i++ {
 				pd := pds[i]
 				pds_fg[i] = fg.NewParamDecl(pd.name, toMonomId(pd.u.(TNamed)))
 			}
-			ret := pair.g.u_ret.(TNamed)
-			m := getMonomMethName(omega, pair.g.meth, pair.targs)
-			//gs := omega[toWKey(v.u)].gs
+			ret := pair.sig.u_ret.(TNamed)
+			m := getMonomMethName(omega, pair.sig.meth, pair.targs)
 			gs[hash] = MonomSig{fg.NewSig(m, pds_fg, toMonomId(ret)), pair.targs, ret}
 		}
 	}
+
+	return omega
 }
 
 /* Helpers */
@@ -384,7 +379,8 @@ func getMonomMethName(omega WMap, m Name, targs []Type) Name {
 	return Name(res)
 }
 
-func getOrigMethName(m Name) Name { // Hack
+// Hack
+func getOrigMethName(m Name) Name {
 	return m[:strings.Index(m, "<")]
 }
 
@@ -415,7 +411,14 @@ func GetParameterisedSigs(wv WVal) []fg.Sig {
 }
 */
 
-/* Old -- deprecated */
+/**
+ * Old -- all below are deprecated
+ */
+
+/* CHECKME: -monom skips any meth with add-param that isn't instantiated?  is
+ * that sound? (any previously failing cast now permitted by this "relaxed
+ * interface constraint"? i.e., increased duck typing potential)
+ */
 
 //type WEnv map[TParam]Type // Pre: Type is closed
 
@@ -487,7 +490,7 @@ func MakeWMap(ds []Decl, gamma GroundEnv, e FGGExpr, omega WMap) (res Type) {
 				}
 				g_subs := g.TSubs(subs)
 				hash := g_subs.String()
-				mds := omega[toWKey(u0_closed)].gs // Pre: MakeWMap above ensures u0 in omega
+				mds := omega[toWKey(u0_closed)].sigs // Pre: MakeWMap above ensures u0 in omega
 				if tmp, ok := mds[hash]; ok {
 					res = tmp.u_act
 				} else {
@@ -543,7 +546,7 @@ func addTypeToWMap(u TNamed, omega WMap) bool {
 	if _, ok := omega[wk]; ok {
 		return false
 	}
-	omega[wk] = WVal{u, toMonomId(u), make(map[string]MonomSig)}
+	omega[wk] = MonomTypeAndSigs{u, toMonomId(u), make(map[string]MonomSig)}
 	return true
 }
 
@@ -554,14 +557,14 @@ func visitSig(ds []Decl, u0 TNamed, g Sig, targs []Type, omega WMap) (res TNamed
 	u_ret := g.u_ret.(TNamed) // Closed, since u0 closed and no meth-params
 	wk1 := toWKey(u_ret)
 	if _, ok := omega[wk1]; !ok {
-		omega[wk1] = WVal{u_ret, toMonomId(u_ret), make(map[string]MonomSig)}
+		omega[wk1] = MonomTypeAndSigs{u_ret, toMonomId(u_ret), make(map[string]MonomSig)}
 		todo = append(todo, u_ret)
 	}
 	for _, v := range g.pDecls {
 		u_p := v.u.(TNamed)
 		wk2 := toWKey(u_p)
 		if _, ok := omega[wk2]; !ok {
-			omega[wk2] = WVal{u_p, toMonomId(u_p), make(map[string]MonomSig)}
+			omega[wk2] = MonomTypeAndSigs{u_p, toMonomId(u_p), make(map[string]MonomSig)}
 			todo = append(todo, u_ret)
 		}
 	}

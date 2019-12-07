@@ -53,6 +53,8 @@ func Obliterate(p_fgg fgg.FGGProgram) FGRProgram { // CHECKME can also subsume e
 	return NewFGRProgram(ds_fgr, e_fgr)
 }
 
+/* Obliterate STypeLit, ITypeLit, Sig */
+
 func oblitSTypeLit(s fgg.STypeLit) STypeLit {
 	t := Type(s.GetName())
 	psi := s.GetPsi()
@@ -112,6 +114,8 @@ func oblitSig(g_fgg fgg.Sig) Sig {
 	// FIXME: need RepDecl in Sig?
 }
 
+/* Obliterate MDecl */
+
 func oblitMDecl(ds_fgg []Decl, d fgg.MDecl) MDecl {
 	x_recv := d.GetRecvName()
 	t_recv := Type(d.GetRecvTypeName())
@@ -170,6 +174,8 @@ func oblitMDecl(ds_fgg []Decl, d fgg.MDecl) MDecl {
 	return NewMDecl(recv_fgr, m /*rds,*/, pds_fgr, t_fgr, e_fgr)
 }
 
+/* Obliterate Expr */
+
 func oblitExpr(ds_fgg []Decl, delta fgg.Delta, gamma fgg.Gamma, e_fgg fgg.FGGExpr) FGRExpr {
 	switch e := e_fgg.(type) {
 	case fgg.Variable:
@@ -181,7 +187,7 @@ func oblitExpr(ds_fgg []Decl, delta fgg.Delta, gamma fgg.Gamma, e_fgg fgg.FGGExp
 		es_fgg := e.GetElems()
 		es_fgr := make([]FGRExpr, len(us)+len(es_fgg))
 		for i := 0; i < len(us); i++ {
-			es_fgr[i] = oblitMkRep(us[i])
+			es_fgr[i] = mkRep_oblit(us[i])
 		}
 		for i := 0; i < len(es_fgg); i++ {
 			es_fgr[len(us)+i] = oblitExpr(ds_fgg, delta, gamma, es_fgg[i]) // !!!
@@ -219,7 +225,7 @@ func oblitExpr(ds_fgg []Decl, delta fgg.Delta, gamma fgg.Gamma, e_fgg fgg.FGGExp
 		es_fgg := e.GetArgs()
 		es_fgr := make([]FGRExpr, len(targs)+len(es_fgg))
 		for i := 0; i < len(targs); i++ {
-			es_fgr[i] = oblitMkRep(targs[i])
+			es_fgr[i] = mkRep_oblit(targs[i])
 		}
 		for i := 0; i < len(es_fgg); i++ {
 			es_fgr[len(targs)+i] = oblitExpr(ds_fgg, delta, gamma, es_fgg[i]) // !!!
@@ -244,13 +250,13 @@ func oblitExpr(ds_fgg []Decl, delta fgg.Delta, gamma fgg.Gamma, e_fgg fgg.FGGExp
 		u := e.GetType()
 		e3 := NewAssert(x, toFgrTypeFromBounds(delta, u))
 		p_fgg := fgg.NewProgram(ds_fgg, fgg.NewVariable(fgg.Name("dummy")), false)
-		return IfThenElse{e1, oblitMkRep(u), e3, p_fgg.String()} // TODO: New constructor
+		return IfThenElse{e1, mkRep_oblit(u), e3, p_fgg.String()} // TODO: New constructor
 	default:
 		panic("Unknown FGG Expr type: " + e_fgg.String())
 	}
 }
 
-/* Helper */
+/* Aux */
 
 // i.e., "erase" -- cf. oblit
 func toFgrTypeFromBounds(delta fgg.Delta, u fgg.Type) Type {
@@ -293,24 +299,20 @@ func dtype(ds []Decl, delta fgg.Delta, gamma fgg.Gamma, d fgg.FGGExpr) fgg.Type 
 	}
 }
 
-// Post: TypeTree or TmpTParam
-func oblitMkRep(u fgg.Type) FGRExpr {
+// Post: TRep or TmpTParam
+func mkRep_oblit(u fgg.Type) FGRExpr { // Duplicated from fgr_translation
 	switch u1 := u.(type) {
 	case fgg.TParam:
 		return TmpTParam{u1.String()}
 	case fgg.TNamed:
-		return makeTypeTree(u1)
+		us := u1.GetTArgs()
+		es := make([]FGRExpr, len(us))
+		for i := 0; i < len(us); i++ {
+			es[i] = mkRep(us[i])
+		}
+		return TRep{u1.GetName(), es}
 	default:
-		panic("Unknown fgg.Type kind " + reflect.TypeOf(u).String() + ": " +
-			u.String())
+		panic("Unknown fgg.Type kind " + reflect.TypeOf(u).String() +
+			": " + u.String())
 	}
-}
-
-func makeTypeTree(u1 fgg.TNamed) TRep {
-	us := u1.GetTArgs()
-	es := make([]FGRExpr, len(us))
-	for i := 0; i < len(us); i++ {
-		es[i] = mkRep(us[i])
-	}
-	return TRep{Name(u1.GetName()), es}
 }
