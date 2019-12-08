@@ -1,28 +1,25 @@
-// Pre (1): ANTLR4
-/*HERE
-- getTypeReps
-- add meth-param RepDecls
-- FGR eval
-*/
-// E.g., antlr-4.7.1-complete.jar
-// (See go:generate below)
-
-// Pre (2): ANTLR4 Runtime for Go
+// Pre(1): ANTLR4 Runtime for Go
 //$ go get github.com/antlr/antlr4/runtime/Go/antlr
+//
 // Optional:
-//$ cd $CYGHOME/code/go/src/github.com/antlr/antlr4
+//$ cd [GOHOME]/src/github.com/antlr/antlr4
 //$ git checkout -b antlr-go-runtime tags/4.7.1  // Match antlr-4.7.1-complete.jar -- but unnecessary
 
-//rhu@HZHL4 MINGW64 ~/code/go/src/
+// Pre(2):
+// [GOHOME]/src/github.com/rhu1/fgg
+// $ mkdir parser/fg
+// $ cp parser/pregren/fg/* parser/fg
+// $ mkdir parser/fgg
+// $ cp parser/pregren/fgg/* parser/fgg
+
+// Run examples:
 //$ go run github.com/rhu1/fgg -v -eval=10 fg/examples/hello/hello.go
 //$ go run github.com/rhu1/fgg -v -inline="package main; type A struct {}; func main() { _ = A{} }"
-// or
-//$ go install
-//$ /c/Users/rhu/code/go/bin/fgg.exe ...
 
-// N.B. GoInstall installs to $CYGHOME/code/go/bin (not $WINHOME)
-
+// Optional alternative to Pre(2): ANTLR4 -- e.g., antlr-4.7.1-complete.jar
 // Assuming "antlr4" alias for (e.g.): java -jar ~/code/java/lib/antlr-4.7.1-complete.jar
+//$ go generate
+// Cf. below:
 //go:generate antlr4 -Dlanguage=Go -o parser/fg parser/FG.g4
 //go:generate antlr4 -Dlanguage=Go -o parser/fgg parser/FGG.g4
 
@@ -30,17 +27,6 @@
 // type B(type a Any) struct { f a }; // Any parsed as a TParam -- currently not permitted
 // Node(Nat){...} // fgg.FGGNode (Nat) is fgg.TParam, not fgg.TName
 // type IA(type ) interface { m1() };  // m1() parsed as a TName (an invalid Spec) -- N.B. ret missing anyway
-
-/* TODO
-- WF: repeat type decl
-- Compact getters/constructors
-- factor out fgg_monom, MDecl and ITypeLit
-- fix type preservation check
-- factor out more into base
-
-	//b.WriteString("type B struct { f t };\n")  // TODO: unknown type
-	//b.WriteString("type B struct { b B };\n")  // TODO: recursive struct
-*/
 
 package main
 
@@ -161,7 +147,7 @@ func main() {
 	switch {
 	case useInternalSrc: // First priority
 		src = internalSrc()
-	case inlineSrc != "": // Second priority, i.e. -inline overrules src file
+	case inlineSrc != "": // Second priority, i.e., -inline overrules src file
 		src = inlineSrc
 	default:
 		if flag.NArg() < 1 {
@@ -184,7 +170,7 @@ func main() {
 		var a fgg.FGGAdaptor
 		prog := interp(&a, src, strictParse, evalSteps)
 
-		// TODO: refactor
+		// TODO: refactor properly
 		doMonom(prog, monom, monomc)
 		//doWrappers(prog, wrapperc)
 		doOblit(prog, oblitc)
@@ -208,7 +194,7 @@ func interp(a base.Adaptor, src string, strict bool, steps int) base.Program {
 }
 
 // N.B. currently FG panic comes out implicitly as an underlying run-time panic
-// TODO: add explicit FG panics
+// CHECKME: add explicit FG panics?
 // If steps == EVAL_TO_VAL, then eval to value
 func eval(p base.Program, steps int) {
 	allowStupid := true
@@ -227,7 +213,7 @@ func eval(p base.Program, steps int) {
 		p, rule = p.Eval()
 		vPrintln(fmt.Sprintf("%6d: %8s %v", i, "["+rule+"]", p.GetMain()))
 		vPrintln("Checking OK:") // TODO: maybe disable by default, enable by flag
-		// TODO FIXME: check actual type preservation (not just typeability)
+		// TODO FIXME: check actual type preservation of e_main (not just typeability)
 		p.Ok(allowStupid)
 		if !done && p.GetMain().IsValue() {
 			done = true
@@ -242,7 +228,7 @@ func doMonom(prog base.Program, monom bool, compile string) {
 	if !monom && compile == "" {
 		return
 	}
-	p_mono := fgg.Monomorph(prog.(fgg.FGGProgram)) // TODO: reformat (e.g., "<...>") to make an actual FG program
+	p_mono := fgg.Monomorph(prog.(fgg.FGGProgram))
 	if monom {
 		vPrintln("\nMonomorphising, formal notation: [Warning] WIP [Warning]")
 		fmt.Println(p_mono.String())
@@ -265,6 +251,7 @@ func doMonom(prog base.Program, monom bool, compile string) {
 	}
 }
 
+/* [WIP] TODO -- not functional yet
 func doWrappers(prog base.Program, compile string) {
 	if compile == "" {
 		return
@@ -284,6 +271,7 @@ func doWrappers(prog base.Program, compile string) {
 		checkErr(err)
 	}
 }
+//*/
 
 func doOblit(prog base.Program, compile string) {
 	if compile == "" {
@@ -303,7 +291,7 @@ func doOblit(prog base.Program, compile string) {
 		checkErr(err)
 	}
 
-	// cf. interp -- TODO: refactor
+	// cf. interp -- TODO: factor out with others
 	p_fgr.Ok(false)
 	if oblitEvalSteps > NO_EVAL {
 		vPrint("\nEvaluating FGR:") // eval prints a leading "\n"
@@ -311,11 +299,11 @@ func doOblit(prog base.Program, compile string) {
 	}
 }
 
-// For convenient quick testing -- via flag "-internal=true"
+// For convenient quick testing -- via flag "-internal"
 func internalSrc() string {
 	Any := "type Any interface {}"
 	ToAny := "type ToAny struct { any Any }"
-	e := "ToAny{1}"
+	e := "ToAny{1}" // FIXME: `1` skipped by parser?
 	return fg.MakeFgProgram(Any, ToAny, e)
 }
 
@@ -339,3 +327,19 @@ func vPrintln(x string) {
 		fmt.Println(x)
 	}
 }
+
+/**
+TODO:
+- WF: repeat type decl
+- fix type preservation check
+- add monom-eval commutativity check
+- factor out more into base
+
+	//b.WriteString("type B struct { f t };\n")  // TODO: unknown type
+	//b.WriteString("type B struct { b B };\n")  // TODO: recursive struct
+*/
+
+// Alternative Run:
+//$ go install
+//$ $GOPATH/bin/fgg.exe ...
+// N.B. GoInstall installs to $CYGHOME/code/go/bin (not $WINHOME)

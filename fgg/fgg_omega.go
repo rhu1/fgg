@@ -12,7 +12,7 @@ var _ = fmt.Errorf
 // Basically Gamma for TNamed only.
 type GroundEnv map[Name]TNamed // Pre: forall TName, isGround
 
-// Cf. WVal
+// Cf. MonomTypeAndSigs
 type GroundTypeAndSigs struct {
 	u_ground TNamed               // Pre: isGround(u_ground)
 	sigs     map[string]GroundSig // Morally, Sig->[]Type -- HACK: string key is Sig.String
