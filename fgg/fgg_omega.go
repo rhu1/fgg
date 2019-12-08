@@ -12,7 +12,7 @@ var _ = fmt.Errorf
 // Basically Gamma for TNamed only.
 type GroundEnv map[Name]TNamed // Pre: forall TName, isGround
 
-// Cf. WVal
+// Cf. MonomTypeAndSigs
 type GroundTypeAndSigs struct {
 	u_ground TNamed               // Pre: isGround(u_ground)
 	sigs     map[string]GroundSig // Morally, Sig->[]Type -- HACK: string key is Sig.String
@@ -30,30 +30,25 @@ type GroundSig struct {
 // N.B. mutates `ground` -- encountered ground types collected into `ground`.
 func fixOmega(ds []Decl, gamma GroundEnv, e FGGExpr,
 	ground map[string]GroundTypeAndSigs) {
-	empty := make(Delta)
+	collectGroundTypesFromExpr(ds, gamma, e, ground)
 
+	empty := make(Delta)
 	again := true
 	for again {
 		again = false
-		collectGroundTypesFromExpr(ds, gamma, e, ground)
 
-		for _, v := range ground {
-			if !IsNamedIfaceType(ds, v.u_ground) {
+		for _, v_I := range ground {
+			if !IsNamedIfaceType(ds, v_I.u_ground) || len(v_I.sigs) == 0 {
 				continue
 			}
-			if len(v.sigs) == 0 {
-				continue
-			}
-			for _, v1 := range ground {
-				if !IsStructType(ds, v1.u_ground) {
-					continue
-				}
-				if !v1.u_ground.Impls(ds, empty, v.u_ground) {
+			for _, v_S := range ground {
+				if !IsStructType(ds, v_S.u_ground) ||
+					!v_S.u_ground.Impls(ds, empty, v_I.u_ground) {
 					continue
 				}
 
-				u_S := v1.u_ground
-				for _, ge := range v.sigs {
+				u_S := v_S.u_ground
+				for _, ge := range v_I.sigs {
 					if len(ge.targs) == 0 {
 						continue
 					}
@@ -73,14 +68,15 @@ func fixOmega(ds []Decl, gamma GroundEnv, e FGGExpr,
 					var pds []ParamDecl = nil
 					for _, d := range ds {
 						if md, ok := d.(MDecl); ok {
-							if md.t_recv == v1.u_ground.t_name && md.name == ge.sig.meth {
+							if md.t_recv == v_S.u_ground.t_name && md.name == ge.sig.meth {
 								pds = md.pDecls
 								break
 							}
 						}
 					}
 					if pds == nil {
-						panic("Method not found on " + v1.u_ground.String() + ": " + ge.sig.meth)
+						panic("Method not found on " + v_S.u_ground.String() + ": " +
+							ge.sig.meth)
 					}
 
 					x0, xs, e := body(ds, u_S, ge.sig.meth, ge.targs)

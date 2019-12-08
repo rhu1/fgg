@@ -167,7 +167,7 @@ func monomTDecl(ds []Decl, omega WMap, td TDecl,
 
 /* Monom MDecl */
 
-// Pre: `wval` represents an instantiation of `md.t_recv`  // TODO: refactor, decompose
+// Pre: `wval` represents an instantiation of `md.t_recv`  // TODO: decompose
 func monomMDecl(ds []Decl, omega WMap, md MDecl,
 	wval MonomTypeAndSigs) (res []fg.MDecl) {
 	subs := make(map[TParam]Type) // Type is a TName
@@ -186,8 +186,9 @@ func monomMDecl(ds []Decl, omega WMap, md MDecl,
 		e := monomExpr(omega, md.e_body.TSubs(subs))
 		res = append(res, fg.NewMDecl(recv, md.name, pds, t, e))
 	} else {
-		targs := collectZigZagMethInstans(ds, omega, md, wval)
-		if len(targs) == 0 { // Means no u_I, if len(wv.gs)>0 -- targs doesn't (yet) include wv.gs
+		targs := collectZigZagMethInstans(ds, omega, md, wval) // CHECKME: maybe not needed? (w.r.t. revised fgg_omega)
+		if len(targs) == 0 {
+			// ^Means no u_I, if len(wv.gs)>0 -- targs doesn't (yet) include wv.gs
 			addMethInstans(wval, md.name, targs)
 		}
 		for _, v := range targs { // CHECKME: factor out with ITypeLit?
@@ -442,7 +443,7 @@ func (wv WVal) GetMonomId() fg.Type {
 // Pre: `e` is typeable under an empty TEnv, i.e., does not feature any TParams
 func MakeWMap(ds []Decl, gamma GroundEnv, e FGGExpr, omega WMap) (res Type) {
 	var todo []TNamed // Pre: forall u, isClosed(u)
-	// Usage contract: if addTypeToWMap true, then append `u` to `todo`
+	// ^Usage contract: if addTypeToWMap true, then append `u` to `todo`
 
 	switch e1 := e.(type) {
 	case Variable:
