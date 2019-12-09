@@ -1,0 +1,20 @@
+package main;
+type HasFggType interface { getFggType() FggType };
+type Any interface { HasFggType };
+type Func interface { HasFggType; apply(a HasFggType) HasFggType };
+type Box interface { HasFggType; Make() HasFggType };
+type ABox struct { A FggType };
+func (x0 ABox) getFggType() FggType { return ABox[[x0.A]] };
+func (a ABox) Make() HasFggType { return ABox{a.A} };
+type BBox struct { A FggType };
+func (x0 BBox) getFggType() FggType { return BBox[[x0.A]] };
+func (a BBox) Make() HasFggType { return BBox{a.A} };
+type E struct { val D };
+func (x0 E) getFggType() FggType { return E[[]] };
+type D struct { val E };
+func (x0 D) getFggType() FggType { return D[[]] };
+type Dummy struct { };
+func (x0 Dummy) getFggType() FggType { return Dummy[[]] };
+func (x Dummy) doSomething(y HasFggType) HasFggType { return y.(Box).Make().(Box) };
+func (x Dummy) makeBox(A FggType) HasFggType { return ABox{A} };
+func main() { _ = Dummy{}.doSomething(Dummy{}.makeBox(E[[]]).(Box)).(Box) }
