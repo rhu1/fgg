@@ -45,6 +45,7 @@ type inference).
 - See here for the monomorphisation output (excluding the non-monomorphisable
   one):
   https://github.com/rhu1/fgg/tree/master/fg/examples/monom
+  Note: all of these monom-generated FG programs are Go programs.
 - See the further notes at the end for some words on each example.
 
 About (3):
