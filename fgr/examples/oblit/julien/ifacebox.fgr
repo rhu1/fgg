@@ -1,0 +1,19 @@
+package main;
+type HasFggType interface { getFggType() FggType };
+type Any interface { HasFggType };
+type Func interface { HasFggType; apply(a HasFggType) HasFggType };
+type Box interface { HasFggType; Map(B FggType, f HasFggType) HasFggType };
+type ABox struct { A FggType; value Any };
+func (x0 ABox) getFggType() FggType { return ABox[[x0.A]] };
+func (a ABox) Map(B FggType, f HasFggType) HasFggType { return ABox{B, f.(Func).apply(a.value.(Any)).(Any)} };
+type Dummy struct { };
+func (x0 Dummy) getFggType() FggType { return Dummy[[]] };
+type D struct { };
+func (x0 D) getFggType() FggType { return D[[]] };
+type E struct { };
+func (x0 E) getFggType() FggType { return E[[]] };
+type DtoE struct { };
+func (x0 DtoE) getFggType() FggType { return DtoE[[]] };
+func (x0 DtoE) apply(d HasFggType) HasFggType { return E{} };
+func (x Dummy) takeBox(b HasFggType) HasFggType { return b.(Box).Map(E[[]], DtoE{}).(Box) };
+func main() { _ = Dummy{}.takeBox(ABox{D[[]], D{}}).(Any) }
