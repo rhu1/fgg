@@ -1,6 +1,7 @@
 Reminder:
 FG  = Featherweight Go 
-      A functional subset of Go with basic structs, interfaces and methods.
+      A functional subset of Go with basic structs, methods, interfaces, duck
+      typing, and type asserts.
 FGG = Featherweight Generic Go 
       An extension of FG with parameterised struct/interface types and methods.
 FGR = FG extended with "type reps"
