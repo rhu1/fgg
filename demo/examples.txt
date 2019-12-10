@@ -1,7 +1,7 @@
 Reminder:
 FG  = Featherweight Go 
       A functional subset of Go with basic structs, methods, interfaces, duck
-      typing, and type asserts.
+      typing and type asserts.
 FGG = Featherweight Generic Go 
       An extension of FG with parameterised struct/interface types and methods.
 FGR = FG extended with "type reps"
@@ -52,12 +52,12 @@ type inference).
 About (3):
 Again, our current translation method, called "obliteration", is intentionally
 a very simple baseline method.
-The idea is to compile (erase) FGG types into (non-parameterised) FGR type
-reps, which record the base (FG) type name and reify FGG type arguments as
-special values.  The compilation into FGR also records the FGG method tables
-as additional meta data.  The evaluation of FGR programs uses the type reps
-and meta data (e.g., in type asserts and interface-satisfaction checks) to
-simulate the source FGG evaluation.
+The idea is to compile FGG types into (non-parameterised) FGR type reps, which
+record the base (FG) type name and reify FGG type arguments as special values.
+The compilation into FGR also records the FGG method tables as additional meta
+data.  The evaluation of FGR programs uses the type reps and meta data (e.g.,
+in type asserts and interface-satisfaction checks) to simulate the source FGG
+evaluation.
 As the simplest method, obliteration translates (i.e., obliterates) all method
 parameter and return types into something close to an "Any" (empty interface)
 type, and restores correct typing and operation by inserting a lot of type
