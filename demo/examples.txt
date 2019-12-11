@@ -22,9 +22,12 @@ General notes:
 So far, we have developed FGG as a minimal and simple framework to establish
 formal definitions of the core concepts and correctness properties (e.g., type
 safety).
-Our next steps will be to build on this framework to consider more practical
-and efficient methods for its compilation.
 We note that FGG includes parameterised methods.
+Our next steps will be:
+(i)  to build on this framework to consider more practical
+     and efficient methods for its compilation; and
+(ii) consider extensions to Middleweight (Generic) Go, to include more
+     features of Go.
 
 About (2):
 The current monomorphisation is intentionally very naive: it attempts to
