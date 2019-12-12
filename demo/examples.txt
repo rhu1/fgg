@@ -7,9 +7,9 @@ FGG = Featherweight Generic Go
 FGR = FG extended with "type reps" (a translation target for FGG)
       Type reps are values that represent FGG (parameterised) types.
 
-We have a prototype implementation of FGG.  The prototype (and parts of the
-underlying theory) are WIP, but it does demonstrate our main ideas so far.
-The prototype can:
+We have a prototype implementation of FGG written in Go.  This implementation
+(and parts of the underlying theory) are WIP, but it does demonstrate our main
+ideas so far.  The prototype can:
 (1) type check and evaluate FGG programs;
 (2) compile FGG programs to FG programs via monomorphisation;
 (3) compile FGG programs to FGR programs via a translation.
