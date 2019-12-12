@@ -86,6 +86,37 @@ in how monomorphisation and translation methods could be combined.
 
 
 ---
-Further notes:
-...[TODO: Benardo's notes on each example]...
+Further notes on what is exercised in each example (these are found in the
+examples/popl20 and examples/monom folders):
+
+booleans.fgg
+ - additional method parameters and parameterised interfaces, but not both combined.
+
+compose.fgg
+- adds an interface parameterised by 2 types (Functions) and interfaces with both 
+  additional method parameters and parameterisation (with constraints on the upper 
+  bounds).
+
+graph.fgg
+- Parameterized interface with constraints but which are not used and so nothing 
+is generated.
+
+irregular.fgg
+- Irregular types but monormophisation works due to instantiation not triggering 
+  infinite expansions.
+
+map.fgg
+- Exercising additional method parameters via map and 3-way parameterized 
+  types (function composition).
+
+box.fgg
+- Cannot be monomorphised due to polymorphic recursion.
+
+box2.fgg
+- Box example that works (i.e., poly rec. is a “usage” issue, not a type 
+  definition issue).
+
+ifacebox.fgg
+- Boxes and maps over them, exercising parameterised interfaces and additional 
+  method params.
 
