@@ -13,6 +13,10 @@ var _ = reflect.Append
 
 /* [WIP] Obliteration: obliterate param/return types, erase field types, rep-ify type-args */
 
+// See fgr.go for RepType (FggType) const
+const GET_REP = "getRep"
+const HAS_REP = "HasRep"
+
 func Obliterate(p_fgg fgg.FGGProgram) FGRProgram { // CHECKME can also subsume existing FGG-FG trans?
 	ds_fgg := p_fgg.GetDecls()
 
@@ -22,24 +26,24 @@ func Obliterate(p_fgg fgg.FGGProgram) FGRProgram { // CHECKME can also subsume e
 	e_fgr := oblitExpr(ds_fgg, delta, gamma, e_fgg)
 
 	// Translate Decls
-	ds_fgr := make([]Decl, 1)                                             // There will also be an additional getFggType MDecl for each t_S
-	ss_HasFggType := []Spec{NewSig("getFggType", []ParamDecl{}, FggType)} // !!! Rep type name -- TODO: factor out constants
-	ds_fgr[0] = NewITypeLit(Type("HasFggType"), ss_HasFggType)            // TODO: factor out constant
+	ds_fgr := make([]Decl, 1)                                    // There will also be an additional getRep MDecl for each t_S
+	ss_HasRep := []Spec{NewSig(GET_REP, []ParamDecl{}, RepType)} // !!! Rep type name -- TODO: factor out constants
+	ds_fgr[0] = NewITypeLit(Type(HAS_REP), ss_HasRep)            // TODO: factor out constant
 	for i := 0; i < len(ds_fgg); i++ {
 		d_fgg := ds_fgg[i]
 		switch d := d_fgg.(type) {
 		case fgg.STypeLit:
-			recv_getFggType := NewParamDecl("x0", Type(d.GetName())) // TODO: factor out constant
+			recv_getRep := NewParamDecl("x0", Type(d.GetName())) // TODO: factor out constant
 			t_S := d.GetName()
 			tfs := d.GetPsi().GetTFormals()
 			es := make([]FGRExpr, len(tfs))
 			for i := 0; i < len(es); i++ {
 				es[i] = NewSelect(NewVariable("x0"), tfs[i].GetTParam().String())
 			}
-			e_getFggType := TRep{Name(t_S), es} // TODO: New constructor
-			getFggType := NewMDecl(recv_getFggType, "getFggType" /*[]RepDecl{},*/, []ParamDecl{},
-				FggType, e_getFggType) // TODO: factor out constants
-			ds_fgr = append(ds_fgr, oblitSTypeLit(d), getFggType)
+			e_getRep := TRep{Name(t_S), es} // TODO: New constructor
+			getRep := NewMDecl(recv_getRep, GET_REP /*[]RepDecl{},*/, []ParamDecl{},
+				RepType, e_getRep) // TODO: factor out constants
+			ds_fgr = append(ds_fgr, oblitSTypeLit(d), getRep)
 		case fgg.ITypeLit:
 			ds_fgr = append(ds_fgr, oblitITypeLit(d))
 		case fgg.MDecl:
@@ -62,7 +66,7 @@ func oblitSTypeLit(s fgg.STypeLit) STypeLit {
 	fds_fgg := s.GetFieldDecls()
 	fds_fgr := make([]FieldDecl, len(tfs)+len(fds_fgg))
 	for i := 0; i < len(tfs); i++ {
-		fds_fgr[i] = NewFieldDecl(tfs[i].GetTParam().String(), FggType)
+		fds_fgr[i] = NewFieldDecl(tfs[i].GetTParam().String(), RepType)
 	}
 	delta := psi.ToDelta()
 	for i := 0; i < len(fds_fgg); i++ {
@@ -77,7 +81,7 @@ func oblitITypeLit(c fgg.ITypeLit) ITypeLit {
 	t := Type(c.GetName())
 	ss_fgg := c.GetSpecs()
 	ss_fgr := make([]Spec, 1+len(ss_fgg))
-	ss_fgr[0] = Type("HasFggType") // TODO: add HasFggType to decls -- and factor out constant
+	ss_fgr[0] = Type(HAS_REP) // TODO: add HasRep to decls -- and factor out constant
 	for i := 0; i < len(ss_fgg); i++ {
 		s_fgg := ss_fgg[i]
 		switch s := s_fgg.(type) {
@@ -98,13 +102,13 @@ func oblitSig(g_fgg fgg.Sig) Sig {
 	for i := 0; i < len(tfs); i++ {
 		tf := tfs[i]
 		pds_fgr[i] = NewParamDecl(tf.GetTParam().String(),
-			FggType)
+			RepType)
 	}
 	for i := 0; i < len(pds_fgg); i++ {
 		pd_fgg := pds_fgg[i]
-		pds_fgr[len(tfs)+i] = NewParamDecl(pd_fgg.GetName(), Type("HasFggType")) // TODO: factor out constant
+		pds_fgr[len(tfs)+i] = NewParamDecl(pd_fgg.GetName(), Type(HAS_REP)) // TODO: factor out constant
 	}
-	return NewSig(m, pds_fgr, Type("HasFggType")) // TODO: constant
+	return NewSig(m, pds_fgr, Type(HAS_REP)) // TODO: constant
 }
 
 /* Obliterate MDecl */
@@ -120,9 +124,9 @@ func oblitMDecl(ds_fgg []Decl, d fgg.MDecl) MDecl {
 	pds_fgr := make([]ParamDecl, len(tfs)+len(pds_fgg)) // Cf. TStructLit
 	for i := 0; i < len(tfs); i++ {
 		tf := tfs[i]
-		pds_fgr[i] = NewParamDecl(tf.GetTParam().String(), FggType)
+		pds_fgr[i] = NewParamDecl(tf.GetTParam().String(), RepType)
 	}
-	t_fgr := Type("HasFggType")
+	t_fgr := Type(HAS_REP)
 	delta := d.GetRecvPsi().ToDelta()
 	for i := 0; i < len(tfs); i++ {
 		tf := tfs[i]
@@ -140,7 +144,7 @@ func oblitMDecl(ds_fgg []Decl, d fgg.MDecl) MDecl {
 	for i := 0; i < len(pds_fgg); i++ {
 		pd := pds_fgg[i]
 		x := pd.GetName()
-		pds_fgr[len(tfs)+i] = NewParamDecl(x, Type("HasFggType"))
+		pds_fgr[len(tfs)+i] = NewParamDecl(x, Type(HAS_REP))
 		v := NewVariable(x)
 		u := pd.GetType()
 		//if _, ok := u.(fgg.TParam); ok || fgg.IsInterfaceTName1(ds_fgg, u) { // !!! cf. y := y.(erase(\sigma)) -- no: allowStupid
@@ -234,7 +238,7 @@ func oblitExpr(ds_fgg []Decl, delta fgg.Delta, gamma fgg.Gamma, e_fgg fgg.FGGExp
 		return res
 	case fgg.Assert:
 		x := oblitExpr(ds_fgg, delta, gamma, e.GetExpr())
-		e1 := NewCall(x, "getFggType", []FGRExpr{})
+		e1 := NewCall(x, GET_REP, []FGRExpr{})
 		u := e.GetType()
 		e3 := NewAssert(x, toFgrTypeFromBounds(delta, u))
 		p_fgg := fgg.NewProgram(ds_fgg, fgg.NewVariable(fgg.Name("dummy")), false)

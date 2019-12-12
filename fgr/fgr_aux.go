@@ -32,7 +32,7 @@ func methods(ds []Decl, t Type) map[Name]Sig {
 				res[v.meth] = v
 			}
 		}
-	} else if t != FggType { // !!! Rep // Perhaps redundant if all TDecl OK checked first
+	} else if t != RepType { // !!! Rep // Perhaps redundant if all TDecl OK checked first
 		panic("Unknown type: " + t.String())
 	}
 	return res

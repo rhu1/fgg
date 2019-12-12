@@ -62,8 +62,8 @@ func (t Type) String() string {
 
 /* The Rep type -- the type of all type rep values (TReps) */
 
-// Was called RepType
-const FggType = Type("FggType")
+//const FggType = Type("FggType")
+const RepType = Type("Rep")
 
 /* AST base intefaces: FGRNode, Decl, TDecl, Spec, Expr */
 

@@ -1,11 +1,11 @@
 package main;
-type HasFggType interface { getFggType() FggType };
-type Any interface { HasFggType };
-type Box struct { a FggType; f Any };
-func (x0 Box) getFggType() FggType { return Box[[x0.a]] };
+type HasRep interface { getRep() Rep };
+type Any interface { HasRep };
+type Box struct { a Rep; f Any };
+func (x0 Box) getRep() Rep { return Box[[x0.a]] };
 type D struct { };
-func (x0 D) getFggType() FggType { return D[[]] };
-func (x0 D) bad(a FggType, x1 HasFggType) HasFggType { return D{}.bad(Box[[a]], Box{a, x1.(Any)}).(Any) };
+func (x0 D) getRep() Rep { return D[[]] };
+func (x0 D) bad(a Rep, x1 HasRep) HasRep { return D{}.bad(Box[[a]], Box{a, x1.(Any)}).(Any) };
 type A struct { };
-func (x0 A) getFggType() FggType { return A[[]] };
+func (x0 A) getRep() Rep { return A[[]] };
 func main() { _ = D{}.bad(A[[]], A{}).(Any) }

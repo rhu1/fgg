@@ -1,8 +1,8 @@
 package main;
-type HasFggType interface { getFggType() FggType };
-type Any interface { HasFggType };
-type Edge interface { HasFggType; Source() HasFggType; Target() HasFggType };
-type Vertex interface { HasFggType; Edges() HasFggType };
+type HasRep interface { getRep() Rep };
+type Any interface { HasRep };
+type Edge interface { HasRep; Source() HasRep; Target() HasRep };
+type Vertex interface { HasRep; Edges() HasRep };
 type A struct { };
-func (x0 A) getFggType() FggType { return A[[]] };
+func (x0 A) getRep() Rep { return A[[]] };
 func main() { _ = A{} }

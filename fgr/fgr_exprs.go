@@ -451,12 +451,12 @@ func (c IfThenElse) Subs(subs map[Variable]FGRExpr) FGRExpr {
 }
 
 func (c IfThenElse) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
-	if t1 := c.e1.Typing(ds, gamma, allowStupid); t1 != FggType {
-		panic("IfThenElse comparison LHS must be of type " + FggType.String() +
+	if t1 := c.e1.Typing(ds, gamma, allowStupid); t1 != RepType {
+		panic("IfThenElse comparison LHS must be of type " + RepType.String() +
 			": found " + t1.String())
 	}
-	if t2 := c.e2.Typing(ds, gamma, allowStupid); t2 != FggType {
-		panic("IfThenElse comparison RHS must be of type " + FggType.String() +
+	if t2 := c.e2.Typing(ds, gamma, allowStupid); t2 != RepType {
+		panic("IfThenElse comparison RHS must be of type " + RepType.String() +
 			": found " + t2.String())
 	}
 	t3 := c.e3.Typing(ds, gamma, allowStupid)
@@ -517,7 +517,7 @@ func (c IfThenElse) ToGoString() string {
 	return b.String()
 }
 
-/* TRep -- the result of mkRep, i.e., an FGR expr/value (of type FggType) that represents a (parameterised) FGG type */
+/* TRep -- the result of mkRep, i.e., an FGR expr/value (of type RepType) that represents a (parameterised) FGG type */
 
 type TRep struct {
 	t_name Name
@@ -547,7 +547,7 @@ func (r TRep) Subs(subs map[Variable]FGRExpr) FGRExpr {
 }
 
 func (r TRep) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
-	return FggType
+	return RepType
 }
 
 // !!! TRep evaluation contexts vs. reify aux?
