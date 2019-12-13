@@ -119,10 +119,14 @@ map.fgg
 
 box.fgg
 - Cannot be monomorphised due to polymorphic recursion.
+- Obliteration is fine, however.
 
 box2.fgg
-- Box example that works (i.e., poly rec. is a “usage” issue, not a type 
-  definition issue).
+- Box example that works with monomorphisation (i.e., poly rec. is a “usage”
+  issue, not a type definition issue).
+- Note: although throwing naive monomorphisation goes through, it would be a
+  different matter whether a static "isMonomorphisable" check (which we do not
+  currently have) would allow this program.
 
 ifacebox.fgg
 - Boxes and maps over them, exercising parameterised interfaces and additional 
