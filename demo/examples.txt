@@ -78,7 +78,7 @@ Unlike monomorphisation, obliteration works for all (well-typed) FGG programs.
   https://github.com/rhu1/fgg/tree/master/fgr/examples/oblit
   (fgr/examples/oblit in the zip)
   Note 1: The notation for type reps is currently: "type_name[[type_args]]".
-          The FGR type of type reps themselves is "FggType" (for all type
+          The FGR type of type reps themselves is "RepType" (for all type
           reps).
   Note 2: The above FGR code does not show the additional meta data (FGG
           method tables).
