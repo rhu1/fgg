@@ -78,7 +78,7 @@ Unlike monomorphisation, obliteration works for all (well-typed) FGG programs.
   https://github.com/rhu1/fgg/tree/master/fgr/examples/oblit
   (fgr/examples/oblit in the zip)
   Note 1: The notation for type reps is currently: "type_name[[type_args]]".
-          The FGR type of type reps themselves is "FggType" (for all type
+          The FGR type of type reps themselves is "RepType" (for all type
           reps).
   Note 2: The above FGR code does not show the additional meta data (FGG
           method tables).
@@ -119,10 +119,14 @@ map.fgg
 
 box.fgg
 - Cannot be monomorphised due to polymorphic recursion.
+- Obliteration is fine, however.
 
 box2.fgg
-- Box example that works (i.e., poly rec. is a “usage” issue, not a type 
-  definition issue).
+- Box example that works with monomorphisation (i.e., poly rec. is a “usage”
+  issue, not a type definition issue).
+- Note: although throwing naive monomorphisation goes through, it would be a
+  different matter whether a static "isMonomorphisable" check (which we do not
+  currently have) would allow this program.
 
 ifacebox.fgg
 - Boxes and maps over them, exercising parameterised interfaces and additional 
