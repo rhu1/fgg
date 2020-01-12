@@ -7,6 +7,17 @@ import (
 
 var _ = fmt.Errorf
 
+/* Build Omega -- (morally) a map from ground FGG types to Sigs of (potential) calls on that receiver */
+
+// Attempt to statically collect all
+func GetOmega(ds []Decl, e_main FGGExpr) GroundMap {
+	var gamma GroundEnv
+	ground := make(GroundMap)
+	collectGroundTypesFromExpr(ds, gamma, e_main, ground)
+	fixOmega(ds, gamma, ground)
+	return ground
+}
+
 /* GroundMap, GroundEnv, GroundTypeAndSigs, GroundSig */
 
 // Maps u_ground.String() -> GroundTypeAndSigs{u_ground, sigs}
@@ -31,16 +42,7 @@ type GroundSig struct {
 	targs []Type
 }
 
-/* Build Omega -- (morally) a map from ground FGG types to Sigs of (potential) calls on that receiver */
-
-// Attempt to statically collect all
-func GetOmega(ds []Decl, e_main FGGExpr) GroundMap {
-	var gamma GroundEnv
-	ground := make(GroundMap)
-	collectGroundTypesFromExpr(ds, gamma, e_main, ground)
-	fixOmega(ds, gamma, ground)
-	return ground
-}
+/* fixOmega */
 
 // Attempt to form a closure on encountered ground types.
 // Iterate over `ground` using add-meth-targs recorded on i/face receivers to
@@ -122,6 +124,8 @@ func getGroundEnvAndBody(ds []Decl, g_I GroundSig, u_S TNamed) (
 	}
 	return gamma1, e
 }
+
+/* collectGroundTypesFromExpr, collectGroundTypesFromType, collectGroundTypesFromSigAndBody */
 
 // Collect ground types from an Expr according to the Expr kind.
 // gamma is needed when visiting an `e` of a "standalone" MDecl (via collectGroundTypesFromType)

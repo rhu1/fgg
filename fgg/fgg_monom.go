@@ -17,31 +17,11 @@ var _ = fmt.Errorf
 // TODO: isMonomorphisable
 // func isMonomorphisable(p FGGProgram) bool { ... }
 
-/* Omega -- implemented as WMap, MonomTypeAndSigs, MonomSig */
-
-type WMap map[WKey]MonomTypeAndSigs
-
-//type MonomMap map[WKey]fg.Type
-
-// Hack, because TNamed cannot be used as map key directly
-type WKey struct {
-	t_name Name   // Just the `t` of the WVal.u_closed
-	hash   string // "Hash" of the WVal.u_closed -- a closed TName
-}
-
-// MonomTypeAndSigs = closed FGG type, it's monom-name, and monom's sigs with add-meth-targs on this receiver
-// TODO: integrate with GroundTypeAndSigs
-type MonomTypeAndSigs struct {
-	u_ground TNamed               // Pre: isGround(u_ground) -- the source (ground) FGG type
-	t_monom  fg.Type              // Monom'd (i.e., FG) type name
-	sigs     map[string]GroundSig // *FG* sigs on t_monom receiver -- HACK: key is MonomSig.sig.String()
-	// ^Also tracks the FGG add-meth-args that gave the sigs
-}
-
 /* Monomoprh: FGGProgram -> FGProgram */
 
 func Monomorph(p FGGProgram) fg.FGProgram {
-	omega := BuildWMap(p)
+	ds_fgg := p.GetDecls()
+	omega := GetOmega(ds_fgg, p.GetMain().(FGGExpr))
 
 	var ds []Decl
 	for _, v := range p.decls {
@@ -241,7 +221,6 @@ func collectZigZagMethInstans(ds []Decl, omega GroundMap, md MDecl,
 // Add meth instans from `wval`, filtered by `m`, to `targs`
 func addMethInstans(wval GroundTypeAndSigs, m Name, targs map[string][]Type) {
 	for _, v := range wval.sigs {
-		//m1 := getOrigMethName(v.sig.GetMethod())
 		m1 := v.sig.GetMethod()
 		if m1 == m && len(v.targs) > 0 {
 			hash := "" // Use WriteTypes?
@@ -342,48 +321,4 @@ func getMonomMethName(omega GroundMap, m Name, targs []Type) Name {
 	}
 	res = res + ">"
 	return Name(res)
-}
-
-// Hack
-func getOrigMethName(m Name) Name {
-	return m[:strings.Index(m, "<")]
-}
-
-/* Convert (FGG) GroundTypeAndSigs to MonomTypeAndSigs -- temp workaround */
-
-// TODO: refactor below
-// Temp. workaround code to interface older "apply-omega" (this file) and
-// .. newer "build-omega" (fgg_omega).
-//func BuildWMap(p FGGProgram) WMap {
-func BuildWMap(p FGGProgram) GroundMap {
-	ds := p.GetDecls()
-	//omega := make(WMap)
-
-	ground := GetOmega(ds, p.GetMain().(FGGExpr))
-	return ground
-	/*for _, v := range ground {
-		wk := toWKey(v.u_ground)
-		//gs := make(map[string]MonomSig)
-		gs := make(map[string]GroundSig)
-		omega[wk] = MonomTypeAndSigs{v.u_ground, toMonomId(v.u_ground), gs}
-
-		for _, pair := range v.sigs {
-			if len(pair.targs) == 0 {
-				continue
-			}
-			hash := pair.sig.String()
-			pds := pair.sig.GetParamDecls()
-			pds_fg := make([]fg.ParamDecl, len(pds))
-			for i := 0; i < len(pds); i++ {
-				pd := pds[i]
-				pds_fg[i] = fg.NewParamDecl(pd.name, toMonomId(pd.u.(TNamed)))
-			}
-			//ret := pair.sig.u_ret.(TNamed)
-			//m := getMonomMethName(omega, pair.sig.meth, pair.targs)
-			//gs[hash] = MonomSig{fg.NewSig(m, pds_fg, toMonomId(ret)), pair.targs, ret}
-			gs[hash] = pair
-		}
-	}
-
-	return omega*/
 }
