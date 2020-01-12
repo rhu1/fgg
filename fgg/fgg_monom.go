@@ -302,44 +302,6 @@ func monomExpr(omega WMap, e FGGExpr) fg.FGExpr {
 	}
 }
 
-/* Convert (FGG) GroundTypeAndSigs to MonomTypeAndSigs -- temp workaround */
-
-// TODO: refactor below
-// Temp. workaround code to interface older "apply-omega" (this file) and
-// newer "build-omega" (fgg_omega).
-func BuildWMap(p FGGProgram) WMap {
-	ds := p.GetDecls()
-	/*var gamma GroundEnv
-	ground := make(map[string]GroundTypeAndSigs)
-	fixOmega(ds, gamma, p.GetMain().(FGGExpr), ground)*/
-	ground := GetOmega(ds, p.GetMain().(FGGExpr))
-
-	omega := make(WMap)
-	for _, v := range ground {
-		wk := toWKey(v.u_ground)
-		gs := make(map[string]MonomSig)
-		omega[wk] = MonomTypeAndSigs{v.u_ground, toMonomId(v.u_ground), gs}
-
-		for _, pair := range v.sigs {
-			if len(pair.targs) == 0 {
-				continue
-			}
-			hash := pair.sig.String()
-			pds := pair.sig.GetParamDecls()
-			pds_fg := make([]fg.ParamDecl, len(pds))
-			for i := 0; i < len(pds); i++ {
-				pd := pds[i]
-				pds_fg[i] = fg.NewParamDecl(pd.name, toMonomId(pd.u.(TNamed)))
-			}
-			ret := pair.sig.u_ret.(TNamed)
-			m := getMonomMethName(omega, pair.sig.meth, pair.targs)
-			gs[hash] = MonomSig{fg.NewSig(m, pds_fg, toMonomId(ret)), pair.targs, ret}
-		}
-	}
-
-	return omega
-}
-
 /* Helpers */
 
 // Pre: isClosed(u)
@@ -387,4 +349,39 @@ func getMonomMethName(omega WMap, m Name, targs []Type) Name {
 // Hack
 func getOrigMethName(m Name) Name {
 	return m[:strings.Index(m, "<")]
+}
+
+/* Convert (FGG) GroundTypeAndSigs to MonomTypeAndSigs -- temp workaround */
+
+// TODO: refactor below
+// Temp. workaround code to interface older "apply-omega" (this file) and
+// .. newer "build-omega" (fgg_omega).
+func BuildWMap(p FGGProgram) WMap {
+	ds := p.GetDecls()
+	omega := make(WMap)
+
+	ground := GetOmega(ds, p.GetMain().(FGGExpr))
+	for _, v := range ground {
+		wk := toWKey(v.u_ground)
+		gs := make(map[string]MonomSig)
+		omega[wk] = MonomTypeAndSigs{v.u_ground, toMonomId(v.u_ground), gs}
+
+		for _, pair := range v.sigs {
+			if len(pair.targs) == 0 {
+				continue
+			}
+			hash := pair.sig.String()
+			pds := pair.sig.GetParamDecls()
+			pds_fg := make([]fg.ParamDecl, len(pds))
+			for i := 0; i < len(pds); i++ {
+				pd := pds[i]
+				pds_fg[i] = fg.NewParamDecl(pd.name, toMonomId(pd.u.(TNamed)))
+			}
+			ret := pair.sig.u_ret.(TNamed)
+			m := getMonomMethName(omega, pair.sig.meth, pair.targs)
+			gs[hash] = MonomSig{fg.NewSig(m, pds_fg, toMonomId(ret)), pair.targs, ret}
+		}
+	}
+
+	return omega
 }
