@@ -55,7 +55,8 @@ func Monomorph(p FGGProgram) fg.FGProgram {
 
 /* Monom TDecl */
 
-// Pre: `wv` represents an instantiation of the `td` type  // TODO: refactor, decompose
+// Pre: `wv` (an "omega" map value) represents an instantiation of the `td` type
+// TODO: refactor, decompose
 func monomTDecl(ds []Decl, omega GroundMap, td TDecl,
 	wv GroundTypeAndSigs) fg.TDecl {
 	subs := make(map[TParam]Type) // Type is a TName
@@ -90,17 +91,17 @@ func monomTDecl(ds []Decl, omega GroundMap, td TDecl,
 					u := s.u_ret.TSubs(subs).(TNamed)
 					ss = append(ss, fg.NewSig(s.meth, pds, toMonomId(omega[toWKey(u)].u_ground)))
 				} else {
-					// forall u_S s.t. u_S <: wv.u, collect m.targs for all wv.m and mono(u_S.m)
-					// ^Correction: forall u, not only u_S, i.e., including interface type receivers
-					// (Cf. map.fgg, Bool().Cond(Bool())(...))
+					// forall u s.t. u <: wv.u, collect add-meth-targs for all meths called on u
 					gs := methods(ds, wv.u_ground)
-					empty := make(Delta)
-					targs := make(map[string][]Type)
-					for _, v := range omega {
-						if /*IsStructType(ds, v.u.t) &&*/ v.u_ground.Impls(ds, empty, wv.u_ground) { // N.B. now adding reflexively
-							// Collect meth instans from *all* subtypes, i.e., including calls on interface receivers
+					delta_empty := make(Delta)
+					targs := make(map[string][]Type) // Key is getTypeArgsHash([]Type)
+					for _, wv1 := range omega {
+						if wv1.u_ground.Impls(ds, delta_empty, wv.u_ground) {
+							// Collect meth instans from *all* subtypes
+							// (including calls on i/face receivers -- cf. map.fgg, Bool().Cond(Bool())(...))
+							// Includes reflexive
 							for _, v1 := range gs {
-								addMethInstans(v, v1.meth, targs)
+								addMethInstans(wv1, v1.meth, targs)
 							}
 						}
 					}
@@ -218,18 +219,24 @@ func collectZigZagMethInstans(ds []Decl, omega GroundMap, md MDecl,
 	return targs
 }
 
-// Add meth instans from `wval`, filtered by `m`, to `targs`
-func addMethInstans(wval GroundTypeAndSigs, m Name, targs map[string][]Type) {
-	for _, v := range wval.sigs {
+// Add instans of `m` in `wv` (an "omega" map value) to `targs`
+// (Adding instances with non-empty add-meth-targs, but that should simply depend on m's decl)
+func addMethInstans(wv GroundTypeAndSigs, m Name, targs map[string][]Type) {
+	for _, v := range wv.sigs {
 		m1 := v.sig.GetMethod()
 		if m1 == m && len(v.targs) > 0 {
-			hash := "" // Use WriteTypes?
-			for _, v1 := range v.targs {
-				hash = hash + v1.String()
-			}
+			hash := getTypeArgsHash(v.targs)
 			targs[hash] = v.targs
 		}
 	}
+}
+
+func getTypeArgsHash(us []Type) string {
+	hash := "" // Use WriteTypes?
+	for _, v1 := range us {
+		hash = hash + v1.String()
+	}
+	return hash
 }
 
 /* Monom FGGExprs */
