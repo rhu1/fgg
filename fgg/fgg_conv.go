@@ -62,8 +62,8 @@ func (c *fg2fgg) convert() error {
 }
 
 // convertType converts a plain type to a parameterised type
-func (c *fg2fgg) convertType(t fg.Type) (Name, pDecls) {
-	return Name(t.String()), pDecls{tFormals: nil} // 0 formal parameters
+func (c *fg2fgg) convertType(t fg.Type) (Name, Psi) {
+	return Name(t.String()), Psi{tFormals: nil} // 0 formal parameters
 }
 
 func (c *fg2fgg) convertSTypeLit(s fg.STypeLit) (STypeLit, error) {
@@ -99,7 +99,7 @@ func (c *fg2fgg) convertITypeLit(i fg.ITypeLit) (ITypeLit, error) {
 
 		specs = append(specs, Sig{
 			meth:   Name(sig.GetMethod()),
-			psi:    pDecls{tFormals: nil},
+			psi:    Psi{tFormals: nil},
 			pDecls: paramDecls,
 			u_ret:  TNamed{t_name: retTypeName},
 		})
@@ -141,7 +141,7 @@ func (c *fg2fgg) convertMDecl(md fg.MDecl) (MDecl, error) {
 		t_recv:   recvTypeName,
 		psi_recv: recvTypeFormals,
 		name:     Name(md.GetName()),
-		psi_meth: pDecls{}, // empty parameter
+		psi_meth: Psi{}, // empty parameter
 		pDecls:   paramDecls,
 		u_ret:    TNamed{t_name: retTypeName},
 		e_body:   methImpl,

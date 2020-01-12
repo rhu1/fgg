@@ -88,13 +88,13 @@ func (p FGGProgram) String() string {
 
 // Pre: len(as) == len(us)
 // Wrapper for []TFormal (cf. e.g., FieldDecl), only because of "(type ...)" syntax
-type pDecls struct {
+type Psi struct {
 	tFormals []TFormal
 }
 
-func (psi pDecls) GetTFormals() []TFormal { return psi.tFormals }
+func (psi Psi) GetTFormals() []TFormal { return psi.tFormals }
 
-func (psi pDecls) Ok(ds []Decl) {
+func (psi Psi) Ok(ds []Decl) {
 	for _, v := range psi.tFormals {
 		u, ok := v.u_I.(TNamed)
 		if !ok {
@@ -107,7 +107,7 @@ func (psi pDecls) Ok(ds []Decl) {
 	}
 }
 
-func (psi pDecls) ToDelta() Delta {
+func (psi Psi) ToDelta() Delta {
 	delta := make(map[TParam]Type)
 	for _, v := range psi.tFormals {
 		delta[v.name] = v.u_I
@@ -115,7 +115,7 @@ func (psi pDecls) ToDelta() Delta {
 	return delta
 }
 
-func (psi pDecls) String() string {
+func (psi Psi) String() string {
 	var b strings.Builder
 	b.WriteString("(type ") // Includes "(...)" -- cf. e.g., writeFieldDecls
 	if len(psi.tFormals) > 0 {
@@ -147,14 +147,14 @@ func (tf TFormal) String() string {
 
 type STypeLit struct {
 	t_name Name
-	psi    pDecls
+	psi    Psi
 	fDecls []FieldDecl
 }
 
 var _ TDecl = STypeLit{}
 
 func (s STypeLit) GetName() Name              { return s.t_name }
-func (s STypeLit) GetPsi() pDecls             { return s.psi }
+func (s STypeLit) GetPsi() Psi                { return s.psi }
 func (s STypeLit) GetFieldDecls() []FieldDecl { return s.fDecls }
 
 func (s STypeLit) Ok(ds []Decl) {
@@ -199,10 +199,10 @@ func (fd FieldDecl) String() string {
 type MDecl struct {
 	x_recv   Name // CHECKME: better to be Variable?  (etc. for other such Names)
 	t_recv   Name // N.B. t_S
-	psi_recv pDecls
+	psi_recv Psi
 	// N.B. receiver elements "decomposed" because Psi (not TNamed, cf. fg.MDecl uses ParamDecl)
 	name     Name // Refactor to embed Sig?
-	psi_meth pDecls
+	psi_meth Psi
 	pDecls   []ParamDecl
 	u_ret    Type // Return
 	e_body   FGGExpr
@@ -212,9 +212,9 @@ var _ Decl = MDecl{}
 
 func (md MDecl) GetRecvName() Name          { return md.x_recv }
 func (md MDecl) GetRecvTypeName() Name      { return md.t_recv }
-func (md MDecl) GetRecvPsi() pDecls         { return md.psi_recv }
+func (md MDecl) GetRecvPsi() Psi            { return md.psi_recv }
 func (md MDecl) GetName() Name              { return md.name }
-func (md MDecl) GetMDeclPsi() pDecls        { return md.psi_meth } // MDecl in name to prevent false capture by TDecl interface
+func (md MDecl) GetMDeclPsi() Psi           { return md.psi_meth } // MDecl in name to prevent false capture by TDecl interface
 func (md MDecl) GetParamDecls() []ParamDecl { return md.pDecls }
 func (md MDecl) GetReturn() Type            { return md.u_ret }
 func (md MDecl) GetBody() FGGExpr           { return md.e_body }
@@ -300,14 +300,14 @@ func (pd ParamDecl) String() string {
 
 type ITypeLit struct {
 	t_I   Name
-	psi   pDecls
+	psi   Psi
 	specs []Spec
 }
 
 var _ TDecl = ITypeLit{}
 
 func (c ITypeLit) GetName() Name    { return c.t_I }
-func (c ITypeLit) GetPsi() pDecls   { return c.psi }
+func (c ITypeLit) GetPsi() Psi      { return c.psi }
 func (c ITypeLit) GetSpecs() []Spec { return c.specs }
 
 func (c ITypeLit) Ok(ds []Decl) {
@@ -342,7 +342,7 @@ func (c ITypeLit) String() string {
 
 type Sig struct {
 	meth   Name
-	psi    pDecls
+	psi    Psi
 	pDecls []ParamDecl
 	u_ret  Type
 }
@@ -350,7 +350,7 @@ type Sig struct {
 var _ Spec = Sig{}
 
 func (g Sig) GetMethod() Name            { return g.meth }
-func (g Sig) GetPsi() pDecls             { return g.psi }
+func (g Sig) GetPsi() Psi                { return g.psi }
 func (g Sig) GetParamDecls() []ParamDecl { return g.pDecls }
 func (g Sig) GetType() Type              { return g.u_ret }
 
@@ -366,7 +366,7 @@ func (g Sig) TSubs(subs map[TParam]Type) Sig {
 		ps[i] = ParamDecl{pd.name, pd.u.TSubs(subs)}
 	}
 	u := g.u_ret.TSubs(subs)
-	return Sig{g.meth, pDecls{tfs}, ps, u}
+	return Sig{g.meth, Psi{tfs}, ps, u}
 }
 
 func (g Sig) Ok(ds []Decl) {

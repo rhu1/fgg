@@ -23,7 +23,9 @@ type GroundTypeAndSigs struct {
 	// ^(i) FGG sigs; (ii) all sigs on u_ground receiver, including empty add-meth-targs
 }
 
-// (The actual GroundTypeAndSigs.sigs map entry, because Sig cannot be used as map key directly)
+// The actual GroundTypeAndSigs.sigs map entry: Sig -> add-meth-targs
+// i.e., the add-meth-targs that gives this Sig instance (param/return types).
+// (Because Sig cannot be used as map key directly.)
 type GroundSig struct {
 	sig   Sig // CHECKME: may only need meth name (given receiver type), but Sig is convenient?
 	targs []Type

@@ -83,7 +83,7 @@ func (a *FGGAdaptor) ExitTypeFormals(ctx *parser.TypeFormalsContext) {
 			tfs[i] = a.pop().(TFormal) // Adding backwards
 		}
 	}
-	a.push(pDecls{tfs})
+	a.push(Psi{tfs})
 }
 
 func (a *FGGAdaptor) ExitTypeFDecl(ctx *parser.TypeFDeclContext) {
@@ -124,7 +124,7 @@ func (a *FGGAdaptor) ExitProgram(ctx *parser.ProgramContext) {
 func (a *FGGAdaptor) ExitTypeDecl(ctx *parser.TypeDeclContext) {
 	t := Name(ctx.GetChild(1).(*antlr.TerminalNodeImpl).GetText())
 	td := a.pop().(TDecl)
-	psi := a.pop().(pDecls)
+	psi := a.pop().(Psi)
 	if s, ok := td.(STypeLit); ok { // N.B. s is a *copy* of td
 		s.t_name = t
 		s.psi = psi
@@ -151,7 +151,7 @@ func (a *FGGAdaptor) ExitStructTypeLit(ctx *parser.StructTypeLitContext) {
 			fds[i] = fd // Adding backwards
 		}
 	}
-	a.push(STypeLit{"^", pDecls{}, fds}) // "^" and TFormals{} to be overwritten in ExitTypeDecl
+	a.push(STypeLit{"^", Psi{}, fds}) // "^" and TFormals{} to be overwritten in ExitTypeDecl
 }
 
 func (a *FGGAdaptor) ExitFieldDecl(ctx *parser.FieldDeclContext) {
@@ -167,7 +167,7 @@ func (a *FGGAdaptor) ExitMethDecl(ctx *parser.MethDeclContext) {
 	// Reverse order
 	e := a.pop().(FGGExpr)
 	g := a.pop().(Sig)
-	psi := a.pop().(pDecls)
+	psi := a.pop().(Psi)
 	t := Name(ctx.GetTypn().GetText())
 	recv := Name(ctx.GetRecv().GetText())
 	a.push(MDecl{recv, t, psi, g.meth, g.psi, g.pDecls, g.u_ret, e})
@@ -193,7 +193,7 @@ func (a *FGGAdaptor) ExitInterfaceTypeLit(ctx *parser.InterfaceTypeLitContext) {
 			ss[i] = s // Adding backwards
 		}
 	}
-	a.push(ITypeLit{"^", pDecls{}, ss}) // "^" and TFormals{} to be overwritten in ExitTypeDecl
+	a.push(ITypeLit{"^", Psi{}, ss}) // "^" and TFormals{} to be overwritten in ExitTypeDecl
 }
 
 func (a *FGGAdaptor) ExitSigSpec(ctx *parser.SigSpecContext) {
@@ -217,7 +217,7 @@ func (a *FGGAdaptor) ExitSig(ctx *parser.SigContext) {
 			pds[i] = a.pop().(ParamDecl) // Adding backwards
 		}
 	}
-	psi := a.pop().(pDecls)
+	psi := a.pop().(Psi)
 	a.push(Sig{m, psi, pds, t})
 }
 
