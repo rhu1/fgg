@@ -23,24 +23,23 @@ func Monomorph(p FGGProgram) fg.FGProgram {
 	ds_fgg := p.GetDecls()
 	omega := GetOmega(ds_fgg, p.GetMain().(FGGExpr))
 
-	var ds []Decl
+	var ds_monom []Decl
 	for _, v := range p.decls {
 		switch d := v.(type) {
 		case TDecl:
 			t := d.GetName()
-			for _, v1 := range omega { // CHECKME: "prunes" unused types -- OK?
-				//if k1.t_name == t {
-				if v1.u_ground.t_name == t {
-					ds = append(ds, monomTDecl(p.decls, omega, d, v1))
+			for _, wv := range omega { // CHECKME: "prunes" unused types, OK?
+				if wv.u_ground.t_name == t {
+					td_monom := monomTDecl(p.decls, omega, d, wv)
+					ds_monom = append(ds_monom, td_monom)
 				}
 			}
 		case MDecl:
-			for _, v1 := range omega { // CHECKME: "prunes" unused types -- OK?
-				//if k1.t_name == d.t_recv {
-				if v1.u_ground.t_name == d.t_recv {
-					//ds = append(ds, monomMDecl(omega, d, v1)...)  // Not allowed
-					for _, v := range monomMDecl(p.decls, omega, d, v1) {
-						ds = append(ds, v)
+			for _, wv := range omega { // CHECKME: "prunes" unused types, OK?
+				if wv.u_ground.t_name == d.t_recv {
+					mds_monom := monomMDecl(p.decls, omega, d, wv)
+					for _, v := range mds_monom {
+						ds_monom = append(ds_monom, v)
 					}
 				}
 			}
@@ -49,19 +48,20 @@ func Monomorph(p FGGProgram) fg.FGProgram {
 				"\n\t" + d.String())
 		}
 	}
-	e := monomExpr(omega, p.e_main)
-	return fg.NewFGProgram(ds, e, p.printf)
+
+	e_monom := monomExpr(omega, p.e_main)
+	return fg.NewFGProgram(ds_monom, e_monom, p.printf)
 }
 
 /* Monom TDecl */
 
-// Pre: `wval` represents an instantiation of the `td` type  // TODO: refactor, decompose
+// Pre: `wv` represents an instantiation of the `td` type  // TODO: refactor, decompose
 func monomTDecl(ds []Decl, omega GroundMap, td TDecl,
-	wval GroundTypeAndSigs) fg.TDecl {
+	wv GroundTypeAndSigs) fg.TDecl {
 	subs := make(map[TParam]Type) // Type is a TName
 	psi := td.GetPsi()
 	for i := 0; i < len(psi.tFormals); i++ {
-		subs[psi.tFormals[i].name] = wval.u_ground.u_args[i]
+		subs[psi.tFormals[i].name] = wv.u_ground.u_args[i]
 	}
 	switch d := td.(type) {
 	case STypeLit:
@@ -74,7 +74,7 @@ func monomTDecl(ds []Decl, omega GroundMap, td TDecl,
 			}
 			fds[i] = fg.NewFieldDecl(tmp.field, toMonomId(omega[toWKey(u)].u_ground))
 		}
-		return fg.NewSTypeLit(toMonomId(wval.u_ground), fds)
+		return fg.NewSTypeLit(toMonomId(wv.u_ground), fds)
 	case ITypeLit:
 		var ss []fg.Spec
 		for _, v := range d.specs {
@@ -93,11 +93,11 @@ func monomTDecl(ds []Decl, omega GroundMap, td TDecl,
 					// forall u_S s.t. u_S <: wv.u, collect m.targs for all wv.m and mono(u_S.m)
 					// ^Correction: forall u, not only u_S, i.e., including interface type receivers
 					// (Cf. map.fgg, Bool().Cond(Bool())(...))
-					gs := methods(ds, wval.u_ground)
+					gs := methods(ds, wv.u_ground)
 					empty := make(Delta)
 					targs := make(map[string][]Type)
 					for _, v := range omega {
-						if /*IsStructType(ds, v.u.t) &&*/ v.u_ground.Impls(ds, empty, wval.u_ground) { // N.B. now adding reflexively
+						if /*IsStructType(ds, v.u.t) &&*/ v.u_ground.Impls(ds, empty, wv.u_ground) { // N.B. now adding reflexively
 							// Collect meth instans from *all* subtypes, i.e., including calls on interface receivers
 							for _, v1 := range gs {
 								addMethInstans(v, v1.meth, targs)
@@ -132,7 +132,7 @@ func monomTDecl(ds []Decl, omega GroundMap, td TDecl,
 					"\n\t" + v.String())
 			}
 		}
-		return fg.NewITypeLit(toMonomId(wval.u_ground), ss)
+		return fg.NewITypeLit(toMonomId(wv.u_ground), ss)
 	default:
 		panic("Unknown TDecl kind: " + reflect.TypeOf(d).String() +
 			"\n\t" + d.String())
@@ -278,20 +278,6 @@ func monomExpr(omega GroundMap, e FGGExpr) fg.FGExpr {
 
 /* Helpers */
 
-// Pre: isClosed(u)
-//func toWKey(u TNamed) WKey {
-func toWKey(u TNamed) string {
-	/*hash := ""
-	if len(u.u_args) > 0 {
-		hash = u.u_args[0].String()
-		for _, v := range u.u_args[1:] {
-			hash = hash + ",," + v.String()
-		}
-	}
-	return WKey{u.t_name, hash}*/
-	return u.String()
-}
-
 func toMonomId(u TNamed) fg.Type {
 	res := u.String()
 	res = strings.Replace(res, ",", ",,", -1)
@@ -299,17 +285,6 @@ func toMonomId(u TNamed) fg.Type {
 	res = strings.Replace(res, ")", ">", -1)
 	res = strings.Replace(res, " ", "", -1)
 	return fg.Type(res)
-}
-
-func isGround(u TNamed) bool {
-	for _, v := range u.u_args {
-		if u1, ok := v.(TNamed); !ok {
-			return false
-		} else if !isGround(u1) {
-			return false
-		}
-	}
-	return true
 }
 
 // Pre: len(targs) > 0

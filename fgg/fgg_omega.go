@@ -23,6 +23,11 @@ func GetOmega(ds []Decl, e_main FGGExpr) GroundMap {
 // Maps u_ground.String() -> GroundTypeAndSigs{u_ground, sigs}
 type GroundMap map[string]GroundTypeAndSigs
 
+// Pre: isGround(u_ground)
+func toWKey(u_ground TNamed) string {
+	return u_ground.String()
+}
+
 // Basically a Gamma for only TNamed
 type GroundEnv map[Name]TNamed // Pre: forall TName, isGround
 
@@ -30,8 +35,8 @@ type GroundEnv map[Name]TNamed // Pre: forall TName, isGround
 // sigs should include all potential such calls that may occur at run-time
 type GroundTypeAndSigs struct {
 	u_ground TNamed               // Pre: isGround(u_ground)
-	sigs     map[string]GroundSig // Morally, Sig->[]Type -- HACK: string key is Sig.String
-	// ^(i) FGG sigs; (ii) all sigs on u_ground receiver, including empty add-meth-targs
+	sigs     map[string]GroundSig // string key is Sig.String
+	// Morally, sigs is a map: fgg.Sig -> []Type -- all sigs on u_ground receiver, including empty add-meth-targs
 }
 
 // The actual GroundTypeAndSigs.sigs map entry: Sig -> add-meth-targs
@@ -55,18 +60,18 @@ func fixOmega(ds []Decl, gamma GroundEnv, ground GroundMap) {
 	for again := true; again; {
 		again = false
 
-		for _, v_I := range ground {
-			if !IsNamedIfaceType(ds, v_I.u_ground) || len(v_I.sigs) == 0 {
+		for _, wv_I := range ground {
+			if !IsNamedIfaceType(ds, wv_I.u_ground) || len(wv_I.sigs) == 0 {
 				continue
 			}
-			for _, v_S := range ground {
-				if !IsStructType(ds, v_S.u_ground) ||
-					!v_S.u_ground.Impls(ds, delta_empty, v_I.u_ground) {
+			for _, wv_S := range ground {
+				if !IsStructType(ds, wv_S.u_ground) ||
+					!wv_S.u_ground.Impls(ds, delta_empty, wv_I.u_ground) {
 					continue
 				}
 
-				u_S := v_S.u_ground
-				for _, g_I := range v_I.sigs {
+				u_S := wv_S.u_ground
+				for _, g_I := range wv_I.sigs {
 					if len(g_I.targs) == 0 { // CHECKME: dropping this skip obsoletes monom zigzag?
 						continue
 					}
@@ -75,9 +80,9 @@ func fixOmega(ds []Decl, gamma GroundEnv, ground GroundMap) {
 					gamma1, e_body := getGroundEnvAndBody(ds, g_I, u_S)
 					ground1 := make(map[string]GroundTypeAndSigs)
 					collectGroundTypesFromExpr(ds, gamma1, e_body, ground1)
-					for _, v_body := range ground1 {
-						if _, ok := ground[v_body.u_ground.String()]; !ok {
-							ground[v_body.u_ground.String()] = v_body
+					for _, wv_body := range ground1 {
+						if _, ok := ground[toWKey(wv_body.u_ground)]; !ok {
+							ground[toWKey(wv_body.u_ground)] = wv_body
 							again = true
 						}
 					}
@@ -189,16 +194,16 @@ func collectGroundTypesFromExpr(ds []Decl, gamma GroundEnv, e FGGExpr,
 // N.B. mutates `ground`
 func collectGroundTypesFromType(ds []Decl, u Type, ground GroundMap) {
 
-	if _, ok := ground[u.String()]; ok {
-		return
-	}
 	if cast, ok := u.(TNamed); !ok || !isGround(cast) {
 		return
 	}
-
 	u1 := u.(TNamed)
+	if _, ok := ground[toWKey(u1)]; ok {
+		return
+	}
+
 	gs := make(map[string]GroundSig) // CHECKME: make GroundSigs type?
-	ground[u1.String()] = GroundTypeAndSigs{u1, gs}
+	ground[toWKey(u1)] = GroundTypeAndSigs{u1, gs}
 
 	if IsStructType(ds, u1) { // Struct case
 		u_S := u1
@@ -298,11 +303,12 @@ func collectGroundTypesFromSigAndBody(ds []Decl, u_recv Type, c Call,
 		subs[g.psi.tFormals[i].name] = c.t_args[i]
 	}
 	g = g.TSubs(subs)
-	gs := ground[u_recv.String()].sigs
+	gs := ground[toWKey(u_recv.(TNamed))].sigs
 	if _, ok := gs[g.String()]; ok {
 		return
 	}
-	gs[g.String()] = GroundSig{g, c.t_args}
+	gs[g.String()] = GroundSig{g, c.t_args} // Record sig for u_recv
+	// N.B. recorded only for u_recv, and not, e.g., super interfaces -- cf. monomTDecl, ITypeLit case
 
 	// If sig not already seen (checked above), use sig to collect from
 	// .. tparams upper bounds, params and return
@@ -335,4 +341,17 @@ func collectGroundTypesFromSigAndBody(ds []Decl, u_recv Type, c Call,
 	} else {
 		// CHECKME: visit all possible bodies -- now subsumed by fixOmega?
 	}
+}
+
+/* Helpers */
+
+func isGround(u TNamed) bool {
+	for _, v := range u.u_args {
+		if u1, ok := v.(TNamed); !ok {
+			return false
+		} else if !isGround(u1) {
+			return false
+		}
+	}
+	return true
 }
