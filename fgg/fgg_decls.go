@@ -342,7 +342,7 @@ func (c ITypeLit) String() string {
 
 type Sig struct {
 	meth   Name
-	psi    Psi
+	psi    Psi // Add-meth-tparams
 	pDecls []ParamDecl
 	u_ret  Type
 }
