@@ -29,24 +29,26 @@ type GroundSig struct {
 	targs []Type
 }
 
-/* Attempt to reach a closure on ground types */
+/* Build Omega -- (morally) a map from ground FGG types to Sigs of (potential) calls on that receiver */
 
-func getOmega(ds []Decl, e_main FGGExpr) GroundMap {
-
+// Attempt to statically collect all
+func GetOmega(ds []Decl, e_main FGGExpr) GroundMap {
 	var gamma GroundEnv
-	ground := make(map[string]GroundTypeAndSigs)
+	ground := make(GroundMap)
 	collectGroundTypesFromExpr(ds, gamma, e_main, ground)
 	fixOmega(ds, gamma, ground)
 	return ground
 }
 
-// N.B. mutates `ground` -- encountered ground types collected into `ground`.
-func fixOmega(ds []Decl, gamma GroundEnv,
-	ground map[string]GroundTypeAndSigs) {
-
-	empty := make(Delta)
-	again := true
-	for again {
+// Attempt to form a closure on encountered ground types.
+// Iterate over `ground` using add-meth-targs recorded on i/face receivers to
+// .. visit all possible method bodies of implementing struct types --
+// .. repeating until no "new" ground types encoutered.
+// Currently, very non-optimal.
+// N.B. mutates `ground` -- encountered ground types collected into `ground`
+func fixOmega(ds []Decl, gamma GroundEnv, ground GroundMap) {
+	delta_empty := make(Delta)
+	for again := true; again; {
 		again = false
 
 		for _, v_I := range ground {
@@ -55,54 +57,23 @@ func fixOmega(ds []Decl, gamma GroundEnv,
 			}
 			for _, v_S := range ground {
 				if !IsStructType(ds, v_S.u_ground) ||
-					!v_S.u_ground.Impls(ds, empty, v_I.u_ground) {
+					!v_S.u_ground.Impls(ds, delta_empty, v_I.u_ground) {
 					continue
 				}
 
 				u_S := v_S.u_ground
-				for _, ge := range v_I.sigs {
-					if len(ge.targs) == 0 {
+				for _, g_I := range v_I.sigs {
+					if len(g_I.targs) == 0 { // CHECKME: dropping this skip obsoletes monom zigzag?
 						continue
 					}
 
-					subs := make(map[TParam]Type)
-					td := GetTDecl(ds, u_S.GetName())
-					targs := u_S.GetTArgs()
-					tfs := td.GetPsi().GetTFormals()
-					for i := 0; i < len(targs); i++ {
-						subs[tfs[i].name] = targs[i]
-					}
-					tfs_c := ge.sig.GetPsi().GetTFormals()
-					for i := 0; i < len(tfs_c); i++ {
-						subs[tfs_c[i].name] = ge.targs[i]
-					}
-
-					var pds []ParamDecl = nil
-					for _, d := range ds {
-						if md, ok := d.(MDecl); ok {
-							if md.t_recv == v_S.u_ground.t_name && md.name == ge.sig.meth {
-								pds = md.pDecls
-								break
-							}
-						}
-					}
-					if pds == nil {
-						panic("Method not found on " + v_S.u_ground.String() + ": " +
-							ge.sig.meth)
-					}
-
-					x0, xs, e := body(ds, u_S, ge.sig.meth, ge.targs)
-					gamma1 := make(GroundEnv)
-					gamma1[x0] = u_S
-					for i := 0; i < len(xs); i++ { // xs = ys in pds
-						gamma1[xs[i]] = pds[i].GetType().TSubs(subs).(TNamed)
-					}
-
+					// Very non-optimal, may revisit the same g_I/u_S pair many times
+					gamma1, e_body := getGroundEnvAndBody(ds, g_I, u_S)
 					ground1 := make(map[string]GroundTypeAndSigs)
-					collectGroundTypesFromExpr(ds, gamma1, e, ground1)
-					for _, ge1 := range ground1 {
-						if _, ok := ground[ge1.u_ground.String()]; !ok {
-							ground[ge1.u_ground.String()] = ge1
+					collectGroundTypesFromExpr(ds, gamma1, e_body, ground1)
+					for _, v_body := range ground1 {
+						if _, ok := ground[v_body.u_ground.String()]; !ok {
+							ground[v_body.u_ground.String()] = v_body
 							again = true
 						}
 					}
@@ -110,6 +81,44 @@ func fixOmega(ds []Decl, gamma GroundEnv,
 			}
 		}
 	}
+}
+
+// Get the Gamma and e_body for visiting the target meth of g_I on receiver u_S
+func getGroundEnvAndBody(ds []Decl, g_I GroundSig, u_S TNamed) (
+	GroundEnv, FGGExpr) {
+
+	subs := make(map[TParam]Type)
+	td_S := GetTDecl(ds, u_S.GetName())
+	targs_recv := u_S.GetTArgs()
+	tfs_recv := td_S.GetPsi().GetTFormals()
+	for i := 0; i < len(targs_recv); i++ {
+		subs[tfs_recv[i].name] = targs_recv[i]
+	}
+	tfs_meth := g_I.sig.GetPsi().GetTFormals()
+	for i := 0; i < len(tfs_meth); i++ {
+		subs[tfs_meth[i].name] = g_I.targs[i]
+	}
+
+	var pds []ParamDecl = nil
+	for _, d := range ds {
+		if md, ok := d.(MDecl); ok {
+			if md.t_recv == u_S.t_name && md.name == g_I.sig.meth {
+				pds = md.pDecls
+				break
+			}
+		}
+	}
+	if pds == nil {
+		panic("Method not found on " + u_S.String() + ": " + g_I.sig.meth)
+	}
+
+	x0, xs, e := body(ds, u_S, g_I.sig.meth, g_I.targs)
+	gamma1 := make(GroundEnv)
+	gamma1[x0] = u_S
+	for i := 0; i < len(xs); i++ { // xs = ys in pds
+		gamma1[xs[i]] = pds[i].GetType().TSubs(subs).(TNamed)
+	}
+	return gamma1, e
 }
 
 // gamma needed when we're visiting an `e` of a "standalone" meth decl (via collectGroundFggType)

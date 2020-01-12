@@ -312,7 +312,7 @@ func BuildWMap(p FGGProgram) WMap {
 	/*var gamma GroundEnv
 	ground := make(map[string]GroundTypeAndSigs)
 	fixOmega(ds, gamma, p.GetMain().(FGGExpr), ground)*/
-	ground := getOmega(ds, p.GetMain().(FGGExpr))
+	ground := GetOmega(ds, p.GetMain().(FGGExpr))
 
 	omega := make(WMap)
 	for _, v := range ground {
