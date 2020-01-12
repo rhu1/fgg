@@ -9,28 +9,40 @@ var _ = fmt.Errorf
 
 /* GroundEnv, GroundTypeAndSigs, GroundEntry */
 
-// Basically Gamma for TNamed only.
+// Basically a Gamma for only TNamed
 type GroundEnv map[Name]TNamed // Pre: forall TName, isGround
 
-// Cf. MonomTypeAndSigs
+// Maps u_ground.String() -> GroundTypeAndSigs{u_ground, sigs}
+type GroundMap map[string]GroundTypeAndSigs
+
+// A ground TNamed and the sigs of methods called on it as a receiver.
+// sigs should include all potential such calls that may occur at run-time
 type GroundTypeAndSigs struct {
 	u_ground TNamed               // Pre: isGround(u_ground)
 	sigs     map[string]GroundSig // Morally, Sig->[]Type -- HACK: string key is Sig.String
-	// ^(a) FGG sigs; (b) all sigs on u_ground receiver, including empty add-meth-targs (cf. fgg_monom.go)
+	// ^(i) FGG sigs; (ii) all sigs on u_ground receiver, including empty add-meth-targs
 }
 
-// The actual map entry, because sig cannot be used as map key directly
+// (The actual GroundTypeAndSigs.sigs map entry, because Sig cannot be used as map key directly)
 type GroundSig struct {
-	sig   Sig // May only need meth name given receiver type, but Sig is convenient(?)
+	sig   Sig // CHECKME: may only need meth name (given receiver type), but Sig is convenient?
 	targs []Type
 }
 
 /* Attempt to reach a closure on ground types */
 
+func getOmega(ds []Decl, e_main FGGExpr) GroundMap {
+
+	var gamma GroundEnv
+	ground := make(map[string]GroundTypeAndSigs)
+	collectGroundTypesFromExpr(ds, gamma, e_main, ground)
+	fixOmega(ds, gamma, ground)
+	return ground
+}
+
 // N.B. mutates `ground` -- encountered ground types collected into `ground`.
-func fixOmega(ds []Decl, gamma GroundEnv, e FGGExpr,
+func fixOmega(ds []Decl, gamma GroundEnv,
 	ground map[string]GroundTypeAndSigs) {
-	collectGroundTypesFromExpr(ds, gamma, e, ground)
 
 	empty := make(Delta)
 	again := true

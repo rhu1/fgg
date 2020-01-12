@@ -308,12 +308,13 @@ func monomExpr(omega WMap, e FGGExpr) fg.FGExpr {
 // Temp. workaround code to interface older "apply-omega" (this file) and
 // newer "build-omega" (fgg_omega).
 func BuildWMap(p FGGProgram) WMap {
-	omega := make(WMap)
 	ds := p.GetDecls()
-	var gamma GroundEnv
+	/*var gamma GroundEnv
 	ground := make(map[string]GroundTypeAndSigs)
-	fixOmega(ds, gamma, p.GetMain().(FGGExpr), ground)
+	fixOmega(ds, gamma, p.GetMain().(FGGExpr), ground)*/
+	ground := getOmega(ds, p.GetMain().(FGGExpr))
 
+	omega := make(WMap)
 	for _, v := range ground {
 		wk := toWKey(v.u_ground)
 		gs := make(map[string]MonomSig)
