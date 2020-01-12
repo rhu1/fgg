@@ -42,8 +42,8 @@ type MonomSig struct {
 
 	u_act TNamed // Deprecated -- see Old
 	// The "actual" return type -- cf. "declared" return type
-	// "Actual" return type means the (static) type of body 'e' of the source..
-	// ..method under targs (and the TEnv of the parent TDecl instance)
+	// "Actual" return type means the (static) type of body 'e' of the source ..
+	// method under targs (and the TEnv of the parent TDecl instance)
 }
 
 /* Monomoprh: FGGProgram -> FGProgram */

@@ -233,6 +233,7 @@ func collectGroundTypesFromType(ds []Decl, u Type, ground map[string]GroundTypeA
 // can proceed when u0 is ground without a Delta as we also have add type args here
 func collectGroundTypesByVisitingCall(ds []Decl, u0 Type, c Call,
 	ground map[string]GroundTypeAndSigs) {
+
 	if cast, ok := u0.(TNamed); !ok || !isGround(cast) {
 		return
 	}
