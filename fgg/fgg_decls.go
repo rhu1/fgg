@@ -352,7 +352,7 @@ var _ Spec = Sig{}
 func (g Sig) GetMethod() Name            { return g.meth }
 func (g Sig) GetPsi() Psi                { return g.psi }
 func (g Sig) GetParamDecls() []ParamDecl { return g.pDecls }
-func (g Sig) GetType() Type              { return g.u_ret }
+func (g Sig) GetReturn() Type            { return g.u_ret }
 
 func (g Sig) TSubs(subs map[TParam]Type) Sig {
 	tfs := make([]TFormal, len(g.psi.tFormals))

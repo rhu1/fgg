@@ -114,7 +114,7 @@ func Translate(p fgg.FGGProgram) FGRProgram { // TODO FIXME: FGR -- TODO also ca
 				pd := pds_fgg[i]
 				pds[i] = NewParamDecl(pd.GetName(), toFgTypeFromBounds(delta, pd.GetType()))
 			}
-			u := g.GetType()
+			u := g.GetReturn()
 			t := toFgTypeFromBounds(delta, u) // !!! tau_p typo, and delta'?
 			var e FGRExpr
 			e = NewStructLit("Dummy_0", []FGRExpr{})
@@ -183,7 +183,7 @@ func fgrTransSig(delta fgg.Delta, g fgg.Sig) Sig {
 	for i := 0; i < len(pds_fgg); i++ {
 		pds[i] = NewParamDecl(pds_fgg[i].GetName(), toFgTypeFromBounds(delta1, pds_fgg[i].GetType()))
 	}
-	t := toFgTypeFromBounds(delta1, g.GetType())
+	t := toFgTypeFromBounds(delta1, g.GetReturn())
 	return NewSig(g.GetMethod(), pds, t)
 }
 
@@ -363,7 +363,7 @@ func fgrTransExpr(ds []Decl, delta fgg.Delta, gamma fgg.Gamma, e fgg.FGGExpr,
 		var res FGRExpr
 		res = NewCall(e_recv, m, args)
 
-		u := g.GetType()
+		u := g.GetReturn()
 		////u_ret := g.u.TSubs(delta1)
 		//u_ret := toFgTypeFromBounds(delta1, md.GetReturn())
 		u_ret := toFgTypeFromBounds(delta1, u) // CHECKME: same as "direct" md.GetReturn().TSubs(delta1) ?
