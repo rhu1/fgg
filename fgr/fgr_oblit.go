@@ -11,11 +11,13 @@ import (
 var _ = fmt.Errorf
 var _ = reflect.Append
 
-/* [WIP] Obliteration: obliterate param/return types, erase field types, rep-ify type-args */
-
 // See fgr.go for RepType (FggType) const
 const GET_REP = "getRep"
 const HAS_REP = "HasRep"
+
+/**
+ * [WIP] Obliteration: obliterate param/return types, erase field types, rep-ify type-args
+ */
 
 func Obliterate(p_fgg fgg.FGGProgram) FGRProgram { // CHECKME can also subsume existing FGG-FG trans?
 	ds_fgg := p_fgg.GetDecls()
@@ -230,7 +232,7 @@ func oblitExpr(ds_fgg []Decl, delta fgg.Delta, gamma fgg.Gamma, e_fgg fgg.FGGExp
 		for i := 0; i < len(targs); i++ {
 			tsubs[tfs[i].GetTParam()] = targs[i]
 		}
-		t_ret := toFgrTypeFromBounds(delta, g.GetType().TSubs(tsubs))
+		t_ret := toFgrTypeFromBounds(delta, g.GetReturn().TSubs(tsubs))
 
 		var res FGRExpr
 		res = NewCall(e_fgr, m, es_fgr)
@@ -282,7 +284,7 @@ func dtype(ds []Decl, delta fgg.Delta, gamma fgg.Gamma, d fgg.FGGExpr) fgg.Type 
 	case fgg.Call:
 		u := fgg.Bounds(delta, dtype(ds, delta, gamma, e.GetRecv()))
 		g := fgg.Methods(ds, u)[e.GetMethod()]
-		return g.GetType()
+		return g.GetReturn()
 	case fgg.Assert:
 		return e.GetType()
 	default:

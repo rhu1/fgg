@@ -228,7 +228,7 @@ func (delta Delta) String() string {
 
 type TDecl interface {
 	Decl
-	GetPsi() pDecls // TODO: rename? potential clash with, e.g., MDecl, can cause "false" interface satisfaction
+	GetPsi() Psi // TODO: rename? potential clash with, e.g., MDecl, can cause "false" interface satisfaction
 }
 
 type Spec interface {
