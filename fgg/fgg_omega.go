@@ -14,10 +14,12 @@ var _ = fmt.Errorf
  * subtyping (cf. "zigzagging" in fgg_monom).
  */
 
-// Attempt to statically collect all
-func GetOmega(ds []Decl, e_main FGGExpr) GroundMap {
+// Attempt to statically collect all ground types, and method instantiations
+// called on those types, that may arise during execution
+// Pre: isMonomorphisable -- TODO
+func GetOmega(ds []Decl, e_main FGGExpr) Omega {
 	var gamma GroundEnv
-	ground := make(GroundMap)
+	ground := make(Omega)
 	collectGroundTypesFromExpr(ds, gamma, e_main, ground)
 	fixOmega(ds, gamma, ground)
 	return ground
@@ -26,7 +28,7 @@ func GetOmega(ds []Decl, e_main FGGExpr) GroundMap {
 /* GroundMap, GroundEnv, GroundTypeAndSigs, GroundSig */
 
 // Maps u_ground.String() -> GroundTypeAndSigs{u_ground, sigs}
-type GroundMap map[string]GroundTypeAndSigs
+type Omega map[string]GroundTypeAndSigs
 
 // Pre: isGround(u_ground)
 func toWKey(u_ground TNamed) string {
@@ -42,6 +44,10 @@ type GroundTypeAndSigs struct {
 	u_ground TNamed               // Pre: isGround(u_ground)
 	sigs     map[string]GroundSig // string key is Sig.String
 	// Morally, sigs is a map: fgg.Sig -> []Type -- all sigs on u_ground receiver, including empty add-meth-targs
+}
+
+func toGroundSigsKey(g Sig) string {
+	return g.String()
 }
 
 // The actual GroundTypeAndSigs.sigs map entry: Sig -> add-meth-targs
@@ -60,7 +66,7 @@ type GroundSig struct {
 // .. repeating until no "new" ground types encountered.
 // Currently, very non-optimal.
 // N.B. mutates `ground` -- encountered ground types collected into `ground`
-func fixOmega(ds []Decl, gamma GroundEnv, ground GroundMap) {
+func fixOmega(ds []Decl, gamma GroundEnv, ground Omega) {
 	delta_empty := make(Delta)
 	for again := true; again; {
 		again = false
@@ -142,7 +148,7 @@ func getGroundEnvAndBody(ds []Decl, g_I GroundSig, u_S TNamed) (
 // CHECKME: Post: res already collected?
 // N.B. mutates `ground`
 func collectGroundTypesFromExpr(ds []Decl, gamma GroundEnv, e FGGExpr,
-	ground GroundMap) (res Type) {
+	ground Omega) (res Type) {
 
 	switch e1 := e.(type) {
 	case Variable:
@@ -197,7 +203,7 @@ func collectGroundTypesFromExpr(ds []Decl, gamma GroundEnv, e FGGExpr,
 // Collect ground types from a "standalone" type according to struct/interface,
 // .. if u itself is ground.
 // N.B. mutates `ground`
-func collectGroundTypesFromType(ds []Decl, u Type, ground GroundMap) {
+func collectGroundTypesFromType(ds []Decl, u Type, ground Omega) {
 
 	if cast, ok := u.(TNamed); !ok || !isGround(cast) {
 		return
@@ -207,8 +213,8 @@ func collectGroundTypesFromType(ds []Decl, u Type, ground GroundMap) {
 		return
 	}
 
-	gs := make(map[string]GroundSig) // CHECKME: make GroundSigs type?
-	ground[toWKey(u1)] = GroundTypeAndSigs{u1, gs}
+	groundsigs := make(map[string]GroundSig) // CHECKME: make GroundSigs type?
+	ground[toWKey(u1)] = GroundTypeAndSigs{u1, groundsigs}
 
 	if IsStructType(ds, u1) { // Struct case
 		u_S := u1
@@ -268,7 +274,7 @@ func collectGroundTypesFromType(ds []Decl, u Type, ground GroundMap) {
 }
 
 // Visit types in sig (for tparams, the upper bounds)
-func collectGroudTypesInSig(ds []Decl, g Sig, ground GroundMap) {
+func collectGroudTypesInSig(ds []Decl, g Sig, ground Omega) {
 	psi_meth := g.GetPsi()
 	for _, v := range psi_meth.GetTFormals() {
 		collectGroundTypesFromType(ds, v.GetUpperBound(), ground)
@@ -287,7 +293,7 @@ func collectGroudTypesInSig(ds []Decl, g Sig, ground GroundMap) {
 // Pre: if u0 is ground, then already in `ground` (cf. collectGroundTypesFromExpr, Call case).
 // Can proceed without a Delta when u0 is ground Delta, as we also have add-targs here.
 func collectGroundTypesFromSigAndBody(ds []Decl, u_recv Type, c Call,
-	ground GroundMap) {
+	ground Omega) {
 
 	// Receiver/add-meth-targs must be ground for the remainder
 	if cast, ok := u_recv.(TNamed); !ok || !isGround(cast) {
@@ -312,7 +318,7 @@ func collectGroundTypesFromSigAndBody(ds []Decl, u_recv Type, c Call,
 	if _, ok := gs[g.String()]; ok {
 		return
 	}
-	gs[g.String()] = GroundSig{g, c.t_args} // Record sig for u_recv
+	gs[toGroundSigsKey(g)] = GroundSig{g, c.t_args} // Record sig for u_recv
 	// N.B. recorded only for u_recv, and not, e.g., super interfaces -- cf. monomTDecl, ITypeLit case
 
 	// If sig not already seen (checked above), use sig to collect from

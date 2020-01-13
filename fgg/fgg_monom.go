@@ -11,11 +11,13 @@ import (
 var _ = fmt.Errorf
 
 /**
- * [WIP] Naive monomorph -- `isMonomophisable` check not implemented yet
+ * [WIP] Naive monomorph -- `isMonomorphisable` check not implemented yet
  */
 
 // TODO: isMonomorphisable
-// func isMonomorphisable(p FGGProgram) bool { ... }
+/*func isMonomorphisable(p FGGProgram) bool {
+	panic("[TODO]")
+}*/
 
 /* Monomoprh: FGGProgram -> FGProgram */
 
@@ -57,7 +59,7 @@ func Monomorph(p FGGProgram) fg.FGProgram {
 
 // Pre: `wv` (an Omega map value) represents an instantiation of the `td` type
 // TODO: decompose
-func monomTDecl(ds []Decl, omega GroundMap, td TDecl,
+func monomTDecl(ds []Decl, omega Omega, td TDecl,
 	wv GroundTypeAndSigs) fg.TDecl {
 	subs := make(map[TParam]Type) // Type is a TName
 	psi := td.GetPsi()
@@ -155,7 +157,7 @@ func monomTDecl(ds []Decl, omega GroundMap, td TDecl,
 
 // Pre: `wv` (an Omega map value) represents an instantiation of `md.t_recv`
 // TODO: decompose
-func monomMDecl(ds []Decl, omega GroundMap, md MDecl,
+func monomMDecl(ds []Decl, omega Omega, md MDecl,
 	wv GroundTypeAndSigs) (res []fg.MDecl) {
 	subs := make(map[TParam]Type) // Type is a TName
 	for i := 0; i < len(md.psi_recv.tFormals); i++ {
@@ -214,7 +216,7 @@ func monomMDecl(ds []Decl, omega GroundMap, md MDecl,
 // N.B. return is empty, i.e., does not include wv.sigs, if no u_I
 // N.B. return is a map, so "duplicate" add-meth-param type instans are implicitly set-ified
 // ^E.g., Calling m(A()) on some struct separately via two interfaces T1 and T2 where T2 <: T1
-func collectZigZagMethInstans(ds []Decl, omega GroundMap, md MDecl,
+func collectZigZagMethInstans(ds []Decl, omega Omega, md MDecl,
 	wv GroundTypeAndSigs) (mInstans map[string][]Type) {
 	empty := make(Delta)
 	mInstans = make(map[string][]Type)
@@ -258,7 +260,7 @@ func getTypeArgsHash(us []Type) string {
 
 /* Monom FGGExprs */
 
-func monomExpr(omega GroundMap, e FGGExpr) fg.FGExpr {
+func monomExpr(omega Omega, e FGGExpr) fg.FGExpr {
 	switch e1 := e.(type) {
 	case Variable:
 		return fg.NewVariable(e1.name)
@@ -313,7 +315,7 @@ func toMonomId(u TNamed) fg.Type {
 }
 
 // Pre: len(targs) > 0
-func getMonomMethName(omega GroundMap, m Name, targs []Type) Name {
+func getMonomMethName(omega Omega, m Name, targs []Type) Name {
 	first := toMonomId(omega[toWKey(targs[0].(TNamed))].u_ground)
 	res := m + "<" + first.String()
 	for _, v := range targs[1:] {
