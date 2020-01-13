@@ -61,6 +61,7 @@ func Monomorph(p FGGProgram) fg.FGProgram {
 // TODO: decompose
 func monomTDecl(ds []Decl, omega Omega, td TDecl,
 	wv GroundTypeAndSigs) fg.TDecl {
+
 	subs := make(map[TParam]Type) // Type is a TName
 	psi := td.GetPsi()
 	for i := 0; i < len(psi.tFormals); i++ {
@@ -159,6 +160,7 @@ func monomTDecl(ds []Decl, omega Omega, td TDecl,
 // TODO: decompose
 func monomMDecl(ds []Decl, omega Omega, md MDecl,
 	wv GroundTypeAndSigs) (res []fg.MDecl) {
+
 	subs := make(map[TParam]Type) // Type is a TName
 	for i := 0; i < len(md.psi_recv.tFormals); i++ {
 		subs[md.psi_recv.tFormals[i].name] = wv.u_ground.u_args[i]
@@ -218,6 +220,7 @@ func monomMDecl(ds []Decl, omega Omega, md MDecl,
 // ^E.g., Calling m(A()) on some struct separately via two interfaces T1 and T2 where T2 <: T1
 func collectZigZagMethInstans(ds []Decl, omega Omega, md MDecl,
 	wv GroundTypeAndSigs) (mInstans map[string][]Type) {
+
 	empty := make(Delta)
 	mInstans = make(map[string][]Type)
 	// Given m = md.m, forall u_I s.t. m in meths(u_I) && wv.u_ground <: u_I,
