@@ -55,8 +55,8 @@ func Monomorph(p FGGProgram) fg.FGProgram {
 
 /* Monom TDecl */
 
-// Pre: `wv` (an "omega" map value) represents an instantiation of the `td` type
-// TODO: refactor, decompose
+// Pre: `wv` (an Omega map value) represents an instantiation of the `td` type
+// TODO: decompose
 func monomTDecl(ds []Decl, omega GroundMap, td TDecl,
 	wv GroundTypeAndSigs) fg.TDecl {
 	subs := make(map[TParam]Type) // Type is a TName
@@ -68,12 +68,13 @@ func monomTDecl(ds []Decl, omega GroundMap, td TDecl,
 	case STypeLit:
 		fds := make([]fg.FieldDecl, len(d.fDecls))
 		for i := 0; i < len(d.fDecls); i++ {
-			tmp := d.fDecls[i]
-			u := tmp.u.TSubs(subs).(TNamed)     // "Inlined" substitution actions here -- cf. TDecl.TSubs
-			if _, ok := omega[toWKey(u)]; !ok { // Cf. BuildWMap, extra loop over non-param TDecls, for those non seen o/w
-				panic("Unknown type: " + u.String())
+			fd := d.fDecls[i]
+			u_f := fd.u.TSubs(subs).(TNamed)      // "Inlined" substitution actions here -- cf. TDecl.TSubs
+			if _, ok := omega[toWKey(u_f)]; !ok { // Cf. BuildWMap, extra loop over non-param TDecls, for those not seen o/w
+				panic("Unknown type: " + u_f.String())
 			}
-			fds[i] = fg.NewFieldDecl(tmp.field, toMonomId(omega[toWKey(u)].u_ground))
+			t_f_monom := toMonomId(omega[toWKey(u_f)].u_ground)
+			fds[i] = fg.NewFieldDecl(fd.field, t_f_monom)
 		}
 		return fg.NewSTypeLit(toMonomId(wv.u_ground), fds)
 	case ITypeLit:
@@ -84,50 +85,60 @@ func monomTDecl(ds []Decl, omega GroundMap, td TDecl,
 				if len(s.psi.tFormals) == 0 {
 					pds := make([]fg.ParamDecl, len(s.pDecls))
 					for i := 0; i < len(s.pDecls); i++ {
-						tmp := s.pDecls[i]
-						u_p := tmp.u.TSubs(subs).(TNamed)
-						pds[i] = fg.NewParamDecl(tmp.name, toMonomId(omega[toWKey(u_p)].u_ground))
+						pd := s.pDecls[i]
+						u_p := pd.u.TSubs(subs).(TNamed)
+						t_p_monom := toMonomId(omega[toWKey(u_p)].u_ground)
+						pds[i] = fg.NewParamDecl(pd.name, t_p_monom)
 					}
-					u := s.u_ret.TSubs(subs).(TNamed)
-					ss = append(ss, fg.NewSig(s.meth, pds, toMonomId(omega[toWKey(u)].u_ground)))
+					u_ret := s.u_ret.TSubs(subs).(TNamed)
+					t_ret_monom := toMonomId(omega[toWKey(u_ret)].u_ground)
+					ss = append(ss, fg.NewSig(s.meth, pds, t_ret_monom))
 				} else {
-					// forall u s.t. u <: wv.u, collect add-meth-targs for all meths called on u
+					// Instantiate sig for all calls of this method on this type or any subtype.
+					// (Similarly, collectZigZagMethInstans.)
+					// N.B. Omega itself does not "respect" subtyping -- i.e., calls recorded
+					// .. on a receiver are not necessarily reflected on its super/subtypes.
+
+					// forall u s.t. u <: wv.u_ground, collect add-meth-targs for all meths called on u
 					gs := methods(ds, wv.u_ground)
 					delta_empty := make(Delta)
-					targs := make(map[string][]Type) // Key is getTypeArgsHash([]Type)
+					mInstans := make(map[string][]Type) // Key is getTypeArgsHash([]Type)
 					for _, wv1 := range omega {
 						if wv1.u_ground.Impls(ds, delta_empty, wv.u_ground) {
 							// Collect meth instans from *all* subtypes
-							// (including calls on i/face receivers -- cf. map.fgg, Bool().Cond(Bool())(...))
-							// Includes reflexive
+							// Includes calls on i/face receivers -- cf. map.fgg, Bool().Cond(Bool())(...)
+							// Includes reflexive case
 							for _, v1 := range gs {
-								addMethInstans(wv1, v1.meth, targs)
+								addMethInstans(wv1, v1.meth, mInstans)
 							}
 						}
 					}
 					// CHECKME: if targs empty, methods "discarded" -- replace meth-params by bounds?
-					for _, v := range targs { // CHECKME: factor out with MDecl?
+					for _, targs := range mInstans {
 						subs1 := make(map[TParam]Type)
 						for k1, v1 := range subs {
 							subs1[k1] = v1
 						}
-						for i := 0; i < len(v); i++ {
-							subs1[s.psi.tFormals[i].name] = v[i]
+						for i := 0; i < len(targs); i++ {
+							subs1[s.psi.tFormals[i].name] = targs[i]
 						}
 						pds := make([]fg.ParamDecl, len(s.pDecls))
 						for i := 0; i < len(s.pDecls); i++ {
-							tmp := s.pDecls[i]
-							u_p := tmp.u.TSubs(subs1).(TNamed)
-							pds[i] = fg.NewParamDecl(tmp.name, toMonomId(omega[toWKey(u_p)].u_ground))
+							pd := s.pDecls[i]
+							u_p := pd.u.TSubs(subs1).(TNamed)
+							t_p_monom := toMonomId(omega[toWKey(u_p)].u_ground)
+							pds[i] = fg.NewParamDecl(pd.name, t_p_monom)
 						}
-						u := s.u_ret.TSubs(subs1).(TNamed)
-						g1 := fg.NewSig(getMonomMethName(omega, s.meth, v), pds,
-							toMonomId(omega[toWKey(u)].u_ground))
+						u_ret := s.u_ret.TSubs(subs1).(TNamed)
+						t_ret_monom := toMonomId(omega[toWKey(u_ret)].u_ground)
+						g1 := fg.NewSig(getMonomMethName(omega, s.meth, targs), pds,
+							t_ret_monom)
 						ss = append(ss, g1)
 					}
 				}
-			case TNamed:
-				ss = append(ss, toMonomId(omega[toWKey(s)].u_ground))
+			case TNamed: // Embedded
+				t_monom := toMonomId(omega[toWKey(s)].u_ground)
+				ss = append(ss, t_monom)
 			default:
 				panic("Unknown Spec kind: " + reflect.TypeOf(v).String() +
 					"\n\t" + v.String())
@@ -142,91 +153,97 @@ func monomTDecl(ds []Decl, omega GroundMap, td TDecl,
 
 /* Monom MDecl */
 
-// Pre: `wval` represents an instantiation of `md.t_recv`  // TODO: decompose
+// Pre: `wv` (an Omega map value) represents an instantiation of `md.t_recv`
+// TODO: decompose
 func monomMDecl(ds []Decl, omega GroundMap, md MDecl,
-	wval GroundTypeAndSigs) (res []fg.MDecl) {
+	wv GroundTypeAndSigs) (res []fg.MDecl) {
 	subs := make(map[TParam]Type) // Type is a TName
 	for i := 0; i < len(md.psi_recv.tFormals); i++ {
-		subs[md.psi_recv.tFormals[i].name] = wval.u_ground.u_args[i]
+		subs[md.psi_recv.tFormals[i].name] = wv.u_ground.u_args[i]
 	}
-	recv := fg.NewParamDecl(md.x_recv, toMonomId(wval.u_ground))
+	recv := fg.NewParamDecl(md.x_recv, toMonomId(wv.u_ground))
 	if len(md.psi_meth.tFormals) == 0 {
 		pds := make([]fg.ParamDecl, len(md.pDecls))
 		for i := 0; i < len(md.pDecls); i++ {
-			tmp := md.pDecls[i]
-			u := tmp.u.TSubs(subs).(TNamed) // "Inlined" substitution actions here -- cf. TDecl.TSubs
-			pds[i] = fg.NewParamDecl(tmp.name, toMonomId(omega[toWKey(u)].u_ground))
+			pd := md.pDecls[i]
+			u_p := pd.u.TSubs(subs).(TNamed) // "Inlined" substitution actions here -- cf. TDecl.TSubs
+			t_p_monom := toMonomId(omega[toWKey(u_p)].u_ground)
+			pds[i] = fg.NewParamDecl(pd.name, t_p_monom)
 		}
-		t := toMonomId(omega[toWKey(md.u_ret.TSubs(subs).(TNamed))].u_ground)
-		e := monomExpr(omega, md.e_body.TSubs(subs))
-		res = append(res, fg.NewMDecl(recv, md.name, pds, t, e))
+		t_ret_monom := toMonomId(omega[toWKey(md.u_ret.TSubs(subs).(TNamed))].u_ground)
+		e_monom := monomExpr(omega, md.e_body.TSubs(subs))
+		res = append(res, fg.NewMDecl(recv, md.name, pds, t_ret_monom, e_monom))
 	} else {
-		targs := collectZigZagMethInstans(ds, omega, md, wval) // CHECKME: maybe not needed? (w.r.t. revised fgg_omega)
-		if len(targs) == 0 {
-			// ^Means no u_I, if len(wv.gs)>0 -- targs doesn't (yet) include wv.gs
-			addMethInstans(wval, md.name, targs)
+		// Instantiate method for all calls on not only any supertype, ..
+		// but also on any subtype of any supertype (to preserve subtyping).
+		// N.B. Omega itself does not "respect" subtyping -- i.e., calls recorded
+		// .. on a receiver are not necessarily reflected on its super/subtypes.
+		mInstans := collectZigZagMethInstans(ds, omega, md, wv)
+		if len(mInstans) == 0 {
+			// ^Means no u_I, if len(wv.sigs) > 0 -- mInstans doesn't (yet) include wv.sigs
+			addMethInstans(wv, md.name, mInstans)
 		}
-		for _, v := range targs { // CHECKME: factor out with ITypeLit?
+		for _, targs := range mInstans {
 			subs1 := make(map[TParam]Type)
 			for k1, v1 := range subs {
 				subs1[k1] = v1
 			}
-			for i := 0; i < len(v); i++ {
-				subs1[md.psi_meth.tFormals[i].name] = v[i]
+			for i := 0; i < len(targs); i++ {
+				subs1[md.psi_meth.tFormals[i].name] = targs[i]
 			}
-			recv := fg.NewParamDecl(md.x_recv, toMonomId(wval.u_ground))
 			pds := make([]fg.ParamDecl, len(md.pDecls))
 			for i := 0; i < len(md.pDecls); i++ {
-				tmp := md.pDecls[i]
-				u_p := tmp.u.TSubs(subs1).(TNamed)
-				pds[i] = fg.NewParamDecl(tmp.name, toMonomId(omega[toWKey(u_p)].u_ground))
+				pd := md.pDecls[i]
+				u_p := pd.u.TSubs(subs1).(TNamed)
+				t_p_monom := toMonomId(omega[toWKey(u_p)].u_ground)
+				pds[i] = fg.NewParamDecl(pd.name, t_p_monom)
 			}
-			u := md.u_ret.TSubs(subs1).(TNamed)
-			e := monomExpr(omega, md.e_body.TSubs(subs1))
-			md1 := fg.NewMDecl(recv, getMonomMethName(omega, md.name, v), pds,
-				toMonomId(omega[toWKey(u)].u_ground), e)
+			u_ret := md.u_ret.TSubs(subs1).(TNamed)
+			t_ret_monom := toMonomId(omega[toWKey(u_ret)].u_ground)
+			recv := fg.NewParamDecl(md.x_recv, toMonomId(wv.u_ground))
+			e_monom := monomExpr(omega, md.e_body.TSubs(subs1))
+			m_monom := getMonomMethName(omega, md.name, targs)
+			md1 := fg.NewMDecl(recv, m_monom, pds, t_ret_monom, e_monom)
 			res = append(res, md1)
 		}
 	}
 	return res
 }
 
-// CHECKME: is this still needed now?  (given revised fgg_omega?)
-//
-// N.B. return is empty, i.e., does not include wv.gs, if no u_I
-// N.B. return is a map, so "duplicate" add-meth-param type instans are implicitly setify-ed
+// Collect all instantations of calls to md on any subtype of any supertype of wv.u_ground.
+// N.B. return is empty, i.e., does not include wv.sigs, if no u_I
+// N.B. return is a map, so "duplicate" add-meth-param type instans are implicitly set-ified
 // ^E.g., Calling m(A()) on some struct separately via two interfaces T1 and T2 where T2 <: T1
 func collectZigZagMethInstans(ds []Decl, omega GroundMap, md MDecl,
-	wval GroundTypeAndSigs) map[string][]Type {
+	wv GroundTypeAndSigs) (mInstans map[string][]Type) {
 	empty := make(Delta)
-	targs := make(map[string][]Type)
-	// Given m = md.m, forall u_I s.t. m in meths(u_I) && wv.u <: u_I, ..
-	// ..forall u_S s.t. u_S <: u_I, collect targs for all mono(u_S.m)
-	// ^Correction: forall u, not only u_S
-	for _, v := range omega {
-		if IsNamedIfaceType(ds, v.u_ground) && wval.u_ground.Impls(ds, empty, v.u_ground) {
-			gs := methods(ds, v.u_ground)
+	mInstans = make(map[string][]Type)
+	// Given m = md.m, forall u_I s.t. m in meths(u_I) && wv.u_ground <: u_I,
+	// .. forall u s.t. u <: u_I, collect targs from all calls of m on u
+	for _, wv1 := range omega {
+		if IsNamedIfaceType(ds, wv1.u_ground) && wv.u_ground.Impls(ds, empty, wv1.u_ground) {
+			gs := methods(ds, wv1.u_ground) // Includes embedded meths for i/face wv1.u_ground
 			if _, ok := gs[md.name]; ok {
-				addMethInstans(v, md.name, targs)
-				for _, v1 := range omega {
-					if /*isStructTName(ds, v1.u) &&*/ v1.u_ground.Impls(ds, empty, v.u_ground) {
-						addMethInstans(v1, md.name, targs)
+				addMethInstans(wv1, md.name, mInstans)
+				for _, wv2 := range omega {
+					if wv2.u_ground.Impls(ds, empty, wv1.u_ground) {
+						addMethInstans(wv2, md.name, mInstans)
 					}
 				}
 			}
 		}
 	}
-	return targs
+	return mInstans
 }
 
-// Add instans of `m` in `wv` (an "omega" map value) to `targs`
+// Add instans of `m` in `wv` (an Omega map value) to `mInstans`
 // (Adding instances with non-empty add-meth-targs, but that should simply depend on m's decl)
-func addMethInstans(wv GroundTypeAndSigs, m Name, targs map[string][]Type) {
+func addMethInstans(wv GroundTypeAndSigs, m Name, mInstans map[string][]Type) {
 	for _, v := range wv.sigs {
 		m1 := v.sig.GetMethod()
 		if m1 == m && len(v.targs) > 0 {
 			hash := getTypeArgsHash(v.targs)
-			targs[hash] = v.targs
+			mInstans[hash] = v.targs
 		}
 	}
 }
@@ -254,7 +271,8 @@ func monomExpr(omega GroundMap, e FGGExpr) fg.FGExpr {
 		if _, ok := omega[wk]; !ok {
 			panic("Unknown type: " + e1.u_S.String())
 		}
-		return fg.NewStructLit(toMonomId(omega[wk].u_ground), es)
+		t_monom := toMonomId(omega[wk].u_ground)
+		return fg.NewStructLit(t_monom, es)
 	case Select:
 		return fg.NewSelect(monomExpr(omega, e1.e_S), e1.field)
 	case Call:
@@ -275,8 +293,8 @@ func monomExpr(omega GroundMap, e FGGExpr) fg.FGExpr {
 		if _, ok := omega[wk]; !ok {
 			panic("Unknown type: " + e1.u_cast.String())
 		}
-		return fg.NewAssert(monomExpr(omega, e1.e_I),
-			toMonomId(omega[wk].u_ground))
+		t_monom := toMonomId(omega[wk].u_ground)
+		return fg.NewAssert(monomExpr(omega, e1.e_I), t_monom)
 	default:
 		panic("Unknown Expr kind: " + reflect.TypeOf(e).String() + "\n\t" +
 			e.String())
@@ -295,11 +313,12 @@ func toMonomId(u TNamed) fg.Type {
 }
 
 // Pre: len(targs) > 0
-//func getMonomMethName(omega WMap, m Name, targs []Type) Name {
 func getMonomMethName(omega GroundMap, m Name, targs []Type) Name {
-	res := m + "<" + toMonomId(omega[toWKey(targs[0].(TNamed))].u_ground).String()
+	first := toMonomId(omega[toWKey(targs[0].(TNamed))].u_ground)
+	res := m + "<" + first.String()
 	for _, v := range targs[1:] {
-		res = res + "," + toMonomId(omega[toWKey(v.(TNamed))].u_ground).String()
+		next := toMonomId(omega[toWKey(v.(TNamed))].u_ground)
+		res = res + "," + next.String()
 	}
 	res = res + ">"
 	return Name(res)

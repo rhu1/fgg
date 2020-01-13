@@ -11,11 +11,13 @@ import (
 var _ = fmt.Errorf
 var _ = reflect.Append
 
-/* [WIP] Obliteration: obliterate param/return types, erase field types, rep-ify type-args */
-
 // See fgr.go for RepType (FggType) const
 const GET_REP = "getRep"
 const HAS_REP = "HasRep"
+
+/**
+ * [WIP] Obliteration: obliterate param/return types, erase field types, rep-ify type-args
+ */
 
 func Obliterate(p_fgg fgg.FGGProgram) FGRProgram { // CHECKME can also subsume existing FGG-FG trans?
 	ds_fgg := p_fgg.GetDecls()

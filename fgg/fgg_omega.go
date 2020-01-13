@@ -7,7 +7,12 @@ import (
 
 var _ = fmt.Errorf
 
-/* Build Omega -- (morally) a map from ground FGG types to Sigs of (potential) calls on that receiver */
+/**
+ * Build Omega -- (morally) a map from ground FGG types to Sigs of (potential)
+ * calls on that receiver.  N.B., calls are recorded only as seen for each
+ * specific receiver type -- i.e., omega does not attempt to "respect"
+ * subtyping (cf. "zigzagging" in fgg_monom).
+ */
 
 // Attempt to statically collect all
 func GetOmega(ds []Decl, e_main FGGExpr) GroundMap {
@@ -52,7 +57,7 @@ type GroundSig struct {
 // Attempt to form a closure on encountered ground types.
 // Iterate over `ground` using add-meth-targs recorded on i/face receivers to
 // .. visit all possible method bodies of implementing struct types --
-// .. repeating until no "new" ground types encoutered.
+// .. repeating until no "new" ground types encountered.
 // Currently, very non-optimal.
 // N.B. mutates `ground` -- encountered ground types collected into `ground`
 func fixOmega(ds []Decl, gamma GroundEnv, ground GroundMap) {
@@ -72,7 +77,7 @@ func fixOmega(ds []Decl, gamma GroundEnv, ground GroundMap) {
 
 				u_S := wv_S.u_ground
 				for _, g_I := range wv_I.sigs {
-					if len(g_I.targs) == 0 { // CHECKME: dropping this skip obsoletes monom zigzag?
+					if len(g_I.targs) == 0 {
 						continue
 					}
 

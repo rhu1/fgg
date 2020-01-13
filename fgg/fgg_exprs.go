@@ -43,7 +43,7 @@ func (x Variable) Eval(ds []Decl) (FGGExpr, string) {
 	panic("Cannot evaluate free variable: " + x.name)
 }
 
-// TODO: refactor Typing and StupidTyping (clearer than bool param)
+// TODO: refactor as Typing and StupidTyping? (clearer than bool param)
 func (x Variable) Typing(ds []Decl, delta Delta, gamma Gamma,
 	allowStupid bool) Type {
 	res, ok := gamma[x.name]
