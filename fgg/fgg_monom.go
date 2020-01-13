@@ -62,7 +62,7 @@ func Monomorph(p FGGProgram) fg.FGProgram {
 func monomTDecl(ds []Decl, omega Omega, td TDecl,
 	wv GroundTypeAndSigs) fg.TDecl {
 
-	subs := make(map[TParam]Type) // Type is a TName
+	subs := make(map[TParam]Type) // Type is a TNamed
 	psi := td.GetPsi()
 	for i := 0; i < len(psi.tFormals); i++ {
 		subs[psi.tFormals[i].name] = wv.u_ground.u_args[i]
@@ -161,7 +161,7 @@ func monomTDecl(ds []Decl, omega Omega, td TDecl,
 func monomMDecl(ds []Decl, omega Omega, md MDecl,
 	wv GroundTypeAndSigs) (res []fg.MDecl) {
 
-	subs := make(map[TParam]Type) // Type is a TName
+	subs := make(map[TParam]Type) // Type is a TNamed
 	for i := 0; i < len(md.psi_recv.tFormals); i++ {
 		subs[md.psi_recv.tFormals[i].name] = wv.u_ground.u_args[i]
 	}
