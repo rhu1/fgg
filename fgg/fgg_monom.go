@@ -23,7 +23,7 @@ var _ = fmt.Errorf
 
 func Monomorph(p FGGProgram) fg.FGProgram {
 	ds_fgg := p.GetDecls()
-	omega := GetOmega(ds_fgg, p.GetMain().(FGGExpr))
+	omega := GetOmega(ds_fgg, p.GetMain().(FGGExpr)) // TODO: do "supertype closure" over omega (cf. collectSuperMethInstans)
 
 	var ds_monom []Decl
 	for _, v := range p.decls {
@@ -287,7 +287,7 @@ func monomExpr(omega Omega, e FGGExpr) fg.FGExpr {
 
 func toMonomId(u TNamed) fg.Type {
 	res := u.String()
-	res = strings.Replace(res, ",", ",,", -1)
+	res = strings.Replace(res, ",", ",,", -1) // TODO: refactor, cf. main.go, doMonom
 	res = strings.Replace(res, "(", "<", -1)
 	res = strings.Replace(res, ")", ">", -1)
 	res = strings.Replace(res, " ", "", -1)
