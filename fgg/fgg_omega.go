@@ -42,7 +42,7 @@ type GroundEnv map[Name]TNamed // Pre: forall TName, isGround
 // sigs should include all potential such calls that may occur at run-time
 type GroundTypeAndSigs struct {
 	u_ground TNamed               // Pre: isGround(u_ground)
-	sigs     map[string]GroundSig // string key is Sig.String
+	sigs     map[string]GroundSig // string key is GroundSig.sig.String()
 	// Morally, sigs is a map: fgg.Sig -> []Type -- all sigs on u_ground receiver, including empty add-meth-targs
 }
 

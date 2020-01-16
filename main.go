@@ -236,7 +236,7 @@ func doMonom(prog base.Program, monom bool, compile string) {
 	if compile != "" {
 		vPrintln("\nMonomorphising, FG output: [Warning] WIP [Warning]")
 		out := p_mono.String()
-		out = strings.Replace(out, ",,", "", -1)
+		out = strings.Replace(out, ",,", "", -1) // TODO: refactor -- cf. fgg_monom, toMonomId
 		out = strings.Replace(out, "<", "", -1)
 		out = strings.Replace(out, ">", "", -1)
 		if compile == "--" {
