@@ -97,28 +97,10 @@ func monomTDecl(ds []Decl, omega Omega, td TDecl,
 					t_ret_monom := toMonomId(omega[toWKey(u_ret)].u_ground)
 					ss = append(ss, fg.NewSig(s.meth, pds, t_ret_monom))
 				} else {
-					// Instantiate sig for all calls of this method on this type or any subtype.
-					// (Similarly, collectZigZagMethInstans.)
-					// N.B. Omega itself does not "respect" subtyping -- i.e., calls recorded
-					// .. on a receiver are not necessarily reflected on its super/subtypes.
-
-					// forall u s.t. u <: wv.u_ground, collect add-meth-targs for all meths called on u
-					gs := methods(ds, wv.u_ground)
+					// Instantiate sig for all calls of this method on this type.
+					// Collect add-meth-targs for all meths called on wv.u_ground.
 					mInstans := make(map[string][]Type) // Key is getTypeArgsHash([]Type)
-					/*delta_empty := make(Delta)
-					for _, wv1 := range omega {
-						if wv1.u_ground.Impls(ds, delta_empty, wv.u_ground) {
-							// Collect meth instans from *all* subtypes
-							// Includes calls on i/face receivers -- cf. map.fgg, Bool().Cond(Bool())(...)
-							// Includes reflexive case
-							for _, v1 := range gs {
-								addMethInstans(wv1, v1.meth, mInstans)
-							}
-						}
-					}*/
-					for _, v1 := range gs {
-						addMethInstans(wv, v1.meth, mInstans)
-					}
+					addMethInstans(wv, s.meth, mInstans)
 					// CHECKME: if targs empty, methods "discarded" -- replace meth-params by bounds?
 					for _, targs := range mInstans {
 						subs1 := make(map[TParam]Type)
@@ -182,15 +164,9 @@ func monomMDecl(ds []Decl, omega Omega, md MDecl,
 		e_monom := monomExpr(omega, md.e_body.TSubs(subs))
 		res = append(res, fg.NewMDecl(recv, md.name, pds, t_ret_monom, e_monom))
 	} else {
-		// Instantiate method for all calls on not only any supertype, ..
-		// but also on any subtype of any supertype (to preserve subtyping).
-		// N.B. Omega itself does not "respect" subtyping -- i.e., calls recorded
-		// .. on a receiver are not necessarily reflected on its super/subtypes.
-		mInstans := collectZigZagMethInstans(ds, omega, md, wv)
-		if len(mInstans) == 0 {
-			// ^Means no u_I, if len(wv.sigs) > 0 -- mInstans doesn't (yet) include wv.sigs
-			addMethInstans(wv, md.name, mInstans)
-		}
+		// Instantiate method for all calls of md.name on any supertype.
+		mInstans := collectSuperMethInstans(ds, omega, md, wv)
+		addMethInstans(wv, md.name, mInstans)
 		for _, targs := range mInstans {
 			subs1 := make(map[TParam]Type)
 			for k1, v1 := range subs {
@@ -218,29 +194,23 @@ func monomMDecl(ds []Decl, omega Omega, md MDecl,
 	return res
 }
 
-// Collect all instantations of calls to md on any subtype of any supertype of wv.u_ground.
-// N.B. return is empty, i.e., does not include wv.sigs, if no u_I
-// N.B. return is a map, so "duplicate" add-meth-param type instans are implicitly set-ified
+// Collect all instantations of calls to md on any supertype of wv.u_ground.
+// - return is empty, i.e., does not include wv.sigs, if no u_I with md.name call
+// - return is a map, so "duplicate" add-meth-param type instans are implicitly set-ified
 // ^E.g., Calling m(A()) on some struct separately via two interfaces T1 and T2 where T2 <: T1
 // Pre: `wv` (an Omega map value) represents an instantiation of `md.t_recv`
 // N.B. `md.t_recv` is a t_S
-func collectZigZagMethInstans(ds []Decl, omega Omega, md MDecl,
+func collectSuperMethInstans(ds []Decl, omega Omega, md MDecl,
 	wv GroundTypeAndSigs) (mInstans map[string][]Type) {
 
 	empty := make(Delta)
 	mInstans = make(map[string][]Type)
 	// Given m = md.m, forall u_I s.t. m in meths(u_I) && wv.u_ground <: u_I,
-	// .. forall u s.t. u <: u_I, collect targs from all calls of m on u
+	// .. collect targs from all calls of m on u_I
 	for _, wv1 := range omega {
 		if IsNamedIfaceType(ds, wv1.u_ground) && wv.u_ground.Impls(ds, empty, wv1.u_ground) {
 			gs := methods(ds, wv1.u_ground) // Includes embedded meths for i/face wv1.u_ground
 			if _, ok := gs[md.name]; ok {
-				addMethInstans(wv1, md.name, mInstans)
-				/*for _, wv2 := range omega {
-					if wv2.u_ground.Impls(ds, empty, wv1.u_ground) {
-						addMethInstans(wv2, md.name, mInstans)
-					}
-				}*/
 				addMethInstans(wv1, md.name, mInstans)
 			}
 		}
