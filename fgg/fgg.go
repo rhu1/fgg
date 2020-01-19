@@ -27,7 +27,7 @@ type Decl = base.Decl
 // Name: see Aliases (at top)
 
 type Type interface {
-	TSubs(subs map[TParam]Type) Type // N.B. map is Delta -- TODO: factor out Subs type?
+	TSubs(subs map[TParam]Type) Type // N.B. map is Delta -- factor out a Subs type?
 	Impls(ds []Decl, delta Delta, u Type) bool
 	Ok(ds []Decl, delta Delta)
 	Equals(u Type) bool
@@ -140,7 +140,8 @@ func (u0 TNamed) Ok(ds []Decl, delta Delta) {
 		subs[psi.tFormals[i].name] = u0.u_args[i]
 	}
 	for i := 0; i < len(psi.tFormals); i++ {
-		actual := psi.tFormals[i].name.TSubs(subs) // CHECKME: submission version T-Named, subs applied to Delta?
+		actual := psi.tFormals[i].name.TSubs(subs)
+		// CHECKME: submission T-Named, subs applied to Delta? -- already applied, Delta is coming from the subs context
 		formal := psi.tFormals[i].u_I.TSubs(subs)
 		if !actual.Impls(ds, delta, formal) { // tfs[i].u is a \tau_I, checked by TDecl.Ok
 			panic("Type actual must implement type formal: actual=" +
