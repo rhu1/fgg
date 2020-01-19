@@ -414,8 +414,8 @@ func TDeclOk(ds []Decl, td TDecl) {
 	psi.Ok(ds)
 	delta := psi.ToDelta()
 	for _, v := range psi.tFormals {
-		u, _ := v.u_I.(TNamed) // \tau_I, checked by psi.Ok
-		u.Ok(ds, delta)        // !!! Submission version T-Type, t_i => t_I
+		u_I, _ := v.u_I.(TNamed) // \tau_I, already checked by psi.Ok
+		u_I.Ok(ds, delta)        // !!! Submission version T-Type, t_i => t_I
 	}
 	// TODO: Check, e.g., unique type/field/method names -- cf., FGGProgram.OK [Warning]
 }
