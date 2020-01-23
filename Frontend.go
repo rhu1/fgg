@@ -48,6 +48,7 @@ func parse(verbose bool, a base.Adaptor, src string, strict bool) base.Program {
 // N.B. currently FG panic comes out implicitly as an underlying run-time panic
 // CHECKME: add explicit FG panics?
 // If steps == EVAL_TO_VAL, then eval to value
+// Post: intrp.GetProgram() contains the eval result; result type is returned
 func eval(intrp Interp, steps int) base.Type {
 	if steps < NO_EVAL {
 		panic("Invalid number of steps: " + strconv.Itoa(steps))
@@ -165,10 +166,7 @@ func (intrp *FGGInterp) Monom(monom bool, compile string) {
 	}
 	if compile != "" {
 		intrp.vPrintln("\nMonomorphising, FG output: [Warning] WIP [Warning]")
-		out := p_mono.String()
-		out = strings.Replace(out, ",,", "", -1) // TODO: refactor -- cf. fgg_monom, toMonomId
-		out = strings.Replace(out, "<", "", -1)
-		out = strings.Replace(out, ">", "", -1)
+		out := monomOutputHack(p_mono.String())
 		if compile == "--" {
 			fmt.Println(out)
 		} else {
@@ -179,6 +177,13 @@ func (intrp *FGGInterp) Monom(monom bool, compile string) {
 			checkErr(err)
 		}
 	}
+}
+
+func monomOutputHack(out string) string {
+	out = strings.Replace(out, ",,", "", -1) // TODO: refactor -- cf. fgg_monom, toMonomId
+	out = strings.Replace(out, "<", "", -1)
+	out = strings.Replace(out, ">", "", -1)
+	return out
 }
 
 func (intrp *FGGInterp) Oblit(compile string) {
