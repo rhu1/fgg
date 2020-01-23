@@ -162,7 +162,7 @@ func main() {
 		//interp(&a, src, strictParse, evalSteps)
 		intrp_fg := NewFGInterp(verbose, src, strictParse)
 		if evalSteps > NO_EVAL {
-			Eval(intrp_fg.prog, evalSteps)
+			intrp_fg.Eval(evalSteps)
 		}
 		// monom implicitly disabled
 	case interpFGG:
