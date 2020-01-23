@@ -11,6 +11,8 @@ import "strings"
 
 import "github.com/rhu1/fgg/base"
 
+var _ = fmt.Errorf
+
 /* "Exported" constructors (e.g., for fgg_monom)*/
 
 func NewFGProgram(ds []Decl, e FGExpr, printf bool) FGProgram {
@@ -44,8 +46,8 @@ func (p FGProgram) GetMain() base.Expr { return p.e_main }
 // From base.Program
 func (p FGProgram) Ok(allowStupid bool) base.Type {
 	if !allowStupid { // Hack, to print the following only for "top-level" programs (not during Eval)
-		fmt.Println("[Warning] Type/method decl OK not fully checked yet " +
-			"(e.g., distinct field/param names, etc.)")
+		/*fmt.Println("[Warning] Type/method decl OK not fully checked yet " +
+		"(e.g., distinct field/param names, etc.)")*/
 	}
 	tds := make(map[Type]TDecl)
 	mds := make(map[string]MDecl) // Hack, string = string(md.recv.t) + "." + md.GetName()

@@ -196,11 +196,10 @@ func testMonom(verbose bool, src string, steps int) {
 	vPrintln(verbose, "\nFGG expr: "+p_fgg.GetMain().String())
 	p_mono := fgg.Monomorph(p_fgg)
 	vPrintln(verbose, "Monom expr: "+p_mono.GetMain().String())
-	p_mono.Ok(true)
+	p_mono.Ok(false)
 	done := steps > EVAL_TO_VAL
 	for i := 0; i < steps || !done; i++ {
 		if p_fgg.GetMain().IsValue() {
-			done = true
 			break
 		}
 		p_fgg, p_mono = testMonomStep(verbose, p_fgg, p_mono)
