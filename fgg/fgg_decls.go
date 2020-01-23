@@ -35,9 +35,9 @@ func (p FGGProgram) GetDecls() []Decl   { return p.decls } // Return a copy?
 func (p FGGProgram) GetMain() base.Expr { return p.e_main }
 
 func (p FGGProgram) Ok(allowStupid bool) base.Type {
-	if !allowStupid { // Hack, to print only "top-level" programs (not during Eval)
-		fmt.Println("[Warning] Type lit OK (\"T ok\") not fully implemented yet " +
-			"(e.g., distinct type/field/method names, etc.)")
+	if !allowStupid { // Hack, to print only "top-level" programs (not during Eval) -- cf. verbose
+		/*fmt.Println("[Warning] Type lit OK (\"T ok\") not fully implemented yet " +
+		"(e.g., distinct type/field/method names, etc.)")*/
 	}
 	for _, v := range p.decls {
 		switch d := v.(type) {
