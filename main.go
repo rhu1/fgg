@@ -101,7 +101,7 @@ func init() {
 	flag.StringVar(&inlineSrc, "inline", "",
 		`-inline="[FG/FGG src]", use inline input as source`)
 	flag.BoolVar(&strictParse, "strict", true,
-		"strict parsing (don't attempt recovery on parsing errors)")
+		"strict parsing (default true, means don't attempt recovery on parsing errors)")
 
 	flag.IntVar(&evalSteps, "eval", NO_EVAL,
 		" N ⇒ evaluate N (≥ 0) steps; or\n-1 ⇒ evaluate to value (or panic)")
@@ -164,66 +164,23 @@ func main() {
 		if evalSteps > NO_EVAL {
 			intrp_fg.Eval(evalSteps)
 		}
+		fmt.Println(intrp_fg.GetProgram().GetMain())
 		// monom implicitly disabled
 	case interpFGG:
-		var a fgg.FGGAdaptor
-		prog := interp(&a, src, strictParse, evalSteps)
+		//var a fgg.FGGAdaptor
+		//prog := interp(&a, src, strictParse, evalSteps)
+		intrp_fgg := NewFGGInterp(verbose, src, strictParse)
+		if evalSteps > NO_EVAL {
+			intrp_fgg.Eval(evalSteps)
+		}
+		fmt.Println(intrp_fgg.GetProgram().GetMain())
 
 		// TODO: refactor properly
+		prog := intrp_fgg.GetProgram().(fgg.FGGProgram)
 		doMonom(prog, monom, monomc)
 		//doWrappers(prog, wrapperc)
 		doOblit(prog, oblitc)
 	}
-}
-
-func interp(a base.Adaptor, src string, strict bool, steps int) base.Program {
-	vPrintln("\nParsing AST:")
-	prog := a.Parse(strict, src) // AST (Program root)
-	vPrintln(prog.String())
-
-	vPrintln("\nChecking source program OK:")
-	allowStupid := false
-	prog.Ok(allowStupid)
-
-	if steps > NO_EVAL {
-		Eval(prog, steps)
-	}
-
-	return prog
-}
-
-// N.B. currently FG panic comes out implicitly as an underlying run-time panic
-// CHECKME: add explicit FG panics?
-// If steps == EVAL_TO_VAL, then Eval to value
-func Eval(p base.Program, steps int) {
-	ds := p.GetDecls()
-	allowStupid := true
-	t_init := p.Ok(allowStupid)
-	vPrintln("\nEntering Eval loop:")
-	vPrintln("Decls:")
-	for _, v := range ds {
-		vPrintln("\t" + v.String() + ";")
-	}
-	vPrintln("Eval steps:")
-	vPrintln(fmt.Sprintf("%6d: %8s %v", 0, "", p.GetMain())) // Initial prog OK already checked
-
-	done := steps > EVAL_TO_VAL || // Ignore 'done' if num steps fixed (set true, for `||!done` below)
-		p.GetMain().IsValue() // O/w evaluate until a val -- here, check if init expr is already a val
-	var rule string
-	for i := 1; i <= steps || !done; i++ {
-		p, rule = p.Eval()
-		vPrintln(fmt.Sprintf("%6d: %8s %v", i, "["+rule+"]", p.GetMain()))
-		vPrint("Checking OK:") // TODO: maybe disable by default, enable by flag
-		t := p.Ok(allowStupid)
-		vPrintln(" " + t.String())
-		if !t.Impls(ds, t_init) { // Check type preservation
-			panic("Type not preserved by evaluation.")
-		}
-		if !done && p.GetMain().IsValue() {
-			done = true
-		}
-	}
-	fmt.Println(p.GetMain().ToGoString()) // Final result
 }
 
 // Pre: (monom == true || compile != "") => -fgg is set
@@ -299,7 +256,9 @@ func doOblit(prog base.Program, compile string) {
 	p_fgr.Ok(false)
 	if oblitEvalSteps > NO_EVAL {
 		vPrint("\nEvaluating FGR:") // eval prints a leading "\n"
-		Eval(p_fgr, oblitEvalSteps)
+		intrp_fgr := NewFGRInterp(verbose, p_fgr)
+		intrp_fgr.Eval(oblitEvalSteps)
+		fmt.Println(intrp_fgr.GetProgram().GetMain())
 	}
 }
 
