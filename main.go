@@ -37,17 +37,15 @@ import (
 	"os"
 	"reflect"
 	"strconv"
-	"strings"
 
-	"github.com/rhu1/fgg/base"
+	//"github.com/rhu1/fgg/base"
 	"github.com/rhu1/fgg/fg"
-	"github.com/rhu1/fgg/fgg"
-	"github.com/rhu1/fgg/fgr"
+	//"github.com/rhu1/fgg/fgg"
+	//"github.com/rhu1/fgg/fgr"
 )
 
 var _ = reflect.TypeOf
 var _ = strconv.Itoa
-var _ = fgr.NewCall
 
 const (
 	EVAL_TO_VAL = -1 // Must be < 0
@@ -176,41 +174,13 @@ func main() {
 		fmt.Println(intrp_fgg.GetProgram().GetMain())
 
 		intrp_fgg.Monom(monom, monomc)
+		intrp_fgg.Oblit(oblitc)
 
 		// TODO: refactor properly
-		prog := intrp_fgg.GetProgram().(fgg.FGGProgram)
+		//prog := intrp_fgg.GetProgram().(fgg.FGGProgram)
 		//doMonom(prog, monom, monomc)
 		////doWrappers(prog, wrapperc)
-		doOblit(prog, oblitc)
-	}
-}
-
-// Pre: (monom == true || compile != "") => -fgg is set
-// TODO: rename
-func doMonom(prog base.Program, monom bool, compile string) {
-	if !monom && compile == "" {
-		return
-	}
-	p_mono := fgg.Monomorph(prog.(fgg.FGGProgram))
-	if monom {
-		vPrintln("\nMonomorphising, formal notation: [Warning] WIP [Warning]")
-		fmt.Println(p_mono.String())
-	}
-	if compile != "" {
-		vPrintln("\nMonomorphising, FG output: [Warning] WIP [Warning]")
-		out := p_mono.String()
-		out = strings.Replace(out, ",,", "", -1) // TODO: refactor -- cf. fgg_monom, toMonomId
-		out = strings.Replace(out, "<", "", -1)
-		out = strings.Replace(out, ">", "", -1)
-		if compile == "--" {
-			fmt.Println(out)
-		} else {
-			vPrintln(out)
-			vPrintln("Writing output to: " + compile)
-			bs := []byte(out)
-			err := ioutil.WriteFile(compile, bs, 0644)
-			checkErr(err)
-		}
+		//doOblit(prog, oblitc)
 	}
 }
 
@@ -236,40 +206,12 @@ func doWrappers(prog base.Program, compile string) {
 }
 //*/
 
-func doOblit(prog base.Program, compile string) {
-	if compile == "" {
-		return
-	}
-	vPrintln("\nTranslating FGG to FG(R) using Obliteration: [Warning] WIP [Warning]")
-	p_fgr := fgr.Obliterate(prog.(fgg.FGGProgram))
-	out := p_fgr.String()
-	// TODO: factor out with -monomc
-	if compile == "--" {
-		fmt.Println(out)
-	} else {
-		vPrintln(out)
-		vPrintln("Writing output to: " + compile)
-		bs := []byte(out)
-		err := ioutil.WriteFile(compile, bs, 0644)
-		checkErr(err)
-	}
-
-	// cf. interp -- TODO: factor out with others
-	p_fgr.Ok(false)
-	if oblitEvalSteps > NO_EVAL {
-		vPrint("\nEvaluating FGR:") // eval prints a leading "\n"
-		intrp_fgr := NewFGRInterp(verbose, p_fgr)
-		intrp_fgr.Eval(oblitEvalSteps)
-		fmt.Println(intrp_fgr.GetProgram().GetMain())
-	}
-}
-
 // For convenient quick testing -- via flag "-internal"
 func internalSrc() string {
 	Any := "type Any interface {}"
 	ToAny := "type ToAny struct { any Any }"
-	e := "ToAny{1}" // FIXME: `1` skipped by parser?
-	return fg.MakeFgProgram(Any, ToAny, e)
+	e := "ToAny{1}"                        // FIXME: `1` skipped by parser?
+	return fg.MakeFgProgram(Any, ToAny, e) // FIXME: hardcoded FG
 }
 
 /* Helpers */
