@@ -28,7 +28,7 @@ const (
 type Interp interface {
 	GetProgram() base.Program
 	SetProgram(p base.Program)
-	Eval(steps int) base.Program
+	Eval(steps int) base.Type
 	vPrint(x string)
 	vPrintln(x string)
 }
@@ -48,7 +48,7 @@ func parse(verbose bool, a base.Adaptor, src string, strict bool) base.Program {
 // N.B. currently FG panic comes out implicitly as an underlying run-time panic
 // CHECKME: add explicit FG panics?
 // If steps == EVAL_TO_VAL, then eval to value
-func eval(intrp Interp, steps int) base.Program {
+func eval(intrp Interp, steps int) base.Type {
 	if steps < NO_EVAL {
 		panic("Invalid number of steps: " + strconv.Itoa(steps))
 	}
@@ -67,13 +67,14 @@ func eval(intrp Interp, steps int) base.Program {
 	done := steps > EVAL_TO_VAL || // Ignore 'done' if num steps fixed (set true, for `||!done` below)
 		p_init.GetMain().IsValue() // O/w evaluate until a val -- here, check if init expr is already a val
 	var rule string
-	p := intrp.GetProgram() // Convenient for re-assign to p inside loop
+	p := p_init
+	t := t_init
 	for i := 1; i <= steps || !done; i++ {
 		p, rule = p.Eval()
 		intrp.SetProgram(p)
 		intrp.vPrintln(fmt.Sprintf("%6d: %8s %v", i, "["+rule+"]", p.GetMain()))
 		intrp.vPrint("Checking OK:") // TODO: maybe disable by default, enable by flag
-		t := p.Ok(allowStupid)
+		t = p.Ok(allowStupid)
 		intrp.vPrintln(" " + t.String())
 		if !t.Impls(ds, t_init) { // Check type preservation
 			panic("Type not preserved by evaluation.")
@@ -82,9 +83,9 @@ func eval(intrp Interp, steps int) base.Program {
 			done = true
 		}
 	}
-	p_res := intrp.GetProgram()
-	intrp.vPrintln(p_res.GetMain().ToGoString()) // Final result
-	return p_res
+	intrp.vPrintln(p.GetMain().ToGoString()) // Final result
+	//return p_res
+	return t
 }
 
 /* FG */
@@ -102,15 +103,10 @@ func NewFGInterp(verbose bool, src string, strict bool) *FGInterp {
 	return &FGInterp{verboseHelper{verbose}, prog}
 }
 
-func (intrp *FGInterp) GetProgram() base.Program {
-	return intrp.prog
-}
+func (intrp *FGInterp) GetProgram() base.Program  { return intrp.prog }
+func (intrp *FGInterp) SetProgram(p base.Program) { intrp.prog = p.(fg.FGProgram) }
 
-func (intrp *FGInterp) SetProgram(p base.Program) {
-	intrp.prog = p.(fg.FGProgram)
-}
-
-func (intrp *FGInterp) Eval(steps int) base.Program {
+func (intrp *FGInterp) Eval(steps int) base.Type {
 	return eval(intrp, steps)
 }
 
@@ -127,15 +123,10 @@ func NewFGRInterp(verbose bool, p fgr.FGRProgram) *FGRInterp {
 	return &FGRInterp{verboseHelper{verbose}, p}
 }
 
-func (intrp *FGRInterp) GetProgram() base.Program {
-	return intrp.prog
-}
+func (intrp *FGRInterp) GetProgram() base.Program  { return intrp.prog }
+func (intrp *FGRInterp) SetProgram(p base.Program) { intrp.prog = p.(fgr.FGRProgram) }
 
-func (intrp *FGRInterp) SetProgram(p base.Program) {
-	intrp.prog = p.(fgr.FGRProgram)
-}
-
-func (intrp *FGRInterp) Eval(steps int) base.Program {
+func (intrp *FGRInterp) Eval(steps int) base.Type {
 	return eval(intrp, steps)
 }
 
@@ -154,15 +145,10 @@ func NewFGGInterp(verbose bool, src string, strict bool) *FGGInterp {
 	return &FGGInterp{verboseHelper{verbose}, prog}
 }
 
-func (intrp *FGGInterp) GetProgram() base.Program {
-	return intrp.prog
-}
+func (intrp *FGGInterp) GetProgram() base.Program  { return intrp.prog }
+func (intrp *FGGInterp) SetProgram(p base.Program) { intrp.prog = p.(fgg.FGGProgram) }
 
-func (intrp *FGGInterp) SetProgram(p base.Program) {
-	intrp.prog = p.(fgg.FGGProgram)
-}
-
-func (intrp *FGGInterp) Eval(steps int) base.Program {
+func (intrp *FGGInterp) Eval(steps int) base.Type {
 	return eval(intrp, steps)
 }
 
