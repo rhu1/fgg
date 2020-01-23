@@ -205,7 +205,7 @@ func testMonom(verbose bool, src string, steps int) {
 		}
 		p_fgg, p_mono = testMonomStep(verbose, p_fgg, p_mono)
 	}
-	vPrintln(verbose, "Finished:\n\tfgg="+p_fgg.GetMain().String()+
+	vPrintln(verbose, "\nFinished:\n\tfgg="+p_fgg.GetMain().String()+
 		"\n\tmono="+p_mono.GetMain().String())
 }
 
@@ -213,7 +213,7 @@ func testMonomStep(verbose bool, p_fgg fgg.FGGProgram,
 	p_mono fg.FGProgram) (fgg.FGGProgram, fg.FGProgram) {
 
 	p1_fgg, _ := p_fgg.Eval()
-	vPrintln(verbose, "Eval FGG one step: "+p1_fgg.GetMain().String())
+	vPrintln(verbose, "\nEval FGG one step: "+p1_fgg.GetMain().String())
 	p1_fgg.Ok(true)
 	p1_mono, _ := p_mono.Eval()
 	vPrintln(verbose, "Eval monom one step: "+p1_mono.GetMain().String())
