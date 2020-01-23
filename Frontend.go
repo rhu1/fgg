@@ -184,6 +184,34 @@ func (intrp *FGGInterp) Monom(monom bool, compile string) {
 	}
 }
 
+func (intrp *FGGInterp) Oblit(compile string) {
+	if compile == "" {
+		return
+	}
+	vPrintln("\nTranslating FGG to FG(R) using Obliteration: [Warning] WIP [Warning]")
+	p_fgr := fgr.Obliterate(intrp.GetProgram().(fgg.FGGProgram))
+	out := p_fgr.String()
+	// TODO: factor out with -monomc
+	if compile == "--" {
+		fmt.Println(out)
+	} else {
+		vPrintln(out)
+		vPrintln("Writing output to: " + compile)
+		bs := []byte(out)
+		err := ioutil.WriteFile(compile, bs, 0644)
+		checkErr(err)
+	}
+
+	// cf. interp -- TODO: factor out with others
+	p_fgr.Ok(false)
+	if oblitEvalSteps > NO_EVAL {
+		vPrint("\nEvaluating FGR:") // eval prints a leading "\n"
+		intrp_fgr := NewFGRInterp(verbose, p_fgr)
+		intrp_fgr.Eval(oblitEvalSteps)
+		fmt.Println(intrp_fgr.GetProgram().GetMain())
+	}
+}
+
 /* Helpers */
 
 /*func vPrint(x string) {
