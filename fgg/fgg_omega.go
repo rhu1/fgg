@@ -76,7 +76,8 @@ func fixOmega(ds []Decl, gamma GroundEnv, omega Omega) {
 				continue
 			}
 			for _, wv_S := range omega {
-				if !IsStructType(ds, wv_S.u_ground) ||
+				if //!IsStructType(ds, wv_S.u_ground) ||  // !!! Now include interfaces
+				wv_S.u_ground.Equals(wv_I.u_ground) ||
 					!wv_S.u_ground.ImplsDelta(ds, delta_empty, wv_I.u_ground) {
 					continue
 				}
