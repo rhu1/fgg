@@ -158,8 +158,12 @@ func main() {
 
 	switch { // Pre: !(interpFG && interpFGG)
 	case interpFG:
-		var a fg.FGAdaptor
-		interp(&a, src, strictParse, evalSteps)
+		//var a fg.FGAdaptor
+		//interp(&a, src, strictParse, evalSteps)
+		intrp_fg := NewFGInterp(verbose, src, strictParse)
+		if evalSteps > NO_EVAL {
+			Eval(intrp_fg.prog, evalSteps)
+		}
 		// monom implicitly disabled
 	case interpFGG:
 		var a fgg.FGGAdaptor
