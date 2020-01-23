@@ -19,17 +19,23 @@ type Gamma map[Name]Type // TODO: should be Variable rather than Name? -- though
 
 type Type Name // Type definition (cf. alias)
 
+var _ base.Type = Type("")
 var _ Spec = Type("")
 
 // Pre: t0, t are known types
 // t0 <: t
-func (t0 Type) Impls(ds []Decl, t Type) bool {
-	if isStructType(ds, t) {
-		return isStructType(ds, t0) && t0 == t
+func (t0 Type) Impls(ds []Decl, t base.Type) bool {
+	if _, ok := t.(Type); !ok {
+		panic("Expected FGR type, not " + reflect.TypeOf(t).String() +
+			":\n\t" + t.String())
+	}
+	t_fg := t.(Type)
+	if isStructType(ds, t_fg) {
+		return isStructType(ds, t0) && t0 == t_fg
 	}
 
-	gs := methods(ds, t)   // t is a t_I
-	gs0 := methods(ds, t0) // t0 may be any
+	gs := methods(ds, t_fg) // t is a t_I
+	gs0 := methods(ds, t0)  // t0 may be any
 	for k, g := range gs {
 		g0, ok := gs0[k]
 		if !ok || !g.EqExceptVars(g0) {
@@ -52,6 +58,14 @@ func (t Type) GetSigs(ds []Decl) []Sig {
 		res = append(res, s.GetSigs(ds)...)
 	}
 	return res
+}
+
+func (t0 Type) Equals(t base.Type) bool {
+	if _, ok := t.(Type); !ok {
+		panic("Expected FGR type, not " + reflect.TypeOf(t).String() +
+			":\n\t" + t.String())
+	}
+	return t0 == t.(Type)
 }
 
 func (t Type) String() string {

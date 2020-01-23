@@ -197,10 +197,12 @@ func interp(a base.Adaptor, src string, strict bool, steps int) base.Program {
 // CHECKME: add explicit FG panics?
 // If steps == EVAL_TO_VAL, then eval to value
 func eval(p base.Program, steps int) {
+	ds := p.GetDecls()
 	allowStupid := true
+	t_init := p.Ok(allowStupid)
 	vPrintln("\nEntering Eval loop:")
 	vPrintln("Decls:")
-	for _, v := range p.GetDecls() {
+	for _, v := range ds {
 		vPrintln("\t" + v.String() + ";")
 	}
 	vPrintln("Eval steps:")
@@ -212,9 +214,13 @@ func eval(p base.Program, steps int) {
 	for i := 1; i <= steps || !done; i++ {
 		p, rule = p.Eval()
 		vPrintln(fmt.Sprintf("%6d: %8s %v", i, "["+rule+"]", p.GetMain()))
-		vPrintln("Checking OK:") // TODO: maybe disable by default, enable by flag
-		// TODO FIXME: check actual type preservation of e_main (not just typeability)
-		p.Ok(allowStupid)
+		vPrint("Checking OK:") // TODO: maybe disable by default, enable by flag
+		t := p.Ok(allowStupid)
+		vPrintln(" " + t.String())
+		if !t.Impls(ds, t_init) { // Check type preservation
+			panic("Type preservation broken, initial type " + t_init.String() +
+				", now:\n\t" + t.String())
+		}
 		if !done && p.GetMain().IsValue() {
 			done = true
 		}

@@ -130,7 +130,7 @@ func (s StructLit) Typing(ds []Decl, delta Delta, gamma Gamma,
 	for i := 0; i < len(s.elems); i++ {
 		u := s.elems[i].Typing(ds, delta, gamma, allowStupid)
 		r := fs[i].u
-		if !u.Impls(ds, delta, r) {
+		if !u.ImplsDelta(ds, delta, r) {
 			panic("Arg expr must implement field type: arg=" + u.String() +
 				", field=" + r.String() + "\n\t" + s.String())
 		}
@@ -330,7 +330,7 @@ func (c Call) Typing(ds []Decl, delta Delta, gamma Gamma, allowStupid bool) Type
 	}
 	for i := 0; i < len(c.t_args); i++ {
 		u := g.psi.tFormals[i].u_I.TSubs(subs)
-		if !c.t_args[i].Impls(ds, delta, u) {
+		if !c.t_args[i].ImplsDelta(ds, delta, u) {
 			panic("Type actual must implement type formal: actual=" +
 				c.t_args[i].String() + ", param=" + u.String())
 		}
@@ -343,7 +343,7 @@ func (c Call) Typing(ds []Decl, delta Delta, gamma Gamma, allowStupid bool) Type
 		// ..e.g., bad monomorph (Box) example.
 		// The ~beta morally do not occur in ~tau, they only bind ~rho
 		u_p := g.pDecls[i].u.TSubs(subs)
-		if !u_a.Impls(ds, delta, u_p) {
+		if !u_a.ImplsDelta(ds, delta, u_p) {
 			panic("Arg expr type must implement param type: arg=" + u_a.String() +
 				", param=" + u_p.String() + "\n\t" + c.String())
 		}
@@ -411,7 +411,7 @@ func (a Assert) Eval(ds []Decl) (FGGExpr, string) {
 	if !IsStructType(ds, u_S) {
 		panic("Non struct type found in struct lit: " + u_S.String())
 	}
-	if u_S.Impls(ds, make(map[TParam]Type), a.u_cast) { // Empty Delta -- not super clear in submission version
+	if u_S.ImplsDelta(ds, make(map[TParam]Type), a.u_cast) { // Empty Delta -- not super clear in submission version
 		return a.e_I, "Assert"
 	}
 	panic("Cannot reduce: " + a.String())
@@ -432,7 +432,7 @@ func (a Assert) Typing(ds []Decl, delta Delta, gamma Gamma, allowStupid bool) Ty
 		return a.u_cast // No further checks -- N.B., Robert said they are looking to refine this
 	}
 	// a.u is a struct type TName
-	if a.u_cast.Impls(ds, delta, u) {
+	if a.u_cast.ImplsDelta(ds, delta, u) {
 		return a.u_cast
 	}
 	panic("Struct type assertion must implement expr type: asserted=" +

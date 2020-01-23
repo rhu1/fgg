@@ -208,7 +208,7 @@ func collectSuperMethInstans(ds []Decl, omega Omega, md MDecl,
 	// Given m = md.m, forall u_I s.t. m in meths(u_I) && wv.u_ground <: u_I,
 	// .. collect targs from all calls of m on u_I
 	for _, wv1 := range omega {
-		if IsNamedIfaceType(ds, wv1.u_ground) && wv.u_ground.Impls(ds, empty, wv1.u_ground) {
+		if IsNamedIfaceType(ds, wv1.u_ground) && wv.u_ground.ImplsDelta(ds, empty, wv1.u_ground) {
 			gs := methods(ds, wv1.u_ground) // Includes embedded meths for i/face wv1.u_ground
 			if _, ok := gs[md.name]; ok {
 				addMethInstans(wv1, md.name, mInstans)
