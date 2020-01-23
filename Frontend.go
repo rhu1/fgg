@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	//"os"
+	"io/ioutil"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/rhu1/fgg/base"
 	"github.com/rhu1/fgg/fg"
@@ -152,6 +153,35 @@ func (intrp *FGGInterp) SetProgram(p base.Program) {
 
 func (intrp *FGGInterp) Eval(steps int) base.Program {
 	return evalaux(intrp, steps)
+}
+
+// Pre: (monom == true || compile != "") => -fgg is set
+// TODO: rename
+func (intrp *FGGInterp) Monom(monom bool, compile string) {
+	if !monom && compile == "" {
+		return
+	}
+	p_mono := fgg.Monomorph(intrp.GetProgram().(fgg.FGGProgram))
+	if monom {
+		vPrintln("\nMonomorphising, formal notation: [Warning] WIP [Warning]")
+		fmt.Println(p_mono.String())
+	}
+	if compile != "" {
+		vPrintln("\nMonomorphising, FG output: [Warning] WIP [Warning]")
+		out := p_mono.String()
+		out = strings.Replace(out, ",,", "", -1) // TODO: refactor -- cf. fgg_monom, toMonomId
+		out = strings.Replace(out, "<", "", -1)
+		out = strings.Replace(out, ">", "", -1)
+		if compile == "--" {
+			fmt.Println(out)
+		} else {
+			vPrintln(out)
+			vPrintln("Writing output to: " + compile)
+			bs := []byte(out)
+			err := ioutil.WriteFile(compile, bs, 0644)
+			checkErr(err)
+		}
+	}
 }
 
 /* Helpers */

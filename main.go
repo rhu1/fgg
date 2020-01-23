@@ -175,10 +175,12 @@ func main() {
 		}
 		fmt.Println(intrp_fgg.GetProgram().GetMain())
 
+		intrp_fgg.Monom(monom, monomc)
+
 		// TODO: refactor properly
 		prog := intrp_fgg.GetProgram().(fgg.FGGProgram)
-		doMonom(prog, monom, monomc)
-		//doWrappers(prog, wrapperc)
+		//doMonom(prog, monom, monomc)
+		////doWrappers(prog, wrapperc)
 		doOblit(prog, oblitc)
 	}
 }
