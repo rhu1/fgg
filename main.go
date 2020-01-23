@@ -47,11 +47,6 @@ import (
 var _ = reflect.TypeOf
 var _ = strconv.Itoa
 
-const (
-	EVAL_TO_VAL = -1 // Must be < 0
-	NO_EVAL     = -2 // Must be < EVAL_TO_VAL
-)
-
 // Command line parameters/flags
 var (
 	interpFG  bool // parse FG
@@ -220,18 +215,6 @@ func internalSrc() string {
 func checkErr(e error) {
 	if e != nil {
 		panic(e)
-	}
-}
-
-func vPrint(x string) {
-	if verbose {
-		fmt.Print(x)
-	}
-}
-
-func vPrintln(x string) {
-	if verbose {
-		fmt.Println(x)
 	}
 }
 
