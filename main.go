@@ -72,8 +72,6 @@ var (
 
 	evalSteps int  // number of steps to evaluate
 	verbose   bool // verbose mode
-
-	printf bool // Use fmt.Printf for main expr  // CHECKME: currently unused?
 )
 
 func init() {
@@ -109,9 +107,6 @@ func init() {
 		" N ⇒ evaluate N (≥ 0) steps; or\n-1 ⇒ evaluate to value (or panic)")
 	flag.BoolVar(&verbose, "v", false,
 		"enable verbose printing")
-
-	flag.BoolVar(&printf, "printf", false,
-		"Use fmt.Printf for main expr")
 }
 
 var usage = func() {
@@ -187,7 +182,7 @@ func interp(a base.Adaptor, src string, strict bool, steps int) base.Program {
 	prog.Ok(allowStupid)
 
 	if steps > NO_EVAL {
-		eval(prog, steps)
+		Eval(prog, steps)
 	}
 
 	return prog
@@ -195,8 +190,8 @@ func interp(a base.Adaptor, src string, strict bool, steps int) base.Program {
 
 // N.B. currently FG panic comes out implicitly as an underlying run-time panic
 // CHECKME: add explicit FG panics?
-// If steps == EVAL_TO_VAL, then eval to value
-func eval(p base.Program, steps int) {
+// If steps == EVAL_TO_VAL, then Eval to value
+func Eval(p base.Program, steps int) {
 	ds := p.GetDecls()
 	allowStupid := true
 	t_init := p.Ok(allowStupid)
@@ -218,8 +213,7 @@ func eval(p base.Program, steps int) {
 		t := p.Ok(allowStupid)
 		vPrintln(" " + t.String())
 		if !t.Impls(ds, t_init) { // Check type preservation
-			panic("Type preservation broken, initial type " + t_init.String() +
-				", now:\n\t" + t.String())
+			panic("Type not preserved by evaluation.")
 		}
 		if !done && p.GetMain().IsValue() {
 			done = true
@@ -301,7 +295,7 @@ func doOblit(prog base.Program, compile string) {
 	p_fgr.Ok(false)
 	if oblitEvalSteps > NO_EVAL {
 		vPrint("\nEvaluating FGR:") // eval prints a leading "\n"
-		eval(p_fgr, oblitEvalSteps)
+		Eval(p_fgr, oblitEvalSteps)
 	}
 }
 
@@ -336,8 +330,7 @@ func vPrintln(x string) {
 
 /**
 TODO:
-- WF: repeat type decl
-- fix type preservation check
+- WF: e.g., repeat type decl
 - add monom-eval commutativity check
 - factor out more into base
 
