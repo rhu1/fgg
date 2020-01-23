@@ -54,9 +54,11 @@ func eval(intrp Interp, steps int) base.Program {
 	}
 	p_init := intrp.GetProgram()
 	allowStupid := true
+	t_init := p_init.Ok(allowStupid)
 	intrp.vPrintln("\nEntering Eval loop:")
 	intrp.vPrintln("Decls:")
-	for _, v := range p_init.GetDecls() {
+	ds := p_init.GetDecls()
+	for _, v := range ds {
 		intrp.vPrintln("\t" + v.String() + ";")
 	}
 	intrp.vPrintln("Eval steps:")
@@ -70,9 +72,12 @@ func eval(intrp Interp, steps int) base.Program {
 		p, rule = p.Eval()
 		intrp.SetProgram(p)
 		intrp.vPrintln(fmt.Sprintf("%6d: %8s %v", i, "["+rule+"]", p.GetMain()))
-		intrp.vPrintln("Checking OK:") // TODO: maybe disable by default, enable by flag
-		// TODO FIXME: check actual type preservation of e_main (not just typeability)
-		p.Ok(allowStupid)
+		intrp.vPrint("Checking OK:") // TODO: maybe disable by default, enable by flag
+		t := p.Ok(allowStupid)
+		intrp.vPrintln(" " + t.String())
+		if !t.Impls(ds, t_init) { // Check type preservation
+			panic("Type not preserved by evaluation.")
+		}
 		if !done && p.GetMain().IsValue() {
 			done = true
 		}
