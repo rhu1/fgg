@@ -223,7 +223,8 @@ func testMonomStep(verbose bool, p_fgg fgg.FGGProgram,
 	e_mono := p1_mono.GetMain()
 	vPrintln(verbose, "Monom of one step'd FGG: "+e_fgg.String())
 	if e_fgg.String() != e_mono.String() {
-		panic("Monom test failed:\n\t FGG expr=" + e_fgg.String() + "\n\tmono=" + e_mono.String())
+		panic("Monom test failed:\n\t FGG expr=" + e_fgg.String() +
+			"\n\tmono=" + e_mono.String())
 	}
 	return p1_fgg.(fgg.FGGProgram), p1_mono.(fg.FGProgram)
 }
