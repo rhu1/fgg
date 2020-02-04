@@ -127,6 +127,11 @@ func main() {
 	flag.Parse()
 
 	// TODO: refactor functionality into cmd dir
+	// TODO
+	// - add type pres to monom test
+	// - add tests for interface oblit building
+	// - fix embedding monom
+	// - fix monom name mangling
 
 	// Determine (default) mode
 	if interpFG {
