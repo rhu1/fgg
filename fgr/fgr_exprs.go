@@ -481,7 +481,7 @@ func (c IfThenElse) Eval(ds []Decl) (FGRExpr, string) {
 
 	r1 := c.e1.(TRep)
 	r2 := c.e2.(TRep)
-	if r1.Reify().Impls(ds_fgg, make(fgg.Delta), r2.Reify()) {
+	if r1.Reify().ImplsDelta(ds_fgg, make(fgg.Delta), r2.Reify()) {
 		return c.e3, "If-true"
 	} else {
 		return Panic{}, "If-false"

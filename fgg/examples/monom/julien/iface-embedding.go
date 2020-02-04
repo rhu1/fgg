@@ -1,22 +1,25 @@
+// go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/monom/julien/iface-embedding.go fgg/examples/monom/julien/iface-embedding.go
+// go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/iface-embedding.go
+
 package main;
 
 type Any(type ) interface {};
 
-type DummyFunc(type A Any(), B Any()) interface { apply(type )(a A) B };
+type DummyFunc(type X Any(), Y Any()) interface { apply(type )(a X) Y };
 
-type Func(type A Any(), B Any()) interface { DummyFunc(A,B) };
+type Func(type X Any(), Y Any()) interface { DummyFunc(X,Y) };
 
-type Box(type A Any()) interface {
-	Map(type B Any())(f Func(A,B)) Box(B)
+type Box(type X Any()) interface {
+	Map(type Y Any())(f Func(X,Y)) Box(Y)
 };
 
-type ABox(type A Any()) struct{
-	value A
+type ABox(type X Any()) struct{
+	value X
 };
 
 
-func (a ABox(type A Any())) Map(type B Any())(f Func(A,B)) Box(B) {
-	return ABox(B){f.apply()(a.value)}
+func (a ABox(type X Any())) Map(type Y Any())(f Func(X,Y)) Box(Y) {
+	return ABox(Y){f.apply()(a.value)}
 };
 
 type Dummy(type ) struct{};

@@ -37,22 +37,15 @@ import (
 	"os"
 	"reflect"
 	"strconv"
-	"strings"
 
-	"github.com/rhu1/fgg/base"
+	//"github.com/rhu1/fgg/base"
 	"github.com/rhu1/fgg/fg"
 	"github.com/rhu1/fgg/fgg"
-	"github.com/rhu1/fgg/fgr"
+	//"github.com/rhu1/fgg/fgr"
 )
 
 var _ = reflect.TypeOf
 var _ = strconv.Itoa
-var _ = fgr.NewCall
-
-const (
-	EVAL_TO_VAL = -1 // Must be < 0
-	NO_EVAL     = -2 // Must be < EVAL_TO_VAL
-)
 
 // Command line parameters/flags
 var (
@@ -66,14 +59,14 @@ var (
 	oblitc         string // output filename of FGR compilation via oblit; "--" for stdout
 	oblitEvalSteps int    // TODO: Need an actual FGR syntax, for oblitc to concrete output
 
+	monomtest bool
+
 	useInternalSrc bool   // use internal source
 	inlineSrc      string // use content of this as source
 	strictParse    bool   // use strict parsing mode
 
 	evalSteps int  // number of steps to evaluate
 	verbose   bool // verbose mode
-
-	printf bool // Use fmt.Printf for main expr  // CHECKME: currently unused?
 )
 
 func init() {
@@ -97,21 +90,21 @@ func init() {
 	flag.IntVar(&oblitEvalSteps, "oblit-eval", NO_EVAL,
 		" N ⇒ evaluate N (≥ 0) steps; or\n-1 ⇒ evaluate to value (or panic)")
 
+	// WIP
+	flag.BoolVar(&monomtest, "test-monom", false, `[WIP] Test monom correctness`)
+
 	// Parsing options
 	flag.BoolVar(&useInternalSrc, "internal", false,
 		`use "internal" input as source`)
 	flag.StringVar(&inlineSrc, "inline", "",
 		`-inline="[FG/FGG src]", use inline input as source`)
 	flag.BoolVar(&strictParse, "strict", true,
-		"strict parsing (don't attempt recovery on parsing errors)")
+		"strict parsing (default true, means don't attempt recovery on parsing errors)")
 
 	flag.IntVar(&evalSteps, "eval", NO_EVAL,
 		" N ⇒ evaluate N (≥ 0) steps; or\n-1 ⇒ evaluate to value (or panic)")
 	flag.BoolVar(&verbose, "v", false,
 		"enable verbose printing")
-
-	flag.BoolVar(&printf, "printf", false,
-		"Use fmt.Printf for main expr")
 }
 
 var usage = func() {
@@ -133,6 +126,14 @@ func main() {
 	flag.Usage = usage
 	flag.Parse()
 
+	// TODO: refactor functionality into cmd dir
+	// TODO
+	// - add type pres to monom test
+	// - add tests for interface omega building
+	// - fix embedding monom -- done
+	// - fix monom name mangling
+	// - fix parser nil vs empty creation
+
 	// Determine (default) mode
 	if interpFG {
 		if interpFGG { // -fg "overrules" -fgg
@@ -146,7 +147,7 @@ func main() {
 	var src string
 	switch {
 	case useInternalSrc: // First priority
-		src = internalSrc()
+		src = internalSrc() // FIXME: hardcoded to FG
 	case inlineSrc != "": // Second priority, i.e., -inline overrules src file
 		src = inlineSrc
 	default:
@@ -161,94 +162,90 @@ func main() {
 		src = string(b)
 	}
 
+	// WIP
+	if monomtest {
+		testMonom(verbose, src, evalSteps)
+		return // FIXME
+	}
+
 	switch { // Pre: !(interpFG && interpFGG)
 	case interpFG:
-		var a fg.FGAdaptor
-		interp(&a, src, strictParse, evalSteps)
+		//var a fg.FGAdaptor
+		//interp(&a, src, strictParse, evalSteps)
+		intrp_fg := NewFGInterp(verbose, src, strictParse)
+		if evalSteps > NO_EVAL {
+			intrp_fg.Eval(evalSteps)
+			fmt.Println(intrp_fg.GetProgram().GetMain())
+		}
 		// monom implicitly disabled
 	case interpFGG:
-		var a fgg.FGGAdaptor
-		prog := interp(&a, src, strictParse, evalSteps)
+		//var a fgg.FGGAdaptor
+		//prog := interp(&a, src, strictParse, evalSteps)
+		intrp_fgg := NewFGGInterp(verbose, src, strictParse)
 
-		// TODO: refactor properly
-		doMonom(prog, monom, monomc)
-		//doWrappers(prog, wrapperc)
-		doOblit(prog, oblitc)
-	}
-}
-
-func interp(a base.Adaptor, src string, strict bool, steps int) base.Program {
-	vPrintln("\nParsing AST:")
-	prog := a.Parse(strict, src) // AST (Program root)
-	vPrintln(prog.String())
-
-	vPrintln("\nChecking source program OK:")
-	allowStupid := false
-	prog.Ok(allowStupid)
-
-	if steps > NO_EVAL {
-		eval(prog, steps)
-	}
-
-	return prog
-}
-
-// N.B. currently FG panic comes out implicitly as an underlying run-time panic
-// CHECKME: add explicit FG panics?
-// If steps == EVAL_TO_VAL, then eval to value
-func eval(p base.Program, steps int) {
-	allowStupid := true
-	vPrintln("\nEntering Eval loop:")
-	vPrintln("Decls:")
-	for _, v := range p.GetDecls() {
-		vPrintln("\t" + v.String() + ";")
-	}
-	vPrintln("Eval steps:")
-	vPrintln(fmt.Sprintf("%6d: %8s %v", 0, "", p.GetMain())) // Initial prog OK already checked
-
-	done := steps > EVAL_TO_VAL || // Ignore 'done' if num steps fixed (set true, for `||!done` below)
-		p.GetMain().IsValue() // O/w evaluate until a val -- here, check if init expr is already a val
-	var rule string
-	for i := 1; i <= steps || !done; i++ {
-		p, rule = p.Eval()
-		vPrintln(fmt.Sprintf("%6d: %8s %v", i, "["+rule+"]", p.GetMain()))
-		vPrintln("Checking OK:") // TODO: maybe disable by default, enable by flag
-		// TODO FIXME: check actual type preservation of e_main (not just typeability)
-		p.Ok(allowStupid)
-		if !done && p.GetMain().IsValue() {
-			done = true
+		if evalSteps > NO_EVAL {
+			intrp_fgg.Eval(evalSteps)
+			fmt.Println(intrp_fgg.GetProgram().GetMain())
 		}
+
+		// TODO: further refactoring (cf. Frontend, Interp)
+		intrp_fgg.Monom(monom, monomc)
+		intrp_fgg.Oblit(oblitc)
+		////doWrappers(prog, wrapperc)
 	}
-	fmt.Println(p.GetMain().ToGoString()) // Final result
 }
 
-// Pre: (monom == true || compile != "") => -fgg is set
-// TODO: rename
-func doMonom(prog base.Program, monom bool, compile string) {
-	if !monom && compile == "" {
-		return
+// TODO: refactor to cmd dir
+func testMonom(verbose bool, src string, steps int) {
+	intrp_fgg := NewFGGInterp(verbose, src, true)
+	p_fgg := intrp_fgg.GetProgram().(fgg.FGGProgram)
+	u := p_fgg.Ok(false).(fgg.TNamed)
+	vPrintln(verbose, "\nFGG expr: "+p_fgg.GetMain().String())
+	p_mono := fgg.Monomorph(p_fgg)
+	vPrintln(verbose, "Monom expr: "+p_mono.GetMain().String())
+	t := p_mono.Ok(false).(fg.Type)
+	if !t.Equals(fgg.ToMonomId(u)) {
+		panic("-test-monom failed: types do not match\n\tFGG type=" + u.String() +
+			" -> " + fgg.ToMonomId(u).String() + "\n\tmono=" + t.String())
 	}
-	p_mono := fgg.Monomorph(prog.(fgg.FGGProgram))
-	if monom {
-		vPrintln("\nMonomorphising, formal notation: [Warning] WIP [Warning]")
-		fmt.Println(p_mono.String())
-	}
-	if compile != "" {
-		vPrintln("\nMonomorphising, FG output: [Warning] WIP [Warning]")
-		out := p_mono.String()
-		out = strings.Replace(out, ",,", "", -1) // TODO: refactor -- cf. fgg_monom, toMonomId
-		out = strings.Replace(out, "<", "", -1)
-		out = strings.Replace(out, ">", "", -1)
-		if compile == "--" {
-			fmt.Println(out)
-		} else {
-			vPrintln(out)
-			vPrintln("Writing output to: " + compile)
-			bs := []byte(out)
-			err := ioutil.WriteFile(compile, bs, 0644)
-			checkErr(err)
+	done := steps > EVAL_TO_VAL
+	for i := 0; i < steps || !done; i++ {
+		if p_fgg.GetMain().IsValue() {
+			break
 		}
+		p_fgg, u, p_mono, t = testMonomStep(verbose, p_fgg, u, p_mono, t)
 	}
+	vPrintln(verbose, "\nFinished:\n\tfgg="+p_fgg.GetMain().String()+
+		"\n\tmono="+p_mono.GetMain().String())
+}
+
+// Pre: p_fgg.Ok(), p_mono.Ok()
+func testMonomStep(verbose bool, p_fgg fgg.FGGProgram, u fgg.TNamed,
+	p_mono fg.FGProgram, t fg.Type) (fgg.FGGProgram, fgg.TNamed, fg.FGProgram, fg.Type) {
+
+	p1_fgg, _ := p_fgg.Eval()
+	vPrintln(verbose, "\nEval FGG one step: "+p1_fgg.GetMain().String())
+	u1 := p1_fgg.Ok(true).(fgg.TNamed)
+	if !u1.Impls(p_fgg.GetDecls(), u) {
+		panic("-test-monom failed: type not preserved\n\tprev=" + u.String() +
+			"\n\tnext=" + u1.String())
+	}
+	p1_mono, _ := p_mono.Eval()
+	vPrintln(verbose, "Eval monom one step: "+p1_mono.GetMain().String())
+	t1 := p1_mono.Ok(true).(fg.Type)
+	if !t1.Equals(fgg.ToMonomId(u1)) {
+		panic("-test-monom failed: types do not match\n\tFGG type=" + u1.String() +
+			" -> " + fgg.ToMonomId(u1).String() + "\n\tmono=" + t1.String())
+	}
+	res := fgg.Monomorph(p1_fgg.(fgg.FGGProgram))
+	e_fgg := res.GetMain()
+	e_mono := p1_mono.GetMain()
+	vPrintln(verbose, "Monom of one step'd FGG: "+e_fgg.String())
+	if e_fgg.String() != e_mono.String() {
+		panic("-test-monom failed: exprs do not match\n\tFGG expr=" + e_fgg.String() +
+			"\n\tmono=" + e_mono.String())
+	}
+	return p1_fgg.(fgg.FGGProgram), u1, p1_mono.(fg.FGProgram), t1
 }
 
 /* [WIP] TODO -- not functional yet
@@ -273,38 +270,12 @@ func doWrappers(prog base.Program, compile string) {
 }
 //*/
 
-func doOblit(prog base.Program, compile string) {
-	if compile == "" {
-		return
-	}
-	vPrintln("\nTranslating FGG to FG(R) using Obliteration: [Warning] WIP [Warning]")
-	p_fgr := fgr.Obliterate(prog.(fgg.FGGProgram))
-	out := p_fgr.String()
-	// TODO: factor out with -monomc
-	if compile == "--" {
-		fmt.Println(out)
-	} else {
-		vPrintln(out)
-		vPrintln("Writing output to: " + compile)
-		bs := []byte(out)
-		err := ioutil.WriteFile(compile, bs, 0644)
-		checkErr(err)
-	}
-
-	// cf. interp -- TODO: factor out with others
-	p_fgr.Ok(false)
-	if oblitEvalSteps > NO_EVAL {
-		vPrint("\nEvaluating FGR:") // eval prints a leading "\n"
-		eval(p_fgr, oblitEvalSteps)
-	}
-}
-
 // For convenient quick testing -- via flag "-internal"
 func internalSrc() string {
 	Any := "type Any interface {}"
 	ToAny := "type ToAny struct { any Any }"
-	e := "ToAny{1}" // FIXME: `1` skipped by parser?
-	return fg.MakeFgProgram(Any, ToAny, e)
+	e := "ToAny{1}"                        // FIXME: `1` skipped by parser?
+	return fg.MakeFgProgram(Any, ToAny, e) // FIXME: hardcoded FG
 }
 
 /* Helpers */
@@ -316,22 +287,9 @@ func checkErr(e error) {
 	}
 }
 
-func vPrint(x string) {
-	if verbose {
-		fmt.Print(x)
-	}
-}
-
-func vPrintln(x string) {
-	if verbose {
-		fmt.Println(x)
-	}
-}
-
 /**
 TODO:
-- WF: repeat type decl
-- fix type preservation check
+- WF: e.g., repeat type decl
 - add monom-eval commutativity check
 - factor out more into base
 

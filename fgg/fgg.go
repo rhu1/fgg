@@ -27,11 +27,10 @@ type Decl = base.Decl
 // Name: see Aliases (at top)
 
 type Type interface {
-	TSubs(subs map[TParam]Type) Type // N.B. map is Delta -- TODO: factor out Subs type?
-	Impls(ds []Decl, delta Delta, u Type) bool
+	base.Type
+	ImplsDelta(ds []Decl, delta Delta, u Type) bool
+	TSubs(subs map[TParam]Type) Type // N.B. map is Delta -- factor out a Subs type?
 	Ok(ds []Decl, delta Delta)
-	Equals(u Type) bool
-	String() string
 	ToGoString() string
 }
 
@@ -50,12 +49,21 @@ func (a TParam) TSubs(subs map[TParam]Type) Type {
 }
 
 // u0 <: u
-func (a TParam) Impls(ds []Decl, delta Delta, u Type) bool {
+func (a TParam) ImplsDelta(ds []Decl, delta Delta, u Type) bool {
 	if a1, ok := u.(TParam); ok {
 		return a == a1
 	} else {
-		return bounds(delta, a).Impls(ds, delta, u)
+		return bounds(delta, a).ImplsDelta(ds, delta, u)
 	}
+}
+
+// Cf. base.Type
+func (a TParam) Impls(ds []Decl, u base.Type) bool {
+	if _, ok := u.(Type); !ok {
+		panic("Expected FGG type, not " + reflect.TypeOf(u).String() +
+			":\n\t" + u.String())
+	}
+	return a.ImplsDelta(ds, make(Delta), u.(Type))
 }
 
 func (a TParam) Ok(ds []Decl, delta Delta) {
@@ -64,7 +72,11 @@ func (a TParam) Ok(ds []Decl, delta Delta) {
 	}
 }
 
-func (a TParam) Equals(u Type) bool {
+func (a TParam) Equals(u base.Type) bool {
+	if _, ok := u.(Type); !ok {
+		panic("Expected FGG type, not " + reflect.TypeOf(u).String() +
+			":\n\t" + u.String())
+	}
 	if b, ok := u.(TParam); ok {
 		return a == b
 	}
@@ -100,17 +112,18 @@ func (u0 TNamed) TSubs(subs map[TParam]Type) Type {
 }
 
 // u0 <: u
-func (u0 TNamed) Impls(ds []Decl, delta Delta, u Type) bool {
-	if isStructType(ds, u) {
-		return isStructType(ds, u0) && u0.Equals(u) // Asks equality of nested TParam
+func (u0 TNamed) ImplsDelta(ds []Decl, delta Delta, u Type) bool {
+	u_fgg := u.(Type)
+	if isStructType(ds, u_fgg) {
+		return isStructType(ds, u0) && u0.Equals(u_fgg) // Asks equality of nested TParam
 	}
 	if _, ok := u.(TParam); ok { // e.g., fgg_test.go, Test014
 		panic("Type name does not implement open type param: found=" +
-			u0.String() + ", expected=" + u.String())
+			u0.String() + ", expected=" + u_fgg.String())
 	}
 
-	gs := methods(ds, u)   // u is a t_I
-	gs0 := methods(ds, u0) // t0 may be any
+	gs := methods(ds, u_fgg) // u is a t_I
+	gs0 := methods(ds, u0)   // t0 may be any
 	for k, g := range gs {
 		g0, ok := gs0[k]
 		if ok {
@@ -120,6 +133,15 @@ func (u0 TNamed) Impls(ds []Decl, delta Delta, u Type) bool {
 		}
 	}
 	return true
+}
+
+// Cf. base.Type
+func (u0 TNamed) Impls(ds []Decl, u base.Type) bool {
+	if _, ok := u.(Type); !ok {
+		panic("Expected FGG type, not " + reflect.TypeOf(u).String() +
+			":\n\t" + u.String())
+	}
+	return u0.ImplsDelta(ds, make(Delta), u.(Type))
 }
 
 func (u0 TNamed) Ok(ds []Decl, delta Delta) {
@@ -140,9 +162,10 @@ func (u0 TNamed) Ok(ds []Decl, delta Delta) {
 		subs[psi.tFormals[i].name] = u0.u_args[i]
 	}
 	for i := 0; i < len(psi.tFormals); i++ {
-		actual := psi.tFormals[i].name.TSubs(subs) // CHECKME: submission version T-Named, subs applied to Delta?
+		actual := psi.tFormals[i].name.TSubs(subs)
+		// CHECKME: submission T-Named, subs applied to Delta? -- already applied, Delta is coming from the subs context
 		formal := psi.tFormals[i].u_I.TSubs(subs)
-		if !actual.Impls(ds, delta, formal) { // tfs[i].u is a \tau_I, checked by TDecl.Ok
+		if !actual.ImplsDelta(ds, delta, formal) { // tfs[i].u is a \tau_I, checked by TDecl.Ok
 			panic("Type actual must implement type formal: actual=" +
 				actual.String() + " formal=" + formal.String())
 		}
@@ -167,7 +190,11 @@ func (u TNamed) GetSigs(ds []Decl) []Sig {
 	return res
 }
 
-func (u0 TNamed) Equals(u Type) bool {
+func (u0 TNamed) Equals(u base.Type) bool {
+	if _, ok := u.(Type); !ok {
+		panic("Expected FGG type, not " + reflect.TypeOf(u).String() +
+			":\n\t" + u.String())
+	}
 	if _, ok := u.(TNamed); !ok {
 		return false
 	}

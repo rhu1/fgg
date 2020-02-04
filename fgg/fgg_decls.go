@@ -33,11 +33,12 @@ var _ FGGNode = FGGProgram{}
 
 func (p FGGProgram) GetDecls() []Decl   { return p.decls } // Return a copy?
 func (p FGGProgram) GetMain() base.Expr { return p.e_main }
+func (p FGGProgram) IsPrintf() bool     { return p.printf } // HACK
 
-func (p FGGProgram) Ok(allowStupid bool) {
-	if !allowStupid { // Hack, to print only "top-level" programs (not during Eval)
-		fmt.Println("[Warning] Type lit OK (\"T ok\") not fully implemented yet " +
-			"(e.g., distinct type/field/method names, etc.)")
+func (p FGGProgram) Ok(allowStupid bool) base.Type {
+	if !allowStupid { // Hack, to print only "top-level" programs (not during Eval) -- cf. verbose
+		/*fmt.Println("[Warning] Type lit OK (\"T ok\") not fully implemented yet " +
+		"(e.g., distinct type/field/method names, etc.)")*/
 	}
 	for _, v := range p.decls {
 		switch d := v.(type) {
@@ -53,7 +54,7 @@ func (p FGGProgram) Ok(allowStupid bool) {
 	// Empty envs for main
 	var delta Delta
 	var gamma Gamma
-	p.e_main.Typing(p.decls, delta, gamma, allowStupid)
+	return p.e_main.Typing(p.decls, delta, gamma, allowStupid)
 }
 
 func (p FGGProgram) Eval() (base.Program, string) {
@@ -250,7 +251,7 @@ func (md MDecl) Ok(ds []Decl) {
 	}
 	allowStupid := false
 	u := md.e_body.Typing(ds, delta1, gamma, allowStupid)
-	if !u.Impls(ds, delta1, md.u_ret) {
+	if !u.ImplsDelta(ds, delta1, md.u_ret) {
 		panic("Method body type must implement declared return type: found=" +
 			u.String() + ", expected=" + md.u_ret.String() + "\n\t" + md.String())
 	}
@@ -414,8 +415,8 @@ func TDeclOk(ds []Decl, td TDecl) {
 	psi.Ok(ds)
 	delta := psi.ToDelta()
 	for _, v := range psi.tFormals {
-		u, _ := v.u_I.(TNamed) // \tau_I, checked by psi.Ok
-		u.Ok(ds, delta)        // !!! Submission version T-Type, t_i => t_I
+		u_I, _ := v.u_I.(TNamed) // \tau_I, already checked by psi.Ok
+		u_I.Ok(ds, delta)        // !!! Submission version T-Type, t_i => t_I
 	}
 	// TODO: Check, e.g., unique type/field/method names -- cf., FGGProgram.OK [Warning]
 }

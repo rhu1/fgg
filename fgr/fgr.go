@@ -22,17 +22,23 @@ type Gamma map[Name]Type // TODO: should be Variable rather than Name -- though 
 // Same as FG
 type Type Name // should be based on fgg.Type -- no: Rep now not parameterised
 
+var _ base.Type = Type("")
 var _ Spec = Type("")
 
 // Pre: t0, t are known types
 // t0 <: t
-func (t0 Type) Impls(ds []Decl, t Type) bool {
-	if isStructType(ds, t) {
-		return isStructType(ds, t0) && t0 == t
+func (t0 Type) Impls(ds []Decl, u base.Type) bool {
+	if _, ok := u.(Type); !ok {
+		panic("Expected FGR type, not " + reflect.TypeOf(u).String() +
+			":\n\t" + u.String())
+	}
+	t_fgr := u.(Type)
+	if isStructType(ds, t_fgr) {
+		return isStructType(ds, t0) && t0 == t_fgr
 	}
 
-	gs := methods(ds, t)   // t is a t_I
-	gs0 := methods(ds, t0) // t0 may be any
+	gs := methods(ds, t_fgr) // t is a t_I
+	gs0 := methods(ds, t0)   // t0 may be any
 	for k, g := range gs {
 		g0, ok := gs0[k]
 		if !ok || !g.EqExceptVars(g0) {
@@ -54,6 +60,14 @@ func (t Type) GetSigs(ds []Decl) []Sig {
 		res = append(res, s.GetSigs(ds)...)
 	}
 	return res
+}
+
+func (t0 Type) Equals(u base.Type) bool {
+	if _, ok := u.(Type); !ok {
+		panic("Expected FGR type, not " + reflect.TypeOf(u).String() +
+			":\n\t" + u.String())
+	}
+	return t0 == u.(Type)
 }
 
 func (t Type) String() string {

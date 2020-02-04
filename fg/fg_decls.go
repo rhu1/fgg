@@ -11,6 +11,8 @@ import "strings"
 
 import "github.com/rhu1/fgg/base"
 
+var _ = fmt.Errorf
+
 /* "Exported" constructors (e.g., for fgg_monom)*/
 
 func NewFGProgram(ds []Decl, e FGExpr, printf bool) FGProgram {
@@ -40,12 +42,13 @@ var _ FGNode = FGProgram{}
 // From base.Program
 func (p FGProgram) GetDecls() []Decl   { return p.decls } // Return a copy?
 func (p FGProgram) GetMain() base.Expr { return p.e_main }
+func (p FGProgram) IsPrintf() bool     { return p.printf } // HACK
 
 // From base.Program
-func (p FGProgram) Ok(allowStupid bool) {
+func (p FGProgram) Ok(allowStupid bool) base.Type {
 	if !allowStupid { // Hack, to print the following only for "top-level" programs (not during Eval)
-		fmt.Println("[Warning] Type/method decl OK not fully checked yet " +
-			"(e.g., distinct field/param names, etc.)")
+		/*fmt.Println("[Warning] Type/method decl OK not fully checked yet " +
+		"(e.g., distinct field/param names, etc.)")*/
 	}
 	tds := make(map[Type]TDecl)
 	mds := make(map[string]MDecl) // Hack, string = string(md.recv.t) + "." + md.GetName()
@@ -75,7 +78,7 @@ func (p FGProgram) Ok(allowStupid bool) {
 		}
 	}
 	var gamma Gamma // Empty env for main
-	p.e_main.Typing(p.decls, gamma, allowStupid)
+	return p.e_main.Typing(p.decls, gamma, allowStupid)
 }
 
 // CHECKME: resulting FGProgram is not parsed from source, OK? -- cf. Expr.Eval

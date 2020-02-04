@@ -1,3 +1,6 @@
+// go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/monom/julien/iface-embedding-simple.go fgg/examples/monom/julien/iface-embedding-simple.go
+// go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/iface-embedding-simple.go
+
 package main;
 
 type Any(type ) interface {};
