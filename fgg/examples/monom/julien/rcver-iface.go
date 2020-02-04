@@ -1,3 +1,6 @@
+//$ go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/rcver-iface.go fgg/examples/monom/julien/rcver-iface.go
+//$ go run github.com/rhu1/fgg -eval=-1 -v tmp/test/fg/monom/julien/rcver-iface.go
+
 package main;
 
 /* SA{} is an IA(Int()) and SB an IA(Bool()). In a "method-driven
@@ -34,7 +37,7 @@ func (x Dummy(type )) CallFunctionBool(type )(y IA(Bool())) Bool() {
 // 	return y.MyFunction(Int())(Int(){})
 // };
 
-// type Pair(type a Any(), b Any() ) struct { 
+// type Pair(type a Any(), b Any() ) struct {
 // 	fst a;
 // 	snd b
 // };
@@ -42,7 +45,7 @@ func (x Dummy(type )) CallFunctionBool(type )(y IA(Bool())) Bool() {
 func main() { _ =
 	Dummy(){}.CallFunctionBool()(SB(){})
 
-	// Pair(Int(),Bool()){Dummy(){}.CallFunctionInt()(SA(){}), 
+	// Pair(Int(),Bool()){Dummy(){}.CallFunctionInt()(SA(){}),
 	// 	   Dummy(){}.CallFunctionBool()(SB(){})
 	// 	}
 

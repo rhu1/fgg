@@ -164,7 +164,7 @@ func main() {
 	// WIP
 	if monomtest {
 		testMonom(verbose, src, evalSteps)
-		return
+		return // FIXME
 	}
 
 	switch { // Pre: !(interpFG && interpFGG)
@@ -174,8 +174,8 @@ func main() {
 		intrp_fg := NewFGInterp(verbose, src, strictParse)
 		if evalSteps > NO_EVAL {
 			intrp_fg.Eval(evalSteps)
+			fmt.Println(intrp_fg.GetProgram().GetMain())
 		}
-		fmt.Println(intrp_fg.GetProgram().GetMain())
 		// monom implicitly disabled
 	case interpFGG:
 		//var a fgg.FGGAdaptor
@@ -183,8 +183,8 @@ func main() {
 		intrp_fgg := NewFGGInterp(verbose, src, strictParse)
 		if evalSteps > NO_EVAL {
 			intrp_fgg.Eval(evalSteps)
+			fmt.Println(intrp_fgg.GetProgram().GetMain())
 		}
-		fmt.Println(intrp_fgg.GetProgram().GetMain())
 
 		// TODO: further refactoring (cf. Frontend, Interp)
 		intrp_fgg.Monom(monom, monomc)

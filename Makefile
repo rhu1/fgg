@@ -52,6 +52,7 @@ test-fg-examples:
 
 .PHONY: test-fgg
 test-fgg: test-fgg-unit test-fgg-examples
+# add monom + oblit?
 
 
 .PHONY: test-fgg-unit
@@ -101,12 +102,15 @@ test-monom:
 	go run github.com/rhu1/fgg -fgg -eval=10 -monomc=tmp/test/fg/box/box2.go fgg/examples/monom/box/box2.fgg
 	go run github.com/rhu1/fgg -eval=10 tmp/test/fg/box/box2.go
 
-	mkdir -p tmp/test/fg/julien
-	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/julien/ifacebox.go fgg/examples/monom/julien/ifacebox.fgg
-	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/julien/ifacebox.go
-	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/julien/ifacebox-nomethparam.go fgg/examples/monom/julien/ifacebox-nomethparam.fgg
-	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/julien/ifacebox-nomethparam.go
-
+	mkdir -p tmp/test/fg/monom/julien
+	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/monom/julien/ifacebox.go fgg/examples/monom/julien/ifacebox.fgg
+	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/ifacebox.go
+	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/monom/julien/ifacebox-nomethparam.go fgg/examples/monom/julien/ifacebox-nomethparam.fgg
+	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/ifacebox-nomethparam.go
+	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/rcver-iface.go fgg/examples/monom/julien/rcver-iface.go
+	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/rcver-iface.go
+	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/one-pass-prob.go fgg/examples/monom/julien/one-pass-prob.go
+	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/one-pass-prob.go
 # TODO: check simulation of -monom output (same result and number of eval steps) -- or commutative diagram
 
 
@@ -134,9 +138,11 @@ clean-test-monom:
 	rm -f tmp/test/fg/box/box2.go
 	rm -fd tmp/test/fg/box
 
-	rm -f tmp/test/fg/julien/ifacebox.go
-	rm -f tmp/test/fg/julien/ifacebox-nomethparam.go
-	rm -fd tmp/test/fg/julien
+	rm -f tmp/test/fg/monom/julien/ifacebox.go
+	rm -f tmp/test/fg/monom/julien/ifacebox-nomethparam.go
+	rm -f tmp/test/fg/monom/julien/rcver-iface.go
+	rm -f tmp/test/fg/monom/julien/one-pass-prob.go
+	rm -fd tmp/test/fg/monom/julien
 
 
 .PHONY: test-fg2fgg
