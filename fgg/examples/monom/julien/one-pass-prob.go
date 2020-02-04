@@ -3,7 +3,6 @@ package main;
 type Any(type ) interface {};
 
 type Int(type ) struct {};
-type Bool(type ) struct {};
 
 type Pair(type a Any(), b Any() ) struct { 
 	fst a;
@@ -30,8 +29,6 @@ func (x Dummy(type )) CallFunction(type )(y IA()) Int() {
 
 func main() { _ =
 	Dummy(){}.CallFunction()(SA(){})
-
-
 }
 
 
