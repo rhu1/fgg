@@ -107,6 +107,10 @@ test-monom:
 	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/ifacebox.go
 	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/monom/julien/ifacebox-nomethparam.go fgg/examples/monom/julien/ifacebox-nomethparam.fgg
 	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/ifacebox-nomethparam.go
+	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/monom/julien/iface-embedding-simple.go fgg/examples/monom/julien/iface-embedding-simple.go
+	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/iface-embedding-simple.go
+	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/monom/julien/iface-embedding.go fgg/examples/monom/julien/iface-embedding.go
+	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/iface-embedding.go
 	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/rcver-iface.go fgg/examples/monom/julien/rcver-iface.go
 	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/rcver-iface.go
 	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/one-pass-prob.go fgg/examples/monom/julien/one-pass-prob.go
@@ -140,6 +144,8 @@ clean-test-monom:
 
 	rm -f tmp/test/fg/monom/julien/ifacebox.go
 	rm -f tmp/test/fg/monom/julien/ifacebox-nomethparam.go
+	rm -f tmp/test/fg/monom/julien/iface-embedding-simple.go
+	rm -f tmp/test/fg/monom/julien/iface-embedding.go
 	rm -f tmp/test/fg/monom/julien/rcver-iface.go
 	rm -f tmp/test/fg/monom/julien/one-pass-prob.go
 	rm -fd tmp/test/fg/monom/julien

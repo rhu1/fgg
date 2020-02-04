@@ -125,7 +125,8 @@ func monomTDecl(ds []Decl, omega Omega, td TDecl,
 					}
 				}
 			case TNamed: // Embedded
-				t_monom := toMonomId(omega[toWKey(s)].u_ground)
+				u_I := s.TSubs(subs).(TNamed)
+				t_monom := toMonomId(omega[toWKey(u_I)].u_ground)
 				ss = append(ss, t_monom)
 			default:
 				panic("Unknown Spec kind: " + reflect.TypeOf(v).String() +

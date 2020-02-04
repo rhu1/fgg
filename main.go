@@ -129,9 +129,10 @@ func main() {
 	// TODO: refactor functionality into cmd dir
 	// TODO
 	// - add type pres to monom test
-	// - add tests for interface oblit building
-	// - fix embedding monom
+	// - add tests for interface omega building
+	// - fix embedding monom -- done
 	// - fix monom name mangling
+	// - fix parser nil vs empty creation
 
 	// Determine (default) mode
 	if interpFG {
