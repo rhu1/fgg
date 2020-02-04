@@ -33,6 +33,7 @@ var _ FGGNode = FGGProgram{}
 
 func (p FGGProgram) GetDecls() []Decl   { return p.decls } // Return a copy?
 func (p FGGProgram) GetMain() base.Expr { return p.e_main }
+func (p FGGProgram) IsPrintf() bool     { return p.printf } // HACK
 
 func (p FGGProgram) Ok(allowStupid bool) base.Type {
 	if !allowStupid { // Hack, to print only "top-level" programs (not during Eval) -- cf. verbose

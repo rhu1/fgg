@@ -42,6 +42,7 @@ var _ FGNode = FGProgram{}
 // From base.Program
 func (p FGProgram) GetDecls() []Decl   { return p.decls } // Return a copy?
 func (p FGProgram) GetMain() base.Expr { return p.e_main }
+func (p FGProgram) IsPrintf() bool     { return p.printf } // HACK
 
 // From base.Program
 func (p FGProgram) Ok(allowStupid bool) base.Type {

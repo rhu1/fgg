@@ -103,7 +103,7 @@ var _ Interp = &FGInterp{}
 func NewFGInterp(verbose bool, src string, strict bool) *FGInterp {
 	var a fg.FGAdaptor
 	orig := parse(verbose, &a, src, strict).(fg.FGProgram)
-	prog := parse(verbose, &a, src, strict).(fg.FGProgram) // TODO: refactor
+	prog := fg.NewFGProgram(orig.GetDecls(), orig.GetMain().(fg.FGExpr), orig.IsPrintf())
 	return &FGInterp{verboseHelper{verbose}, orig, prog}
 }
 
@@ -150,7 +150,7 @@ var _ Interp = &FGGInterp{}
 func NewFGGInterp(verbose bool, src string, strict bool) *FGGInterp {
 	var a fgg.FGGAdaptor
 	orig := parse(verbose, &a, src, strict).(fgg.FGGProgram)
-	prog := parse(verbose, &a, src, strict).(fgg.FGGProgram)
+	prog := fgg.NewProgram(orig.GetDecls(), orig.GetMain().(fgg.FGGExpr), orig.IsPrintf())
 	return &FGGInterp{verboseHelper{verbose}, orig, prog}
 }
 
