@@ -30,8 +30,8 @@ func (x Dummy(type )) CallFunctionBool(type )(y IA(Bool())) Bool() {
 // };
 
 // type Pair(type a Any(), b Any() ) struct { 
-// 	x a;
-// 	y b
+// 	fst a;
+// 	snd b
 // };
 
 func main() { _ =
@@ -46,6 +46,13 @@ func main() { _ =
 	// Pair(Bool(),Int()){
 	// 	Dummy(){}.CallFunctionBool()(SB(){}),
 	// 	SA(){}.MyFunction(Int())(Int(){})}
+
+
+	// Pair(Bool(),IA(Int())){
+	// 	Dummy(){}.CallFunctionBool()(SB(){}),
+	// 	SA(){}
+	// }.snd.MyFunction(Bool())(Bool(){})
+
 }
 
 
