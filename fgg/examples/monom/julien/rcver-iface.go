@@ -1,5 +1,10 @@
 package main;
 
+/* SA{} is an IA(Int()) and SB an IA(Bool()). In a "method-driven
+ * mono, the call to CallFunctionBool observes that MyFunction(Int) is called
+ * on an IA(Bool) and so all possible MyFunction(Int) would be mono'd. This
+ * would potentially mono MyFunction(Int) on SA{} which is not an IA(Bool). */
+
 type Any(type ) interface {};
 
 type Int(type ) struct {};
