@@ -122,17 +122,16 @@ Options:
 	os.Exit(1)
 }
 
+// TODO
+// - refactor functionality into cmd dir
+// - add type pres to monom test -- DONE
+// - add tests for interface omega building
+// - fix embedding monom -- DONE
+// - fix monom name mangling
+// - fix parser nil vs. empty creation
 func main() {
 	flag.Usage = usage
 	flag.Parse()
-
-	// TODO: refactor functionality into cmd dir
-	// TODO
-	// - add type pres to monom test
-	// - add tests for interface omega building
-	// - fix embedding monom -- done
-	// - fix monom name mangling
-	// - fix parser nil vs empty creation
 
 	// Determine (default) mode
 	if interpFG {
@@ -219,7 +218,7 @@ func testMonom(verbose bool, src string, steps int) {
 		"\n\tmono="+p_mono.GetMain().String())
 }
 
-// Pre: p_fgg.Ok(), p_mono.Ok()
+// Pre: u = p_fgg.Ok(), t = p_mono.Ok()
 func testMonomStep(verbose bool, p_fgg fgg.FGGProgram, u fgg.TNamed,
 	p_mono fg.FGProgram, t fg.Type) (fgg.FGGProgram, fgg.TNamed, fg.FGProgram, fg.Type) {
 
