@@ -188,13 +188,6 @@ func (intrp *FGGInterp) Monom(monom bool, compile string) {
 	}
 }
 
-func monomOutputHack(out string) string {
-	out = strings.Replace(out, ",,", "", -1) // TODO: refactor -- cf. fgg_monom, toMonomId
-	out = strings.Replace(out, "<", "", -1)
-	out = strings.Replace(out, ">", "", -1)
-	return out
-}
-
 func (intrp *FGGInterp) Oblit(compile string) {
 	if compile == "" {
 		return
@@ -221,6 +214,15 @@ func (intrp *FGGInterp) Oblit(compile string) {
 		intrp_fgr.Eval(oblitEvalSteps)
 		fmt.Println(intrp_fgr.GetProgram().GetMain())
 	}
+}
+
+/* Aux */
+
+func monomOutputHack(out string) string {
+	out = strings.Replace(out, ",,", "", -1) // TODO: refactor -- cf. fgg_monom, toMonomId
+	out = strings.Replace(out, "<", "", -1)
+	out = strings.Replace(out, ">", "", -1)
+	return out
 }
 
 /* Helpers */

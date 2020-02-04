@@ -19,6 +19,12 @@ var _ = fmt.Errorf
 	panic("[TODO]")
 }*/
 
+/* Export */
+
+func ToMonomId(u TNamed) fg.Type {
+	return toMonomId(u)
+}
+
 /* Monomoprh: FGGProgram -> FGProgram */
 
 func Monomorph(p FGGProgram) fg.FGProgram {

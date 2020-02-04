@@ -199,40 +199,53 @@ func main() {
 func testMonom(verbose bool, src string, steps int) {
 	intrp_fgg := NewFGGInterp(verbose, src, true)
 	p_fgg := intrp_fgg.GetProgram().(fgg.FGGProgram)
-	p_fgg.Ok(false)
+	u := p_fgg.Ok(false).(fgg.TNamed)
 	vPrintln(verbose, "\nFGG expr: "+p_fgg.GetMain().String())
 	p_mono := fgg.Monomorph(p_fgg)
 	vPrintln(verbose, "Monom expr: "+p_mono.GetMain().String())
-	p_mono.Ok(false)
+	t := p_mono.Ok(false).(fg.Type)
+	if !t.Equals(fgg.ToMonomId(u)) {
+		panic("-test-monom failed: types do not match\n\tFGG type=" + u.String() +
+			" -> " + fgg.ToMonomId(u).String() + "\n\tmono=" + t.String())
+	}
 	done := steps > EVAL_TO_VAL
 	for i := 0; i < steps || !done; i++ {
 		if p_fgg.GetMain().IsValue() {
 			break
 		}
-		p_fgg, p_mono = testMonomStep(verbose, p_fgg, p_mono)
+		p_fgg, u, p_mono, t = testMonomStep(verbose, p_fgg, u, p_mono, t)
 	}
 	vPrintln(verbose, "\nFinished:\n\tfgg="+p_fgg.GetMain().String()+
 		"\n\tmono="+p_mono.GetMain().String())
 }
 
-func testMonomStep(verbose bool, p_fgg fgg.FGGProgram,
-	p_mono fg.FGProgram) (fgg.FGGProgram, fg.FGProgram) {
+// Pre: p_fgg.Ok(), p_mono.Ok()
+func testMonomStep(verbose bool, p_fgg fgg.FGGProgram, u fgg.TNamed,
+	p_mono fg.FGProgram, t fg.Type) (fgg.FGGProgram, fgg.TNamed, fg.FGProgram, fg.Type) {
 
 	p1_fgg, _ := p_fgg.Eval()
 	vPrintln(verbose, "\nEval FGG one step: "+p1_fgg.GetMain().String())
-	p1_fgg.Ok(true)
+	u1 := p1_fgg.Ok(true).(fgg.TNamed)
+	if !u1.Impls(p_fgg.GetDecls(), u) {
+		panic("-test-monom failed: type not preserved\n\tprev=" + u.String() +
+			"\n\tnext=" + u1.String())
+	}
 	p1_mono, _ := p_mono.Eval()
 	vPrintln(verbose, "Eval monom one step: "+p1_mono.GetMain().String())
-	p1_mono.Ok(true)
+	t1 := p1_mono.Ok(true).(fg.Type)
+	if !t1.Equals(fgg.ToMonomId(u1)) {
+		panic("-test-monom failed: types do not match\n\tFGG type=" + u1.String() +
+			" -> " + fgg.ToMonomId(u1).String() + "\n\tmono=" + t1.String())
+	}
 	res := fgg.Monomorph(p1_fgg.(fgg.FGGProgram))
 	e_fgg := res.GetMain()
 	e_mono := p1_mono.GetMain()
 	vPrintln(verbose, "Monom of one step'd FGG: "+e_fgg.String())
 	if e_fgg.String() != e_mono.String() {
-		panic("Monom test failed:\n\t FGG expr=" + e_fgg.String() +
+		panic("-test-monom failed: exprs do not match\n\tFGG expr=" + e_fgg.String() +
 			"\n\tmono=" + e_mono.String())
 	}
-	return p1_fgg.(fgg.FGGProgram), p1_mono.(fg.FGProgram)
+	return p1_fgg.(fgg.FGGProgram), u1, p1_mono.(fg.FGProgram), t1
 }
 
 /* [WIP] TODO -- not functional yet
