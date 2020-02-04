@@ -181,6 +181,7 @@ func main() {
 		//var a fgg.FGGAdaptor
 		//prog := interp(&a, src, strictParse, evalSteps)
 		intrp_fgg := NewFGGInterp(verbose, src, strictParse)
+
 		if evalSteps > NO_EVAL {
 			intrp_fgg.Eval(evalSteps)
 			fmt.Println(intrp_fgg.GetProgram().GetMain())

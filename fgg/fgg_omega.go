@@ -72,10 +72,14 @@ func fixOmega(ds []Decl, gamma GroundEnv, omega Omega) {
 		again = false
 
 		for _, wv_upper := range omega {
+			//fmt.Println("aaa: ", wv_upper)
 			if !IsNamedIfaceType(ds, wv_upper.u_ground) || len(wv_upper.sigs) == 0 {
 				continue
 			}
 			for _, wv_lower := range omega {
+
+				//fmt.Println("bbb: ", wv_lower, wv_lower.u_ground.ImplsDelta(ds, delta_empty, wv_upper.u_ground))
+
 				if //!IsStructType(ds, wv_S.u_ground) ||  // !!! Now include interfaces
 				wv_lower.u_ground.Equals(wv_upper.u_ground) ||
 					!wv_lower.u_ground.ImplsDelta(ds, delta_empty, wv_upper.u_ground) {
@@ -314,7 +318,8 @@ func collectGroundTypesFromSigAndBody(ds []Decl, u_recv Type, c Call,
 	for i := 0; i < len(g.psi.tFormals); i++ {
 		subs[g.psi.tFormals[i].name] = c.t_args[i]
 	}
-	g = g.TSubs(subs)
+	g = g.TSubs(subs) // CHECKME: keeping add-meth-params, used to create subs (e.g., getGroundEnvAndBody)
+	//g = Sig{g.meth, Psi{[]TFormal{}}, g.pDecls, g.u_ret}
 	gs := omega[toWKey(u_recv.(TNamed))].sigs
 	if _, ok := gs[g.String()]; ok {
 		return

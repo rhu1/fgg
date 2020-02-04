@@ -26,6 +26,7 @@ const (
 /* -- Interp */
 
 type Interp interface {
+	GetSource() base.Program // TODO: factor out decls with below
 	GetProgram() base.Program
 	SetProgram(p base.Program)
 	Eval(steps int) base.Type
@@ -93,6 +94,7 @@ func eval(intrp Interp, steps int) base.Type {
 
 type FGInterp struct {
 	verboseHelper
+	orig fg.FGProgram
 	prog fg.FGProgram
 }
 
@@ -100,10 +102,12 @@ var _ Interp = &FGInterp{}
 
 func NewFGInterp(verbose bool, src string, strict bool) *FGInterp {
 	var a fg.FGAdaptor
-	prog := parse(verbose, &a, src, strict).(fg.FGProgram)
-	return &FGInterp{verboseHelper{verbose}, prog}
+	orig := parse(verbose, &a, src, strict).(fg.FGProgram)
+	prog := parse(verbose, &a, src, strict).(fg.FGProgram) // TODO: refactor
+	return &FGInterp{verboseHelper{verbose}, orig, prog}
 }
 
+func (intrp *FGInterp) GetSource() base.Program   { return intrp.orig }
 func (intrp *FGInterp) GetProgram() base.Program  { return intrp.prog }
 func (intrp *FGInterp) SetProgram(p base.Program) { intrp.prog = p.(fg.FGProgram) }
 
@@ -121,9 +125,11 @@ type FGRInterp struct {
 var _ Interp = &FGRInterp{}
 
 func NewFGRInterp(verbose bool, p fgr.FGRProgram) *FGRInterp {
+
 	return &FGRInterp{verboseHelper{verbose}, p}
 }
 
+func (intrp *FGRInterp) GetSource() base.Program   { panic("TODO") }
 func (intrp *FGRInterp) GetProgram() base.Program  { return intrp.prog }
 func (intrp *FGRInterp) SetProgram(p base.Program) { intrp.prog = p.(fgr.FGRProgram) }
 
@@ -135,6 +141,7 @@ func (intrp *FGRInterp) Eval(steps int) base.Type {
 
 type FGGInterp struct {
 	verboseHelper
+	orig fgg.FGGProgram
 	prog fgg.FGGProgram
 }
 
@@ -142,10 +149,12 @@ var _ Interp = &FGGInterp{}
 
 func NewFGGInterp(verbose bool, src string, strict bool) *FGGInterp {
 	var a fgg.FGGAdaptor
+	orig := parse(verbose, &a, src, strict).(fgg.FGGProgram)
 	prog := parse(verbose, &a, src, strict).(fgg.FGGProgram)
-	return &FGGInterp{verboseHelper{verbose}, prog}
+	return &FGGInterp{verboseHelper{verbose}, orig, prog}
 }
 
+func (intrp *FGGInterp) GetSource() base.Program   { return intrp.orig }
 func (intrp *FGGInterp) GetProgram() base.Program  { return intrp.prog }
 func (intrp *FGGInterp) SetProgram(p base.Program) { intrp.prog = p.(fgg.FGGProgram) }
 
@@ -159,7 +168,7 @@ func (intrp *FGGInterp) Monom(monom bool, compile string) {
 	if !monom && compile == "" {
 		return
 	}
-	p_mono := fgg.Monomorph(intrp.GetProgram().(fgg.FGGProgram))
+	p_mono := fgg.Monomorph(intrp.GetSource().(fgg.FGGProgram))
 	if monom {
 		intrp.vPrintln("\nMonomorphising, formal notation: [Warning] WIP [Warning]")
 		fmt.Println(p_mono.String())
@@ -191,7 +200,7 @@ func (intrp *FGGInterp) Oblit(compile string) {
 		return
 	}
 	intrp.vPrintln("\nTranslating FGG to FG(R) using Obliteration: [Warning] WIP [Warning]")
-	p_fgr := fgr.Obliterate(intrp.GetProgram().(fgg.FGGProgram))
+	p_fgr := fgr.Obliterate(intrp.GetSource().(fgg.FGGProgram))
 	out := p_fgr.String()
 	// TODO: factor out with -monomc
 	if compile == "--" {
