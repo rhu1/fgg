@@ -165,9 +165,9 @@ func monomMDecl(ds []Decl, omega Omega, md MDecl,
 		res = append(res, fg.NewMDecl(recv, md.name, pds, t_ret_monom, e_monom))
 	} else {
 		// Instantiate method for all calls of md.name on any supertype.
-		//mInstans := collectSuperMethInstans(ds, omega, md, wv) // reflexive
-		mInstans := make(map[string][]Type) // CHECKME: should be sufficient given omega?
-		addMethInstans(wv, md.name, mInstans)
+		mInstans := collectSuperMethInstans(ds, omega, md, wv) // reflexive
+		/*mInstans := make(map[string][]Type) // CHECKME: should be sufficient given omega?
+		addMethInstans(wv, md.name, mInstans)*/
 		for _, targs := range mInstans {
 			subs1 := make(map[TParam]Type)
 			for k1, v1 := range subs {
