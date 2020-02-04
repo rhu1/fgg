@@ -231,6 +231,25 @@ test-oblit:
 	go run github.com/rhu1/fgg -fgg -oblitc=tmp/test-oblit/fgr/julien/ifacebox-nomethparam.fgr -oblit-eval=-1 fgg/examples/monom/julien/ifacebox-nomethparam.fgg
 
 
+.PHONY: test-monom-commut
+test-monom-commut:
+	go run github.com/rhu1/fgg -eval=-1 -test-monom fgg/examples/popl20/booleans/booleans.fgg
+	go run github.com/rhu1/fgg -eval=-1 -test-monom fgg/examples/popl20/compose/compose.fgg
+	go run github.com/rhu1/fgg -eval=-1 -test-monom fgg/examples/popl20/graph/graph.fgg
+	go run github.com/rhu1/fgg -eval=-1 -test-monom fgg/examples/popl20/irregular/irregular.fgg
+	go run github.com/rhu1/fgg -eval=-1 -test-monom fgg/examples/popl20/map/map.fgg
+	go run github.com/rhu1/fgg -eval=-1 -test-monom fgg/examples/popl20/monomorph/monomorph.fgg
+	go run github.com/rhu1/fgg -eval=10 -test-monom fgg/examples/monom/box/box2.fgg
+	go run github.com/rhu1/fgg -eval=-1 -test-monom fgg/examples/monom/julien/ifacebox.fgg
+	go run github.com/rhu1/fgg -eval=-1 -test-monom fgg/examples/monom/julien/ifacebox-nomethparam.fgg
+	go run github.com/rhu1/fgg -eval=-1 -test-monom fgg/examples/monom/julien/iface-embedding-simple.go
+	go run github.com/rhu1/fgg -eval=-1 -test-monom fgg/examples/monom/julien/iface-embedding.go
+	go run github.com/rhu1/fgg -eval=-1 -test-monom fgg/examples/monom/julien/rcver-iface.go
+	go run github.com/rhu1/fgg -eval=-1 -test-monom fgg/examples/monom/julien/one-pass-prob.go
+	go run github.com/rhu1/fgg -eval=-1 -test-monom fgg/examples/monom/julien/contamination.go
+
+
+
 .PHONY: clean-test-oblit
 clean-test-oblit:
 	rm -f tmp/test-oblit/fgr/booleans/booleans.fgr
