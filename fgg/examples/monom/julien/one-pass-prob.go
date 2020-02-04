@@ -17,8 +17,8 @@ type IA(type ) interface{
 type SA(type ) struct {};
  
 // NB: SA.MyFunction() is only called via interface, 
-// can find the instantiation of Pair(Int,Int) in one pass?
-func (x SA(type )) MyFunction(type b Any())(y b) Int() {return Pair(Int(),Int()){Int(){}, Int(){}}.snd};
+// can we find the instantiation of Pair(Int,Int) in one pass?
+func (x SA(type )) MyFunction(type b Any())(y b) Int() {return Pair(b,Int()){y, Int(){}}.snd};
 
 
 type Dummy(type ) struct{};
