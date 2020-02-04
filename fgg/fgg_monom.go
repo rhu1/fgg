@@ -165,8 +165,8 @@ func monomMDecl(ds []Decl, omega Omega, md MDecl,
 		res = append(res, fg.NewMDecl(recv, md.name, pds, t_ret_monom, e_monom))
 	} else {
 		// Instantiate method for all calls of md.name on any supertype.
-		mInstans := collectSuperMethInstans(ds, omega, md, wv) // reflexive
-		/*mInstans := make(map[string][]Type)*/ // CHECKME: should be sufficient given omega?
+		//mInstans := collectSuperMethInstans(ds, omega, md, wv) // reflexive
+		mInstans := make(map[string][]Type) // CHECKME: should be sufficient given omega?
 		addMethInstans(wv, md.name, mInstans)
 		for _, targs := range mInstans {
 			subs1 := make(map[TParam]Type)
@@ -196,7 +196,6 @@ func monomMDecl(ds []Decl, omega Omega, md MDecl,
 }
 
 // Collect all instantations of calls to md on any supertype of wv.u_ground.
-// - return is empty, i.e., does not include wv.sigs, if no u_I with md.name call
 // - return is a map, so "duplicate" add-meth-param type instans are implicitly set-ified
 // ^E.g., Calling m(A()) on some struct separately via two interfaces T1 and T2 where T2 <: T1
 // Pre: `wv` (an Omega map value) represents an instantiation of `md.t_recv`
