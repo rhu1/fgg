@@ -165,7 +165,8 @@ func monomMDecl(ds []Decl, omega Omega, md MDecl,
 		res = append(res, fg.NewMDecl(recv, md.name, pds, t_ret_monom, e_monom))
 	} else {
 		// Instantiate method for all calls of md.name on any supertype.
-		mInstans := collectSuperMethInstans(ds, omega, md, wv)
+		mInstans := collectSuperMethInstans(ds, omega, md, wv) // reflexive
+		/*mInstans := make(map[string][]Type)*/ // CHECKME: should be sufficient given omega?
 		addMethInstans(wv, md.name, mInstans)
 		for _, targs := range mInstans {
 			subs1 := make(map[TParam]Type)
@@ -208,7 +209,7 @@ func collectSuperMethInstans(ds []Decl, omega Omega, md MDecl,
 	// Given m = md.m, forall u_I s.t. m in meths(u_I) && wv.u_ground <: u_I,
 	// .. collect targs from all calls of m on u_I
 	for _, wv1 := range omega {
-		if IsNamedIfaceType(ds, wv1.u_ground) && wv.u_ground.ImplsDelta(ds, empty, wv1.u_ground) {
+		if /*IsNamedIfaceType(ds, wv1.u_ground) &&*/ wv.u_ground.ImplsDelta(ds, empty, wv1.u_ground) {
 			gs := methods(ds, wv1.u_ground) // Includes embedded meths for i/face wv1.u_ground
 			if _, ok := gs[md.name]; ok {
 				addMethInstans(wv1, md.name, mInstans)
@@ -219,7 +220,7 @@ func collectSuperMethInstans(ds []Decl, omega Omega, md MDecl,
 }
 
 // Add instans of `m` in `wv` (an Omega map value) to `mInstans`
-// (Adding instances with non-empty add-meth-targs, but that should simply depend on m's decl)
+// (Only Adding instances with non-empty add-meth-targs, but that should simply depend on m's decl)
 func addMethInstans(wv GroundTypeAndSigs, m Name, mInstans map[string][]Type) {
 	for _, v := range wv.sigs {
 		m1 := v.sig.GetMethod()

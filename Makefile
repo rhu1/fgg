@@ -98,9 +98,9 @@ test-monom:
 	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/monomorph/monomorph.go fgg/examples/popl20/monomorph/monomorph.fgg
 	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monomorph/monomorph.go
 
-	mkdir -p tmp/test/fg/box
-	go run github.com/rhu1/fgg -fgg -eval=10 -monomc=tmp/test/fg/box/box2.go fgg/examples/monom/box/box2.fgg
-	go run github.com/rhu1/fgg -eval=10 tmp/test/fg/box/box2.go
+	mkdir -p tmp/test/fg/monom/box
+	go run github.com/rhu1/fgg -fgg -eval=10 -monomc=tmp/test/fg/monom/box/box2.go fgg/examples/monom/box/box2.fgg
+	go run github.com/rhu1/fgg -eval=10 tmp/test/fg/monom/box/box2.go
 
 	mkdir -p tmp/test/fg/monom/julien
 	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/monom/julien/ifacebox.go fgg/examples/monom/julien/ifacebox.fgg
@@ -135,8 +135,8 @@ clean-test-monom:
 	rm -f tmp/test/fg/monomorph/monomorph.go
 	rm -fd tmp/test/fg/monomorph
 
-	rm -f tmp/test/fg/box/box2.go
-	rm -fd tmp/test/fg/box
+	rm -f tmp/test/fg/monom/box/box2.go
+	rm -fd tmp/test/fg/monom/box
 
 	rm -f tmp/test/fg/monom/julien/ifacebox.go
 	rm -f tmp/test/fg/monom/julien/ifacebox-nomethparam.go

@@ -71,19 +71,19 @@ func fixOmega(ds []Decl, gamma GroundEnv, omega Omega) {
 	for again := true; again; {
 		again = false
 
-		for _, wv_I := range omega {
-			if !IsNamedIfaceType(ds, wv_I.u_ground) || len(wv_I.sigs) == 0 {
+		for _, wv_upper := range omega {
+			if !IsNamedIfaceType(ds, wv_upper.u_ground) || len(wv_upper.sigs) == 0 {
 				continue
 			}
-			for _, wv_S := range omega {
+			for _, wv_lower := range omega {
 				if //!IsStructType(ds, wv_S.u_ground) ||  // !!! Now include interfaces
-				wv_S.u_ground.Equals(wv_I.u_ground) ||
-					!wv_S.u_ground.ImplsDelta(ds, delta_empty, wv_I.u_ground) {
+				wv_lower.u_ground.Equals(wv_upper.u_ground) ||
+					!wv_lower.u_ground.ImplsDelta(ds, delta_empty, wv_upper.u_ground) {
 					continue
 				}
 
-				u_S := wv_S.u_ground
-				for _, g_I := range wv_I.sigs {
+				u_S := wv_lower.u_ground
+				for _, g_I := range wv_upper.sigs {
 					if len(g_I.targs) == 0 {
 						continue
 					}
