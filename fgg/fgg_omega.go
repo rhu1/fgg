@@ -91,6 +91,11 @@ func fixOmega(ds []Decl, gamma GroundEnv, omega Omega) {
 					if len(g_I.targs) == 0 {
 						continue
 					}
+					g_Ikey := toGroundSigsKey(g_I.sig)
+					if _, ok := wv_lower.sigs[g_Ikey]; ok {
+						continue
+					}
+					wv_lower.sigs[g_Ikey] = g_I
 
 					// Very non-optimal, may revisit the same g_I/u_S pair many times
 					gamma1, e_body := getGroundEnvAndBody(ds, g_I, u_S)

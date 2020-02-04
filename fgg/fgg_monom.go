@@ -165,9 +165,9 @@ func monomMDecl(ds []Decl, omega Omega, md MDecl,
 		res = append(res, fg.NewMDecl(recv, md.name, pds, t_ret_monom, e_monom))
 	} else {
 		// Instantiate method for all calls of md.name on any supertype.
-		mInstans := collectSuperMethInstans(ds, omega, md, wv) // reflexive
-		/*mInstans := make(map[string][]Type) // CHECKME: should be sufficient given omega?
-		addMethInstans(wv, md.name, mInstans)*/
+		//mInstans := collectSuperMethInstans(ds, omega, md, wv) // reflexive
+		mInstans := make(map[string][]Type) // CHECKME: should be sufficient given omega?
+		addMethInstans(wv, md.name, mInstans)
 		for _, targs := range mInstans {
 			subs1 := make(map[TParam]Type)
 			for k1, v1 := range subs {
@@ -195,7 +195,7 @@ func monomMDecl(ds []Decl, omega Omega, md MDecl,
 	return res
 }
 
-// Collect all instantations of calls to md on any supertype of wv.u_ground.
+/*// Collect all instantations of calls to md on any supertype of wv.u_ground.
 // - return is a map, so "duplicate" add-meth-param type instans are implicitly set-ified
 // ^E.g., Calling m(A()) on some struct separately via two interfaces T1 and T2 where T2 <: T1
 // Pre: `wv` (an Omega map value) represents an instantiation of `md.t_recv`
@@ -208,7 +208,7 @@ func collectSuperMethInstans(ds []Decl, omega Omega, md MDecl,
 	// Given m = md.m, forall u_I s.t. m in meths(u_I) && wv.u_ground <: u_I,
 	// .. collect targs from all calls of m on u_I
 	for _, wv1 := range omega {
-		if /*IsNamedIfaceType(ds, wv1.u_ground) &&*/ wv.u_ground.ImplsDelta(ds, empty, wv1.u_ground) {
+		if wv.u_ground.ImplsDelta(ds, empty, wv1.u_ground) {
 			gs := methods(ds, wv1.u_ground) // Includes embedded meths for i/face wv1.u_ground
 			if _, ok := gs[md.name]; ok {
 				addMethInstans(wv1, md.name, mInstans)
@@ -216,7 +216,7 @@ func collectSuperMethInstans(ds []Decl, omega Omega, md MDecl,
 		}
 	}
 	return mInstans
-}
+}*/
 
 // Add instans of `m` in `wv` (an Omega map value) to `mInstans`
 // (Only Adding instances with non-empty add-meth-targs, but that should simply depend on m's decl)
