@@ -94,9 +94,9 @@ func fixOmega(ds []Decl, gamma GroundEnv, omega Omega) {
 
 					// Very non-optimal, may revisit the same g_I/u_S pair many times
 					gamma1, e_body := getGroundEnvAndBody(ds, g_I, u_S)
-					ground1 := make(map[string]GroundTypeAndSigs)
-					collectGroundTypesFromExpr(ds, gamma1, e_body, ground1)
-					for _, wv_body := range ground1 {
+					omega1 := make(Omega)
+					collectGroundTypesFromExpr(ds, gamma1, e_body, omega1)
+					for _, wv_body := range omega1 {
 						if _, ok := omega[toWKey(wv_body.u_ground)]; !ok {
 							omega[toWKey(wv_body.u_ground)] = wv_body
 							again = true
