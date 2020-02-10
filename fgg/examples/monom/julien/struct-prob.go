@@ -24,7 +24,9 @@ type Func(type a Any(), b Any()) interface {
 
 type ABox(type a Any()) struct{ val a };
 
-type BadBox(type a Any()) struct { val Box(a)};
+type BadBox(type a Any()) struct { 
+		val Box(Box(Box(a)))
+		};
 
 type Dummy(type ) struct{};
 
