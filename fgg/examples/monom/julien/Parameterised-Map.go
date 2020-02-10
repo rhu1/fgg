@@ -13,8 +13,11 @@ type Func(type a Any(), b Any()) interface {
 };
 
 type Bool2Int(type ) struct {};
+type ParamBox(type a Any()) struct {v1 a};
+func (x ParamBox(type a Any())) map(type b Any())(f Func(a,b)) Box(b) {return ParamBox(b){f.apply()(x.v1)}};
 
-func (x Bool2Int(type )) apply(type )(x Bool()) Int() {return Int(){} };
+
+func (x Bool2Int(type )) apply(type )(y Bool()) Int() {return Int(){} };
 
 type Box(type a Any()) interface{
 	map(type b Any())(f Func(a,b)) Box(b)
@@ -22,22 +25,22 @@ type Box(type a Any()) interface{
 };
 
 type IntBox(type ) struct {v1 Int()}; // IntBox <:
-func (x IntBox(type )) map(type b Any())(f Func(Int(),b)) Box(b) {return BoolBox(){f.apply()(x.v1)}};
+func (x IntBox(type )) map(type b Any())(f Func(Int(),b)) Box(b) {return ParamBox(b){f.apply()(x.v1)}};
 
 
 type BoolBox(type ) struct {v1 Bool()}; // BoolBox <: IA(Bool())
-func (x BoolBox(type )) map(type b Any())(f Func(Bool(),b)) Box(b) {return IntBox(){f.apply()(x.v1)}};
+func (x BoolBox(type )) map(type b Any())(f Func(Bool(),b)) Box(b) {return ParamBox(b){f.apply()(x.v1)}};
 
 
 type Dummy(type ) struct{};
 
-func (x Dummy(type )) CallFunctionBool(type )(y Box(Bool())) Bool() {
+func (x Dummy(type )) CallFunctionBool(type )(y Box(Bool())) Box(Int()) {
 	return y.map(Int())(Bool2Int(){})
 
 };
 
 
 func main() { _ =
-	Dummy(){}.CallFunctionBool()(BoolBox(){})
+	Dummy(){}.CallFunctionBool()(BoolBox(){Bool(){}})
 
 }
