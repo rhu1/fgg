@@ -129,6 +129,7 @@ Options:
 // - fix embedding monom -- DONE
 // - fix monom name mangling
 // - fix parser nil vs. empty creation
+// - WF check for duplicate decl names
 func main() {
 	flag.Usage = usage
 	flag.Parse()
