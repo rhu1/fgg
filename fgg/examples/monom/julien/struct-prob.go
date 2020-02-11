@@ -1,4 +1,4 @@
-//$ go run github.com/rhu1/fgg -fgg -eval=-1 -v fgg/examples/monom/julien/Parameterised-Map.go
+//$ go run github.com/rhu1/fgg -fgg -monomc=tmp/fg/monom/julien/struct-prob.go -v fgg/examples/monom/julien/struct-prob.go
 
 package main;
 
@@ -22,7 +22,7 @@ type Func(type a Any(), b Any()) interface {
 };
 
 
-type ABox(type a Any()) struct{ val a };
+//type ABox(type a Any()) struct{ val a };
 
 type BadBox(type a Any()) struct { 
 		val Box(Box(Box(a)))
