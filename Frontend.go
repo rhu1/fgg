@@ -219,7 +219,7 @@ func (intrp *FGGInterp) Oblit(compile string) {
 /* Aux */
 
 func monomOutputHack(out string) string {
-	out = strings.Replace(out, ",,", "_", -1) // TODO: refactor -- cf. fgg_monom, toMonomId
+	out = strings.Replace(out, ",,", "ᐨ", -1) // TODO: refactor -- cf. fgg_monom, toMonomId
 	out = strings.Replace(out, "<", "ᐸ", -1)
 	out = strings.Replace(out, ">", "ᐳ", -1)
 	return out
