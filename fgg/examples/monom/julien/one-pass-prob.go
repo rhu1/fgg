@@ -26,7 +26,7 @@ func (x SA(type )) MyFunction(type b Any())(y b) Int() {return Pair(b,Int()){y, 
 type Dummy(type ) struct{};
 
 func (x Dummy(type )) CallFunction(type )(y IA()) Int() {
-	return y.MyFunction(Int())(Int(){})
+	return y.MyFunction(Int())(Int(){}) // IA : MyFunction<Int>
 };
 
 
