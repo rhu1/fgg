@@ -15,7 +15,95 @@ var _ = fmt.Errorf
  */
 
 func IsMonomable(p FGGProgram) bool {
+	for _, v := range p.decls {
+		switch d := v.(type) {
+		case STypeLit:
+			if !isMonomableSTypeLit(d) {
+				return false
+			}
+		case ITypeLit:
+			if !isMonomableITypeLit(d) {
+				return false
+			}
+		case MDecl:
+			if !isMonomableMDecl(d) {
+				return false
+			}
+		default:
+			panic("Unknown Decl kind: " + reflect.TypeOf(v).String() + "\n\t" +
+				v.String())
+		}
+	}
 	return isMonomableExpr(p.e_main)
+}
+
+func isMonomableSTypeLit(d STypeLit) bool {
+	for _, v := range d.psi.GetTFormals() { // Maybe easier to make an actual u, and use isOrContainsTParam
+		if u1, ok := v.u_I.(TNamed); ok {
+			if isOrContainsTParam(u1) {
+				return false
+			}
+		}
+	}
+	for _, v := range d.fDecls {
+		if u1, ok := v.u.(TNamed); ok {
+			if isOrContainsTParam(u1) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func isMonomableITypeLit(d ITypeLit) bool {
+	// TODO: factor out with above
+	for _, v := range d.psi.GetTFormals() { // Maybe easier to make an actual u, and use isOrContainsTParam
+		if u1, ok := v.u_I.(TNamed); ok {
+			if isOrContainsTParam(u1) {
+				return false
+			}
+		}
+	}
+	for _, v := range d.specs {
+		if u1, ok := v.(TNamed); ok { // TODO: type switch
+			if isOrContainsTParam(u1) {
+				return false
+			}
+		} /*else if u1, ok := v.u.Sig; ok {  // Implicitly checked via MDecls? (for interfaces/methods actually used)
+			if isOrContainsTParam(u1) {
+				return false
+			}
+		}*/
+	}
+	return true
+}
+
+func isMonomableMDecl(d MDecl) bool {
+
+	for _, v := range d.psi_recv.GetTFormals() { // Maybe easier to make an actual u, and use isOrContainsTParam
+		if u1, ok := v.u_I.(TNamed); ok {
+			if isOrContainsTParam(u1) {
+				return false
+			}
+		}
+	}
+	pds := d.GetParamDecls()
+	for _, v := range pds {
+		if u1, ok := v.u.(TNamed); ok {
+			if isOrContainsTParam(u1) {
+				return false
+			}
+		}
+	}
+	if u1, ok := d.u_ret.(TNamed); ok {
+		if isOrContainsTParam(u1) {
+			return false
+		}
+	}
+	if isMonomableExpr(d.e_body) {
+		return false
+	}
+	return true
 }
 
 func isMonomableExpr(e FGGExpr) bool {
