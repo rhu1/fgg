@@ -18,13 +18,13 @@ func IsMonomable(p FGGProgram) bool {
 	for _, v := range p.decls {
 		switch d := v.(type) {
 		case STypeLit:
-			if !isMonomableSTypeLit(d) {
+			/*if !isMonomableSTypeLit(d) {
 				return false
-			}
+			}*/
 		case ITypeLit:
-			if !isMonomableITypeLit(d) {
+			/*if !isMonomableITypeLit(d) {
 				return false
-			}
+			}*/
 		case MDecl:
 			if !isMonomableMDecl(d) {
 				return false
@@ -37,6 +37,32 @@ func IsMonomable(p FGGProgram) bool {
 	return isMonomableExpr(p.e_main)
 }
 
+func isMonomableMDecl(d MDecl) bool {
+
+	/*for _, v := range d.psi_recv.GetTFormals() { // Maybe easier to make an actual u, and use isOrContainsTParam
+		if u1, ok := v.u_I.(TNamed); ok {
+			if isOrContainsTParam(u1) {
+				return false
+			}
+		}
+	}
+	pds := d.GetParamDecls()
+	for _, v := range pds {
+		if u1, ok := v.u.(TNamed); ok {
+			if isOrContainsTParam(u1) {
+				return false
+			}
+		}
+	}
+	if u1, ok := d.u_ret.(TNamed); ok {
+		if isOrContainsTParam(u1) {
+			return false
+		}
+	}*/
+	return isMonomableExpr(d.e_body)
+}
+
+/*
 func isMonomableSTypeLit(d STypeLit) bool {
 	for _, v := range d.psi.GetTFormals() { // Maybe easier to make an actual u, and use isOrContainsTParam
 		if u1, ok := v.u_I.(TNamed); ok {
@@ -73,38 +99,11 @@ func isMonomableITypeLit(d ITypeLit) bool {
 			if isOrContainsTParam(u1) {
 				return false
 			}
-		}*/
+		}* /
 	}
 	return true
 }
-
-func isMonomableMDecl(d MDecl) bool {
-
-	for _, v := range d.psi_recv.GetTFormals() { // Maybe easier to make an actual u, and use isOrContainsTParam
-		if u1, ok := v.u_I.(TNamed); ok {
-			if isOrContainsTParam(u1) {
-				return false
-			}
-		}
-	}
-	pds := d.GetParamDecls()
-	for _, v := range pds {
-		if u1, ok := v.u.(TNamed); ok {
-			if isOrContainsTParam(u1) {
-				return false
-			}
-		}
-	}
-	if u1, ok := d.u_ret.(TNamed); ok {
-		if isOrContainsTParam(u1) {
-			return false
-		}
-	}
-	if isMonomableExpr(d.e_body) {
-		return false
-	}
-	return true
-}
+//*/
 
 func isMonomableExpr(e FGGExpr) bool {
 	switch e1 := e.(type) {
