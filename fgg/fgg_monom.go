@@ -14,10 +14,59 @@ var _ = fmt.Errorf
  * [WIP] Naive monomorph -- `isMonomorphisable` check not implemented yet
  */
 
-// TODO: isMonomorphisable
-/*func isMonomorphisable(p FGGProgram) bool {
-	panic("[TODO]")
-}*/
+func IsMonomable(p FGGProgram) bool {
+	return isMonomableExpr(p.e_main)
+}
+
+func isMonomableExpr(e FGGExpr) bool {
+	switch e1 := e.(type) {
+	case Variable:
+		return true
+	case StructLit:
+		for _, v := range e1.u_S.u_args {
+			if u1, ok := v.(TNamed); ok {
+				if isOrContainsTParam(u1) {
+					return false
+				}
+			}
+		}
+		for _, v := range e1.elems {
+			if !isMonomableExpr(v) {
+				return false
+			}
+		}
+		return true
+	case Select:
+		return isMonomableExpr(e1.e_S)
+	case Call:
+		for _, v := range e1.t_args {
+			if u1, ok := v.(TNamed); ok {
+				if isOrContainsTParam(u1) {
+					return false
+				}
+			}
+		}
+		if !isMonomableExpr(e1.e_recv) {
+			return false
+		}
+		for _, v := range e1.args {
+			if !isMonomableExpr(v) {
+				return false
+			}
+		}
+		return true
+	case Assert:
+		if u1, ok := e1.u_cast.(TNamed); ok {
+			if isOrContainsTParam(u1) {
+				return false
+			}
+		}
+		return isMonomableExpr(e1.e_I)
+	default:
+		panic("Unknown Expr kind: " + reflect.TypeOf(e).String() + "\n\t" +
+			e.String())
+	}
+}
 
 /* Export */
 
@@ -311,4 +360,18 @@ func getMonomMethName(omega Omega, m Name, targs []Type) Name {
 	}
 	res = res + ">"
 	return Name(res)
+}
+
+// returns true iff u is a TParam or contains a TParam
+func isOrContainsTParam(u Type) bool {
+	if _, ok := u.(TParam); ok {
+		return true
+	}
+	u1 := u.(TNamed)
+	for _, v := range u1.u_args {
+		if isOrContainsTParam(v) {
+			return true
+		}
+	}
+	return false
 }
