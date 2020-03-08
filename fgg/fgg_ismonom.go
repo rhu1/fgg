@@ -26,10 +26,11 @@ func Foo(ds []Decl) {
 		case ITypeLit:
 		case MDecl:
 			delta := d.GetMDeclPsi().ToDelta()
-			tfs := d.GetMDeclPsi().GetTFormals()
+			tfs := d.GetRecvPsi().GetTFormals()
 			u_args := make([]Type, len(tfs))
 			for i := 0; i < len(tfs); i++ {
 				u_args[i] = tfs[i].GetUpperBound()
+				delta[tfs[i].GetTParam()] = u_args[i]
 			}
 			u_recv := TNamed{d.t_recv, u_args}
 			gamma := make(Gamma)
@@ -47,8 +48,41 @@ func Foo(ds []Decl) {
 	}
 
 	war(bools)
-	fmt.Println("1111: ", graph)
-	fmt.Println("2222: ", bools)
+	//fmt.Println("1111: ", graph)
+	//fmt.Println("2222: ", bools)
+
+	findCycles(bools)
+	//fmt.Println("3333: ", cycles)
+
+	for _, v := range cycles {
+		for i := 0; i < len(v); i++ {
+			var next RecvMethPair
+			if i == len(v)-1 {
+				next = v[0]
+			} else {
+				next = v[i+1]
+			}
+			tmp := graph[v[i]]
+			if tmp == nil {
+				continue
+			}
+			tmp2 := tmp[next]
+			if tmp2 != nil {
+				for _, t_args := range tmp2 {
+					for _, u := range t_args {
+						if u1, ok := u.(TNamed); ok {
+							for _, x := range u1.u_args {
+								if isOrContainsTParam(x) {
+									panic("Not monomorphisable, potential polymorphic recursion: " +
+										fmt.Sprintf("%v", v))
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
 // N.B. mutates graph
@@ -69,7 +103,7 @@ func bar(ds []Decl, delta Delta, gamma Gamma, ctxt RecvMethPair, e FGGExpr,
 			bar(ds, delta, gamma, ctxt, arg, graph, bools)
 		}
 		//g := methods(u_recv)[e1.meth]  // Want u_recv from Typing...
-		var psi Psi
+		/*var psi Psi
 		for _, v := range ds {
 			if v1, ok := v.(MDecl); ok && v1.name == e1.meth {
 				psi = v1.GetMDeclPsi()
@@ -79,8 +113,14 @@ func bar(ds []Decl, delta Delta, gamma Gamma, ctxt RecvMethPair, e FGGExpr,
 		delta1 := psi.ToDelta()
 		for k, v := range delta {
 			delta1[k] = v
+		}*/
+		delta1 := delta // TODO refactor
+		u_recv := e1.e_recv.Typing(ds, delta1, gamma, true)
+
+		if _, ok := u_recv.(TParam); ok { // E.g., compose, x.Equal()(xs.head), x is `a`
+			u_recv = delta[u_recv.(TParam)]
 		}
-		u_recv := e1.e_recv.Typing(ds, delta1, gamma, true) // CHECKME: TParam possible? or already bounds
+
 		tmp := graph[ctxt]
 		btmp := bools[ctxt]
 		if tmp == nil {
@@ -109,6 +149,9 @@ func bar(ds []Decl, delta Delta, gamma Gamma, ctxt RecvMethPair, e FGGExpr,
 						u_args[i] = tfs[i].GetUpperBound()
 					}
 					u_S := TNamed{d.t_name, u_args}
+
+					fmt.Println("aaaa: ", u_S, u_I, ",", delta1, "\n\t", e1)
+
 					if u_S.ImplsDelta(ds, delta1, u_I) {
 						key := RecvMethPair{u_S.String(), e1.meth}
 						tmp2 := tmp[key] // TODO factor out with above
@@ -144,8 +187,9 @@ func war(graph map[RecvMethPair]map[RecvMethPair]bool) {
 			for j := 0; j < len(meths); j++ {
 				tmp := graph[meths[i]]
 				if tmp == nil {
-					tmp = make(map[RecvMethPair]bool)
-					graph[meths[i]] = tmp
+					/*tmp = make(map[RecvMethPair]bool)
+					graph[meths[i]] = tmp*/
+					return
 				}
 				if !tmp[meths[j]] {
 					tmp2 := graph[meths[i]]
@@ -155,6 +199,39 @@ func war(graph map[RecvMethPair]map[RecvMethPair]bool) {
 					}
 				}
 			}
+		}
+	}
+}
+
+var cycles [][]RecvMethPair
+
+func findCycles(bools map[RecvMethPair]map[RecvMethPair]bool) {
+	for _, v := range meths {
+		stack := []RecvMethPair{v}
+		aux(bools, stack)
+	}
+}
+
+func aux(bools map[RecvMethPair]map[RecvMethPair]bool, stack []RecvMethPair) {
+	tmp := bools[stack[len(stack)-1]]
+	if tmp == nil {
+		return
+	}
+	for i := 0; i < len(meths); i++ {
+		m := meths[i]
+		if tmp[m] {
+			if stack[0] == m {
+				//stack1 := append(stack, m)
+				cycles = append(cycles, stack)
+				return
+			}
+			for j := 1; j < len(stack); j++ {
+				if stack[j] == m {
+					return
+				}
+			}
+			stack1 := append(stack, m)
+			aux(bools, stack1)
 		}
 	}
 }
