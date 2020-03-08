@@ -234,7 +234,7 @@ func (s Select) ToGoString() string {
 type Call struct {
 	e_recv FGGExpr
 	meth   Name
-	t_args []Type
+	t_args []Type // Rename u_args?
 	args   []FGGExpr
 }
 

@@ -168,7 +168,16 @@ func (intrp *FGGInterp) Monom(monom bool, compile string) {
 	if !monom && compile == "" {
 		return
 	}
-	p_mono := fgg.Monomorph(intrp.GetSource().(fgg.FGGProgram))
+
+	p_fgg := intrp.GetSource().(fgg.FGGProgram)
+	if e, ok := fgg.IsMonomable(p_fgg); !ok {
+		panic("\nNot monomorphisable according to \"type param under named type\"" +
+			" restriction.\n\t" + e.String())
+	}
+
+	//fgg.Foo(intrp.orig.GetDecls())
+
+	p_mono := fgg.Monomorph(p_fgg)
 	if monom {
 		intrp.vPrintln("\nMonomorphising, formal notation: [Warning] WIP [Warning]")
 		fmt.Println(p_mono.String())
