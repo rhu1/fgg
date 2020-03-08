@@ -175,6 +175,8 @@ func (intrp *FGGInterp) Monom(monom bool, compile string) {
 			" restriction.\n\t" + e.String())
 	}
 
+	fgg.Foo(intrp.orig.GetDecls())
+
 	p_mono := fgg.Monomorph(p_fgg)
 	if monom {
 		intrp.vPrintln("\nMonomorphising, formal notation: [Warning] WIP [Warning]")
