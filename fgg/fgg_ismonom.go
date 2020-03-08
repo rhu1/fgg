@@ -11,16 +11,15 @@ var _ = reflect.Append
 var _ = strings.Compare
 
 type RecvMethPair struct {
-	//t_recv   Name   // Cf. MDecl
-	//psi_recv string // HACK: string is psi.String()
 	u_recv string
 	m      Name
 }
 
-var ddd []RecvMethPair = make([]RecvMethPair, 0)
+var meths []RecvMethPair = make([]RecvMethPair, 0) // TODO refactor
 
 func Foo(ds []Decl) {
-	graph := make(map[RecvMethPair]map[RecvMethPair]bool)
+	graph := make(map[RecvMethPair]map[RecvMethPair]([][]Type))
+	bools := make(map[RecvMethPair]map[RecvMethPair]bool)
 	for _, v := range ds {
 		switch d := v.(type) {
 		case STypeLit:
@@ -39,33 +38,35 @@ func Foo(ds []Decl) {
 				gamma[v.GetName()] = v.GetType()
 			}
 			ctxt := RecvMethPair{u_recv.String(), d.name}
-			ddd = append(ddd, ctxt)
-			bar(ds, delta, gamma, ctxt, d.e_body, graph)
+			meths = append(meths, ctxt)
+			bar(ds, delta, gamma, ctxt, d.e_body, graph, bools)
 		default:
 			panic("Unknown Decl kind: " + reflect.TypeOf(v).String() + "\n\t" +
 				v.String())
 		}
 	}
 
-	war(graph)
+	war(bools)
 	fmt.Println("1111: ", graph)
+	fmt.Println("2222: ", bools)
 }
 
 // N.B. mutates graph
 func bar(ds []Decl, delta Delta, gamma Gamma, ctxt RecvMethPair, e FGGExpr,
-	graph map[RecvMethPair]map[RecvMethPair]bool) {
+	graph map[RecvMethPair]map[RecvMethPair]([][]Type),
+	bools map[RecvMethPair]map[RecvMethPair]bool) {
 
 	switch e1 := e.(type) {
 	case Variable:
 	case StructLit:
 		for _, elem := range e1.elems {
-			bar(ds, delta, gamma, ctxt, elem, graph)
+			bar(ds, delta, gamma, ctxt, elem, graph, bools)
 		}
 	case Select:
 	case Call:
-		bar(ds, delta, gamma, ctxt, e1.e_recv, graph)
+		bar(ds, delta, gamma, ctxt, e1.e_recv, graph, bools)
 		for _, arg := range e1.args {
-			bar(ds, delta, gamma, ctxt, arg, graph)
+			bar(ds, delta, gamma, ctxt, arg, graph, bools)
 		}
 		//g := methods(u_recv)[e1.meth]  // Want u_recv from Typing...
 		var psi Psi
@@ -81,12 +82,22 @@ func bar(ds []Decl, delta Delta, gamma Gamma, ctxt RecvMethPair, e FGGExpr,
 		}
 		u_recv := e1.e_recv.Typing(ds, delta1, gamma, true) // CHECKME: TParam possible? or already bounds
 		tmp := graph[ctxt]
+		btmp := bools[ctxt]
 		if tmp == nil {
-			tmp = make(map[RecvMethPair]bool)
+			tmp = make(map[RecvMethPair]([][]Type))
 			graph[ctxt] = tmp
+			btmp = make(map[RecvMethPair]bool)
+			bools[ctxt] = btmp
 		}
 		if isStructType(ds, u_recv) {
-			tmp[RecvMethPair{u_recv.String(), e1.meth}] = true
+			key := RecvMethPair{u_recv.String(), e1.meth}
+			tmp2 := tmp[key]
+			if tmp2 == nil {
+				tmp2 = make([][]Type, 0)
+			}
+			tmp2 = append(tmp2, e1.t_args)
+			tmp[key] = tmp2
+			btmp[key] = true
 		} else {
 			u_I := u_recv
 			for _, v := range ds {
@@ -99,7 +110,14 @@ func bar(ds []Decl, delta Delta, gamma Gamma, ctxt RecvMethPair, e FGGExpr,
 					}
 					u_S := TNamed{d.t_name, u_args}
 					if u_S.ImplsDelta(ds, delta1, u_I) {
-						tmp[RecvMethPair{u_S.String(), e1.meth}] = true
+						key := RecvMethPair{u_S.String(), e1.meth}
+						tmp2 := tmp[key] // TODO factor out with above
+						if tmp2 == nil {
+							tmp2 = make([][]Type, 0)
+						}
+						tmp2 = append(tmp2, e1.t_args)
+						tmp[key] = tmp2
+						btmp[key] = true
 					}
 				case ITypeLit:
 				case MDecl:
@@ -110,7 +128,7 @@ func bar(ds []Decl, delta Delta, gamma Gamma, ctxt RecvMethPair, e FGGExpr,
 			}
 		}
 	case Assert:
-		bar(ds, delta, gamma, ctxt, e1.e_I, graph)
+		bar(ds, delta, gamma, ctxt, e1.e_I, graph, bools)
 	default:
 		panic("Unknown Expr kind: " + reflect.TypeOf(e).String() + "\n\t" +
 			e.String())
@@ -121,19 +139,19 @@ func bar(ds []Decl, delta Delta, gamma Gamma, ctxt RecvMethPair, e FGGExpr,
 
 // Mutates graph
 func war(graph map[RecvMethPair]map[RecvMethPair]bool) {
-	for k := 0; k < len(ddd); k++ {
-		for i := 0; i < len(ddd); i++ {
-			for j := 0; j < len(ddd); j++ {
-				tmp := graph[ddd[i]]
+	for k := 0; k < len(meths); k++ {
+		for i := 0; i < len(meths); i++ {
+			for j := 0; j < len(meths); j++ {
+				tmp := graph[meths[i]]
 				if tmp == nil {
 					tmp = make(map[RecvMethPair]bool)
-					graph[ddd[i]] = tmp
+					graph[meths[i]] = tmp
 				}
-				if !tmp[ddd[j]] {
-					tmp2 := graph[ddd[i]]
-					tmp3 := graph[ddd[k]]
+				if !tmp[meths[j]] {
+					tmp2 := graph[meths[i]]
+					tmp3 := graph[meths[k]]
 					if tmp2 != nil && tmp3 != nil {
-						tmp[ddd[j]] = tmp2[ddd[k]] && tmp3[ddd[j]]
+						tmp[meths[j]] = tmp2[meths[k]] && tmp3[meths[j]]
 					}
 				}
 			}
