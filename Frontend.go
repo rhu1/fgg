@@ -170,9 +170,9 @@ func (intrp *FGGInterp) Monom(monom bool, compile string) {
 	}
 
 	p_fgg := intrp.GetSource().(fgg.FGGProgram)
-	if !fgg.IsMonomable(p_fgg) {
-		panic("\nNot monomorphisable according to \"type param under constructor\"" +
-			"restriction.")
+	if e, ok := fgg.IsMonomable(p_fgg); !ok {
+		panic("\nNot monomorphisable according to \"type param under named type\"" +
+			" restriction.\n\t" + e.String())
 	}
 
 	p_mono := fgg.Monomorph(p_fgg)

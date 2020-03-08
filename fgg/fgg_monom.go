@@ -11,23 +11,26 @@ import (
 var _ = fmt.Errorf
 
 /**
- * [WIP] Naive monomorph -- `isMonomorphisable` check not implemented yet
+ * [WIP] Naive monomorph
  */
 
-func IsMonomable(p FGGProgram) bool {
+/* Export */
+
+func ToMonomId(u TNamed) fg.Type {
+	return toMonomId(u)
+}
+
+/* Simplistic conservative isMonom check:
+   no typeparam nested in a named type in typeargs of StructLit/Call exprs */
+
+func IsMonomable(p FGGProgram) (FGGExpr, bool) {
 	for _, v := range p.decls {
 		switch d := v.(type) {
 		case STypeLit:
-			/*if !isMonomableSTypeLit(d) {
-				return false
-			}*/
 		case ITypeLit:
-			/*if !isMonomableITypeLit(d) {
-				return false
-			}*/
 		case MDecl:
-			if !isMonomableMDecl(d) {
-				return false
+			if e, ok := isMonomableMDecl(d); !ok {
+				return e, false
 			}
 		default:
 			panic("Unknown Decl kind: " + reflect.TypeOf(v).String() + "\n\t" +
@@ -37,115 +40,52 @@ func IsMonomable(p FGGProgram) bool {
 	return isMonomableExpr(p.e_main)
 }
 
-func isMonomableMDecl(d MDecl) bool {
-
-	/*for _, v := range d.psi_recv.GetTFormals() { // Maybe easier to make an actual u, and use isOrContainsTParam
-		if u1, ok := v.u_I.(TNamed); ok {
-			if isOrContainsTParam(u1) {
-				return false
-			}
-		}
-	}
-	pds := d.GetParamDecls()
-	for _, v := range pds {
-		if u1, ok := v.u.(TNamed); ok {
-			if isOrContainsTParam(u1) {
-				return false
-			}
-		}
-	}
-	if u1, ok := d.u_ret.(TNamed); ok {
-		if isOrContainsTParam(u1) {
-			return false
-		}
-	}*/
+func isMonomableMDecl(d MDecl) (FGGExpr, bool) {
 	return isMonomableExpr(d.e_body)
 }
 
-/*
-func isMonomableSTypeLit(d STypeLit) bool {
-	for _, v := range d.psi.GetTFormals() { // Maybe easier to make an actual u, and use isOrContainsTParam
-		if u1, ok := v.u_I.(TNamed); ok {
-			if isOrContainsTParam(u1) {
-				return false
-			}
-		}
-	}
-	for _, v := range d.fDecls {
-		if u1, ok := v.u.(TNamed); ok {
-			if isOrContainsTParam(u1) {
-				return false
-			}
-		}
-	}
-	return true
-}
-
-func isMonomableITypeLit(d ITypeLit) bool {
-	// TODO: factor out with above
-	for _, v := range d.psi.GetTFormals() { // Maybe easier to make an actual u, and use isOrContainsTParam
-		if u1, ok := v.u_I.(TNamed); ok {
-			if isOrContainsTParam(u1) {
-				return false
-			}
-		}
-	}
-	for _, v := range d.specs {
-		if u1, ok := v.(TNamed); ok { // TODO: type switch
-			if isOrContainsTParam(u1) {
-				return false
-			}
-		} /*else if u1, ok := v.u.Sig; ok {  // Implicitly checked via MDecls? (for interfaces/methods actually used)
-			if isOrContainsTParam(u1) {
-				return false
-			}
-		}* /
-	}
-	return true
-}
-//*/
-
-func isMonomableExpr(e FGGExpr) bool {
+// Post: if bool is true, Expr is the offender; o/w disregard Expr
+func isMonomableExpr(e FGGExpr) (FGGExpr, bool) {
 	switch e1 := e.(type) {
 	case Variable:
-		return true
+		return e1, true
 	case StructLit:
 		for _, v := range e1.u_S.u_args {
 			if u1, ok := v.(TNamed); ok {
 				if isOrContainsTParam(u1) {
-					return false
+					return e1, false
 				}
 			}
 		}
 		for _, v := range e1.elems {
-			if !isMonomableExpr(v) {
-				return false
+			if e2, ok := isMonomableExpr(v); !ok {
+				return e2, false
 			}
 		}
-		return true
+		return e1, true
 	case Select:
 		return isMonomableExpr(e1.e_S)
 	case Call:
 		for _, v := range e1.t_args {
 			if u1, ok := v.(TNamed); ok {
 				if isOrContainsTParam(u1) {
-					return false
+					return e1, false
 				}
 			}
 		}
-		if !isMonomableExpr(e1.e_recv) {
-			return false
+		if e2, ok := isMonomableExpr(e1.e_recv); !ok {
+			return e2, false
 		}
 		for _, v := range e1.args {
-			if !isMonomableExpr(v) {
-				return false
+			if e2, ok := isMonomableExpr(v); !ok {
+				return e2, false
 			}
 		}
-		return true
+		return e1, true
 	case Assert:
 		if u1, ok := e1.u_cast.(TNamed); ok {
 			if isOrContainsTParam(u1) {
-				return false
+				return e1, false
 			}
 		}
 		return isMonomableExpr(e1.e_I)
@@ -153,12 +93,6 @@ func isMonomableExpr(e FGGExpr) bool {
 		panic("Unknown Expr kind: " + reflect.TypeOf(e).String() + "\n\t" +
 			e.String())
 	}
-}
-
-/* Export */
-
-func ToMonomId(u TNamed) fg.Type {
-	return toMonomId(u)
 }
 
 /* Monomoprh: FGGProgram -> FGProgram */
