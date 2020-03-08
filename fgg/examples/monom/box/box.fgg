@@ -1,4 +1,4 @@
-//$ go run github.com/rhu1/fgg -fgg [-monom] -v fgg/examples/monom/box/box.fgg
+//$ go run github.com/rhu1/fgg -fgg [-monomc=--] -v fgg/examples/monom/box/box.fgg
 
 //$ go run github.com/rhu1/fgg -fgg -oblitc=tmp/test/fgr/box/box.go -v fgg/examples/monom/box/box.fgg
 
