@@ -48,8 +48,8 @@ func Foo(ds []Decl) {
 		}
 	}
 
-	war(bools)
-	//fmt.Println("1111: ", graph)
+	////war(bools)
+	//fmt.Println("1111: ", graph, "\n")
 	//fmt.Println("2222: ", bools)
 
 	findCycles(bools)
