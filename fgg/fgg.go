@@ -112,6 +112,7 @@ func (u0 TNamed) TSubs(subs map[TParam]Type) Type {
 }
 
 // u0 <: u
+// delta unused here (cf. TParam.ImplsDelta)
 func (u0 TNamed) ImplsDelta(ds []Decl, delta Delta, u Type) bool {
 	u_fgg := u.(Type)
 	if isStructType(ds, u_fgg) {

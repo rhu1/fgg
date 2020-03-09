@@ -29,8 +29,9 @@ func Foo(ds []Decl) {
 			tfs := d.GetRecvPsi().GetTFormals()
 			u_args := make([]Type, len(tfs))
 			for i := 0; i < len(tfs); i++ {
-				u_args[i] = tfs[i].GetUpperBound()
-				delta[tfs[i].GetTParam()] = u_args[i]
+				//u_args[i] = tfs[i].GetUpperBound()
+				u_args[i] = tfs[i].GetTParam()
+				delta[tfs[i].GetTParam()] = tfs[i].GetUpperBound()
 			}
 			u_recv := TNamed{d.t_recv, u_args}
 			gamma := make(Gamma)
@@ -38,7 +39,7 @@ func Foo(ds []Decl) {
 			for _, v := range d.GetParamDecls() {
 				gamma[v.GetName()] = v.GetType()
 			}
-			ctxt := RecvMethPair{u_recv.String(), d.name}
+			ctxt := RecvMethPair{u_recv.TSubs(delta).String(), d.name}
 			meths = append(meths, ctxt)
 			bar(ds, delta, gamma, ctxt, d.e_body, graph, bools)
 		default:
@@ -117,9 +118,9 @@ func bar(ds []Decl, delta Delta, gamma Gamma, ctxt RecvMethPair, e FGGExpr,
 		delta1 := delta // TODO refactor
 		u_recv := e1.e_recv.Typing(ds, delta1, gamma, true)
 
-		if _, ok := u_recv.(TParam); ok { // E.g., compose, x.Equal()(xs.head), x is `a`
+		/*if _, ok := u_recv.(TParam); ok { // E.g., compose, x.Equal()(xs.head), x is `a`
 			u_recv = delta[u_recv.(TParam)]
-		}
+		}*/
 
 		tmp := graph[ctxt]
 		btmp := bools[ctxt]
@@ -130,7 +131,7 @@ func bar(ds []Decl, delta Delta, gamma Gamma, ctxt RecvMethPair, e FGGExpr,
 			bools[ctxt] = btmp
 		}
 		if isStructType(ds, u_recv) {
-			key := RecvMethPair{u_recv.String(), e1.meth}
+			key := RecvMethPair{u_recv.TSubs(delta1).String(), e1.meth}
 			tmp2 := tmp[key]
 			if tmp2 == nil {
 				tmp2 = make([][]Type, 0)
@@ -139,7 +140,7 @@ func bar(ds []Decl, delta Delta, gamma Gamma, ctxt RecvMethPair, e FGGExpr,
 			tmp[key] = tmp2
 			btmp[key] = true
 		} else {
-			u_I := u_recv
+			u_I := u_recv // Or type param
 			for _, v := range ds {
 				switch d := v.(type) {
 				case STypeLit:
@@ -149,11 +150,8 @@ func bar(ds []Decl, delta Delta, gamma Gamma, ctxt RecvMethPair, e FGGExpr,
 						u_args[i] = tfs[i].GetUpperBound()
 					}
 					u_S := TNamed{d.t_name, u_args}
-
-					fmt.Println("aaaa: ", u_S, u_I, ",", delta1, "\n\t", e1)
-
-					if u_S.ImplsDelta(ds, delta1, u_I) {
-						key := RecvMethPair{u_S.String(), e1.meth}
+					if p, ok := u_I.(TParam); (ok && u_S.ImplsDelta(ds, delta1, delta1[p])) || (!ok && u_S.ImplsDelta(ds, delta1, u_I)) {
+						key := RecvMethPair{u_S.TSubs(delta1).String(), e1.meth}
 						tmp2 := tmp[key] // TODO factor out with above
 						if tmp2 == nil {
 							tmp2 = make([][]Type, 0)
@@ -212,6 +210,7 @@ func findCycles(bools map[RecvMethPair]map[RecvMethPair]bool) {
 	}
 }
 
+// DFS
 func aux(bools map[RecvMethPair]map[RecvMethPair]bool, stack []RecvMethPair) {
 	tmp := bools[stack[len(stack)-1]]
 	if tmp == nil {
