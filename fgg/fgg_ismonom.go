@@ -150,7 +150,8 @@ func bar(ds []Decl, delta Delta, gamma Gamma, ctxt RecvMethPair, e FGGExpr,
 						u_args[i] = tfs[i].GetUpperBound()
 					}
 					u_S := TNamed{d.t_name, u_args}
-					if p, ok := u_I.(TParam); (ok && u_S.ImplsDelta(ds, delta1, delta1[p])) || (!ok && u_S.ImplsDelta(ds, delta1, u_I)) {
+					if p, ok := u_I.(TParam); (ok && u_S.ImplsDelta(ds, delta1, delta1[p])) || // CHECKME: delta1[p] ?
+						(!ok && u_S.ImplsDelta(ds, delta1, u_I)) {
 						key := RecvMethPair{u_S.TSubs(delta1).String(), e1.meth}
 						tmp2 := tmp[key] // TODO factor out with above
 						if tmp2 == nil {
@@ -178,6 +179,7 @@ func bar(ds []Decl, delta Delta, gamma Gamma, ctxt RecvMethPair, e FGGExpr,
 
 /* Aux */
 
+// Currently redundant
 // Mutates graph
 func war(graph map[RecvMethPair]map[RecvMethPair]bool) {
 	for k := 0; k < len(meths); k++ {
