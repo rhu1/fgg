@@ -17,10 +17,11 @@ type NestedCons(type a Any()) struct {
 type Arg(type a Any()) struct {};
 
 
-func (x Arg(type a Any())) mkNesting(type )(y a)  Box(a) {
+func (x Arg(type a Any())) mkNesting(type )(y a) Box(a) {
 	return NestedCons(a){
 		y,
-		 Arg(Box(y)){}.mkNesting()(Box(y){y})
+		//Arg(Box(y)){}.mkNesting()(Box(y){y})  // FIXME: ImplsDelta blows up
+		 Arg(Box(a)){}.mkNesting()(Box(a){y})
 		 }.tail
 };
 
