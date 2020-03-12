@@ -1,4 +1,4 @@
-// Should monomorphise
+// Should monomorphise (m3() is not called, m2() is not recursive and m1() is not poly-rec)
 
 package main;
 
