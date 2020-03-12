@@ -14,4 +14,4 @@ func (x B(type a Any())) m(type )() B(C(a)) {
 };
 
 
-func main() { _ =  B(A()){C(A()){}}}
+func main() { _ =  B(A()){C(A()){}}.m()()}
