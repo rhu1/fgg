@@ -1,4 +1,4 @@
-// This is not monomorphisable 
+// This is not monomorphisable?
 package main;
 
 type Any(type ) interface {};
