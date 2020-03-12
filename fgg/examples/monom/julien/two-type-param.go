@@ -1,3 +1,4 @@
+// Will not monomorphise
 package main;
 
 type Any(type ) interface {};
