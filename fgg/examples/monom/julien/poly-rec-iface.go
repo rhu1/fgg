@@ -1,17 +1,20 @@
-// This is not monomorphisable ?
+// This is monomorphisable !
 package main;
 
 type Any(type ) interface {};
 
+type Dummy(type ) struct {};
 
-type I(type a Any()) interface { method(type )() I(I(a))};
+func (x Dummy(type )) toAny(type )(y Any()) Any() {
+	return y
+};
+
+type I(type a Any()) interface { m(type b Any())() I(I(b))};
 
 type A(type ) struct {};
 
-func (x A(type )) m(type a Any())() I(a) {
-	return A(){}.m(a)()
+func (x A(type )) m(type b Any())() I(I(b)) {
+	return Dummy(){}.toAny()(A(){}).(I(a)).m(a)()
 };
-
-
 
 func main() { _ =  A(){}.m(A())() }
