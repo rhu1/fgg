@@ -1,17 +1,25 @@
-// This should be monomorphisable!
+// This is not monomorphisable because it is not well-formed (recursive struct)
 package main;
 
 type Any(type ) interface {};
 
-type B(type a Any()) struct {val C(a)};
-
-type C(type a Any()) struct {};
-
 type A(type ) struct {};
 
-func (x B(type a Any())) m(type )() B(C(a)) {
-	return B(C(a)){C(C(a)){}}
+type B(type a Any()) struct {val C(C(a))};
+
+type C(type a Any()) struct {val B(a)}; 
+
+func (x A(type )) m(type a Any())() C(B(a)) {
+	return A(){}.m(a)()
 };
 
+func main() { _ =  A(){}.m(A())() }
 
-func main() { _ =  B(A()){C(A()){}}.m()()}
+
+/*
+
+for all: 
+type t(type ) struct T, 
+then t never appears in T (inter-procedurally)
+
+*/
