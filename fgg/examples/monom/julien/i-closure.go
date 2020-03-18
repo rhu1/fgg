@@ -11,6 +11,11 @@ func (x Dummy(type )) useInterface(type )(y IA()) Any() {
 	return y.m1(S())()
 };
 
+// // Adding this fixes the panic
+// func (x Dummy(type )) useInterfaceB(type )(y IB()) Any() {
+// 	return y.m1(S())()
+// };
+
 type IA(type ) interface { m1(type a Any())() S() };
 type IB(type ) interface { m1(type a Any())() S();  m2(type a Any())() S()};
 
