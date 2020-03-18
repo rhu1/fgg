@@ -40,7 +40,8 @@ func Foo(ds []Decl) {
 			for _, v := range d.GetParamDecls() {
 				gamma[v.GetName()] = v.GetType()
 			}
-			ctxt := RecvMethPair{u_recv.TSubs(delta).String(), d.name}
+			//ctxt := RecvMethPair{u_recv.TSubs(delta).String(), d.name}
+			ctxt := RecvMethPair{u_recv.t_name, d.name}
 			meths = append(meths, ctxt)
 			bar(ds, delta, gamma, ctxt, d.e_body, graph, bools, recvargs)
 		default:
@@ -50,7 +51,8 @@ func Foo(ds []Decl) {
 	}
 
 	////war(bools)
-	//fmt.Println("1111: ", graph, "\n")
+	//fmt.Println("1111a: ", graph, "\n")
+	//fmt.Println("1111b: ", recvargs)
 	//fmt.Println("2222: ", bools)
 
 	findCycles(bools)
@@ -110,7 +112,6 @@ func bar(ds []Decl, delta Delta, gamma Gamma, ctxt RecvMethPair, e FGGExpr,
 	graph map[RecvMethPair]map[RecvMethPair]([][]Type),
 	bools map[RecvMethPair]map[RecvMethPair]bool,
 	recvargs map[RecvMethPair]map[RecvMethPair]([][]Type)) {
-
 	switch e1 := e.(type) {
 	case Variable:
 	case StructLit:
@@ -118,6 +119,7 @@ func bar(ds []Decl, delta Delta, gamma Gamma, ctxt RecvMethPair, e FGGExpr,
 			bar(ds, delta, gamma, ctxt, elem, graph, bools, recvargs)
 		}
 	case Select:
+		bar(ds, delta, gamma, ctxt, e1.e_S, graph, bools, recvargs)
 	case Call:
 		bar(ds, delta, gamma, ctxt, e1.e_recv, graph, bools, recvargs)
 		for _, arg := range e1.args {
@@ -154,7 +156,8 @@ func bar(ds []Decl, delta Delta, gamma Gamma, ctxt RecvMethPair, e FGGExpr,
 			recvargs[ctxt] = rtmp
 		}
 		if isStructType(ds, u_recv) {
-			key := RecvMethPair{u_recv.TSubs(delta1).String(), e1.meth}
+			//key := RecvMethPair{u_recv.TSubs(delta1).String(), e1.meth}
+			key := RecvMethPair{u_recv.TSubs(delta).(TNamed).t_name, e1.meth}
 			tmp2 := tmp[key]
 			if tmp2 == nil {
 				tmp2 = make([][]Type, 0)
@@ -183,7 +186,8 @@ func bar(ds []Decl, delta Delta, gamma Gamma, ctxt RecvMethPair, e FGGExpr,
 					u_S := TNamed{d.t_name, u_args}
 					if p, ok := u_I.(TParam); (ok && u_S.ImplsDelta(ds, delta1, delta1[p])) || // CHECKME: delta1[p] ?
 						(!ok && u_S.ImplsDelta(ds, delta1, u_I)) {
-						key := RecvMethPair{u_S.TSubs(delta1).String(), e1.meth}
+						//key := RecvMethPair{u_S.TSubs(delta1).String(), e1.meth}
+						key := RecvMethPair{u_S.t_name, e1.meth}
 						// TODO factor out below with above
 						tmp2 := tmp[key]
 						if tmp2 == nil {

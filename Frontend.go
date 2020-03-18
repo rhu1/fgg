@@ -175,7 +175,10 @@ func (intrp *FGGInterp) Monom(monom bool, compile string) {
 			" restriction.\n\t" + e.String())
 	}*/
 
+	//...HERE fix mutual-poly-rec (should blow up without ismonom)
 	fgg.Foo(intrp.orig.GetDecls())
+
+	//fmt.Println("zzzz:")
 
 	p_mono := fgg.Monomorph(p_fgg)
 	if monom {

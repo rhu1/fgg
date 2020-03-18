@@ -20,7 +20,13 @@ var _ = fmt.Errorf
 func GetOmega(ds []Decl, e_main FGGExpr) Omega {
 	var gamma GroundEnv
 	ground := make(Omega)
+
+	//fmt.Println("vvvv:")
+
 	collectGroundTypesFromExpr(ds, gamma, e_main, ground)
+
+	//fmt.Println("wwww:")
+
 	fixOmega(ds, gamma, ground)
 	return ground
 }
@@ -71,6 +77,8 @@ func fixOmega(ds []Decl, gamma GroundEnv, omega Omega) {
 	for again := true; again; {
 		again = false
 
+		//fmt.Println("000: ", omega, "\n")
+
 		for _, wv_upper := range omega {
 			//fmt.Println("aaa: ", wv_upper)
 			if !IsNamedIfaceType(ds, wv_upper.u_ground) || len(wv_upper.sigs) == 0 {
@@ -98,13 +106,15 @@ func fixOmega(ds []Decl, gamma GroundEnv, omega Omega) {
 					wv_lower.sigs[g_Ikey] = g_I
 
 					// Very non-optimal, may revisit the same g_I/u_S pair many times
-					gamma1, e_body := getGroundEnvAndBody(ds, g_I, u_S)
-					omega1 := make(Omega)
-					collectGroundTypesFromExpr(ds, gamma1, e_body, omega1)
-					for _, wv_body := range omega1 {
-						if _, ok := omega[toWKey(wv_body.u_ground)]; !ok {
-							omega[toWKey(wv_body.u_ground)] = wv_body
-							again = true
+					if IsStructType(ds, u_S) {
+						gamma1, e_body := getGroundEnvAndBody(ds, g_I, u_S)
+						omega1 := make(Omega)
+						collectGroundTypesFromExpr(ds, gamma1, e_body, omega1)
+						for _, wv_body := range omega1 {
+							if _, ok := omega[toWKey(wv_body.u_ground)]; !ok {
+								omega[toWKey(wv_body.u_ground)] = wv_body
+								again = true
+							}
 						}
 					}
 				}
@@ -160,6 +170,8 @@ func getGroundEnvAndBody(ds []Decl, g_I GroundSig, u_S TNamed) (
 func collectGroundTypesFromExpr(ds []Decl, gamma GroundEnv, e FGGExpr,
 	omega Omega) (res Type) {
 
+	//fmt.Println("2222:", e, "\n")
+
 	switch e1 := e.(type) {
 	case Variable:
 		res = gamma[e1.name]
@@ -210,10 +222,17 @@ func collectGroundTypesFromExpr(ds []Decl, gamma GroundEnv, e FGGExpr,
 	return res
 }
 
+var x int = 0
+
 // Collect ground types from a "standalone" type according to struct/interface,
 // .. if u itself is ground.
 // N.B. mutates `ground`
 func collectGroundTypesFromType(ds []Decl, u Type, omega Omega) {
+
+	x++
+	if x > 1000 {
+		//panic("foo")
+	}
 
 	if cast, ok := u.(TNamed); !ok || !isGround(cast) {
 		return
@@ -226,6 +245,8 @@ func collectGroundTypesFromType(ds []Decl, u Type, omega Omega) {
 	groundsigs := make(map[string]GroundSig) // CHECKME: make GroundSigs type?
 	omega[toWKey(u1)] = GroundTypeAndSigs{u1, groundsigs}
 
+	//fmt.Println("3333:", u1, IsStructType(ds, u1))
+
 	if IsStructType(ds, u1) { // Struct case
 		u_S := u1
 
@@ -235,6 +256,7 @@ func collectGroundTypesFromType(ds []Decl, u Type, omega Omega) {
 			u_f := fd.u.(TNamed)
 			collectGroundTypesFromType(ds, u_f, omega)
 		}
+		//fmt.Println("4444:")
 
 		// Visit meths
 		gs := methods(ds, u_S)
@@ -253,6 +275,7 @@ func collectGroundTypesFromType(ds []Decl, u Type, omega Omega) {
 				collectGroundTypesFromExpr(ds, gamma, e_body, omega)
 			}
 		}
+		//fmt.Println("5555:")
 
 		// CHECKME: check all super interfaces, and (recursively) visit all meths of sub-structs?
 		// no: fixOmega does the zig-zagging

@@ -1,3 +1,5 @@
+//$ go run github.com/rhu1/fgg -fgg -v -monom=-- fgg/examples/monom/julien/mutual-poly-rec.go
+
 package main;
 
 type Any(type ) interface {};

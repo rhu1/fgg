@@ -1,3 +1,5 @@
+//$ go run github.com/rhu1/fgg -fgg -eval=-1 -v fgg/examples/monom/julien/i-closure.go
+
 // This is monomorphisable !
 package main;
 
