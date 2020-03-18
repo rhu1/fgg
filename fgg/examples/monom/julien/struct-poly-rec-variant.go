@@ -1,4 +1,4 @@
-// This is not monomorphisable 
+// This is not monomorphisable but not well-formed (recursive struct)
 package main;
 
 type Any(type ) interface {};
