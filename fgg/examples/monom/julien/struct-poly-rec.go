@@ -10,7 +10,7 @@ type C(type a Any()) struct {};
 type A(type ) struct {};
 
 func (x B(type a Any())) m(type )() B(C(a)) {
-	return B(C(a)){C(C(a)){}}
+	return B(C(a)){C(C(a)){}}  // N.B. no recursion
 };
 
 

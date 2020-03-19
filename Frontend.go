@@ -175,7 +175,7 @@ func (intrp *FGGInterp) Monom(monom bool, compile string) {
 			" restriction.\n\t" + e.String())
 	}*/
 
-	//...HERE fix mutual-poly-rec (should blow up without ismonom)
+	//...HERE fix mutual-poly-rec (should blow up without ismonom) ..fix struct-poly-rec, omega building loops (add recursive struct WF?)
 	fgg.Foo(intrp.orig.GetDecls())
 
 	//fmt.Println("zzzz:")
