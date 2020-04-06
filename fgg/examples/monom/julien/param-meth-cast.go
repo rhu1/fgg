@@ -1,4 +1,5 @@
 // This illustrates the need to preserve the full method sets when monomorphising
+// Proposed fix: https://play.golang.org/p/yya08l04Nbg
 package main;
 
 type Any(type ) interface {};
@@ -18,8 +19,8 @@ func (x V(type )) toAny(type )(y Foo()) Any() {
 };
 
 // V <: Foo 
-func (x V(type )) m(type a Any())(x a, y S) Any() {
-	return x.(Any())
+func (x V(type )) m(type a Any())(z a, y S) Any() {
+	return z.(Any())
 };
 
 func main() { _ =  V(){}.toAny()(V(){}).(Bar()) } // cast fails

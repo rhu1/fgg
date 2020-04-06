@@ -1,9 +1,9 @@
+// Proposed (correct) monomed: https://play.golang.org/p/9nT1MahKCvE
 package main;
 
 type Any(type ) interface {};
 
 type Top(type ) interface {};
-
 
 type Dummy(type ) struct {};
 
@@ -22,9 +22,7 @@ func (x S(type )) m(type a Any())() Dummy() {
 };
 
 
-
 // T <: Foo
-
 type T(type ) struct {};
 func (x T(type )) m(type a Top())() Dummy() {
 	return Dummy(){}
