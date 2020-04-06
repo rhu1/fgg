@@ -22,5 +22,5 @@ func (x V(type )) m(type a Any())(x a, y S) Any() {
 	return x.(Any())
 };
 
-func main() { _ =  V(){}.toAny()(V(){}).(Bar()) }
+func main() { _ =  V(){}.toAny()(V(){}).(Bar()) } // cast fails
 
