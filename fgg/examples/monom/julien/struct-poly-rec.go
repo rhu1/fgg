@@ -3,23 +3,28 @@
 // This should be monomorphisable!
 package main;
 
+
+
+
+
 type Any(type ) interface {};
 
 type A(type ) struct {};
 
-type B(type a Any()) struct {val C(C(a))};
+type B(type a Any()) struct {val C(a)};
+//type B(type a Any()) struct {val C(C(a))};
 
-type C(type a Any()) struct {val B(a)};
+type C(type a Any()) struct {};
+//type C(type a Any()) struct {val B(a)};
 
-//*
 func (x B(type a Any())) m(type )() B(C(a)) {
 	return B(C(a)){C(C(a)){}}  // N.B. no recursion
 };
-/*/
+/*
 func (x A(type )) m(type a Any())() C(B(a)) {
 	return A(){}.m(a)()
 };
-//*/
+*/
 
 /*func (x A(type )) m(type a Any())() C(B(a)) {
 	return A(){}.m(a)()
@@ -37,9 +42,22 @@ then t never appears in fields*(T) (transitively / inter-procedurally for struct
 
 */
 
-type Box(type a Any()) struct {val IBox(a)};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*type Box(type a Any()) struct {val IBox(a)};
 type IBox(type a Any()) interface { box() IBox(IBox(a)); unbox() a};
 
 type Cons(a Any()) struct { head a; tail List(a)};
-type Nil(a Any()) struct { };
->>>>>>> e36abec7b3c212261b569a9dcdfc6fd00e3797da
+type Nil(a Any()) struct { };*/
