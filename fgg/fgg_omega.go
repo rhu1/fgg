@@ -71,7 +71,7 @@ type GroundSig struct {
 // .. visit all possible method bodies of implementing struct types --
 // .. repeating until no "new" ground types encountered.
 // Currently, very non-optimal.
-// N.B. mutates `ground` -- encountered ground types collected into `ground`
+// N.B. mutates `omega` -- encountered ground types collected into `ground`
 func fixOmega(ds []Decl, gamma GroundEnv, omega Omega) {
 	delta_empty := make(Delta)
 	for again := true; again; {
@@ -166,7 +166,7 @@ func getGroundEnvAndBody(ds []Decl, g_I GroundSig, u_S TNamed) (
 // Collect ground types from an Expr according to the Expr kind.
 // gamma is needed when visiting an `e` of a "standalone" MDecl (via collectGroundTypesFromType)
 // CHECKME: Post: res already collected?
-// N.B. mutates `ground`
+// N.B. mutates `omega`
 func collectGroundTypesFromExpr(ds []Decl, gamma GroundEnv, e FGGExpr,
 	omega Omega, rec bool) (res Type) {
 
@@ -229,7 +229,7 @@ var x int = 0
 
 // Collect ground types from a "standalone" type according to struct/interface,
 // .. if u itself is ground.
-// N.B. mutates `ground`
+// N.B. mutates `omega`
 func collectGroundTypesFromType(ds []Decl, u Type, omega Omega,
 	rec bool) { // HACK FIXME
 
