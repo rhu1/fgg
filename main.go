@@ -199,6 +199,8 @@ func main() {
 	}
 }
 
+/* monom simulation check */
+
 // TODO: refactor to cmd dir
 func testMonom(verbose bool, src string, steps int) {
 	intrp_fgg := NewFGGInterp(verbose, src, true)
@@ -219,7 +221,7 @@ func testMonom(verbose bool, src string, steps int) {
 		if p_fgg.GetMain().IsValue() {
 			break
 		}
-		p_fgg, u, p_mono, t = testMonomStep(verbose, omega, p_fgg, u, p_mono, t)
+		p_fgg, u, p_mono = testMonomStep(verbose, omega, p_fgg, u, p_mono)
 	}
 	vPrintln(verbose, "\nFinished:\n\tfgg="+p_fgg.GetMain().String()+
 		"\n\tmono="+p_mono.GetMain().String())
@@ -227,8 +229,8 @@ func testMonom(verbose bool, src string, steps int) {
 
 // Pre: u = p_fgg.Ok(), t = p_mono.Ok()
 func testMonomStep(verbose bool, omega fgg.Omega, p_fgg fgg.FGGProgram,
-	u fgg.TNamed, p_mono fg.FGProgram, t fg.Type) (fgg.FGGProgram, fgg.TNamed,
-	fg.FGProgram, fg.Type) {
+	u fgg.TNamed, p_mono fg.FGProgram) (fgg.FGGProgram, fgg.TNamed,
+	fg.FGProgram) {
 
 	p1_fgg, _ := p_fgg.Eval()
 	vPrintln(verbose, "\nEval FGG one step: "+p1_fgg.GetMain().String())
@@ -253,8 +255,10 @@ func testMonomStep(verbose bool, omega fgg.Omega, p_fgg fgg.FGGProgram,
 		panic("-test-monom failed: exprs do not match\n\tFGG expr=" + e_fgg.String() +
 			"\n\tmono=" + e_mono.String())
 	}
-	return p1_fgg.(fgg.FGGProgram), u1, p1_mono.(fg.FGProgram), t1
+	return p1_fgg.(fgg.FGGProgram), u1, p1_mono.(fg.FGProgram)
 }
+
+/* oblit simulation check */
 
 /* [WIP] TODO -- not functional yet
 func doWrappers(prog base.Program, compile string) {
