@@ -118,6 +118,7 @@ test-monom:
 	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/contamination.go fgg/examples/monom/julien/contamination.go
 	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/contamination.go
 
+
 # check simulation of -monomc output (same result and number of eval steps) -- or commutative diagram
 .PHONY: simulate-monom
 simulate-monom:
@@ -136,6 +137,28 @@ simulate-monom:
 	go run github.com/rhu1/fgg -test-monom -eval=-1 fgg/examples/monom/julien/rcver-iface.go
 	go run github.com/rhu1/fgg -test-monom -eval=-1 fgg/examples/monom/julien/one-pass-prob.go
 	go run github.com/rhu1/fgg -test-monom -eval=-1 fgg/examples/monom/julien/contamination.go
+
+
+.PHONY: simulate-oblit
+simulate-oblit:
+	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/popl20/booleans/booleans.fgg
+	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/popl20/compose/compose.fgg
+	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/popl20/graph/graph.fgg
+	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/popl20/irregular/irregular.fgg
+	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/popl20/map/map.fgg
+	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/popl20/monomorph/monomorph.fgg
+	#go run github.com/rhu1/fgg -test-oblit -eval=10 fgg/examples/monom/box/box2.fgg
+
+	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/monom/julien/ifacebox.fgg
+	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/monom/julien/ifacebox-nomethparam.fgg
+
+	# TODO
+	#go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/monom/julien/iface-embedding-simple.go
+	#go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/monom/julien/iface-embedding.go
+
+	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/monom/julien/rcver-iface.go
+	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/monom/julien/one-pass-prob.go
+	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/monom/julien/contamination.go
 
 
 .PHONY: clean-test-monom
