@@ -100,7 +100,10 @@ func isMonomableExpr(e FGGExpr) (FGGExpr, bool) {
 func Monomorph(p FGGProgram) fg.FGProgram {
 	ds_fgg := p.GetDecls()
 	omega := GetOmega(ds_fgg, p.GetMain().(FGGExpr)) // TODO: do "supertype closure" over omega (cf. collectSuperMethInstans)
+	return ApplyOmega(p, omega)
+}
 
+func ApplyOmega(p FGGProgram, omega Omega) fg.FGProgram {
 	var ds_monom []Decl
 	for _, v := range p.decls {
 		switch d := v.(type) {
