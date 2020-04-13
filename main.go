@@ -60,6 +60,7 @@ var (
 	oblitEvalSteps int    // TODO: Need an actual FGR syntax, for oblitc to concrete output
 
 	monomtest bool
+	oblittest bool
 
 	useInternalSrc bool   // use internal source
 	inlineSrc      string // use content of this as source
@@ -92,6 +93,7 @@ func init() {
 
 	// WIP
 	flag.BoolVar(&monomtest, "test-monom", false, `[WIP] Test monom correctness`)
+	flag.BoolVar(&oblittest, "test-oblit", false, `[WIP] Test oblit correctness`)
 
 	// Parsing options
 	flag.BoolVar(&useInternalSrc, "internal", false,
@@ -166,7 +168,9 @@ func main() {
 	if monomtest {
 		testMonom(verbose, src, evalSteps)
 		return // FIXME
-	}
+	} /*else if oblittest {
+		testOblit(verbose, src, evalSteps)
+	}*/
 
 	switch { // Pre: !(interpFG && interpFGG)
 	case interpFG:
@@ -201,7 +205,9 @@ func testMonom(verbose bool, src string, steps int) {
 	p_fgg := intrp_fgg.GetProgram().(fgg.FGGProgram)
 	u := p_fgg.Ok(false).(fgg.TNamed)
 	vPrintln(verbose, "\nFGG expr: "+p_fgg.GetMain().String())
-	p_mono := fgg.Monomorph(p_fgg)
+	//p_mono := fgg.Monomorph(p_fgg)
+	omega := fgg.GetOmega(p_fgg.GetDecls(), p_fgg.GetMain().(fgg.FGGExpr))
+	p_mono := fgg.ApplyOmega(p_fgg, omega)
 	vPrintln(verbose, "Monom expr: "+p_mono.GetMain().String())
 	t := p_mono.Ok(false).(fg.Type)
 	if !t.Equals(fgg.ToMonomId(u)) {
@@ -213,15 +219,16 @@ func testMonom(verbose bool, src string, steps int) {
 		if p_fgg.GetMain().IsValue() {
 			break
 		}
-		p_fgg, u, p_mono, t = testMonomStep(verbose, p_fgg, u, p_mono, t)
+		p_fgg, u, p_mono, t = testMonomStep(verbose, omega, p_fgg, u, p_mono, t)
 	}
 	vPrintln(verbose, "\nFinished:\n\tfgg="+p_fgg.GetMain().String()+
 		"\n\tmono="+p_mono.GetMain().String())
 }
 
 // Pre: u = p_fgg.Ok(), t = p_mono.Ok()
-func testMonomStep(verbose bool, p_fgg fgg.FGGProgram, u fgg.TNamed,
-	p_mono fg.FGProgram, t fg.Type) (fgg.FGGProgram, fgg.TNamed, fg.FGProgram, fg.Type) {
+func testMonomStep(verbose bool, omega fgg.Omega, p_fgg fgg.FGGProgram,
+	u fgg.TNamed, p_mono fg.FGProgram, t fg.Type) (fgg.FGGProgram, fgg.TNamed,
+	fg.FGProgram, fg.Type) {
 
 	p1_fgg, _ := p_fgg.Eval()
 	vPrintln(verbose, "\nEval FGG one step: "+p1_fgg.GetMain().String())
@@ -237,7 +244,8 @@ func testMonomStep(verbose bool, p_fgg fgg.FGGProgram, u fgg.TNamed,
 		panic("-test-monom failed: types do not match\n\tFGG type=" + u1.String() +
 			" -> " + fgg.ToMonomId(u1).String() + "\n\tmono=" + t1.String())
 	}
-	res := fgg.Monomorph(p1_fgg.(fgg.FGGProgram))
+	//res := fgg.Monomorph(p1_fgg.(fgg.FGGProgram))
+	res := fgg.ApplyOmega(p1_fgg.(fgg.FGGProgram), omega)
 	e_fgg := res.GetMain()
 	e_mono := p1_mono.GetMain()
 	vPrintln(verbose, "Monom of one step'd FGG: "+e_fgg.String())
