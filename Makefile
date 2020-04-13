@@ -147,12 +147,11 @@ simulate-oblit:
 	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/popl20/irregular/irregular.fgg
 	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/popl20/map/map.fgg
 	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/popl20/monomorph/monomorph.fgg
-	#go run github.com/rhu1/fgg -test-oblit -eval=10 fgg/examples/monom/box/box2.fgg
 
 	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/monom/julien/ifacebox.fgg
 	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/monom/julien/ifacebox-nomethparam.fgg
 
-	# TODO
+	# TODO?
 	#go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/monom/julien/iface-embedding-simple.go
 	#go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/monom/julien/iface-embedding.go
 
