@@ -102,22 +102,26 @@ test-monom:
 	go run github.com/rhu1/fgg -fgg -eval=10 -monomc=tmp/test/fg/monom/box/box2.go fgg/examples/monom/box/box2.fgg
 	go run github.com/rhu1/fgg -eval=10 tmp/test/fg/monom/box/box2.go
 
-	mkdir -p tmp/test/fg/monom/julien
+	mkdir -p tmp/test/fg/monom/julien/
 	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/monom/julien/ifacebox.go fgg/examples/monom/julien/ifacebox.fgg
 	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/ifacebox.go
 	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/monom/julien/ifacebox-nomethparam.go fgg/examples/monom/julien/ifacebox-nomethparam.fgg
 	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/ifacebox-nomethparam.go
-	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/monom/julien/iface-embedding-simple.go fgg/examples/monom/julien/iface-embedding-simple.go
-	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/iface-embedding-simple.go
-	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/monom/julien/iface-embedding.go fgg/examples/monom/julien/iface-embedding.go
-	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/iface-embedding.go
-	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/rcver-iface.go fgg/examples/monom/julien/rcver-iface.go
-	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/rcver-iface.go
-	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/one-pass-prob.go fgg/examples/monom/julien/one-pass-prob.go
-	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/one-pass-prob.go
-	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/contamination.go fgg/examples/monom/julien/contamination.go
-	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/contamination.go
-# TODO: check simulation of -monom output (same result and number of eval steps) -- or commutative diagram
+
+	mkdir -p tmp/test/fg/monom/julien/mono-ok
+	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/monom/julien/mono-ok/iface-embedding-simple.go fgg/examples/monom/julien/mono-ok/iface-embedding-simple.go
+	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/mono-ok/iface-embedding-simple.go
+	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/monom/julien/mono-ok/iface-embedding.go fgg/examples/monom/julien/mono-ok/iface-embedding.go
+	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/mono-ok/iface-embedding.go
+	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/rcver-iface.go fgg/examples/monom/julien/mono-ok/rcver-iface.go
+	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/mono-ok/rcver-iface.go
+	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/one-pass-prob.go fgg/examples/monom/julien/mono-ok/one-pass-prob.go
+	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/mono-ok/one-pass-prob.go
+	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/contamination.go fgg/examples/monom/julien/mono-ok/contamination.go
+	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/mono-ok/contamination.go
+
+	mkdir -p tmp/test/fg/monom/julien/mono-ko
+	#TODO
 
 
 .PHONY: clean-test-monom
@@ -146,12 +150,16 @@ clean-test-monom:
 
 	rm -f tmp/test/fg/monom/julien/ifacebox.go
 	rm -f tmp/test/fg/monom/julien/ifacebox-nomethparam.go
-	rm -f tmp/test/fg/monom/julien/iface-embedding-simple.go
-	rm -f tmp/test/fg/monom/julien/iface-embedding.go
-	rm -f tmp/test/fg/monom/julien/rcver-iface.go
-	rm -f tmp/test/fg/monom/julien/one-pass-prob.go
-	rm -f tmp/test/fg/monom/julien/contamination.go
 	rm -fd tmp/test/fg/monom/julien
+
+	rm -f tmp/test/fg/monom/julien/mono-ok/iface-embedding-simple.go
+	rm -f tmp/test/fg/monom/julien/mono-ok/iface-embedding.go
+	rm -f tmp/test/fg/monom/julien/mono-ok/rcver-iface.go
+	rm -f tmp/test/fg/monom/julien/mono-ok/one-pass-prob.go
+	rm -f tmp/test/fg/monom/julien/mono-ok/contamination.go
+	rm -fd tmp/test/fg/monom/julien/mono-ok
+
+	rm -fd tmp/test/fg/monom/julien/mono-ko
 
 
 .PHONY: test-fg2fgg

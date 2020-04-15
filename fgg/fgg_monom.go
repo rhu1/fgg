@@ -113,7 +113,7 @@ func Monomorph(p FGGProgram) fg.FGProgram {
 			t := d.GetName()
 			for _, wv := range omega { // CHECKME: "prunes" unused types, OK?
 				if wv.u_ground.t_name == t {
-					fmt.Println("yyyy:", t)
+					//fmt.Println("yyyy:", t)
 					td_monom := monomTDecl(p.decls, omega, d, wv)
 					ds_monom = append(ds_monom, td_monom)
 				}
@@ -121,7 +121,7 @@ func Monomorph(p FGGProgram) fg.FGProgram {
 		case MDecl:
 			for _, wv := range omega { // CHECKME: "prunes" unused types, OK?
 				if wv.u_ground.t_name == d.t_recv {
-					fmt.Println("zzzz:", d.t_recv, wv.u_ground, wv.sigs)
+					//fmt.Println("zzzz:", d.t_recv, wv.u_ground, wv.sigs)
 					mds_monom := monomMDecl(p.decls, omega, d, wv)
 					for _, v := range mds_monom {
 						ds_monom = append(ds_monom, v)

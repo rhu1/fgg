@@ -193,7 +193,7 @@ func collectGroundTypesFromExpr(ds []Decl, gamma GroundEnv, e FGGExpr,
 		}
 	case Call:
 
-		fmt.Println("^cccc:", e1)
+		//fmt.Println("^cccc:", e1)
 
 		u_recv := collectGroundTypesFromExpr(ds, gamma, e1.e_recv, omega, rec)
 		collectGroundTypesFromType(ds, u_recv, omega, rec)
@@ -249,10 +249,10 @@ func collectGroundTypesFromType(ds []Decl, u Type, omega Omega,
 	groundsigs := make(map[string]GroundSig) // CHECKME: make GroundSigs type?
 	omega[toWKey(u1)] = GroundTypeAndSigs{u1, groundsigs}
 
-	fmt.Println("3333:", u1, IsStructType(ds, u1))
+	//fmt.Println("3333:", u1, IsStructType(ds, u1))
 
 	if !rec {
-		return
+		//return
 	}
 
 	if IsStructType(ds, u1) { // Struct case
@@ -338,7 +338,7 @@ func collectGroudTypesInSig(ds []Decl, g Sig, omega Omega, rec bool) {
 func collectGroundTypesFromSigAndBody(ds []Decl, u_recv Type, c Call,
 	omega Omega, rec bool) {
 
-	fmt.Println("^dddd:", c, omega[toWKey(u_recv.(TNamed))].sigs)
+	//fmt.Println("^dddd:", c, omega[toWKey(u_recv.(TNamed))].sigs)
 
 	// Receiver/add-meth-targs must be ground for the remainder
 	if cast, ok := u_recv.(TNamed); !ok || !isGround(cast) {
@@ -361,11 +361,11 @@ func collectGroundTypesFromSigAndBody(ds []Decl, u_recv Type, c Call,
 	g = g.TSubs(subs) // CHECKME: keeping add-meth-params, used to create subs (e.g., getGroundEnvAndBody)
 	//g = Sig{g.meth, Psi{[]TFormal{}}, g.pDecls, g.u_ret}
 	gs := omega[toWKey(u_recv.(TNamed))].sigs
-	fmt.Println("^eeee:", u_recv, g, ",,", subs)
+	//fmt.Println("^eeee:", u_recv, g, ",,", subs)
 	if _, ok := gs[g.String()]; ok {
 		return
 	}
-	fmt.Println("^ffff:")
+	//fmt.Println("^ffff:")
 	gs[toGroundSigsKey(g)] = GroundSig{g, c.t_args} // Record sig for u_recv
 	// N.B. recorded only for u_recv, and not, e.g., super interfaces -- cf. monomTDecl, ITypeLit case
 
@@ -377,7 +377,7 @@ func collectGroundTypesFromSigAndBody(ds []Decl, u_recv Type, c Call,
 	if IsStructType(ds, u_recv) {
 		u_S := u_recv.(TNamed)
 
-		fmt.Println("^aaaa:", u_S, c)
+		//fmt.Println("^aaaa:", u_S, c)
 
 		subs := make(map[TParam]Type)
 		td_S := GetTDecl(ds, u_S.GetName())
@@ -394,7 +394,7 @@ func collectGroundTypesFromSigAndBody(ds []Decl, u_recv Type, c Call,
 		pds := g.GetParamDecls()
 		x0, xs, e_body := body(ds, u_S, c.meth, c.t_args)
 
-		fmt.Println("^bbbb:", e_body)
+		//fmt.Println("^bbbb:", e_body)
 
 		gamma1 := make(GroundEnv)
 		gamma1[x0] = u_S
