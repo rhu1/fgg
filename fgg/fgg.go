@@ -280,7 +280,7 @@ type TFormal struct {
 	name TParam
 	u_I  Type
 	// CHECKME: submission version, upper bound \tau_I is only "of the form t_I(~\tau)"? -- i.e., not \alpha?
-	// ^If so, then can refine to TName
+	// ^If so, then can refine to TNamed
 }
 
 func (tf TFormal) GetTParam() TParam   { return tf.name }
@@ -294,12 +294,12 @@ func (tf TFormal) String() string {
 // Also ranged over by small phi
 type SmallPsi []Type
 
-/* Context, Type context */
+/* Context, Type context, Substitutions */
 
 //type Gamma map[Variable]Type  // CHECKME: refactor?
 type Gamma map[Name]Type
 type Delta map[TParam]Type // Type intended to be an upper bound
-type Eta Delta             // Type intended to be a ground type
+type Eta map[TParam]TNamed // Type intended to be a ground TNamed
 
 func (delta Delta) String() string {
 	res := "["

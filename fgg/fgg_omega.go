@@ -31,7 +31,221 @@ func GetOmega(ds []Decl, e_main FGGExpr) Omega {
 	return ground
 }
 
-/* GroundMap, GroundEnv, GroundTypeAndSigs, GroundSig */
+/* Omega, GroundTypeAndSigs, GroundSig, GroundEnv */
+
+type Omega1 struct {
+	ts map[string]TNamed // Pre: all TNamed are isGround
+	//ms map[string]GroundTypeAndSigs // Maps u_ground.String() -> GroundTypeAndSigs{u_ground, sigs}
+	ms map[string]MethInstan // Maps u_ground.String() -> GroundTypeAndSigs{u_ground, sigs}
+}
+
+type MethInstan struct {
+	u_recv TNamed // Pre: isGround
+	m      Name
+	psi    SmallPsi // Pre: all isGround
+}
+
+// Pre: isGround(u_ground)
+func toKey_Wt(u_ground TNamed) string {
+	return u_ground.String()
+}
+
+// Pre: isGround(x.u_ground)
+func toKey_Wm(x MethInstan) string {
+	return x.u_recv.String()
+}
+
+/* fixOmega */
+
+// Attempt to form a closure on encountered ground types.
+// Iterate over `ground` using add-meth-targs recorded on i/face receivers to
+// .. visit all possible method bodies of implementing struct types --
+// .. repeating until no "new" ground types encountered.
+// Currently, very non-optimal.
+// N.B. mutates `omega` -- encountered ground types collected into `ground`
+/*func fixOmega(ds []Decl, gamma GroundEnv, omega Omega) {
+	delta_empty := make(Delta)
+	for again := true; again; {
+		again = false
+
+		//fmt.Println("000: ", omega, "\n")
+
+		for _, wv_upper := range omega {
+			//fmt.Println("aaa: ", wv_upper)
+			if !IsNamedIfaceType(ds, wv_upper.u_ground) || len(wv_upper.sigs) == 0 {
+				continue
+			}
+			for _, wv_lower := range omega {
+
+				//fmt.Println("bbb: ", wv_lower, wv_lower.u_ground.ImplsDelta(ds, delta_empty, wv_upper.u_ground))
+
+				if //!IsStructType(ds, wv_S.u_ground) ||  // !!! Now include interfaces
+				wv_lower.u_ground.Equals(wv_upper.u_ground) ||
+					!wv_lower.u_ground.ImplsDelta(ds, delta_empty, wv_upper.u_ground) {
+					continue
+				}
+
+				u_S := wv_lower.u_ground
+				for _, g_I := range wv_upper.sigs {
+					if len(g_I.targs) == 0 {
+						continue
+					}
+					g_Ikey := toGroundSigsKey(g_I)
+					if _, ok := wv_lower.sigs[g_Ikey]; ok {
+						continue
+					}
+					wv_lower.sigs[g_Ikey] = g_I
+
+					// Very non-optimal, may revisit the same g_I/u_S pair many times
+					if IsStructType(ds, u_S) {
+						gamma1, e_body := getGroundEnvAndBody(ds, g_I, u_S)
+						omega1 := make(Omega)
+						collectGroundTypesFromExpr(ds, gamma1, e_body, omega1, true)
+						for _, wv_body := range omega1 {
+							if _, ok := omega[toWKey(wv_body.u_ground)]; !ok {
+								omega[toWKey(wv_body.u_ground)] = wv_body
+								again = true
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+// Get the Gamma and e_body for visiting the target meth of g_I on receiver u_S
+func getGroundEnvAndBody(ds []Decl, g_I GroundSig, u_S TNamed) (
+	GroundEnv, FGGExpr) {
+
+	subs := make(map[TParam]Type)
+	td_S := GetTDecl(ds, u_S.GetName())
+	targs_recv := u_S.GetTArgs()
+	tfs_recv := td_S.GetPsi().GetTFormals()
+	for i := 0; i < len(targs_recv); i++ {
+		subs[tfs_recv[i].name] = targs_recv[i]
+	}
+	tfs_meth := g_I.sig.GetPsi().GetTFormals()
+	for i := 0; i < len(tfs_meth); i++ {
+		subs[tfs_meth[i].name] = g_I.targs[i]
+	}
+
+	var pds []ParamDecl = nil
+	for _, d := range ds {
+		if md, ok := d.(MDecl); ok {
+			if md.t_recv == u_S.t_name && md.name == g_I.sig.meth {
+				pds = md.pDecls
+				break
+			}
+		}
+	}
+	if pds == nil {
+		panic("Method not found on " + u_S.String() + ": " + g_I.sig.meth)
+	}
+
+	x0, xs, e := body(ds, u_S, g_I.sig.meth, g_I.targs)
+	gamma1 := make(GroundEnv)
+	gamma1[x0] = u_S
+	for i := 0; i < len(xs); i++ { // xs = ys in pds
+		gamma1[xs[i]] = pds[i].GetType().TSubs(subs).(TNamed)
+	}
+	return gamma1, e
+}*/
+
+/* Expressions */
+
+// gamma used to type Call receiver
+func collectExpr(ds []Decl, gamma GroundEnv, e FGGExpr,
+	omega Omega1) {
+
+	switch e1 := e.(type) {
+	case Variable:
+		return
+	case StructLit:
+		for _, elem := range e1.elems {
+			collectExpr(ds, gamma, elem, omega)
+		}
+		omega.ts[toKey_Wt(e1.u_S)] = e1.u_S
+	case Select:
+		collectExpr(ds, gamma, e1.e_S, omega)
+	case Call:
+		collectExpr(ds, gamma, e1.e_recv, omega)
+		for _, e_arg := range e1.args {
+			collectExpr(ds, gamma, e_arg, omega)
+		}
+		gamma1 := make(Gamma)
+		for k, v := range gamma {
+			gamma1[k] = v
+		}
+		u_recv := e1.Typing(ds, make(Delta), gamma1, false).(TNamed) // FIXME: rec
+		omega.ts[toKey_Wt(u_recv)] = u_recv
+		m := MethInstan{u_recv, e1.meth, e1.GetTArgs()} // CHECKME: why add?
+		omega.ms[toKey_Wm(m)] = m
+	case Assert:
+		collectExpr(ds, gamma, e1.e_I, omega)
+		u := e1.u_cast.(TNamed)
+		omega.ts[toKey_Wt(u)] = u
+	default:
+		panic("Unknown Expr kind: " + reflect.TypeOf(e).String() + "\n\t" +
+			e.String())
+	}
+}
+
+/* Aux */
+
+/*
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ */
+
+/* Omega, GroundTypeAndSigs, GroundSig, GroundEnv */
 
 // Maps u_ground.String() -> GroundTypeAndSigs{u_ground, sigs}
 type Omega map[string]GroundTypeAndSigs
@@ -41,19 +255,16 @@ func toWKey(u_ground TNamed) string {
 	return u_ground.String()
 }
 
-// Basically a Gamma for only TNamed
-type GroundEnv map[Name]TNamed // Pre: forall TName, isGround
-
 // A ground TNamed and the sigs of methods called on it as a receiver.
 // sigs should include all potential such calls that may occur at run-time
 type GroundTypeAndSigs struct {
 	u_ground TNamed               // Pre: isGround(u_ground)
-	sigs     map[string]GroundSig // string key is GroundSig.sig.String()
+	sigs     map[string]GroundSig // string key is toGroundSigsKey, i.e., GroundSig.sig.String()
 	// Morally, sigs is a map: fgg.Sig -> []Type -- all sigs on u_ground receiver, including empty add-meth-targs
 }
 
-func toGroundSigsKey(g Sig) string {
-	return g.String()
+func toGroundSigsKey(g GroundSig) string {
+	return g.sig.String()
 }
 
 // The actual GroundTypeAndSigs.sigs map entry: Sig -> add-meth-targs
@@ -63,6 +274,9 @@ type GroundSig struct {
 	sig   Sig // CHECKME: may only need meth name (given receiver type), but Sig is convenient?
 	targs []Type
 }
+
+// Basically a Gamma for only ground TNamed -- cf. Eta (TParam, not Name)
+type GroundEnv map[Name]TNamed // Pre: forall TName, isGround
 
 /* fixOmega */
 
@@ -99,7 +313,7 @@ func fixOmega(ds []Decl, gamma GroundEnv, omega Omega) {
 					if len(g_I.targs) == 0 {
 						continue
 					}
-					g_Ikey := toGroundSigsKey(g_I.sig)
+					g_Ikey := toGroundSigsKey(g_I)
 					if _, ok := wv_lower.sigs[g_Ikey]; ok {
 						continue
 					}
@@ -366,7 +580,8 @@ func collectGroundTypesFromSigAndBody(ds []Decl, u_recv Type, c Call,
 		return
 	}
 	//fmt.Println("^ffff:")
-	gs[toGroundSigsKey(g)] = GroundSig{g, c.t_args} // Record sig for u_recv
+	tmp := GroundSig{g, c.t_args}
+	gs[toGroundSigsKey(tmp)] = tmp // Record sig for u_recv
 	// N.B. recorded only for u_recv, and not, e.g., super interfaces -- cf. monomTDecl, ITypeLit case
 
 	// If sig not already seen (checked above), use sig to collect from
