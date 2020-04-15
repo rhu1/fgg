@@ -289,6 +289,8 @@ func checkErr(e error) {
 
 /**
 TODO:
+- mutual-poly-rec should blow up when ismonom check off -- omega sigs => t.m pairs
+- struct-poly-rec should be monomable -- more aggressive method dropping in omega *building*; need to distinguish actual receiver types from other seen types, for applying omega to mdecls
 - WF: e.g., repeat type decl
 - add monom-eval commutativity check
 - factor out more into base

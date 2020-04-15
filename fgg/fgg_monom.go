@@ -113,6 +113,7 @@ func Monomorph(p FGGProgram) fg.FGProgram {
 			t := d.GetName()
 			for _, wv := range omega { // CHECKME: "prunes" unused types, OK?
 				if wv.u_ground.t_name == t {
+					fmt.Println("yyyy:", t)
 					td_monom := monomTDecl(p.decls, omega, d, wv)
 					ds_monom = append(ds_monom, td_monom)
 				}
@@ -120,6 +121,7 @@ func Monomorph(p FGGProgram) fg.FGProgram {
 		case MDecl:
 			for _, wv := range omega { // CHECKME: "prunes" unused types, OK?
 				if wv.u_ground.t_name == d.t_recv {
+					fmt.Println("zzzz:", d.t_recv, wv.u_ground, wv.sigs)
 					mds_monom := monomMDecl(p.decls, omega, d, wv)
 					for _, v := range mds_monom {
 						ds_monom = append(ds_monom, v)
@@ -233,7 +235,6 @@ func monomMDecl(ds []Decl, omega Omega, md MDecl,
 	for i := 0; i < len(md.psi_recv.tFormals); i++ {
 		subs[md.psi_recv.tFormals[i].name] = wv.u_ground.u_args[i]
 	}
-	recv := fg.NewParamDecl(md.x_recv, toMonomId(wv.u_ground))
 	if len(md.psi_meth.tFormals) == 0 {
 		pds := make([]fg.ParamDecl, len(md.pDecls))
 		for i := 0; i < len(md.pDecls); i++ {
@@ -242,11 +243,14 @@ func monomMDecl(ds []Decl, omega Omega, md MDecl,
 			t_p_monom := toMonomId(omega[toWKey(u_p)].u_ground)
 			pds[i] = fg.NewParamDecl(pd.name, t_p_monom)
 		}
-		t_ret_monom := toMonomId(omega[toWKey(md.u_ret.TSubs(subs).(TNamed))].u_ground)
+		u_ret := md.u_ret.TSubs(subs).(TNamed)
+		t_ret_monom := toMonomId(omega[toWKey(u_ret)].u_ground)
+		recv := fg.NewParamDecl(md.x_recv, toMonomId(wv.u_ground))
 		e_monom := monomExpr(omega, md.e_body.TSubs(subs))
-		res = append(res, fg.NewMDecl(recv, md.name, pds, t_ret_monom, e_monom))
+		md1 := fg.NewMDecl(recv, md.name, pds, t_ret_monom, e_monom)
+		res = append(res, md1)
 	} else {
-		// Instantiate method for all calls of md.name on any supertype.
+		// Instantiate method for all calls of md.name (on any supertype receiver, as per omega)
 		//mInstans := collectSuperMethInstans(ds, omega, md, wv) // reflexive
 		mInstans := make(map[string][]Type) // CHECKME: should be sufficient given omega?
 		addMethInstans(wv, md.name, mInstans)
