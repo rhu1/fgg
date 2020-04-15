@@ -103,7 +103,10 @@ func Monomorph(p FGGProgram) fg.FGProgram {
 	//fmt.Println("xxxx:")
 
 	omega := GetOmega(ds_fgg, p.GetMain().(FGGExpr)) // TODO: do "supertype closure" over omega (cf. collectSuperMethInstans)
+	return ApplyOmega(p, omega)
+}
 
+func ApplyOmega(p FGGProgram, omega Omega) fg.FGProgram {
 	//fmt.Println("yyyy:")
 
 	var ds_monom []Decl
