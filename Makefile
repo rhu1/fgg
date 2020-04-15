@@ -246,9 +246,9 @@ clean-test-oblit:
 	rm -f tmp/test-oblit/fgr/box/box2.fgr
 	rm -fd tmp/test-oblit/fgr/box
 
-	rm -f tmp/test-oblit/fgr/julien/rcver-iface.fgr
-	rm -f tmp/test-oblit/fgr/julien/one-pass-prob.fgr
-	rm -f tmp/test-oblit/fgr/julien/contamination.fgr
+	rm -f tmp/test-oblit/fgr/julien/mono-ok/rcver-iface.fgr
+	rm -f tmp/test-oblit/fgr/julien/mono-ok/one-pass-prob.fgr
+	rm -f tmp/test-oblit/fgr/julien/mono-ok/contamination.fgr
 	rm -fd tmp/test-oblit/fgr/julien/mono-ok
 
 	rm -fd tmp/test-oblit/fgr/julien/mono-ko

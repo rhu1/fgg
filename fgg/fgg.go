@@ -230,6 +230,70 @@ func (u TNamed) ToGoString() string {
 	return b.String()
 }
 
+/* Type formals and actuals */
+
+// Pre: len(as) == len(us)
+// Wrapper for []TFormal (cf. e.g., FieldDecl), only because of "(type ...)" syntax
+// Also ranged over by big phi
+type BigPsi struct {
+	tFormals []TFormal
+}
+
+func (psi BigPsi) GetTFormals() []TFormal { return psi.tFormals }
+
+func (psi BigPsi) Ok(ds []Decl) {
+	for _, v := range psi.tFormals {
+		u, ok := v.u_I.(TNamed)
+		if !ok {
+			panic("Upper bound must be of the form \"t_I(type ...)\": not " +
+				v.u_I.String())
+		}
+		if !IsNamedIfaceType(ds, u) { // CHECKME: subsumes above TName check (looks for \tau_S)
+			panic("Upper bound must be an interface type: not " + u.String())
+		}
+	}
+}
+
+func (psi BigPsi) ToDelta() Delta {
+	delta := make(map[TParam]Type)
+	for _, v := range psi.tFormals {
+		delta[v.name] = v.u_I
+	}
+	return delta
+}
+
+func (psi BigPsi) String() string {
+	var b strings.Builder
+	b.WriteString("(type ") // Includes "(...)" -- cf. e.g., writeFieldDecls
+	if len(psi.tFormals) > 0 {
+		b.WriteString(psi.tFormals[0].String())
+		for _, v := range psi.tFormals[1:] {
+			b.WriteString(", ")
+			b.WriteString(v.String())
+		}
+	}
+	b.WriteString(")")
+	return b.String()
+}
+
+type TFormal struct {
+	name TParam
+	u_I  Type
+	// CHECKME: submission version, upper bound \tau_I is only "of the form t_I(~\tau)"? -- i.e., not \alpha?
+	// ^If so, then can refine to TName
+}
+
+func (tf TFormal) GetTParam() TParam   { return tf.name }
+func (tf TFormal) GetUpperBound() Type { return tf.u_I }
+
+func (tf TFormal) String() string {
+	return string(tf.name) + " " + tf.u_I.String()
+}
+
+// Type actuals
+// Also ranged over by small phi
+type SmallPsi []Type
+
 /* Context, Type context */
 
 //type Gamma map[Variable]Type  // CHECKME: refactor?
@@ -257,7 +321,7 @@ func (delta Delta) String() string {
 
 type TDecl interface {
 	Decl
-	GetPsi() Psi // TODO: rename? potential clash with, e.g., MDecl, can cause "false" interface satisfaction
+	GetPsi() BigPsi // TODO: rename? potential clash with, e.g., MDecl, can cause "false" interface satisfaction
 }
 
 type Spec interface {
