@@ -89,6 +89,7 @@ func (p FGGProgram) String() string {
 
 // Pre: len(as) == len(us)
 // Wrapper for []TFormal (cf. e.g., FieldDecl), only because of "(type ...)" syntax
+// Also ranged over by phi
 type Psi struct {
 	tFormals []TFormal
 }

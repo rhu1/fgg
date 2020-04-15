@@ -234,7 +234,8 @@ func (u TNamed) ToGoString() string {
 
 //type Gamma map[Variable]Type  // CHECKME: refactor?
 type Gamma map[Name]Type
-type Delta map[TParam]Type
+type Delta map[TParam]Type // Type intended to be an upper bound
+type Eta Delta             // Type intended to be a ground type
 
 func (delta Delta) String() string {
 	res := "["
