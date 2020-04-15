@@ -15,6 +15,12 @@ var _ = reflect.Append
 const GET_REP = "getRep"
 const HAS_REP = "HasRep"
 
+/* Export */
+
+func ToFgrTypeFromBounds(delta fgg.Delta, u fgg.Type) Type {
+	return toFgrTypeFromBounds(delta, u)
+}
+
 /**
  * [WIP] Obliteration: obliterate param/return types, erase field types, rep-ify type-args
  */
