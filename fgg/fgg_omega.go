@@ -476,7 +476,7 @@ func getGroundEnvAndBody(ds []Decl, g_I GroundSig, u_S TNamed) (
 	gamma1 := make(GroundEnv)
 	gamma1[x0] = u_S
 	for i := 0; i < len(xs); i++ { // xs = ys in pds
-		gamma1[xs[i]] = pds[i].GetType().TSubs(subs).(TNamed)
+		gamma1[xs[i].name] = pds[i].GetType().TSubs(subs).(TNamed) // TODO: xs is now already pds
 	}
 	return gamma1, e
 }
@@ -598,7 +598,7 @@ func collectGroundTypesFromType(ds []Decl, u Type, omega Omega,
 				gamma := make(GroundEnv)
 				gamma[x_recv] = u_S
 				for i := 0; i < len(pds); i++ {
-					gamma[xs[i]] = pds[i].GetType().(TNamed)
+					gamma[xs[i].name] = pds[i].GetType().(TNamed) // TODO: xs is now already pds
 				}
 				collectGroundTypesFromExpr(ds, gamma, e_body, omega, false)
 				var _ = e_body
@@ -720,7 +720,8 @@ func collectGroundTypesFromSigAndBody(ds []Decl, u_recv Type, c Call,
 		gamma1 := make(GroundEnv)
 		gamma1[x0] = u_S
 		for i := 0; i < len(xs); i++ { // xs = ys in pds
-			gamma1[xs[i]] = pds[i].GetType().TSubs(subs).(TNamed) // Param names in g should be same as actual MDecl
+			gamma1[xs[i].name] = pds[i].GetType().TSubs(subs).(TNamed) // TODO: xs is now already pds
+			// Param names in g should be same as actual MDecl
 		}
 		collectGroundTypesFromExpr(ds, gamma1, e_body, omega, rec)
 	} else {

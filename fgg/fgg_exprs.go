@@ -291,7 +291,7 @@ func (c Call) Eval(ds []Decl) (FGGExpr, string) {
 	subs := make(map[Variable]FGGExpr)
 	subs[Variable{x0}] = c.e_recv
 	for i := 0; i < len(xs); i++ {
-		subs[Variable{xs[i]}] = c.args[i]
+		subs[Variable{xs[i].name}] = c.args[i]
 	}
 	return e.Subs(subs), "Call" // N.B. single combined substitution map slightly different to R-Call
 }

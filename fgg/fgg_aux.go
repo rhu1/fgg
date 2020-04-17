@@ -93,14 +93,15 @@ func methods(ds []Decl, u Type) map[Name]Sig {
 
 // Pre: t_S is a struct type
 // Submission version, m(~\rho) informal notation
-func body(ds []Decl, u_S TNamed, m Name, targs []Type) (Name, []Name, FGGExpr) {
+//func body(ds []Decl, u_S TNamed, m Name, targs []Type) (Name, []Name, FGGExpr) {
+func body(ds []Decl, u_S TNamed, m Name, targs []Type) (Name, []ParamDecl, FGGExpr) {
 	for _, v := range ds {
 		md, ok := v.(MDecl)
 		if ok && md.t_recv == u_S.t_name && md.name == m {
-			xs := make([]Name, len(md.pDecls))
+			/*xs := make([]Name, len(md.pDecls))
 			for i := 0; i < len(md.pDecls); i++ {
 				xs[i] = md.pDecls[i].name
-			}
+			}*/
 			subs := make(map[TParam]Type)
 			for i := 0; i < len(md.PsiRecv.tFormals); i++ {
 				subs[md.PsiRecv.tFormals[i].name] = u_S.u_args[i]
@@ -108,7 +109,8 @@ func body(ds []Decl, u_S TNamed, m Name, targs []Type) (Name, []Name, FGGExpr) {
 			for i := 0; i < len(md.PsiMeth.tFormals); i++ {
 				subs[md.PsiMeth.tFormals[i].name] = targs[i]
 			}
-			return md.x_recv, xs, md.e_body.TSubs(subs)
+			//return md.x_recv, xs, md.e_body.TSubs(subs)
+			return md.x_recv, md.pDecls, md.e_body.TSubs(subs)
 		}
 	}
 	panic("Method not found: " + u_S.String() + "." + m)
