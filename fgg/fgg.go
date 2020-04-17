@@ -50,7 +50,11 @@ func (a TParam) TSubs(subs map[TParam]Type) Type {
 }
 
 func (a TParam) SubsEta(eta Eta) TNamed {
-	panic("Shouldn't get in here: " + a.String())
+	res, ok := eta[a]
+	if !ok {
+		panic("Shouldn't get here: " + a)
+	}
+	return res
 }
 
 // u0 <: u

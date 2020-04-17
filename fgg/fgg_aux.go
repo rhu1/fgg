@@ -99,15 +99,13 @@ func body(ds []Decl, u_S TNamed, m Name, targs []Type) (ParamDecl, []ParamDecl, 
 		md, ok := v.(MDecl)
 		if ok && md.t_recv == u_S.t_name && md.name == m {
 			subs := make(map[TParam]Type)
-			us := make(SmallPsi, len(md.PsiRecv.tFormals))
 			for i := 0; i < len(md.PsiRecv.tFormals); i++ {
 				subs[md.PsiRecv.tFormals[i].name] = u_S.u_args[i]
-				us[i] = u_S.u_args[i]
 			}
 			for i := 0; i < len(md.PsiMeth.tFormals); i++ {
 				subs[md.PsiMeth.tFormals[i].name] = targs[i]
 			}
-			recv := ParamDecl{md.x_recv, TNamed{md.t_recv, us}}
+			recv := ParamDecl{md.x_recv, u_S}
 			pds := make([]ParamDecl, len(md.pDecls))
 			for i := 0; i < len(md.pDecls); i++ {
 				tmp := md.pDecls[i]

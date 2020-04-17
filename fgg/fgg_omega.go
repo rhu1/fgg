@@ -18,17 +18,18 @@ var _ = fmt.Errorf
 // called on those types, that may arise during execution
 // Pre: isMonomorphisable -- TODO
 func GetOmega(ds []Decl, e_main FGGExpr) Omega {
+	omega := make(Omega)
+	//type Omega map[string]GroundTypeAndSigs
+
 	var gamma GroundEnv
-	ground := make(Omega)
+	collectGroundTypesFromExpr(ds, gamma, e_main, omega, true)
+	fixOmega(ds, gamma, omega)
 
-	//fmt.Println("vvvv:")
+	omega1 := Omega1{make(map[string]TNamed), make(map[string]MethInstan)}
+	collectExpr(ds, make(GroundEnv), e_main, omega1)
+	fixOmega1(ds, omega1)
 
-	collectGroundTypesFromExpr(ds, gamma, e_main, ground, true)
-
-	//fmt.Println("wwww:")
-
-	fixOmega(ds, gamma, ground)
-	return ground
+	return omega
 }
 
 /* Omega, GroundTypeAndSigs, GroundSig, GroundEnv */
@@ -56,6 +57,12 @@ func toKey_Wm(x MethInstan) string {
 }
 
 /* fixOmega */
+
+func fixOmega1(ds []Decl, omega Omega1) {
+	for auxG(ds, omega) {
+		//fmt.Println("----\n", omega.us, "\n", omega.ms, "\n----\n")
+	}
+}
 
 // Attempt to form a closure on encountered ground types.
 // Iterate over `ground` using add-meth-targs recorded on i/face receivers to
@@ -177,7 +184,7 @@ func collectExpr(ds []Decl, gamma GroundEnv, e FGGExpr,
 		for k, v := range gamma {
 			gamma1[k] = v
 		}
-		u_recv := e1.Typing(ds, make(Delta), gamma1, false).(TNamed)
+		u_recv := e1.e_recv.Typing(ds, make(Delta), gamma1, false).(TNamed)
 		omega.us[toKey_Wt(u_recv)] = u_recv
 		m := MethInstan{u_recv, e1.meth, e1.GetTArgs()} // CHECKME: why add u_recv separately?
 		omega.ms[toKey_Wm(m)] = m
@@ -193,15 +200,24 @@ func collectExpr(ds []Decl, gamma GroundEnv, e FGGExpr,
 
 /* Aux */
 
-func auxG(ds []Decl, omega Omega1) {
-	auxF(ds, omega)
-	auxI(ds, omega)
-	auxM(ds, omega)
-	auxS(ds, make(Delta), omega)
-	auxP(ds, omega)
+func auxG(ds []Decl, omega Omega1) bool {
+	res := false
+	// CHECKME: clone omega?
+	res = auxF(ds, omega) || res
+	//fmt.Println("F\n", omega.us, "\n", omega.ms, "\n----\n")
+	res = auxI(ds, omega) || res
+	//fmt.Println("I\n", omega.us, "\n", omega.ms, "\n----\n")
+	res = auxM(ds, omega) || res
+	//fmt.Println("M\n", omega.us, "\n", omega.ms, "\n----\n")
+	res = auxS(ds, make(Delta), omega) || res
+	//fmt.Println("S\n", omega.us, "\n", omega.ms, "\n----\n")
+	res = auxP(ds, omega) || res
+	//fmt.Println("P\n", omega.us, "\n", omega.ms, "\n----\n")
+	return res
 }
 
-func auxF(ds []Decl, omega Omega1) {
+func auxF(ds []Decl, omega Omega1) bool {
+	res := false
 	tmp := make(map[string]TNamed)
 	for _, u := range omega.us {
 		if !isStructType(ds, u) {
@@ -213,11 +229,16 @@ func auxF(ds []Decl, omega Omega1) {
 		}
 	}
 	for k, v := range tmp {
-		omega.us[k] = v
+		if _, ok := omega.us[k]; !ok {
+			omega.us[k] = v
+			res = true
+		}
 	}
+	return res
 }
 
-func auxI(ds []Decl, omega Omega1) {
+func auxI(ds []Decl, omega Omega1) bool {
+	res := false
 	tmp := make(map[string]MethInstan)
 	for _, m := range omega.ms {
 		if !IsNamedIfaceType(ds, m.u_recv) {
@@ -234,18 +255,26 @@ func auxI(ds []Decl, omega Omega1) {
 		}
 	}
 	for k, v := range tmp {
-		omega.ms[k] = v
+		if _, ok := omega.ms[k]; !ok {
+			omega.ms[k] = v
+			res = true
+		}
 	}
+	return res
 }
 
-func auxM(ds []Decl, omega Omega1) {
+func auxM(ds []Decl, omega Omega1) bool {
+	res := false
 	tmp := make(map[string]TNamed)
 	for _, m := range omega.ms {
 		gs := methods(ds, m.u_recv)
-		for _, g := range gs { // Should be singleton
+		for _, g := range gs { // Should be only g s.t. g.meth == m.meth
+			if g.meth != m.meth {
+				continue
+			}
 			eta := MakeEta(g.psi, m.psi)
 			for _, pd := range g.pDecls {
-				u_pd := pd.u.SubsEta(eta)
+				u_pd := pd.u.SubsEta(eta) // HERE: need receiver subs also?
 				tmp[toKey_Wt(u_pd)] = u_pd
 			}
 			u_ret := g.u_ret.SubsEta(eta)
@@ -253,32 +282,47 @@ func auxM(ds []Decl, omega Omega1) {
 		}
 	}
 	for k, v := range tmp {
-		omega.us[k] = v
+		if _, ok := omega.us[k]; !ok {
+			omega.us[k] = v
+			res = true
+		}
 	}
+	return res
 }
 
-func auxS(ds []Decl, delta Delta, omega Omega1) {
+func auxS(ds []Decl, delta Delta, omega Omega1) bool {
+	res := false
 	tmp := make(map[string]MethInstan)
 	for _, m := range omega.ms {
 		for _, u := range omega.us {
 			if !isStructType(ds, u) || !u.ImplsDelta(ds, delta, m.u_recv) {
 				continue
 			}
-			x0, _, e := body(ds, u, m.meth, m.psi)
+			x0, xs, e := body(ds, u, m.meth, m.psi)
 			gamma := make(GroundEnv)
-			gamma[x0.name] = u
-			// HERE pds
-			collectExpr(ds, gamma, e, omega)
+			gamma[x0.name] = x0.u.(TNamed)
+			for _, pd := range xs {
+				gamma[pd.name] = pd.u.(TNamed)
+			}
 			m1 := MethInstan{u, m.meth, m.psi}
-			tmp[toKey_Wm(m1)] = m1
+			k := toKey_Wm(m1)
+			if _, ok := omega.ms[k]; !ok {
+				tmp[k] = m1
+				collectExpr(ds, gamma, e, omega)
+			}
 		}
 	}
 	for k, v := range tmp {
-		omega.ms[k] = v
+		if _, ok := omega.ms[k]; !ok {
+			omega.ms[k] = v
+			res = true
+		}
 	}
+	return res
 }
 
-func auxP(ds []Decl, omega Omega1) {
+func auxP(ds []Decl, omega Omega1) bool {
+	res := false
 	tmp := make(map[string]MethInstan)
 	for _, u := range omega.us {
 		if !isNamedIfaceType(ds, u) {
@@ -295,8 +339,12 @@ func auxP(ds []Decl, omega Omega1) {
 		}
 	}
 	for k, v := range tmp {
-		omega.ms[k] = v
+		if _, ok := omega.ms[k]; !ok {
+			omega.ms[k] = v
+			res = true
+		}
 	}
+	return res
 }
 
 /*
