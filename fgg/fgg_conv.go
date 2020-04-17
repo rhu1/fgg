@@ -78,7 +78,7 @@ func (c *fg2fgg) convertSTypeLit(s fg.STypeLit) (STypeLit, error) {
 		fieldDecls = append(fieldDecls, fd)
 	}
 
-	return STypeLit{t_name: typeName, psi: typeFormals, fDecls: fieldDecls}, nil
+	return STypeLit{t_name: typeName, Psi: typeFormals, fDecls: fieldDecls}, nil
 }
 
 func (c *fg2fgg) convertITypeLit(i fg.ITypeLit) (ITypeLit, error) {
@@ -137,14 +137,14 @@ func (c *fg2fgg) convertMDecl(md fg.MDecl) (MDecl, error) {
 	}
 
 	return MDecl{
-		x_recv:   md.GetReceiver().GetName(),
-		t_recv:   recvTypeName,
-		psi_recv: recvTypeFormals,
-		name:     Name(md.GetName()),
-		psi_meth: BigPsi{}, // empty parameter
-		pDecls:   paramDecls,
-		u_ret:    TNamed{t_name: retTypeName},
-		e_body:   methImpl,
+		x_recv:  md.GetReceiver().GetName(),
+		t_recv:  recvTypeName,
+		PsiRecv: recvTypeFormals,
+		name:    Name(md.GetName()),
+		PsiMeth: BigPsi{}, // empty parameter
+		pDecls:  paramDecls,
+		u_ret:   TNamed{t_name: retTypeName},
+		e_body:  methImpl,
 	}, nil
 }
 

@@ -32,8 +32,8 @@ func fields(ds []Decl, u_S TNamed) []FieldDecl {
 		panic("Not a struct type: " + u_S.String())
 	}
 	subs := make(map[TParam]Type)
-	for i := 0; i < len(s.psi.tFormals); i++ {
-		subs[s.psi.tFormals[i].name] = u_S.u_args[i]
+	for i := 0; i < len(s.Psi.tFormals); i++ {
+		subs[s.Psi.tFormals[i].name] = u_S.u_args[i]
 	}
 	fds := make([]FieldDecl, len(s.fDecls))
 	for i := 0; i < len(s.fDecls); i++ {
@@ -53,8 +53,8 @@ func methods(ds []Decl, u Type) map[Name]Sig {
 				u_S := u.(TNamed)
 				if md.t_recv == u_S.t_name {
 					subs := make(map[TParam]Type)
-					for i := 0; i < len(md.psi_recv.tFormals); i++ {
-						subs[md.psi_recv.tFormals[i].name] = u_S.u_args[i]
+					for i := 0; i < len(md.PsiRecv.tFormals); i++ {
+						subs[md.PsiRecv.tFormals[i].name] = u_S.u_args[i]
 					}
 					/*for i := 0; i < len(md.psi.tfs); i++ { // CHECKME: because TParam.TSubs will panic o/w -- refactor?
 						subs[md.psi.tfs[i].a] = md.psi.tfs[i].a
@@ -102,11 +102,11 @@ func body(ds []Decl, u_S TNamed, m Name, targs []Type) (Name, []Name, FGGExpr) {
 				xs[i] = md.pDecls[i].name
 			}
 			subs := make(map[TParam]Type)
-			for i := 0; i < len(md.psi_recv.tFormals); i++ {
-				subs[md.psi_recv.tFormals[i].name] = u_S.u_args[i]
+			for i := 0; i < len(md.PsiRecv.tFormals); i++ {
+				subs[md.PsiRecv.tFormals[i].name] = u_S.u_args[i]
 			}
-			for i := 0; i < len(md.psi_meth.tFormals); i++ {
-				subs[md.psi_meth.tFormals[i].name] = targs[i]
+			for i := 0; i < len(md.PsiMeth.tFormals); i++ {
+				subs[md.PsiMeth.tFormals[i].name] = targs[i]
 			}
 			return md.x_recv, xs, md.e_body.TSubs(subs)
 		}

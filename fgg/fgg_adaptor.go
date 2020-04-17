@@ -127,7 +127,7 @@ func (a *FGGAdaptor) ExitTypeDecl(ctx *parser.TypeDeclContext) {
 	psi := a.pop().(BigPsi)
 	if s, ok := td.(STypeLit); ok { // N.B. s is a *copy* of td
 		s.t_name = t
-		s.psi = psi
+		s.Psi = psi
 		a.push(s)
 	} else if c, ok := td.(ITypeLit); ok {
 		c.t_I = t

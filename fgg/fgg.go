@@ -160,7 +160,7 @@ func (u0 TNamed) Impls(ds []Decl, u base.Type) bool {
 
 func (u0 TNamed) Ok(ds []Decl, delta Delta) {
 	td := GetTDecl(ds, u0.t_name)
-	psi := td.GetPsi()
+	psi := td.GetBigPsi()
 	if len(psi.tFormals) != len(u0.u_args) {
 		var b strings.Builder
 		b.WriteString("Arity mismatch between type formals and actuals: formals=")
@@ -252,10 +252,10 @@ type BigPsi struct {
 	tFormals []TFormal
 }
 
-func (psi BigPsi) GetTFormals() []TFormal { return psi.tFormals }
+func (Psi BigPsi) GetTFormals() []TFormal { return Psi.tFormals }
 
-func (psi BigPsi) Ok(ds []Decl) {
-	for _, v := range psi.tFormals {
+func (Psi BigPsi) Ok(ds []Decl) {
+	for _, v := range Psi.tFormals {
 		u, ok := v.u_I.(TNamed)
 		if !ok {
 			panic("Upper bound must be of the form \"t_I(type ...)\": not " +
@@ -267,20 +267,20 @@ func (psi BigPsi) Ok(ds []Decl) {
 	}
 }
 
-func (psi BigPsi) ToDelta() Delta {
+func (Psi BigPsi) ToDelta() Delta {
 	delta := make(map[TParam]Type)
-	for _, v := range psi.tFormals {
+	for _, v := range Psi.tFormals {
 		delta[v.name] = v.u_I
 	}
 	return delta
 }
 
-func (psi BigPsi) String() string {
+func (Psi BigPsi) String() string {
 	var b strings.Builder
 	b.WriteString("(type ") // Includes "(...)" -- cf. e.g., writeFieldDecls
-	if len(psi.tFormals) > 0 {
-		b.WriteString(psi.tFormals[0].String())
-		for _, v := range psi.tFormals[1:] {
+	if len(Psi.tFormals) > 0 {
+		b.WriteString(Psi.tFormals[0].String())
+		for _, v := range Psi.tFormals[1:] {
 			b.WriteString(", ")
 			b.WriteString(v.String())
 		}
@@ -352,7 +352,7 @@ func MakeEta(Psi BigPsi, psi SmallPsi) Eta {
 
 type TDecl interface {
 	Decl
-	GetPsi() BigPsi // TODO: rename? potential clash with, e.g., MDecl, can cause "false" interface satisfaction
+	GetBigPsi() BigPsi // TODO: rename? potential clash with, e.g., MDecl, can cause "false" interface satisfaction
 }
 
 type Spec interface {

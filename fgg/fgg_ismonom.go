@@ -178,7 +178,7 @@ func bar(ds []Decl, delta Delta, gamma Gamma, ctxt RecvMethPair, e FGGExpr,
 			for _, v := range ds {
 				switch d := v.(type) {
 				case STypeLit:
-					tfs := d.GetPsi().GetTFormals()
+					tfs := d.GetBigPsi().GetTFormals()
 					u_args := make([]Type, len(tfs))
 					for i := 0; i < len(tfs); i++ {
 						u_args[i] = tfs[i].GetUpperBound()

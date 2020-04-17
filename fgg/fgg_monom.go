@@ -149,7 +149,7 @@ func monomTDecl(ds []Decl, omega Omega, td TDecl,
 	wv GroundTypeAndSigs) fg.TDecl {
 
 	subs := make(map[TParam]Type) // Type is a TNamed
-	psi := td.GetPsi()
+	psi := td.GetBigPsi()
 	for i := 0; i < len(psi.tFormals); i++ {
 		subs[psi.tFormals[i].name] = wv.u_ground.u_args[i]
 	}
@@ -235,10 +235,10 @@ func monomMDecl(ds []Decl, omega Omega, md MDecl,
 	wv GroundTypeAndSigs) (res []fg.MDecl) {
 
 	subs := make(map[TParam]Type) // Type is a TNamed
-	for i := 0; i < len(md.psi_recv.tFormals); i++ {
-		subs[md.psi_recv.tFormals[i].name] = wv.u_ground.u_args[i]
+	for i := 0; i < len(md.PsiRecv.tFormals); i++ {
+		subs[md.PsiRecv.tFormals[i].name] = wv.u_ground.u_args[i]
 	}
-	if len(md.psi_meth.tFormals) == 0 {
+	if len(md.PsiMeth.tFormals) == 0 {
 		pds := make([]fg.ParamDecl, len(md.pDecls))
 		for i := 0; i < len(md.pDecls); i++ {
 			pd := md.pDecls[i]
@@ -263,7 +263,7 @@ func monomMDecl(ds []Decl, omega Omega, md MDecl,
 				subs1[k1] = v1
 			}
 			for i := 0; i < len(targs); i++ {
-				subs1[md.psi_meth.tFormals[i].name] = targs[i]
+				subs1[md.PsiMeth.tFormals[i].name] = targs[i]
 			}
 			pds := make([]fg.ParamDecl, len(md.pDecls))
 			for i := 0; i < len(md.pDecls); i++ {

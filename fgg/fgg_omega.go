@@ -450,7 +450,7 @@ func getGroundEnvAndBody(ds []Decl, g_I GroundSig, u_S TNamed) (
 	subs := make(map[TParam]Type)
 	td_S := GetTDecl(ds, u_S.GetName())
 	targs_recv := u_S.GetTArgs()
-	tfs_recv := td_S.GetPsi().GetTFormals()
+	tfs_recv := td_S.GetBigPsi().GetTFormals()
 	for i := 0; i < len(targs_recv); i++ {
 		subs[tfs_recv[i].name] = targs_recv[i]
 	}
@@ -621,7 +621,7 @@ func collectGroundTypesFromType(ds []Decl, u Type, omega Omega,
 
 		// Visit embedded
 		td_I := GetTDecl(ds, u_I.t_name).(ITypeLit)
-		tfs_I := td_I.GetPsi().GetTFormals()
+		tfs_I := td_I.GetBigPsi().GetTFormals()
 		subs := make(map[TParam]Type)
 		for i := 0; i < len(u_I.u_args); i++ {
 			subs[tfs_I[i].name] = u_I.u_args[i]
@@ -703,7 +703,7 @@ func collectGroundTypesFromSigAndBody(ds []Decl, u_recv Type, c Call,
 		subs := make(map[TParam]Type)
 		td_S := GetTDecl(ds, u_S.GetName())
 		targs_S := u_S.GetTArgs()
-		tfs_S := td_S.GetPsi().GetTFormals()
+		tfs_S := td_S.GetBigPsi().GetTFormals()
 		for i := 0; i < len(targs_S); i++ {
 			subs[tfs_S[i].name] = targs_S[i]
 		}
