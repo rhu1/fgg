@@ -129,9 +129,10 @@ Options:
 // - add type pres to monom test -- DONE
 // - add tests for interface omega building
 // - fix embedding monom -- DONE
-// - fix monom name mangling
+// - fix monom name mangling -- partial: fix "commas"
 // - fix parser nil vs. empty creation
 // - WF check for duplicate decl names
+// - WF recursive structs check
 func main() {
 	flag.Usage = usage
 	flag.Parse()
