@@ -30,6 +30,7 @@ type Type interface {
 	base.Type
 	ImplsDelta(ds []Decl, delta Delta, u Type) bool
 	TSubs(subs map[TParam]Type) Type // N.B. map is Delta -- factor out a Subs type?
+	SubsEta(eta Eta) TNamed
 	Ok(ds []Decl, delta Delta)
 	ToGoString() string
 }
@@ -46,6 +47,10 @@ func (a TParam) TSubs(subs map[TParam]Type) Type {
 		// Cf. Variable.Subs?
 	}
 	return res
+}
+
+func (a TParam) SubsEta(eta Eta) TNamed {
+	panic("Shouldn't get in here: " + a.String())
 }
 
 // u0 <: u
@@ -107,6 +112,14 @@ func (u0 TNamed) TSubs(subs map[TParam]Type) Type {
 	us := make([]Type, len(u0.u_args))
 	for i := 0; i < len(us); i++ {
 		us[i] = u0.u_args[i].TSubs(subs)
+	}
+	return TNamed{u0.t_name, us}
+}
+
+func (u0 TNamed) SubsEta(eta Eta) TNamed {
+	us := make([]Type, len(u0.u_args))
+	for i := 0; i < len(us); i++ {
+		us[i] = u0.u_args[i].SubsEta(eta)
 	}
 	return TNamed{u0.t_name, us}
 }
@@ -294,6 +307,14 @@ func (tf TFormal) String() string {
 // Also ranged over by small phi
 type SmallPsi []Type
 
+func (x0 SmallPsi) String() string {
+	var b strings.Builder
+	for _, v := range x0 {
+		b.WriteString(v.String())
+	}
+	return b.String()
+}
+
 /* Context, Type context, Substitutions */
 
 //type Gamma map[Variable]Type  // CHECKME: refactor?
@@ -313,6 +334,16 @@ func (delta Delta) String() string {
 		res = k.String() + ":" + v.String()
 	}
 	return res + "]"
+}
+
+// Pre: len(psi) == len(Psi.GetTFormals()); psi all ground
+func MakeEta(Psi BigPsi, psi SmallPsi) Eta {
+	eta := make(Eta)
+	tfs := Psi.tFormals
+	for i := 0; i < len(tfs); i++ {
+		eta[tfs[i].name] = psi[i].(TNamed)
+	}
+	return eta
 }
 
 /* AST base intefaces: FGGNode, Decl, TDecl, Spec, Expr */
