@@ -289,7 +289,7 @@ func (c Call) Eval(ds []Decl) (FGGExpr, string) {
 	s := c.e_recv.(StructLit)
 	x0, xs, e := body(ds, s.u_S, c.meth, c.t_args) // panics if method not found
 	subs := make(map[Variable]FGGExpr)
-	subs[Variable{x0}] = c.e_recv
+	subs[Variable{x0.name}] = c.e_recv
 	for i := 0; i < len(xs); i++ {
 		subs[Variable{xs[i].name}] = c.args[i]
 	}

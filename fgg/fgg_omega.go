@@ -266,8 +266,8 @@ func auxS(ds []Decl, delta Delta, omega Omega1) {
 			}
 			x0, _, e := body(ds, u, m.meth, m.psi)
 			gamma := make(GroundEnv)
-			gamma[x0] = u
-			// HERE gamma value param types
+			gamma[x0.name] = u
+			// HERE pds
 			collectExpr(ds, gamma, e, omega)
 			m1 := MethInstan{u, m.meth, m.psi}
 			tmp[toKey_Wm(m1)] = m1
@@ -474,7 +474,7 @@ func getGroundEnvAndBody(ds []Decl, g_I GroundSig, u_S TNamed) (
 
 	x0, xs, e := body(ds, u_S, g_I.sig.meth, g_I.targs)
 	gamma1 := make(GroundEnv)
-	gamma1[x0] = u_S
+	gamma1[x0.name] = u_S          // TODO: x0 is now already pd
 	for i := 0; i < len(xs); i++ { // xs = ys in pds
 		gamma1[xs[i].name] = pds[i].GetType().TSubs(subs).(TNamed) // TODO: xs is now already pds
 	}
@@ -596,7 +596,7 @@ func collectGroundTypesFromType(ds []Decl, u Type, omega Omega,
 			if len(g.GetPsi().GetTFormals()) == 0 {
 				x_recv, xs, e_body := body(ds, u_S, g.meth, []Type{})
 				gamma := make(GroundEnv)
-				gamma[x_recv] = u_S
+				gamma[x_recv.name] = u_S // TODO: x_recv is now already pd
 				for i := 0; i < len(pds); i++ {
 					gamma[xs[i].name] = pds[i].GetType().(TNamed) // TODO: xs is now already pds
 				}
@@ -718,7 +718,7 @@ func collectGroundTypesFromSigAndBody(ds []Decl, u_recv Type, c Call,
 		//fmt.Println("^bbbb:", e_body)
 
 		gamma1 := make(GroundEnv)
-		gamma1[x0] = u_S
+		gamma1[x0.name] = u_S          // TODO: x0 is now already pd
 		for i := 0; i < len(xs); i++ { // xs = ys in pds
 			gamma1[xs[i].name] = pds[i].GetType().TSubs(subs).(TNamed) // TODO: xs is now already pds
 			// Param names in g should be same as actual MDecl
