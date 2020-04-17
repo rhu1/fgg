@@ -41,7 +41,7 @@ type Omega1 struct {
 
 type MethInstan struct {
 	u_recv TNamed // Pre: isGround
-	m      Name
+	meth   Name
 	psi    SmallPsi // Pre: all isGround
 }
 
@@ -52,7 +52,7 @@ func toKey_Wt(u_ground TNamed) string {
 
 // Pre: isGround(x.u_ground)
 func toKey_Wm(x MethInstan) string {
-	return x.u_recv.String() + "_" + x.m + "_" + x.psi.String()
+	return x.u_recv.String() + "_" + x.meth + "_" + x.psi.String()
 }
 
 /* fixOmega */
@@ -204,7 +204,7 @@ func auxG(ds []Decl, omega Omega1) {
 func auxF(ds []Decl, omega Omega1) {
 	tmp := make(map[string]TNamed)
 	for _, u := range omega.us {
-		if !IsStructType(ds, u) {
+		if !isStructType(ds, u) {
 			continue
 		}
 		for _, u_f := range Fields(ds, u) {
@@ -228,7 +228,7 @@ func auxI(ds []Decl, omega Omega1) {
 				continue
 			}
 			if m1.u_recv.Impls(ds, m.u_recv) {
-				mm := MethInstan{m1.u_recv, m.m, m.psi}
+				mm := MethInstan{m1.u_recv, m.meth, m.psi}
 				tmp[toKey_Wm(mm)] = mm
 			}
 		}
@@ -258,9 +258,45 @@ func auxM(ds []Decl, omega Omega1) {
 }
 
 func auxS(ds []Decl, delta Delta, omega Omega1) {
+	tmp := make(map[string]MethInstan)
+	for _, m := range omega.ms {
+		for _, u := range omega.us {
+			if !isStructType(ds, u) || !u.ImplsDelta(ds, delta, m.u_recv) {
+				continue
+			}
+			x0, _, e := body(ds, u, m.meth, m.psi)
+			gamma := make(GroundEnv)
+			gamma[x0] = u
+			// HERE gamma value param types
+			collectExpr(ds, gamma, e, omega)
+			m1 := MethInstan{u, m.meth, m.psi}
+			tmp[toKey_Wm(m1)] = m1
+		}
+	}
+	for k, v := range tmp {
+		omega.ms[k] = v
+	}
 }
 
 func auxP(ds []Decl, omega Omega1) {
+	tmp := make(map[string]MethInstan)
+	for _, u := range omega.us {
+		if !isNamedIfaceType(ds, u) {
+			continue
+		}
+		gs := methods(ds, u)
+		for _, g := range gs {
+			psi := make(SmallPsi, len(g.psi.tFormals))
+			for i := 0; i < len(psi); i++ {
+				psi[i] = g.psi.tFormals[i].u_I
+			}
+			m := MethInstan{u, g.meth, psi}
+			tmp[toKey_Wm(m)] = m
+		}
+	}
+	for k, v := range tmp {
+		omega.ms[k] = v
+	}
 }
 
 /*
