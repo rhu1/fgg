@@ -59,6 +59,9 @@ type FGListener interface {
 	// EnterAssert is called when entering the Assert production.
 	EnterAssert(c *AssertContext)
 
+	// EnterSprintf is called when entering the Sprintf production.
+	EnterSprintf(c *SprintfContext)
+
 	// EnterSelect is called when entering the Select production.
 	EnterSelect(c *SelectContext)
 
@@ -118,6 +121,9 @@ type FGListener interface {
 
 	// ExitAssert is called when exiting the Assert production.
 	ExitAssert(c *AssertContext)
+
+	// ExitSprintf is called when exiting the Sprintf production.
+	ExitSprintf(c *SprintfContext)
 
 	// ExitSelect is called when exiting the Select production.
 	ExitSelect(c *SelectContext)
