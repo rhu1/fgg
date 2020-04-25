@@ -20,14 +20,64 @@ var _ = fmt.Errorf
 func GetOmega(ds []Decl, e_main FGGExpr) Omega {
 	omega := make(Omega)
 	//type Omega map[string]GroundTypeAndSigs
+	// Maps u_ground.String() -> GroundTypeAndSigs{u_ground, sigs}
+	/*type GroundTypeAndSigs struct {
+		u_ground TNamed               // Pre: isGround(u_ground)
+		sigs     map[string]GroundSig // string key is toGroundSigsKey, i.e., GroundSig.sig.String()
+	}*/
+	/*type GroundSig struct {
+		sig   Sig // CHECKME: may only need meth name (given receiver type), but Sig is convenient?
+		targs []Type
+	}*/
 
 	var gamma GroundEnv
 	collectGroundTypesFromExpr(ds, gamma, e_main, omega, true)
 	fixOmega(ds, gamma, omega)
 
+	for _, v := range omega {
+		fmt.Println(v.u_ground, " ;; ", v.sigs)
+	}
+
 	omega1 := Omega1{make(map[string]TNamed), make(map[string]MethInstan)}
 	collectExpr(ds, make(GroundEnv), e_main, omega1)
 	fixOmega1(ds, omega1)
+
+	//fmt.Println("---")
+	//omega1.Println()
+
+	omega = make(Omega)
+	for _, u := range omega1.us {
+		omega[u.String()] = GroundTypeAndSigs{u, make(map[string]GroundSig)}
+	}
+	for _, m := range omega1.ms {
+		k := toWKey(m.u_recv)
+		wv, ok := omega[k]
+		if !ok {
+			wv = GroundTypeAndSigs{m.u_recv, make(map[string]GroundSig)}
+			omega[k] = wv
+		}
+		/*var md MDecl
+		for _, d := range ds {
+			if md1, ok := d.(MDecl); ok && md1.t_recv == m.u_recv.t_name && md1.name == m.meth {
+				md = md1
+				break
+			}
+		}
+		if md.u_ret == nil { // FIXME HACK
+			panic("MDecl not found: " + m.u_recv.t_name + "." + m.meth)
+		}
+		tmp := Sig{m.meth, md.PsiMeth, md.pDecls, md.u_ret}
+		fmt.Println("xxx:", m.meth, md.t_recv)
+		fmt.Println("yyy:", m.meth, md.PsiMeth, md.pDecls, md.u_ret)*/
+
+		tmp := methods(ds, m.u_recv)[m.meth]
+		g := GroundSig{tmp, m.psi}
+		wv.sigs[toGroundSigsKey(g)] = g // May overwrite (but fine)
+	}
+	fmt.Println("---")
+	for _, v := range omega {
+		fmt.Println(v.u_ground, " ;; ", v.sigs)
+	}
 
 	return omega
 }
@@ -38,6 +88,18 @@ type Omega1 struct {
 	us map[string]TNamed // Pre: all TNamed are isGround
 	//ms map[string]GroundTypeAndSigs // Maps u_ground.String() -> GroundTypeAndSigs{u_ground, sigs}
 	ms map[string]MethInstan
+}
+
+func (w Omega1) Println() {
+	fmt.Println("===")
+	for _, v := range w.us {
+		fmt.Println(v)
+	}
+	fmt.Println("---")
+	for _, v := range w.ms {
+		fmt.Println(v.u_recv, v.meth, v.psi)
+	}
+	fmt.Println("===")
 }
 
 type MethInstan struct {
@@ -59,16 +121,14 @@ func toKey_Wm(x MethInstan) string {
 /* fixOmega */
 
 func fixOmega1(ds []Decl, omega Omega1) {
+	x := 1
+	//fmt.Println("count:", x)
+	x++
+	//omega.Println()
 	for auxG(ds, omega) {
-		/*fmt.Println("\n===")
-		for _, v := range omega.us {
-			fmt.Println(v)
-		}
-		fmt.Println("---")
-		for _, v := range omega.ms {
-			fmt.Println(v.u_recv, v.meth, v.psi)
-		}
-		fmt.Println("===\n")*/
+		//fmt.Println("count:", x)
+		x++
+		//omega.Println()
 	}
 }
 
@@ -264,7 +324,6 @@ func auxI(ds []Decl, omega Omega1) bool {
 	}
 	for k, v := range tmp {
 		if _, ok := omega.ms[k]; !ok {
-			fmt.Println("111:", v)
 			omega.ms[k] = v
 			res = true
 		}
@@ -282,9 +341,9 @@ func auxM(ds []Decl, omega Omega1) bool {
 				continue
 			}
 			eta := MakeEta(g.psi, m.psi)
-			//fmt.Println("333:", m.u_recv, ";", g, ";", m)
+			//fmt.Println("333:", m.u_recv, ";", m.meth)
 			for _, pd := range g.pDecls {
-				//fmt.Println("444:", pd.u, eta)
+				//fmt.Println("444:", pd.name, pd.u)
 				u_pd := pd.u.SubsEta(eta) // HERE: need receiver subs also? cf. map.fgg "type b Eq(b)" -- methods should be ok?
 				tmp[toKey_Wt(u_pd)] = u_pd
 			}
@@ -317,10 +376,10 @@ func auxS(ds []Decl, delta Delta, omega Omega1) bool {
 			}
 			m1 := MethInstan{u, m.meth, m.psi}
 			k := toKey_Wm(m1)
-			if _, ok := omega.ms[k]; !ok {
-				tmp[k] = m1
-				collectExpr(ds, gamma, e, omega)
-			}
+			//if _, ok := omega.ms[k]; !ok { // No: initial collectExpr already adds to omega.ms
+			tmp[k] = m1
+			collectExpr(ds, gamma, e, omega)
+			//}
 		}
 	}
 	for k, v := range tmp {
