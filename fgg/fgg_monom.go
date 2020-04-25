@@ -11,7 +11,7 @@ import (
 var _ = fmt.Errorf
 
 /**
- * [WIP] Naive monomorph
+ * Monomorph
  */
 
 /* Export */
@@ -20,91 +20,163 @@ func ToMonomId(u TNamed) fg.Type {
 	return toMonomId(u)
 }
 
-/* Simplistic conservative isMonom check:
-   no typeparam nested in a named type in typeargs of StructLit/Call exprs */
-
-func IsMonomable(p FGGProgram) (FGGExpr, bool) {
-	for _, v := range p.decls {
-		switch d := v.(type) {
-		case STypeLit:
-		case ITypeLit:
-		case MDecl:
-			if e, ok := isMonomableMDecl(d); !ok {
-				return e, false
-			}
-		default:
-			panic("Unknown Decl kind: " + reflect.TypeOf(v).String() + "\n\t" +
-				v.String())
-		}
-	}
-	return isMonomableExpr(p.e_main)
-}
-
-func isMonomableMDecl(d MDecl) (FGGExpr, bool) {
-	return isMonomableExpr(d.e_body)
-}
-
-// Post: if bool is true, Expr is the offender; o/w disregard Expr
-func isMonomableExpr(e FGGExpr) (FGGExpr, bool) {
-	switch e1 := e.(type) {
-	case Variable:
-		return e1, true
-	case StructLit:
-		for _, v := range e1.u_S.u_args {
-			if u1, ok := v.(TNamed); ok {
-				if isOrContainsTParam(u1) {
-					return e1, false
-				}
-			}
-		}
-		for _, v := range e1.elems {
-			if e2, ok := isMonomableExpr(v); !ok {
-				return e2, false
-			}
-		}
-		return e1, true
-	case Select:
-		return isMonomableExpr(e1.e_S)
-	case Call:
-		for _, v := range e1.t_args {
-			if u1, ok := v.(TNamed); ok {
-				if isOrContainsTParam(u1) {
-					return e1, false
-				}
-			}
-		}
-		if e2, ok := isMonomableExpr(e1.e_recv); !ok {
-			return e2, false
-		}
-		for _, v := range e1.args {
-			if e2, ok := isMonomableExpr(v); !ok {
-				return e2, false
-			}
-		}
-		return e1, true
-	case Assert:
-		if u1, ok := e1.u_cast.(TNamed); ok {
-			if isOrContainsTParam(u1) {
-				return e1, false
-			}
-		}
-		return isMonomableExpr(e1.e_I)
-	default:
-		panic("Unknown Expr kind: " + reflect.TypeOf(e).String() + "\n\t" +
-			e.String())
-	}
-}
-
-/* Monomoprh: FGGProgram -> FGProgram */
+/* Monomorph: FGGProgram -> FGProgram */
 
 func Monomorph(p FGGProgram) fg.FGProgram {
 	ds_fgg := p.GetDecls()
 
 	//fmt.Println("xxxx:")
 
-	omega := GetOmega(ds_fgg, p.GetMain().(FGGExpr)) // TODO: do "supertype closure" over omega (cf. collectSuperMethInstans)
+	//omega := GetOmega(ds_fgg, p.GetMain().(FGGExpr)) // TODO: do "supertype closure" over omega (cf. collectSuperMethInstans)
+	omega := GetOmega1(ds_fgg, p.GetMain().(FGGExpr))
 	return ApplyOmega(p, omega)
 }
+
+func ApplyOmega1(p FGGProgram, omega Omega1) fg.FGProgram {
+	var ds_monom []Decl
+	for _, v := range p.decls {
+		switch d := v.(type) {
+		case TDecl:
+			tds_monom := monomTDecl1(p.decls, omega, d)
+			for _, v := range tds_monom {
+				ds_monom = append(ds_monom, v)
+			}
+		case MDecl:
+			mds_monom := monomMDecl1(omega, d)
+			for _, v := range mds_monom {
+				ds_monom = append(ds_monom, v)
+			}
+		default:
+			panic("Unknown Decl kind: " + reflect.TypeOf(d).String() +
+				"\n\t" + d.String())
+		}
+	}
+	e_monom := monomExpr1(p.e_main, make(Eta)) // FIXME
+	return fg.NewFGProgram(ds_monom, e_monom, p.printf)
+}
+
+// All m (MethInstan.meth) belong to the same t (MethInstan.u_recv.t_name)
+type Mu map[string]MethInstan // Cf. Omega1, toKey_Wm
+
+func monomTDecl1(ds []Decl, omega Omega1, td TDecl) []fg.TDecl {
+	var res []fg.TDecl
+	for _, u := range omega.us {
+		t := td.GetName()
+		if u.t_name == t {
+			eta := MakeEta(td.GetBigPsi(), u.u_args)
+			mu := make(Mu)
+			for k, m := range omega.ms {
+				if m.u_recv.t_name == t {
+					mu[k] = m
+				}
+			}
+			t_monom := toMonomId(u)
+			switch cast := td.(type) {
+			case STypeLit:
+				res = append(res, monomSTypeLit1(t_monom, cast, eta))
+			case ITypeLit:
+				res = append(res, monomITypeLit1(t_monom, cast, eta, mu))
+			default:
+				panic("Unknown TDecl kind: " + reflect.TypeOf(td).String() +
+					"\n\t" + td.String())
+			}
+		}
+	}
+	return res
+}
+
+func monomSTypeLit1(t_monom fg.Type, s STypeLit, eta Eta) fg.STypeLit {
+	fds := make([]fg.FieldDecl, len(s.fDecls))
+	for i := 0; i < len(s.fDecls); i++ {
+		fd := s.fDecls[i]
+		u_f := fd.u.SubsEta(eta) // "Inlined" substitution actions here -- cf. M-Type
+		/*if _, ok := omega[toWKey(u_f)]; !ok { // Cf. BuildWMap, extra loop over non-param TDecls, for those not seen o/w
+			panic("Unknown type: " + u_f.String())
+		}*/
+		fds[i] = fg.NewFieldDecl(fd.field, toMonomId(u_f))
+	}
+	return fg.NewSTypeLit(t_monom, fds)
+}
+
+func monomITypeLit1(t_monom fg.Type, c ITypeLit, eta Eta, mu Mu) fg.ITypeLit {
+	var ss []fg.Spec
+	for _, v := range c.specs {
+		switch s := v.(type) {
+		case Sig: // !!! M contains Psi
+			for _, m := range mu {
+				if m.meth != s.meth {
+					continue
+				}
+				theta := MakeEta(c.psi, m.psi)
+				for k, v := range eta {
+					theta[k] = v
+				}
+				//getMonomMethName(omega Omega, m Name, targs []Type) Name {
+				m_monom := toMonomMethName1(m.meth, m.psi, eta) // !!! small psi
+				pds_monom := make([]fg.ParamDecl, len(s.pDecls))
+				for i := 0; i < len(pds_monom); i++ {
+					pd := s.pDecls[i]
+					pds_monom[i] = fg.NewParamDecl(pd.name, toMonomId(pd.u.(TNamed)))
+				}
+				ss = append(ss, fg.NewSig(m_monom, pds_monom, toMonomId(s.u_ret.(TNamed))))
+			}
+		case TNamed: // Embedded
+			u_I := s.SubsEta(eta)
+			t_monom := toMonomId(u_I)
+			ss = append(ss, t_monom)
+		default:
+			panic("Unknown Spec kind: " + reflect.TypeOf(v).String() +
+				"\n\t" + v.String())
+		}
+	}
+	return fg.NewITypeLit(t_monom, ss)
+}
+
+func monomMDecl1(omega Omega1, md MDecl) []fg.MDecl {
+	var res []fg.MDecl
+	for _, m := range omega.ms {
+		if !(m.u_recv.t_name == md.t_recv && m.meth == md.name) {
+			continue
+		}
+	}
+	return res
+}
+
+func monomExpr1(e FGGExpr, eta Eta) fg.FGExpr {
+	panic("TODO")
+}
+
+/*
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ */
 
 func ApplyOmega(p FGGProgram, omega Omega) fg.FGProgram {
 	//fmt.Println("yyyy:")
@@ -124,7 +196,7 @@ func ApplyOmega(p FGGProgram, omega Omega) fg.FGProgram {
 		case MDecl:
 			for _, wv := range omega { // CHECKME: "prunes" unused types, OK?
 				if wv.u_ground.t_name == d.t_recv {
-					//fmt.Println("zzzz:", d.t_recv, wv.u_ground, wv.sigs)
+					//fmt.Println("zzzz:", d.name, d.t_recv, wv.u_ground, wv.sigs)
 					mds_monom := monomMDecl(p.decls, omega, d, wv)
 					for _, v := range mds_monom {
 						ds_monom = append(ds_monom, v)
@@ -395,6 +467,18 @@ func getMonomMethName(omega Omega, m Name, targs []Type) Name {
 	return Name(res)
 }
 
+// CHECKME: psi should already be gorunded, eta unnecessary?
+func toMonomMethName1(m Name, psi SmallPsi, eta Eta) Name {
+	first := toMonomId(psi[0].SubsEta(eta))
+	res := m + "<" + first.String()
+	for _, v := range psi[1:] {
+		next := toMonomId(v.SubsEta(eta))
+		res = res + "," + next.String()
+	}
+	res = res + ">"
+	return Name(res)
+}
+
 // returns true iff u is a TParam or contains a TParam
 func isOrContainsTParam(u Type) bool {
 	if _, ok := u.(TParam); ok {
@@ -407,4 +491,79 @@ func isOrContainsTParam(u Type) bool {
 		}
 	}
 	return false
+}
+
+/* Simplistic conservative isMonom check:
+   no typeparam nested in a named type in typeargs of StructLit/Call exprs */
+
+func IsMonomable(p FGGProgram) (FGGExpr, bool) {
+	for _, v := range p.decls {
+		switch d := v.(type) {
+		case STypeLit:
+		case ITypeLit:
+		case MDecl:
+			if e, ok := isMonomableMDecl(d); !ok {
+				return e, false
+			}
+		default:
+			panic("Unknown Decl kind: " + reflect.TypeOf(v).String() + "\n\t" +
+				v.String())
+		}
+	}
+	return isMonomableExpr(p.e_main)
+}
+
+func isMonomableMDecl(d MDecl) (FGGExpr, bool) {
+	return isMonomableExpr(d.e_body)
+}
+
+// Post: if bool is true, Expr is the offender; o/w disregard Expr
+func isMonomableExpr(e FGGExpr) (FGGExpr, bool) {
+	switch e1 := e.(type) {
+	case Variable:
+		return e1, true
+	case StructLit:
+		for _, v := range e1.u_S.u_args {
+			if u1, ok := v.(TNamed); ok {
+				if isOrContainsTParam(u1) {
+					return e1, false
+				}
+			}
+		}
+		for _, v := range e1.elems {
+			if e2, ok := isMonomableExpr(v); !ok {
+				return e2, false
+			}
+		}
+		return e1, true
+	case Select:
+		return isMonomableExpr(e1.e_S)
+	case Call:
+		for _, v := range e1.t_args {
+			if u1, ok := v.(TNamed); ok {
+				if isOrContainsTParam(u1) {
+					return e1, false
+				}
+			}
+		}
+		if e2, ok := isMonomableExpr(e1.e_recv); !ok {
+			return e2, false
+		}
+		for _, v := range e1.args {
+			if e2, ok := isMonomableExpr(v); !ok {
+				return e2, false
+			}
+		}
+		return e1, true
+	case Assert:
+		if u1, ok := e1.u_cast.(TNamed); ok {
+			if isOrContainsTParam(u1) {
+				return e1, false
+			}
+		}
+		return isMonomableExpr(e1.e_I)
+	default:
+		panic("Unknown Expr kind: " + reflect.TypeOf(e).String() + "\n\t" +
+			e.String())
+	}
 }

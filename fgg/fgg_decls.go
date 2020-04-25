@@ -242,7 +242,7 @@ func (pd ParamDecl) String() string {
 
 type ITypeLit struct {
 	t_I   Name
-	psi   BigPsi
+	psi   BigPsi // TODO: rename Psi
 	specs []Spec
 }
 
@@ -284,7 +284,7 @@ func (c ITypeLit) String() string {
 
 type Sig struct {
 	meth   Name
-	psi    BigPsi // Add-meth-tparams
+	psi    BigPsi // Add-meth-tparams  // TODO: rename Psi
 	pDecls []ParamDecl
 	u_ret  Type
 }

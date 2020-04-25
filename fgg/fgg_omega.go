@@ -19,6 +19,14 @@ var _ = fmt.Errorf
 // Pre: isMonomorphisable -- TODO
 func GetOmega(ds []Decl, e_main FGGExpr) Omega {
 	omega := make(Omega)
+	var gamma GroundEnv
+	collectGroundTypesFromExpr(ds, gamma, e_main, omega, true)
+	fixOmega(ds, gamma, omega)
+	return omega
+}
+
+func GetOmega1(ds []Decl, e_main FGGExpr) Omega {
+	omega := make(Omega)
 	//type Omega map[string]GroundTypeAndSigs
 	// Maps u_ground.String() -> GroundTypeAndSigs{u_ground, sigs}
 	/*type GroundTypeAndSigs struct {
@@ -65,7 +73,7 @@ func GetOmega(ds []Decl, e_main FGGExpr) Omega {
 			}
 		}
 		if md.u_ret == nil { // FIXME HACK
-			panic("MDecl not found: " + m.u_recv.t_name + "." + m.meth)
+			panic("Method decl not found: " + m.u_recv.t_name + "." + m.meth)
 		}
 		tmp := Sig{m.meth, md.PsiMeth, md.pDecls, md.u_ret}
 		fmt.Println("xxx:", m.meth, md.t_recv)
@@ -80,7 +88,7 @@ func GetOmega(ds []Decl, e_main FGGExpr) Omega {
 		fmt.Println(v.u_ground, " ;; ", v.sigs)
 	}
 
-	return omega
+	return omega2
 }
 
 /* Omega, GroundTypeAndSigs, GroundSig, GroundEnv */

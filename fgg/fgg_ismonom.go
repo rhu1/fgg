@@ -17,6 +17,7 @@ type RecvMethPair struct {
 
 var meths []RecvMethPair = make([]RecvMethPair, 0) // TODO refactor
 
+// TODO: rename
 func Foo(ds []Decl) {
 	graph := make(map[RecvMethPair]map[RecvMethPair]([][]Type))
 	bools := make(map[RecvMethPair]map[RecvMethPair]bool)
