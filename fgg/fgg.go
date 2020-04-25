@@ -121,6 +121,7 @@ func (u0 TNamed) TSubs(subs map[TParam]Type) Type {
 }
 
 func (u0 TNamed) SubsEta(eta Eta) TNamed {
+	//fmt.Println("555:", u0, eta)
 	us := make([]Type, len(u0.u_args))
 	for i := 0; i < len(us); i++ {
 		us[i] = u0.u_args[i].SubsEta(eta)

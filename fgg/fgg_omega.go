@@ -60,7 +60,15 @@ func toKey_Wm(x MethInstan) string {
 
 func fixOmega1(ds []Decl, omega Omega1) {
 	for auxG(ds, omega) {
-		//fmt.Println("----\n", omega.us, "\n", omega.ms, "\n----\n")
+		/*fmt.Println("\n===")
+		for _, v := range omega.us {
+			fmt.Println(v)
+		}
+		fmt.Println("---")
+		for _, v := range omega.ms {
+			fmt.Println(v.u_recv, v.meth, v.psi)
+		}
+		fmt.Println("===\n")*/
 	}
 }
 
@@ -211,7 +219,7 @@ func auxG(ds []Decl, omega Omega1) bool {
 	//fmt.Println("M\n", omega.us, "\n", omega.ms, "\n----\n")
 	res = auxS(ds, make(Delta), omega) || res
 	//fmt.Println("S\n", omega.us, "\n", omega.ms, "\n----\n")
-	res = auxP(ds, omega) || res
+	//res = auxP(ds, omega) || res
 	//fmt.Println("P\n", omega.us, "\n", omega.ms, "\n----\n")
 	return res
 }
@@ -256,6 +264,7 @@ func auxI(ds []Decl, omega Omega1) bool {
 	}
 	for k, v := range tmp {
 		if _, ok := omega.ms[k]; !ok {
+			fmt.Println("111:", v)
 			omega.ms[k] = v
 			res = true
 		}
@@ -273,8 +282,10 @@ func auxM(ds []Decl, omega Omega1) bool {
 				continue
 			}
 			eta := MakeEta(g.psi, m.psi)
+			//fmt.Println("333:", m.u_recv, ";", g, ";", m)
 			for _, pd := range g.pDecls {
-				u_pd := pd.u.SubsEta(eta) // HERE: need receiver subs also?
+				//fmt.Println("444:", pd.u, eta)
+				u_pd := pd.u.SubsEta(eta) // HERE: need receiver subs also? cf. map.fgg "type b Eq(b)" -- methods should be ok?
 				tmp[toKey_Wt(u_pd)] = u_pd
 			}
 			u_ret := g.u_ret.SubsEta(eta)
@@ -336,6 +347,7 @@ func auxP(ds []Decl, omega Omega1) bool {
 			}
 			m := MethInstan{u, g.meth, psi}
 			tmp[toKey_Wm(m)] = m
+			fmt.Println("222:", u, ";", m)
 		}
 	}
 	for k, v := range tmp {
