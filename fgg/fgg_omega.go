@@ -34,6 +34,7 @@ func GetOmega(ds []Decl, e_main FGGExpr) Omega {
 	collectGroundTypesFromExpr(ds, gamma, e_main, omega, true)
 	fixOmega(ds, gamma, omega)
 
+	fmt.Println("===")
 	for _, v := range omega {
 		fmt.Println(v.u_ground, " ;; ", v.sigs)
 	}
@@ -45,16 +46,16 @@ func GetOmega(ds []Decl, e_main FGGExpr) Omega {
 	//fmt.Println("---")
 	//omega1.Println()
 
-	omega = make(Omega)
+	omega2 := make(Omega)
 	for _, u := range omega1.us {
-		omega[u.String()] = GroundTypeAndSigs{u, make(map[string]GroundSig)}
+		omega2[u.String()] = GroundTypeAndSigs{u, make(map[string]GroundSig)}
 	}
 	for _, m := range omega1.ms {
 		k := toWKey(m.u_recv)
-		wv, ok := omega[k]
+		wv, ok := omega2[k]
 		if !ok {
 			wv = GroundTypeAndSigs{m.u_recv, make(map[string]GroundSig)}
-			omega[k] = wv
+			omega2[k] = wv
 		}
 		/*var md MDecl
 		for _, d := range ds {
@@ -75,7 +76,7 @@ func GetOmega(ds []Decl, e_main FGGExpr) Omega {
 		wv.sigs[toGroundSigsKey(g)] = g // May overwrite (but fine)
 	}
 	fmt.Println("---")
-	for _, v := range omega {
+	for _, v := range omega2 {
 		fmt.Println(v.u_ground, " ;; ", v.sigs)
 	}
 
