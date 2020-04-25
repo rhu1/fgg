@@ -103,14 +103,14 @@ func (a TParam) ToGoString() string {
 // Convention: t=type name (t), u=FGG type (tau)
 type TNamed struct {
 	t_name Name
-	u_args []Type
+	u_args []Type // SmallPsi
 }
 
 var _ Type = TNamed{}
 var _ Spec = TNamed{}
 
 func (u0 TNamed) GetName() Name    { return u0.t_name }
-func (u0 TNamed) GetTArgs() []Type { return u0.u_args }
+func (u0 TNamed) GetTArgs() []Type { return u0.u_args } // SmallPsi
 
 func (u0 TNamed) TSubs(subs map[TParam]Type) Type {
 	us := make([]Type, len(u0.u_args))

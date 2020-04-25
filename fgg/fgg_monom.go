@@ -51,7 +51,7 @@ func ApplyOmega1(p FGGProgram, omega Omega1) fg.FGProgram {
 				"\n\t" + d.String())
 		}
 	}
-	e_monom := monomExpr1(p.e_main, make(Eta)) // FIXME
+	e_monom := monomExpr1(p.e_main, make(Eta))
 	return fg.NewFGProgram(ds_monom, e_monom, p.printf)
 }
 
@@ -90,10 +90,8 @@ func monomSTypeLit1(t_monom fg.Type, s STypeLit, eta Eta) fg.STypeLit {
 	for i := 0; i < len(s.fDecls); i++ {
 		fd := s.fDecls[i]
 		u_f := fd.u.SubsEta(eta) // "Inlined" substitution actions here -- cf. M-Type
-		/*if _, ok := omega[toWKey(u_f)]; !ok { // Cf. BuildWMap, extra loop over non-param TDecls, for those not seen o/w
-			panic("Unknown type: " + u_f.String())
-		}*/
-		fds[i] = fg.NewFieldDecl(fd.field, toMonomId(u_f))
+		t_monom = toMonomId(u_f)
+		fds[i] = fg.NewFieldDecl(fd.field, t_monom)
 	}
 	return fg.NewSTypeLit(t_monom, fds)
 }
@@ -111,14 +109,8 @@ func monomITypeLit1(t_monom fg.Type, c ITypeLit, eta Eta, mu Mu) fg.ITypeLit {
 				for k, v := range eta {
 					theta[k] = v
 				}
-				//getMonomMethName(omega Omega, m Name, targs []Type) Name {
-				m_monom := toMonomMethName1(m.meth, m.psi, eta) // !!! small psi
-				pds_monom := make([]fg.ParamDecl, len(s.pDecls))
-				for i := 0; i < len(pds_monom); i++ {
-					pd := s.pDecls[i]
-					pds_monom[i] = fg.NewParamDecl(pd.name, toMonomId(pd.u.(TNamed)))
-				}
-				ss = append(ss, fg.NewSig(m_monom, pds_monom, toMonomId(s.u_ret.(TNamed))))
+				g_monom := monomSig1(s, m, theta) // !!! small psi
+				ss = append(ss, g_monom)
 			}
 		case TNamed: // Embedded
 			u_I := s.SubsEta(eta)
@@ -132,18 +124,70 @@ func monomITypeLit1(t_monom fg.Type, c ITypeLit, eta Eta, mu Mu) fg.ITypeLit {
 	return fg.NewITypeLit(t_monom, ss)
 }
 
+func monomSig1(g Sig, m MethInstan, eta Eta) fg.Sig {
+	//getMonomMethName(omega Omega, m Name, targs []Type) Name {
+	m_monom := toMonomMethName1(m.meth, m.psi, eta) // !!! small psi
+	pds_monom := make([]fg.ParamDecl, len(g.pDecls))
+	for i := 0; i < len(pds_monom); i++ {
+		pd := g.pDecls[i]
+		pds_monom[i] = fg.NewParamDecl(pd.name, toMonomId(pd.u.(TNamed)))
+	}
+	return fg.NewSig(m_monom, pds_monom, toMonomId(g.u_ret.(TNamed)))
+}
+
 func monomMDecl1(omega Omega1, md MDecl) []fg.MDecl {
 	var res []fg.MDecl
 	for _, m := range omega.ms {
 		if !(m.u_recv.t_name == md.t_recv && m.meth == md.name) {
 			continue
 		}
+		theta := MakeEta(md.PsiRecv, m.u_recv.u_args)
+		for i := 0; i < len(md.PsiMeth.tFormals); i++ {
+			theta[md.PsiMeth.tFormals[i].name] = m.psi[i].(TNamed)
+		}
+		recv_monom := fg.NewParamDecl(md.x_recv, toMonomId(m.u_recv))                 // !!! t_S(phi) already ground receiver
+		g_monom := monomSig1(Sig{md.name, md.PsiMeth, md.pDecls, md.u_ret}, m, theta) // !!! small psi
+		e_monom := monomExpr1(md.e_body, theta)
+		md_monom := fg.NewMDecl(recv_monom, g_monom.GetMethod(), g_monom.GetParamDecls(), g_monom.GetReturn(), e_monom)
+		res = append(res, md_monom)
 	}
 	return res
 }
 
-func monomExpr1(e FGGExpr, eta Eta) fg.FGExpr {
-	panic("TODO")
+func monomExpr1(e1 FGGExpr, eta Eta) fg.FGExpr {
+	switch e := e1.(type) {
+	case Variable:
+		return fg.NewVariable(e.name)
+	case StructLit:
+		es_monom := make([]fg.FGExpr, len(e.elems))
+		for i := 0; i < len(e.elems); i++ {
+			es_monom[i] = monomExpr1(e.elems[i], eta)
+		}
+		t_monom := toMonomId(e.u_S)
+		return fg.NewStructLit(t_monom, es_monom)
+	case Select:
+		return fg.NewSelect(monomExpr1(e.e_S, eta), e.field)
+	case Call:
+		e_monom := monomExpr1(e.e_recv, eta)
+		var m_monom Name
+		/*if len(e.t_args) == 0 {
+			m_monom = e.meth
+		} else {*/
+		m_monom = toMonomMethName1(e.meth, e.t_args, eta)
+		//}
+		es_monom := make([]fg.FGExpr, len(e.args))
+		for i := 0; i < len(e.args); i++ {
+			es_monom[i] = monomExpr1(e.args[i], eta)
+		}
+		return fg.NewCall(e_monom, m_monom, es_monom)
+	case Assert:
+		e_monom := monomExpr1(e.e_I, eta)
+		t_monom := toMonomId(e.u_cast.(TNamed))
+		return fg.NewAssert(e_monom, t_monom)
+	default:
+		panic("Unknown Expr kind: " + reflect.TypeOf(e1).String() + "\n\t" +
+			e1.String())
+	}
 }
 
 /*
@@ -467,7 +511,7 @@ func getMonomMethName(omega Omega, m Name, targs []Type) Name {
 	return Name(res)
 }
 
-// CHECKME: psi should already be gorunded, eta unnecessary?
+// !!! CHECKME: psi should already be gorunded, eta unnecessary?
 func toMonomMethName1(m Name, psi SmallPsi, eta Eta) Name {
 	first := toMonomId(psi[0].SubsEta(eta))
 	res := m + "<" + first.String()
