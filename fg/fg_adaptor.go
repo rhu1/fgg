@@ -222,3 +222,14 @@ func (a *FGAdaptor) ExitAssert(ctx *parser.AssertContext) {
 	e := a.pop().(FGExpr)
 	a.push(Assert{e, t})
 }
+
+func (a *FGAdaptor) ExitSprintf(ctx *parser.SprintfContext) {
+	var format string = ctx.GetChild(4).(*antlr.TerminalNodeImpl).GetText()
+	nargs := (ctx.GetChildCount() - 6) / 2 // Because of the comma
+	args := make([]FGExpr, nargs)
+	for i := 0; i < nargs; i++ {
+		tmp := a.pop()
+		args[i] = tmp.(FGExpr)
+	}
+	a.push(Sprintf{format, args})
+}

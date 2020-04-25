@@ -18,6 +18,7 @@ TYPE      : 'type' ;
 IMPORT    : 'import' ;
 FMT       : 'fmt' ;
 PRINTF    : 'Printf' ;
+SPRINT    : 'Sprint' ;
 
 
 /* Tokens */
