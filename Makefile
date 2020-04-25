@@ -37,6 +37,8 @@ test-fg-unit:
 
 .PHONY: test-fg-examples
 test-fg-examples:
+	go run github.com/rhu1/fgg -eval=10 fg/examples/hello/hello.go
+	go run github.com/rhu1/fgg -eval=10 fg/examples/hello/fmtprintf.go
 	go run github.com/rhu1/fgg -eval=-1 fg/examples/popl20/booleans/booleans.go
 	go run github.com/rhu1/fgg -eval=-1 fg/examples/popl20/compose/compose.go
 	go run github.com/rhu1/fgg -eval=-1 fg/examples/popl20/equal/equal.go
@@ -62,6 +64,8 @@ test-fgg-unit:
 
 .PHONY: test-fgg-examples
 test-fgg-examples:
+	go run github.com/rhu1/fgg -fgg -eval=10 fgg/examples/hello/hello.fgg
+	go run github.com/rhu1/fgg -fgg -eval=10 fgg/examples/hello/fmtprintf.fgg
 	go run github.com/rhu1/fgg -fgg -eval=-1 fgg/examples/popl20/booleans/booleans.fgg
 	go run github.com/rhu1/fgg -fgg -eval=-1 fgg/examples/popl20/compose/compose.fgg
 	go run github.com/rhu1/fgg -fgg -eval=-1 fgg/examples/popl20/graph/graph.fgg

@@ -47,7 +47,7 @@ LINE_COMMENT    : '//' ~[\r\n]* -> channel(HIDDEN) ;
 program    : PACKAGE MAIN ';' 
              (IMPORT '"' FMT '"')?
              decls? FUNC MAIN '(' ')' '{' 
-             ('_' '=' expr | FMT '.' PRINTF '(' '"' '%' '#' 'v' '"' ',' expr ')')  // TODO: too permissive re. whitespace
+             ('_' '=' expr | FMT '.' PRINTF '(' '"%#v"' ',' expr ')')
              '}' EOF ;
 decls      : ((typeDecl | methDecl) ';')+ ;
 typeDecl   : TYPE NAME typeLit ;  // TODO: tag id=NAME, better for adapting (vs., index constants)
