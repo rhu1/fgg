@@ -231,9 +231,11 @@ func (intrp *FGGInterp) Oblit(compile string) {
 /* Aux */
 
 func monomOutputHack(out string) string {
-	out = strings.Replace(out, ",,", " ͜", -1) // U+035C Combining Double Breve Below  // TODO: refactor -- cf. fgg_monom, toMonomId
-	out = strings.Replace(out, "<", "ᐸ", -1)   // U+1438 Canadian Aboriginal Syllabics Pa
-	out = strings.Replace(out, ">", "ᐳ", -1)   // U+1433 Canadian Aboriginal Syllabics Po
+	// TODO: refactor -- cf. fgg_monom, toMonomId
+	out = strings.Replace(out, ",,", "ᐨ", -1) // U+1428 Canadian Aboriginal Syllabics Final Short Horizontal Stroke
+	// U+035C Combining Double Breve Below -- CHECKME: doesn't work with ANTLR?
+	out = strings.Replace(out, "<", "ᐸ", -1) // U+1438 Canadian Aboriginal Syllabics Pa
+	out = strings.Replace(out, ">", "ᐳ", -1) // U+1433 Canadian Aboriginal Syllabics Po
 	return out
 }
 

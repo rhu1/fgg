@@ -28,7 +28,8 @@ PRINTF    : 'Printf' ;
 fragment LETTER : ('a' .. 'z') | ('A' .. 'Z') ;
 fragment DIGIT  : ('0' .. '9') ;
 //fragment HACK   : 'ᐸ' | 'ᐳ' ;  // Doesn't seem to work?
-fragment HACK   : '\u1438' | '\u1433' | '\u1428' ;  // Hack for monom output
+fragment HACK   : '\u1438' | '\u1433' | '\u1428' ;    // Hack for monom output (cf. Frontend.monomOutputHack)
+//fragment HACK   : '\u1438' | '\u1433' | '\u035C' ;
 NAME            : (LETTER | '_' | HACK) (LETTER | '_' | DIGIT | HACK)* ;
 WHITESPACE      : [ \r\n\t]+ -> skip ;
 COMMENT         : '/*' .*? '*/' -> channel(HIDDEN) ;

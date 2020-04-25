@@ -279,8 +279,8 @@ func (c Call) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 	for i := 0; i < len(c.args); i++ {
 		t := c.args[i].Typing(ds, gamma, allowStupid)
 		if !t.Impls(ds, g.pDecls[i].t) {
-			panic("Arg expr type must implement param type: arg=" + t + ", param=" +
-				g.pDecls[i].t)
+			panic("Arg expr type must implement param type: arg=" + t.String() +
+				", param=" + g.pDecls[i].t.String() + "\n\t" + c.String())
 		}
 	}
 	return g.t_ret

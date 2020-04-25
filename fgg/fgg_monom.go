@@ -165,7 +165,7 @@ func monomExpr1(e1 FGGExpr, eta Eta) fg.FGExpr {
 		for i := 0; i < len(e.elems); i++ {
 			es_monom[i] = monomExpr1(e.elems[i], eta)
 		}
-		t_monom := toMonomId(e.u_S)
+		t_monom := toMonomId(e.u_S.SubsEta(eta))
 		return fg.NewStructLit(t_monom, es_monom)
 	case Select:
 		return fg.NewSelect(monomExpr1(e.e_S, eta), e.field)
