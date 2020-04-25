@@ -25,8 +25,7 @@ func GetOmega(ds []Decl, e_main FGGExpr) Omega {
 	return omega
 }
 
-func GetOmega1(ds []Decl, e_main FGGExpr) Omega {
-	omega := make(Omega)
+func GetOmega1(ds []Decl, e_main FGGExpr) Omega1 {
 	//type Omega map[string]GroundTypeAndSigs
 	// Maps u_ground.String() -> GroundTypeAndSigs{u_ground, sigs}
 	/*type GroundTypeAndSigs struct {
@@ -38,6 +37,7 @@ func GetOmega1(ds []Decl, e_main FGGExpr) Omega {
 		targs []Type
 	}*/
 
+	/*omega := make(Omega)
 	var gamma GroundEnv
 	collectGroundTypesFromExpr(ds, gamma, e_main, omega, true)
 	fixOmega(ds, gamma, omega)
@@ -45,50 +45,54 @@ func GetOmega1(ds []Decl, e_main FGGExpr) Omega {
 	fmt.Println("===")
 	for _, v := range omega {
 		fmt.Println(v.u_ground, " ;; ", v.sigs)
-	}
+	}*/
 
 	omega1 := Omega1{make(map[string]TNamed), make(map[string]MethInstan)}
 	collectExpr(ds, make(GroundEnv), e_main, omega1)
 	fixOmega1(ds, omega1)
 
-	//fmt.Println("---")
-	//omega1.Println()
+	/*
+		fmt.Println("---")
+		omega1.Println()
+		//*/
 
-	omega2 := make(Omega)
-	for _, u := range omega1.us {
-		omega2[u.String()] = GroundTypeAndSigs{u, make(map[string]GroundSig)}
-	}
-	for _, m := range omega1.ms {
-		k := toWKey(m.u_recv)
-		wv, ok := omega2[k]
-		if !ok {
-			wv = GroundTypeAndSigs{m.u_recv, make(map[string]GroundSig)}
-			omega2[k] = wv
+	return omega1
+
+	/* omega2 := make(Omega)
+		for _, u := range omega1.us {
+			omega2[u.String()] = GroundTypeAndSigs{u, make(map[string]GroundSig)}
 		}
-		/*var md MDecl
-		for _, d := range ds {
-			if md1, ok := d.(MDecl); ok && md1.t_recv == m.u_recv.t_name && md1.name == m.meth {
-				md = md1
-				break
+		for _, m := range omega1.ms {
+			k := toWKey(m.u_recv)
+			wv, ok := omega2[k]
+			if !ok {
+				wv = GroundTypeAndSigs{m.u_recv, make(map[string]GroundSig)}
+				omega2[k] = wv
 			}
-		}
-		if md.u_ret == nil { // FIXME HACK
-			panic("Method decl not found: " + m.u_recv.t_name + "." + m.meth)
-		}
-		tmp := Sig{m.meth, md.PsiMeth, md.pDecls, md.u_ret}
-		fmt.Println("xxx:", m.meth, md.t_recv)
-		fmt.Println("yyy:", m.meth, md.PsiMeth, md.pDecls, md.u_ret)*/
+			/*var md MDecl
+			for _, d := range ds {
+				if md1, ok := d.(MDecl); ok && md1.t_recv == m.u_recv.t_name && md1.name == m.meth {
+					md = md1
+					break
+				}
+			}
+			if md.u_ret == nil { // FIXME HACK
+				panic("Method decl not found: " + m.u_recv.t_name + "." + m.meth)
+			}
+			tmp := Sig{m.meth, md.PsiMeth, md.pDecls, md.u_ret}
+			fmt.Println("xxx:", m.meth, md.t_recv)
+			fmt.Println("yyy:", m.meth, md.PsiMeth, md.pDecls, md.u_ret)* /
 
-		tmp := methods(ds, m.u_recv)[m.meth]
-		g := GroundSig{tmp, m.psi}
-		wv.sigs[toGroundSigsKey(g)] = g // May overwrite (but fine)
-	}
-	fmt.Println("---")
-	for _, v := range omega2 {
-		fmt.Println(v.u_ground, " ;; ", v.sigs)
-	}
-
+			tmp := methods(ds, m.u_recv)[m.meth]
+			g := GroundSig{tmp, m.psi}
+			wv.sigs[toGroundSigsKey(g)] = g // May overwrite (but fine)
+		}
+		fmt.Println("---")
+		for _, v := range omega2 {
+			fmt.Println(v.u_ground, " ;; ", v.sigs)
+		}
 	return omega2
+	*/
 }
 
 /* Omega, GroundTypeAndSigs, GroundSig, GroundEnv */
@@ -425,6 +429,19 @@ func auxP(ds []Decl, omega Omega1) bool {
 		}
 	}
 	return res
+}
+
+/* Helpers */
+
+func isGround(u TNamed) bool {
+	for _, v := range u.u_args {
+		if u1, ok := v.(TNamed); !ok {
+			return false
+		} else if !isGround(u1) {
+			return false
+		}
+	}
+	return true
 }
 
 /*
@@ -855,17 +872,4 @@ func collectGroundTypesFromSigAndBody(ds []Decl, u_recv Type, c Call,
 	} else {
 		// CHECKME: visit all possible bodies -- now subsumed by fixOmega?
 	}
-}
-
-/* Helpers */
-
-func isGround(u TNamed) bool {
-	for _, v := range u.u_args {
-		if u1, ok := v.(TNamed); !ok {
-			return false
-		} else if !isGround(u1) {
-			return false
-		}
-	}
-	return true
 }
