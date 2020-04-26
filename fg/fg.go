@@ -11,6 +11,10 @@ type Name = base.Name
 type FGNode = base.AstNode
 type Decl = base.Decl
 
+/* Constants */
+
+var STRING_TYPE Type = Type("string")
+
 /* Name, Context, Type */
 
 // Name: see Aliases (at top)
@@ -105,6 +109,9 @@ type FGExpr interface {
 /* Helpers */
 
 func isStructType(ds []Decl, t Type) bool {
+	if t == STRING_TYPE { // TODO CHECKME
+		return true
+	}
 	for _, v := range ds {
 		d, ok := v.(STypeLit)
 		if ok && d.t_S == t {

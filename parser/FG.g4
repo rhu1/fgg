@@ -21,6 +21,7 @@ TYPE      : 'type' ;
 IMPORT    : 'import' ;
 FMT       : 'fmt' ;
 PRINTF    : 'Printf' ;
+SPRINTF   : 'Sprintf' ;
 
 
 /* Tokens */
@@ -28,11 +29,13 @@ PRINTF    : 'Printf' ;
 fragment LETTER : ('a' .. 'z') | ('A' .. 'Z') ;
 fragment DIGIT  : ('0' .. '9') ;
 //fragment HACK   : 'ᐸ' | 'ᐳ' ;  // Doesn't seem to work?
-fragment HACK   : '\u1438' | '\u1433' | '\u1428' ;  // Hack for monom output
-NAME            : (LETTER | '_' | HACK) (LETTER | '_' | DIGIT | HACK)* ;
+fragment MONOM_HACK   : '\u1438' | '\u1433' | '\u1428' ;  // Hack for monom output
+NAME            : (LETTER | '_' | MONOM_HACK) (LETTER | '_' | DIGIT | MONOM_HACK)* ;
 WHITESPACE      : [ \r\n\t]+ -> skip ;
 COMMENT         : '/*' .*? '*/' -> channel(HIDDEN) ;
 LINE_COMMENT    : '//' ~[\r\n]* -> channel(HIDDEN) ;
+
+SPRINTF_HACK : '"' (LETTER | DIGIT | '_' | '%' | '(' | ')' | '+' | '-')* '"' ;  // Hack for Sprintf format
 
 
 /* Rules */
@@ -68,6 +71,7 @@ expr       : NAME                                   # Variable
            | expr '.' NAME                          # Select
            | recv=expr '.' NAME '(' args=exprs? ')' # Call
            | expr '.' '(' NAME ')'                  # Assert
+           | FMT '.' SPRINTF '(' SPRINTF_HACK (',' | expr)* ')'  # Sprintf
            ;
 exprs      : expr (',' expr)* ;
 

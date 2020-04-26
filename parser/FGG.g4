@@ -18,6 +18,7 @@ TYPE      : 'type' ;
 IMPORT    : 'import' ;
 FMT       : 'fmt' ;
 PRINTF    : 'Printf' ;
+SPRINTF   : 'Sprintf' ;
 
 
 /* Tokens */
@@ -28,6 +29,8 @@ NAME            : (LETTER | '_') (LETTER | '_' | DIGIT)* ;
 WHITESPACE      : [ \r\n\t]+ -> skip ;
 COMMENT         : '/*' .*? '*/' -> channel(HIDDEN) ;
 LINE_COMMENT    : '//' ~[\r\n]* -> channel(HIDDEN) ;
+
+SPRINTF_HACK : '"' (LETTER | DIGIT | '_' | '%' | '(' | ')' | '+' | '-')* '"' ;  // Hack for Sprintf format
 
 
 /* Rules */
@@ -72,6 +75,7 @@ expr        : NAME                                                 # Variable
             | expr '.' NAME                                        # Select
             | recv=expr '.' NAME '(' targs=typs? ')' '(' args=exprs? ')' # Call
             | expr '.' '(' typ ')'                                 # Assert
+            | FMT '.' SPRINTF '(' SPRINTF_HACK (',' | expr)* ')'    # Sprintf
             ;
 exprs       : expr (',' expr)* ;
 

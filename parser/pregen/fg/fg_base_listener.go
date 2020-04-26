@@ -123,6 +123,12 @@ func (s *BaseFGListener) EnterAssert(ctx *AssertContext) {}
 // ExitAssert is called when production Assert is exited.
 func (s *BaseFGListener) ExitAssert(ctx *AssertContext) {}
 
+// EnterSprintf is called when production Sprintf is entered.
+func (s *BaseFGListener) EnterSprintf(ctx *SprintfContext) {}
+
+// ExitSprintf is called when production Sprintf is exited.
+func (s *BaseFGListener) ExitSprintf(ctx *SprintfContext) {}
+
 // EnterSelect is called when production Select is entered.
 func (s *BaseFGListener) EnterSelect(ctx *SelectContext) {}
 

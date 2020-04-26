@@ -462,6 +462,129 @@ func (a Assert) ToGoString() string {
 	return b.String()
 }
 
+/* String, fmt.Sprintf */
+
+type String struct {
+	val string
+}
+
+var _ FGGExpr = String{}
+
+func (s String) GetValue() string { return s.val }
+
+func (s String) Subs(subs map[Variable]FGGExpr) FGGExpr {
+	return s
+}
+
+func (s String) TSubs(subs map[TParam]Type) FGGExpr {
+	return s
+}
+
+func (s String) Eval(ds []Decl) (FGGExpr, string) {
+	panic("Cannot reduce: " + s.String())
+}
+
+func (s String) Typing(ds []Decl, delta Delta, gamma Gamma, allowStupid bool) Type {
+	return STRING_TYPE
+}
+
+// From base.Expr
+func (s String) IsValue() bool {
+	return true
+}
+
+func (s String) String() string {
+	//return "\"" + s.val + "\""
+	return s.val
+}
+
+func (s String) ToGoString() string {
+	//return "\"" + s.val + "\""
+	return s.val
+}
+
+type Sprintf struct {
+	format string // Includes surrounding quotes
+	args   []FGGExpr
+}
+
+var _ FGGExpr = Sprintf{}
+
+func (s Sprintf) GetFormat() string  { return s.format }
+func (s Sprintf) GetArgs() []FGGExpr { return s.args }
+
+func (s Sprintf) Subs(subs map[Variable]FGGExpr) FGGExpr {
+	args := make([]FGGExpr, len(s.args))
+	for i := 0; i < len(args); i++ {
+		args[i] = s.args[i].Subs(subs)
+	}
+	return Sprintf{s.format, args}
+}
+
+func (s Sprintf) TSubs(subs map[TParam]Type) FGGExpr {
+	return s
+}
+
+func (s Sprintf) Eval(ds []Decl) (FGGExpr, string) {
+	args := make([]FGGExpr, len(s.args))
+	done := false
+	var rule string
+	for i := 0; i < len(s.args); i++ {
+		v := s.args[i]
+		if !done && !v.IsValue() {
+			v, rule = v.Eval(ds)
+			done = true
+		}
+		args[i] = v
+	}
+	if done {
+		return Sprintf{s.format, args}, rule
+	} else {
+		cast := make([]interface{}, len(args))
+		for i := range args {
+			cast[i] = args[i]
+		}
+		return String{fmt.Sprintf(s.format, cast...)}, "Sprintf"
+	}
+}
+
+// TODO: [Warning] not "fully" type checked, cf. MISSING/EXTRA
+func (s Sprintf) Typing(ds []Decl, delta Delta, gamma Gamma, allowStupid bool) Type {
+	for i := 0; i < len(s.args); i++ {
+		s.args[i].Typing(ds, delta, gamma, allowStupid)
+	}
+	return STRING_TYPE
+}
+
+// From base.Expr
+func (s Sprintf) IsValue() bool {
+	return false
+}
+
+func (s Sprintf) String() string {
+	var b strings.Builder
+	b.WriteString("fmt.Sprintf(")
+	b.WriteString(s.format)
+	if len(s.args) > 0 {
+		b.WriteString(", ")
+		writeExprs(&b, s.args)
+	}
+	b.WriteString(")")
+	return b.String()
+}
+
+func (s Sprintf) ToGoString() string {
+	var b strings.Builder
+	b.WriteString("fmt.Sprintf(")
+	b.WriteString(s.format)
+	if len(s.args) > 0 {
+		b.WriteString(", ")
+		writeToGoExprs(&b, s.args)
+	}
+	b.WriteString(")")
+	return b.String()
+}
+
 /* Aux, helpers */
 
 func writeExprs(b *strings.Builder, es []FGGExpr) {
