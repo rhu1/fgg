@@ -99,11 +99,11 @@ func (psi Psi) Ok(ds []Decl) {
 	for _, v := range psi.tFormals {
 		u, ok := v.u_I.(TNamed)
 		if !ok {
-			panic("Upper bound must be of the form \"t_I(type ...)\": not " +
+			panic("Upper bound must be of the form \"t_I(type ...)\", not: " +
 				v.u_I.String())
 		}
 		if !IsNamedIfaceType(ds, u) { // CHECKME: subsumes above TName check (looks for \tau_S)
-			panic("Upper bound must be an interface type: not " + u.String())
+			panic("Upper bound must be an interface type, not: " + u.String())
 		}
 	}
 }
