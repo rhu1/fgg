@@ -228,6 +228,21 @@ func (md MDecl) Ok(ds []Decl) {
 	md.psi_recv.Ok(ds)
 	md.psi_meth.Ok(ds)
 
+	td := getTDecl(ds, md.t_recv)
+	tfs_td := td.GetPsi().tFormals
+	if len(tfs_td) != len(md.psi_recv.tFormals) {
+		panic("Receiver parameter arity mismatch:\n\tmdecl=" + md.t_recv +
+			md.psi_recv.String() + ", tdecl=" + td.GetName() + td.GetPsi().String())
+	}
+	for i := 0; i < len(tfs_td); i++ {
+		if !md.psi_recv.tFormals[i].u_I.Impls(ds, tfs_td[i].u_I) {
+			//if !md.psi_recv.tFormals[i].u_I.Equals(tfs_td[i].u_I) {  // TODO: add test // FIXME: equals needs alpha
+			panic("Receiver parameter upperbound not a subtype of type decl upperbound:" +
+				"\n\tmdecl=" + md.psi_recv.tFormals[i].String() + ", tdecl=" +
+				tfs_td[i].String())
+		}
+	}
+
 	delta := md.psi_recv.ToDelta()
 	for _, v := range md.psi_recv.tFormals {
 		v.u_I.Ok(ds, delta)

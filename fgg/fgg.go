@@ -82,7 +82,7 @@ func (a TParam) Equals(u base.Type) bool {
 			":\n\t" + u.String())
 	}
 	if b, ok := u.(TParam); ok {
-		return a == b
+		return a == b // TODO FIXME: need alpha -- pre- index-ify TNamed (and Impls)?  // TODO: add tests
 	}
 	return false
 }

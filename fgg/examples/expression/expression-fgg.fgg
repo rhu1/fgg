@@ -54,6 +54,7 @@ type Add(type a Any()) struct {
 };
 
 func (e Add(type a Evalable())) Eval(type )() Int() {
+//func (e Add(type )) Eval(type )() Int() {  // TODO: add test
   return e.left.Eval()() //+ e.right.Eval()()
 };
 
