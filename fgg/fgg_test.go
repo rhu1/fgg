@@ -317,3 +317,21 @@ func TestEval001(t *testing.T) {
 	prog := parseAndOkGood(t, Any, ToAny, A, B, Bm, e)
 	testutils.EvalAndOkBad(t, prog, "Cannot cast A() to B(A())", 3)
 }
+
+/* fmt.Sprintf */
+
+func TestEval002(t *testing.T) {
+	imp := "import \"fmt\""
+	A := "type A(type ) struct {}"
+	e := "fmt.Sprintf(\"\")"
+	prog := parseAndOkGood(t, imp, A, e)
+	testutils.EvalAndOkGood(t, prog, 1)
+}
+
+func TestEval003(t *testing.T) {
+	imp := "import \"fmt\""
+	A := "type A(type ) struct {}"
+	e := "fmt.Sprintf(\"%v ,_()+- %v\", A(){}, A(){})"
+	prog := parseAndOkGood(t, imp, A, e)
+	testutils.EvalAndOkGood(t, prog, 1)
+}

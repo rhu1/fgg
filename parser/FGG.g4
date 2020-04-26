@@ -29,8 +29,7 @@ NAME            : (LETTER | '_') (LETTER | '_' | DIGIT)* ;
 WHITESPACE      : [ \r\n\t]+ -> skip ;
 COMMENT         : '/*' .*? '*/' -> channel(HIDDEN) ;
 LINE_COMMENT    : '//' ~[\r\n]* -> channel(HIDDEN) ;
-
-SPRINTF_HACK : '"' (LETTER | DIGIT | '_' | '%' | '(' | ')' | '+' | '-')* '"' ;  // Hack for Sprintf format
+STRING          : '"' (LETTER | DIGIT | ' ' | '.' | ',' | '_' | '%' | '(' | ')' | '+' | '-')* '"' ;
 
 
 /* Rules */
@@ -50,7 +49,7 @@ typeFormals : '(' TYPE typeFDecls? ')' ; // Refactored "(...)" into here
 typeFDecls  : typeFDecl (',' typeFDecl)* ;
 typeFDecl   : NAME typ ;  // CHECKME: #TypeName ?
 program     : PACKAGE MAIN ';'
-              (IMPORT '"' FMT '"')?
+              (IMPORT STRING ';')?
               decls? FUNC MAIN '(' ')' '{'
               ('_' '=' expr  | FMT '.' PRINTF '(' '"%#v"' ',' expr ')')
               '}' EOF
@@ -75,7 +74,7 @@ expr        : NAME                                                 # Variable
             | expr '.' NAME                                        # Select
             | recv=expr '.' NAME '(' targs=typs? ')' '(' args=exprs? ')' # Call
             | expr '.' '(' typ ')'                                 # Assert
-            | FMT '.' SPRINTF '(' SPRINTF_HACK (',' | expr)* ')'    # Sprintf
+            | FMT '.' SPRINTF '(' STRING (',' | expr)* ')'         # Sprintf
             ;
 exprs       : expr (',' expr)* ;
 

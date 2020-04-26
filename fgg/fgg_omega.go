@@ -203,6 +203,21 @@ func collectGroundTypesFromExpr(ds []Decl, gamma GroundEnv, e FGGExpr,
 		collectGroundTypesFromType(ds, u, omega)
 		collectGroundTypesFromExpr(ds, gamma, e1.e_I, omega)
 		res = u
+	case String: // CHECKME
+		k := toWKey(STRING_TYPE)
+		if _, ok := omega[k]; !ok {
+			omega[k] = GroundTypeAndSigs{STRING_TYPE, make(map[string]GroundSig)}
+		}
+		res = STRING_TYPE
+	case Sprintf:
+		k := toWKey(STRING_TYPE)
+		if _, ok := omega[k]; !ok {
+			omega[k] = GroundTypeAndSigs{STRING_TYPE, make(map[string]GroundSig)}
+		}
+		for _, arg := range e1.args {
+			collectGroundTypesFromExpr(ds, gamma, arg, omega) // Discard return
+		}
+		res = STRING_TYPE
 	default:
 		panic("Unknown Expr kind: " + reflect.TypeOf(e).String() + "\n\t" +
 			e.String())
