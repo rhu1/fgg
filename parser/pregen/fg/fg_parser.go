@@ -88,10 +88,10 @@ var parserATN = []uint16{
 	162, 3, 2, 2, 2, 162, 164, 3, 2, 2, 2, 163, 161, 3, 2, 2, 2, 164, 166,
 	7, 6, 2, 2, 165, 144, 3, 2, 2, 2, 165, 146, 3, 2, 2, 2, 165, 152, 3, 2,
 	2, 2, 166, 185, 3, 2, 2, 2, 167, 168, 12, 6, 2, 2, 168, 169, 7, 10, 2,
-	2, 169, 184, 7, 25, 2, 2, 170, 171, 12, 4, 2, 2, 171, 172, 7, 10, 2, 2,
+	2, 169, 184, 7, 25, 2, 2, 170, 171, 12, 5, 2, 2, 171, 172, 7, 10, 2, 2,
 	172, 173, 7, 25, 2, 2, 173, 175, 7, 5, 2, 2, 174, 176, 5, 28, 15, 2, 175,
 	174, 3, 2, 2, 2, 175, 176, 3, 2, 2, 2, 176, 177, 3, 2, 2, 2, 177, 184,
-	7, 6, 2, 2, 178, 179, 12, 3, 2, 2, 179, 180, 7, 10, 2, 2, 180, 181, 7,
+	7, 6, 2, 2, 178, 179, 12, 4, 2, 2, 179, 180, 7, 10, 2, 2, 180, 181, 7,
 	5, 2, 2, 181, 182, 7, 25, 2, 2, 182, 184, 7, 6, 2, 2, 183, 167, 3, 2, 2,
 	2, 183, 170, 3, 2, 2, 2, 183, 178, 3, 2, 2, 2, 184, 187, 3, 2, 2, 2, 185,
 	183, 3, 2, 2, 2, 185, 186, 3, 2, 2, 2, 186, 27, 3, 2, 2, 2, 187, 185, 3,
@@ -112,7 +112,7 @@ var literalNames = []string{
 var symbolicNames = []string{
 	"", "", "", "", "", "", "", "", "", "", "", "", "FUNC", "INTERFACE", "MAIN",
 	"PACKAGE", "RETURN", "STRUCT", "TYPE", "IMPORT", "FMT", "PRINTF", "SPRINTF",
-	"NAME", "WHITESPACE", "COMMENT", "LINE_COMMENT", "SPRINT_HACK",
+	"NAME", "WHITESPACE", "COMMENT", "LINE_COMMENT", "SPRINTF_HACK",
 }
 
 var ruleNames = []string{
@@ -174,7 +174,7 @@ const (
 	FGParserWHITESPACE   = 24
 	FGParserCOMMENT      = 25
 	FGParserLINE_COMMENT = 26
-	FGParserSPRINT_HACK  = 27
+	FGParserSPRINTF_HACK = 27
 )
 
 // FGParser rules.
@@ -2310,8 +2310,8 @@ func (s *SprintfContext) SPRINTF() antlr.TerminalNode {
 	return s.GetToken(FGParserSPRINTF, 0)
 }
 
-func (s *SprintfContext) SPRINT_HACK() antlr.TerminalNode {
-	return s.GetToken(FGParserSPRINT_HACK, 0)
+func (s *SprintfContext) SPRINTF_HACK() antlr.TerminalNode {
+	return s.GetToken(FGParserSPRINTF_HACK, 0)
 }
 
 func (s *SprintfContext) AllExpr() []IExprContext {
@@ -2533,7 +2533,7 @@ func (p *FGParser) expr(_p int) (localctx IExprContext) {
 		}
 		{
 			p.SetState(154)
-			p.Match(FGParserSPRINT_HACK)
+			p.Match(FGParserSPRINTF_HACK)
 		}
 		p.SetState(159)
 		p.GetErrorHandler().Sync(p)
@@ -2608,8 +2608,8 @@ func (p *FGParser) expr(_p int) (localctx IExprContext) {
 				p.PushNewRecursionContext(localctx, _startState, FGParserRULE_expr)
 				p.SetState(168)
 
-				if !(p.Precpred(p.GetParserRuleContext(), 2)) {
-					panic(antlr.NewFailedPredicateException(p, "p.Precpred(p.GetParserRuleContext(), 2)", ""))
+				if !(p.Precpred(p.GetParserRuleContext(), 3)) {
+					panic(antlr.NewFailedPredicateException(p, "p.Precpred(p.GetParserRuleContext(), 3)", ""))
 				}
 				{
 					p.SetState(169)
@@ -2647,8 +2647,8 @@ func (p *FGParser) expr(_p int) (localctx IExprContext) {
 				p.PushNewRecursionContext(localctx, _startState, FGParserRULE_expr)
 				p.SetState(176)
 
-				if !(p.Precpred(p.GetParserRuleContext(), 1)) {
-					panic(antlr.NewFailedPredicateException(p, "p.Precpred(p.GetParserRuleContext(), 1)", ""))
+				if !(p.Precpred(p.GetParserRuleContext(), 2)) {
+					panic(antlr.NewFailedPredicateException(p, "p.Precpred(p.GetParserRuleContext(), 2)", ""))
 				}
 				{
 					p.SetState(177)
@@ -2827,10 +2827,10 @@ func (p *FGParser) Expr_Sempred(localctx antlr.RuleContext, predIndex int) bool 
 		return p.Precpred(p.GetParserRuleContext(), 4)
 
 	case 1:
-		return p.Precpred(p.GetParserRuleContext(), 2)
+		return p.Precpred(p.GetParserRuleContext(), 3)
 
 	case 2:
-		return p.Precpred(p.GetParserRuleContext(), 1)
+		return p.Precpred(p.GetParserRuleContext(), 2)
 
 	default:
 		panic("No predicate with index: " + fmt.Sprint(predIndex))

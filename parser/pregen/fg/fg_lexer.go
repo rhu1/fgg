@@ -136,14 +136,14 @@ var lexerLiteralNames = []string{
 var lexerSymbolicNames = []string{
 	"", "", "", "", "", "", "", "", "", "", "", "", "FUNC", "INTERFACE", "MAIN",
 	"PACKAGE", "RETURN", "STRUCT", "TYPE", "IMPORT", "FMT", "PRINTF", "SPRINTF",
-	"NAME", "WHITESPACE", "COMMENT", "LINE_COMMENT", "SPRINT_HACK",
+	"NAME", "WHITESPACE", "COMMENT", "LINE_COMMENT", "SPRINTF_HACK",
 }
 
 var lexerRuleNames = []string{
 	"T__0", "T__1", "T__2", "T__3", "T__4", "T__5", "T__6", "T__7", "T__8",
 	"T__9", "T__10", "FUNC", "INTERFACE", "MAIN", "PACKAGE", "RETURN", "STRUCT",
 	"TYPE", "IMPORT", "FMT", "PRINTF", "SPRINTF", "LETTER", "DIGIT", "MONOM_HACK",
-	"NAME", "WHITESPACE", "COMMENT", "LINE_COMMENT", "SPRINT_HACK",
+	"NAME", "WHITESPACE", "COMMENT", "LINE_COMMENT", "SPRINTF_HACK",
 }
 
 type FGLexer struct {
@@ -207,5 +207,5 @@ const (
 	FGLexerWHITESPACE   = 24
 	FGLexerCOMMENT      = 25
 	FGLexerLINE_COMMENT = 26
-	FGLexerSPRINT_HACK  = 27
+	FGLexerSPRINTF_HACK = 27
 )
