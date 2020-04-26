@@ -270,7 +270,7 @@ func Test013(t *testing.T) {
 	Any := "type Any(type ) interface {}"
 	A := "type A(type ) struct {}"
 	B := "type B(type a Any()) struct { f a }"
-	Bm := "func (x0 B(type )) m(type a Any())(x1 a) a { return x1 }"
+	Bm := "func (x0 B(type a Any())) m(type b Any())(x1 b) b { return x1 }"
 	e := "B(A()){A(){}}.m(B(A()))(B(A()){A(){}}).f"
 	parseAndOkGood(t, Any, A, B, Bm, e)
 }
@@ -280,7 +280,7 @@ func Test014(t *testing.T) {
 	Any := "type Any(type ) interface {}"
 	A := "type A(type ) struct {}"
 	B := "type B(type a Any()) struct { f a }"
-	Bm := "func (x0 B(type )) m(type a Any())() a { return A(){} }"
+	Bm := "func (x0 B(type a Any())) m(type b Any())() b { return A(){} }"
 	e := "B(A()){A(){}}.m(B(A()))(B(A()){A(){}}).f" // Eval would break type preservation, see TestEval001
 	parseAndOkBad(t, Any, A, B, Bm, e)
 }
@@ -312,7 +312,7 @@ func TestEval001(t *testing.T) {
 	ToAny := "type ToAny(type ) struct { any Any() }"
 	A := "type A(type ) struct {}"
 	B := "type B(type a Any()) struct { f a }"
-	Bm := "func (x0 B(type )) m(type a Any())(x1 a) a { return ToAny(){A(){}}.any.(a) }"
+	Bm := "func (x0 B(type a Any())) m(type b Any())(x1 b) b { return ToAny(){A(){}}.any.(b) }"
 	e := "B(A()){A(){}}.m(B(A()))(B(A()){A(){}}).f"
 	prog := parseAndOkGood(t, Any, ToAny, A, B, Bm, e)
 	testutils.EvalAndOkBad(t, prog, "Cannot cast A() to B(A())", 3)

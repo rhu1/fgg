@@ -60,9 +60,10 @@ func (xs Nil(type a Eq(a))) Map(type b Eq(b))(f Func(a, b)) List(b) {
 func (xs Cons(type a Eq(a))) Map(type b Eq(b))(f Func(a, b)) List(b) {
 	return Cons(b){f.Apply()(xs.head), xs.tail.Map(b)(f)}
 };
-type memberBr(type b Eq(b)) struct {
-	xs List(b);
-	x b
+//type memberBr(type b Eq(b)) struct {  // FIXME: alpha
+type memberBr(type a Eq(a)) struct {
+	xs List(a);
+	x a
 };
 func (this memberBr(type a Eq(a))) IfTT(type )() Bool() { return TT(){} };
 func (this memberBr(type a Eq(a))) IfFF(type )() Bool() { return this.xs.Member()(this.x) };
