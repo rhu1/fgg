@@ -131,8 +131,10 @@ Options:
 // - fix embedding monom -- DONE
 // - fix monom name mangling -- partial: fix "commas"
 // - fix parser nil vs. empty creation
+// - Equals/Impls alpha -- e.g., interface/struct method overriding
 // - WF check for duplicate decl names
 // - WF recursive structs check
+// - WF types declared
 func main() {
 	flag.Usage = usage
 	flag.Parse()
