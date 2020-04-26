@@ -20,7 +20,6 @@ TYPE      : 'type' ;
 
 IMPORT    : 'import' ;
 FMT       : 'fmt' ;
-//FMS       : 'fms' ;
 PRINTF    : 'Printf' ;
 SPRINTF    : 'Sprintf' ;
 
@@ -70,9 +69,9 @@ paramDecl  : vari=NAME typ=NAME ;
 expr       : NAME                                   # Variable
            | NAME '{' exprs? '}'                    # StructLit
            | expr '.' NAME                          # Select
-           | FMT '.' SPRINTF '(' SPRINT_HACK (',' | expr)* ')'  # Sprintf
            | recv=expr '.' NAME '(' args=exprs? ')' # Call
            | expr '.' '(' NAME ')'                  # Assert
+           | FMT '.' SPRINTF '(' SPRINT_HACK (',' | expr)* ')'  # Sprintf
            ;
 exprs      : expr (',' expr)* ;
 
