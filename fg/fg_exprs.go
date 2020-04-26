@@ -468,7 +468,7 @@ func (s Sprintf) Eval(ds []Decl) (FGExpr, string) {
 	}
 }
 
-// TODO: [Warning] not "fully" type checked
+// TODO: [Warning] not "fully" type checked, cf. MISSING/EXTRA
 func (s Sprintf) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 	for i := 0; i < len(s.args); i++ {
 		s.args[i].Typing(ds, gamma, allowStupid)

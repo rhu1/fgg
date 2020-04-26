@@ -21,7 +21,7 @@ TYPE      : 'type' ;
 IMPORT    : 'import' ;
 FMT       : 'fmt' ;
 PRINTF    : 'Printf' ;
-SPRINTF    : 'Sprintf' ;
+SPRINTF   : 'Sprintf' ;
 
 
 /* Tokens */

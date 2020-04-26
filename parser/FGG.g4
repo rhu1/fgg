@@ -18,7 +18,7 @@ TYPE      : 'type' ;
 IMPORT    : 'import' ;
 FMT       : 'fmt' ;
 PRINTF    : 'Printf' ;
-SPRINT    : 'Sprint' ;
+SPRINTF   : 'Sprintf' ;
 
 
 /* Tokens */
@@ -73,6 +73,7 @@ expr        : NAME                                                 # Variable
             | expr '.' NAME                                        # Select
             | recv=expr '.' NAME '(' targs=typs? ')' '(' args=exprs? ')' # Call
             | expr '.' '(' typ ')'                                 # Assert
+            | FMT '.' SPRINTF '(' SPRINT_HACK (',' | expr)* ')'    # Sprintf
             ;
 exprs       : expr (',' expr)* ;
 
