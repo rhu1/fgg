@@ -175,7 +175,7 @@ func (a *FGAdaptor) ExitSig(ctx *parser.SigContext) {
 	a.push(Sig{m, pds, t})
 }
 
-/* "expr": #Variable, #StructLit, #Select, #Call, #Assert */
+/* "expr": #Variable, #StructLit, #Select, #Call, #Assert, #Sprintf */
 
 func (a *FGAdaptor) ExitVariable(ctx *parser.VariableContext) {
 	id := Name(ctx.GetChild(0).(*antlr.TerminalNodeImpl).GetText())

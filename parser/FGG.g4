@@ -30,6 +30,8 @@ WHITESPACE      : [ \r\n\t]+ -> skip ;
 COMMENT         : '/*' .*? '*/' -> channel(HIDDEN) ;
 LINE_COMMENT    : '//' ~[\r\n]* -> channel(HIDDEN) ;
 
+SPRINTF_HACK : '"' (LETTER | DIGIT | '_' | '%' | '(' | ')' | '+' | '-')* '"' ;  // Hack for Sprintf format
+
 
 /* Rules */
 
@@ -73,7 +75,7 @@ expr        : NAME                                                 # Variable
             | expr '.' NAME                                        # Select
             | recv=expr '.' NAME '(' targs=typs? ')' '(' args=exprs? ')' # Call
             | expr '.' '(' typ ')'                                 # Assert
-            | FMT '.' SPRINTF '(' SPRINT_HACK (',' | expr)* ')'    # Sprintf
+            | FMT '.' SPRINTF '(' SPRINTF_HACK (',' | expr)* ')'    # Sprintf
             ;
 exprs       : expr (',' expr)* ;
 

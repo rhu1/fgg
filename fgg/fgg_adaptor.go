@@ -221,7 +221,7 @@ func (a *FGGAdaptor) ExitSig(ctx *parser.SigContext) {
 	a.push(Sig{m, psi, pds, t})
 }
 
-/* "expr": #Variable, #StructLit, #Select, #Call, #Assert */
+/* "expr": #Variable, #StructLit, #Select, #Call, #Assert, #Sprintf */
 
 // Same as FG
 func (a *FGGAdaptor) ExitVariable(ctx *parser.VariableContext) {
@@ -279,4 +279,15 @@ func (a *FGGAdaptor) ExitAssert(ctx *parser.AssertContext) {
 	u := a.pop().(Type)
 	e := a.pop().(FGGExpr)
 	a.push(Assert{e, u})
+}
+
+func (a *FGGAdaptor) ExitSprintf(ctx *parser.SprintfContext) {
+	var format string = ctx.GetChild(4).(*antlr.TerminalNodeImpl).GetText()
+	nargs := (ctx.GetChildCount() - 6) / 2 // Because of the comma
+	args := make([]FGGExpr, nargs)
+	for i := 0; i < nargs; i++ {
+		tmp := a.pop()
+		args[i] = tmp.(FGGExpr)
+	}
+	a.push(Sprintf{format, args})
 }

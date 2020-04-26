@@ -15,6 +15,10 @@ func NewTName(t Name, us []Type) TNamed       { return TNamed{t, us} }
 func IsStructType(ds []Decl, u Type) bool     { return isStructType(ds, u) }
 func IsNamedIfaceType(ds []Decl, u Type) bool { return isNamedIfaceType(ds, u) }
 
+/* Constants */
+
+var STRING_TYPE TNamed = TNamed{"string", []Type{}}
+
 /* Aliases from base */
 // TODO: refactor?
 
@@ -289,6 +293,9 @@ func isStructName(ds []Decl, t Name) bool {
 // Check if u is a \tau_S -- implicitly must be a TNamed
 func isStructType(ds []Decl, u Type) bool {
 	if u1, ok := u.(TNamed); ok {
+		if u1.Equals(STRING_TYPE) { // TODO CHECKME
+			return true
+		}
 		for _, v := range ds {
 			d, ok := v.(STypeLit)
 			if ok && d.t_name == u1.t_name {
