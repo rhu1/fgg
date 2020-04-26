@@ -34,7 +34,7 @@ NAME            : (LETTER | '_' | MONOM_HACK) (LETTER | '_' | DIGIT | MONOM_HACK
 WHITESPACE      : [ \r\n\t]+ -> skip ;
 COMMENT         : '/*' .*? '*/' -> channel(HIDDEN) ;
 LINE_COMMENT    : '//' ~[\r\n]* -> channel(HIDDEN) ;
-STRING          : '"' (LETTER | DIGIT | ' ' | ',' | '_' | '%' | '(' | ')' | '+' | '-')* '"' ;
+STRING          : '"' (LETTER | DIGIT | ' ' | '.' | ',' | '_' | '%' | '(' | ')' | '+' | '-')* '"' ;
 
 
 /* Rules */

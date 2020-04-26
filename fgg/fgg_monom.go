@@ -357,6 +357,14 @@ func monomExpr(omega Omega, e FGGExpr) fg.FGExpr {
 		}
 		t_monom := toMonomId(omega[wk].u_ground)
 		return fg.NewAssert(monomExpr(omega, e1.e_I), t_monom)
+	case String: // CHECKME
+		return fg.NewString(e1.val)
+	case Sprintf:
+		args := make([]fg.FGExpr, len(e1.args))
+		for i := 0; i < len(e1.args); i++ {
+			args[i] = monomExpr(omega, e1.args[i])
+		}
+		return fg.NewSprintf(e1.format, args)
 	default:
 		panic("Unknown Expr kind: " + reflect.TypeOf(e).String() + "\n\t" +
 			e.String())
