@@ -34,8 +34,7 @@ NAME            : (LETTER | '_' | MONOM_HACK) (LETTER | '_' | DIGIT | MONOM_HACK
 WHITESPACE      : [ \r\n\t]+ -> skip ;
 COMMENT         : '/*' .*? '*/' -> channel(HIDDEN) ;
 LINE_COMMENT    : '//' ~[\r\n]* -> channel(HIDDEN) ;
-
-SPRINTF_HACK : '"' (LETTER | DIGIT | '_' | '%' | '(' | ')' | '+' | '-')* '"' ;  // Hack for Sprintf format
+STRING          : '"' (LETTER | DIGIT | ' ' | ',' | '_' | '%' | '(' | ')' | '+' | '-')* '"' ;
 
 
 /* Rules */
@@ -47,9 +46,9 @@ SPRINTF_HACK : '"' (LETTER | DIGIT | '_' | '%' | '(' | ')' | '+' | '-')* '"' ;  
 // "plurals", e.g., decls, used for sequences: comes out as "helper" Contexts,
 // nodes that group up actual children underneath -- makes "adapting" easier.
 
-program    : PACKAGE MAIN ';' 
-             (IMPORT '"' FMT '"')?
-             decls? FUNC MAIN '(' ')' '{' 
+program    : PACKAGE MAIN ';'
+             (IMPORT STRING ';')?
+             decls? FUNC MAIN '(' ')' '{'
              ('_' '=' expr | FMT '.' PRINTF '(' '"%#v"' ',' expr ')')
              '}' EOF ;
 decls      : ((typeDecl | methDecl) ';')+ ;
@@ -71,7 +70,7 @@ expr       : NAME                                   # Variable
            | expr '.' NAME                          # Select
            | recv=expr '.' NAME '(' args=exprs? ')' # Call
            | expr '.' '(' NAME ')'                  # Assert
-           | FMT '.' SPRINTF '(' SPRINTF_HACK (',' | expr)* ')'  # Sprintf
+           | FMT '.' SPRINTF '(' STRING (',' | expr)* ')'  # Sprintf
            ;
 exprs      : expr (',' expr)* ;
 

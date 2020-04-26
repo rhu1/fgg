@@ -50,7 +50,7 @@ typeFormals : '(' TYPE typeFDecls? ')' ; // Refactored "(...)" into here
 typeFDecls  : typeFDecl (',' typeFDecl)* ;
 typeFDecl   : NAME typ ;  // CHECKME: #TypeName ?
 program     : PACKAGE MAIN ';'
-              (IMPORT '"' FMT '"')?
+              (IMPORT '"' FMT '"' (';')?)?  // FIXME: ';' wasn't meant to be optional
               decls? FUNC MAIN '(' ')' '{'
               ('_' '=' expr  | FMT '.' PRINTF '(' '"%#v"' ',' expr ')')
               '}' EOF

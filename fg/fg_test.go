@@ -412,3 +412,21 @@ func TestEval006(t *testing.T) {
 	prog := parseAndOkGood(t, A, e)
 	testutils.EvalAndOkGood(t, prog, 0)
 }
+
+/* fmt.Sprintf */
+
+func TestEval007(t *testing.T) {
+	imp := "import \"fmt\""
+	A := "type A struct {}"
+	e := "fmt.Sprintf(\"\")"
+	prog := parseAndOkGood(t, imp, A, e)
+	testutils.EvalAndOkGood(t, prog, 1)
+}
+
+func TestEval008(t *testing.T) {
+	imp := "import \"fmt\""
+	A := "type A struct {}"
+	e := "fmt.Sprintf(\"%v ,_()+- %v\", A{}, A{})"
+	prog := parseAndOkGood(t, imp, A, e)
+	testutils.EvalAndOkGood(t, prog, 1)
+}
