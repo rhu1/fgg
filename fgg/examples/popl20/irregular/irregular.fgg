@@ -50,7 +50,7 @@ type Pair(type a Any()) struct {
 type pairMap(type a Any()) struct {
 	f Func(a, a)
 };
-func (p pairMap(type a Any())) Apply(type )(x Pair(a)) Pair(a) {
+func (p pairMap(type a Any())) Apply(type )(x Pair(a)) Pair(a) {  // Func(Pair(a),Pair(a))
 	return Pair(a){ p.f.Apply()(x.fst), p.f.Apply()(x.snd) }
 };
 type Balanced(type a Any()) interface {
@@ -64,7 +64,7 @@ type Node(type a Any()) struct {
 func (leaf Leaf(type a Any())) BalancedMap(type )(f Func(a, a)) Balanced(a) {
 	return Leaf(a){}
 };
-func (node Node(type a Any())) BalancedMap(type )(f Func(a,a)) Balanced(a) {
+func (node Node(type a Any())) BalancedMap(type )(f Func(a, a)) Balanced(a) {
 	return Node(a){f.Apply()(node.label), node.children.BalancedMap()(pairMap(a){f})}
 };
 
@@ -95,3 +95,10 @@ func main() {
 				}
 			}.BalancedMap()(incr(){D(){}._1()()})
 }
+
+/*func main() {   // TODO: add test (monom)
+	_ = Node(Nat()){
+				D(){}._1()(),
+				Leaf(Pair(Nat())){}
+			}.BalancedMap()(incr(){D(){}._1()()})
+}*/

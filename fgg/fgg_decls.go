@@ -85,77 +85,18 @@ func (p FGGProgram) String() string {
 	return b.String()
 }
 
-/* Type formals */
-
-// Pre: len(as) == len(us)
-// Wrapper for []TFormal (cf. e.g., FieldDecl), only because of "(type ...)" syntax
-type Psi struct {
-	tFormals []TFormal
-}
-
-func (psi Psi) GetTFormals() []TFormal { return psi.tFormals }
-
-func (psi Psi) Ok(ds []Decl) {
-	for _, v := range psi.tFormals {
-		u, ok := v.u_I.(TNamed)
-		if !ok {
-			panic("Upper bound must be of the form \"t_I(type ...)\", not: " +
-				v.u_I.String())
-		}
-		if !IsNamedIfaceType(ds, u) { // CHECKME: subsumes above TName check (looks for \tau_S)
-			panic("Upper bound must be an interface type, not: " + u.String())
-		}
-	}
-}
-
-func (psi Psi) ToDelta() Delta {
-	delta := make(map[TParam]Type)
-	for _, v := range psi.tFormals {
-		delta[v.name] = v.u_I
-	}
-	return delta
-}
-
-func (psi Psi) String() string {
-	var b strings.Builder
-	b.WriteString("(type ") // Includes "(...)" -- cf. e.g., writeFieldDecls
-	if len(psi.tFormals) > 0 {
-		b.WriteString(psi.tFormals[0].String())
-		for _, v := range psi.tFormals[1:] {
-			b.WriteString(", ")
-			b.WriteString(v.String())
-		}
-	}
-	b.WriteString(")")
-	return b.String()
-}
-
-type TFormal struct {
-	name TParam
-	u_I  Type
-	// CHECKME: submission version, upper bound \tau_I is only "of the form t_I(~\tau)"? -- i.e., not \alpha?
-	// ^If so, then can refine to TName
-}
-
-func (tf TFormal) GetTParam() TParam   { return tf.name }
-func (tf TFormal) GetUpperBound() Type { return tf.u_I }
-
-func (tf TFormal) String() string {
-	return string(tf.name) + " " + tf.u_I.String()
-}
-
 /* STypeLit, FieldDecl */
 
 type STypeLit struct {
 	t_name Name
-	psi    Psi
+	Psi    BigPsi
 	fDecls []FieldDecl
 }
 
 var _ TDecl = STypeLit{}
 
 func (s STypeLit) GetName() Name              { return s.t_name }
-func (s STypeLit) GetPsi() Psi                { return s.psi }
+func (s STypeLit) GetBigPsi() BigPsi          { return s.Psi }
 func (s STypeLit) GetFieldDecls() []FieldDecl { return s.fDecls }
 
 func (s STypeLit) Ok(ds []Decl) {
@@ -166,7 +107,7 @@ func (s STypeLit) String() string {
 	var b strings.Builder
 	b.WriteString("type ")
 	b.WriteString(string(s.t_name))
-	b.WriteString(s.psi.String())
+	b.WriteString(s.Psi.String())
 	b.WriteString(" struct {")
 	if len(s.fDecls) > 0 {
 		b.WriteString(" ")
@@ -198,24 +139,24 @@ func (fd FieldDecl) String() string {
 /* MDecl, ParamDecl */
 
 type MDecl struct {
-	x_recv   Name // CHECKME: better to be Variable?  (etc. for other such Names)
-	t_recv   Name // N.B. t_S
-	psi_recv Psi
+	x_recv  Name // CHECKME: better to be Variable?  (etc. for other such Names)
+	t_recv  Name // N.B. t_S
+	PsiRecv BigPsi
 	// N.B. receiver elements "decomposed" because Psi (not TNamed, cf. fg.MDecl uses ParamDecl)
-	name     Name // Refactor to embed Sig?
-	psi_meth Psi
-	pDecls   []ParamDecl
-	u_ret    Type // Return
-	e_body   FGGExpr
+	name    Name // Refactor to embed Sig?
+	PsiMeth BigPsi
+	pDecls  []ParamDecl
+	u_ret   Type // Return
+	e_body  FGGExpr
 }
 
 var _ Decl = MDecl{}
 
 func (md MDecl) GetRecvName() Name          { return md.x_recv }
 func (md MDecl) GetRecvTypeName() Name      { return md.t_recv }
-func (md MDecl) GetRecvPsi() Psi            { return md.psi_recv }
+func (md MDecl) GetRecvPsi() BigPsi         { return md.PsiRecv }
 func (md MDecl) GetName() Name              { return md.name }
-func (md MDecl) GetMDeclPsi() Psi           { return md.psi_meth } // MDecl in name to prevent false capture by TDecl interface
+func (md MDecl) GetMDeclPsi() BigPsi        { return md.PsiMeth } // MDecl in name to prevent false capture by TDecl interface
 func (md MDecl) GetParamDecls() []ParamDecl { return md.pDecls }
 func (md MDecl) GetReturn() Type            { return md.u_ret }
 func (md MDecl) GetBody() FGGExpr           { return md.e_body }
@@ -225,40 +166,42 @@ func (md MDecl) Ok(ds []Decl) {
 		panic("Receiver must be a struct type: not " + md.t_recv +
 			"\n\t" + md.String())
 	}
-	md.psi_recv.Ok(ds)
-	md.psi_meth.Ok(ds)
+	md.PsiRecv.Ok(ds)
+	md.PsiMeth.Ok(ds)
 
 	td := getTDecl(ds, md.t_recv)
-	tfs_td := td.GetPsi().tFormals
-	if len(tfs_td) != len(md.psi_recv.tFormals) {
+	tfs_td := td.GetBigPsi().tFormals
+	if len(tfs_td) != len(md.PsiRecv.tFormals) {
 		panic("Receiver parameter arity mismatch:\n\tmdecl=" + md.t_recv +
-			md.psi_recv.String() + ", tdecl=" + td.GetName() + td.GetPsi().String())
+			md.PsiRecv.String() + ", tdecl=" + td.GetName() + td.GetBigPsi().String())
 	}
 	for i := 0; i < len(tfs_td); i++ {
-		if !md.psi_recv.tFormals[i].u_I.Impls(ds, tfs_td[i].u_I) {
-			//if !md.psi_recv.tFormals[i].u_I.Equals(tfs_td[i].u_I) {  // TODO: add test // FIXME: equals needs alpha
+		subs_md := makeParamIndexSubs(md.PsiRecv)
+		subs_td := makeParamIndexSubs(td.GetBigPsi())
+		if !md.PsiRecv.tFormals[i].u_I.TSubs(subs_md).
+			Impls(ds, tfs_td[i].u_I.TSubs(subs_td)) {
 			panic("Receiver parameter upperbound not a subtype of type decl upperbound:" +
-				"\n\tmdecl=" + md.psi_recv.tFormals[i].String() + ", tdecl=" +
+				"\n\tmdecl=" + md.PsiRecv.tFormals[i].String() + ", tdecl=" +
 				tfs_td[i].String())
 		}
 	}
 
-	delta := md.psi_recv.ToDelta()
-	for _, v := range md.psi_recv.tFormals {
+	delta := md.PsiRecv.ToDelta()
+	for _, v := range md.PsiRecv.tFormals {
 		v.u_I.Ok(ds, delta)
 	}
 
-	delta1 := md.psi_meth.ToDelta()
+	delta1 := md.PsiMeth.ToDelta()
 	for k, v := range delta {
 		delta1[k] = v
 	}
-	for _, v := range md.psi_meth.tFormals {
+	for _, v := range md.PsiMeth.tFormals {
 		v.u_I.Ok(ds, delta1)
 	}
 
-	as := make([]Type, len(md.psi_recv.tFormals)) // !!! submission version, x:t_S(a) => x:t_S(~a)
-	for i := 0; i < len(md.psi_recv.tFormals); i++ {
-		as[i] = md.psi_recv.tFormals[i].name
+	as := make([]Type, len(md.PsiRecv.tFormals)) // !!! submission version, x:t_S(a) => x:t_S(~a)
+	for i := 0; i < len(md.PsiRecv.tFormals); i++ {
+		as[i] = md.PsiRecv.tFormals[i].name
 	}
 	gamma := Gamma{md.x_recv: TNamed{md.t_recv, as}} // CHECKME: can we give the bounds directly here instead of 'as'?
 	for _, v := range md.pDecls {
@@ -273,7 +216,7 @@ func (md MDecl) Ok(ds []Decl) {
 }
 
 func (md MDecl) ToSig() Sig {
-	return Sig{md.name, md.psi_meth, md.pDecls, md.u_ret}
+	return Sig{md.name, md.PsiMeth, md.pDecls, md.u_ret}
 }
 
 func (md MDecl) String() string {
@@ -283,10 +226,10 @@ func (md MDecl) String() string {
 	b.WriteString(md.x_recv)
 	b.WriteString(" ")
 	b.WriteString(md.t_recv)
-	b.WriteString(md.psi_recv.String())
+	b.WriteString(md.PsiRecv.String())
 	b.WriteString(") ")
 	b.WriteString(md.name)
-	b.WriteString(md.psi_meth.String())
+	b.WriteString(md.PsiMeth.String())
 	b.WriteString("(")
 	writeParamDecls(&b, md.pDecls)
 	b.WriteString(") ")
@@ -316,15 +259,15 @@ func (pd ParamDecl) String() string {
 
 type ITypeLit struct {
 	t_I   Name
-	psi   Psi
+	psi   BigPsi // TODO: rename Psi
 	specs []Spec
 }
 
 var _ TDecl = ITypeLit{}
 
-func (c ITypeLit) GetName() Name    { return c.t_I }
-func (c ITypeLit) GetPsi() Psi      { return c.psi }
-func (c ITypeLit) GetSpecs() []Spec { return c.specs }
+func (c ITypeLit) GetName() Name     { return c.t_I }
+func (c ITypeLit) GetBigPsi() BigPsi { return c.psi }
+func (c ITypeLit) GetSpecs() []Spec  { return c.specs }
 
 func (c ITypeLit) Ok(ds []Decl) {
 	TDeclOk(ds, c)
@@ -358,7 +301,7 @@ func (c ITypeLit) String() string {
 
 type Sig struct {
 	meth   Name
-	psi    Psi // Add-meth-tparams
+	psi    BigPsi // Add-meth-tparams  // TODO: rename Psi
 	pDecls []ParamDecl
 	u_ret  Type
 }
@@ -366,7 +309,7 @@ type Sig struct {
 var _ Spec = Sig{}
 
 func (g Sig) GetMethod() Name            { return g.meth }
-func (g Sig) GetPsi() Psi                { return g.psi }
+func (g Sig) GetPsi() BigPsi             { return g.psi }
 func (g Sig) GetParamDecls() []ParamDecl { return g.pDecls }
 func (g Sig) GetReturn() Type            { return g.u_ret }
 
@@ -382,7 +325,7 @@ func (g Sig) TSubs(subs map[TParam]Type) Sig {
 		ps[i] = ParamDecl{pd.name, pd.u.TSubs(subs)}
 	}
 	u := g.u_ret.TSubs(subs)
-	return Sig{g.meth, Psi{tfs}, ps, u}
+	return Sig{g.meth, BigPsi{tfs}, ps, u}
 }
 
 func (g Sig) Ok(ds []Decl) {
@@ -392,24 +335,6 @@ func (g Sig) Ok(ds []Decl) {
 
 func (g Sig) GetSigs(_ []Decl) []Sig {
 	return []Sig{g}
-}
-
-// !!! Sig in FGG includes ~a and ~x, which naively breaks "impls"
-func (g0 Sig) EqExceptTParamsAndVars(g Sig) bool {
-	if len(g0.psi.tFormals) != len(g.psi.tFormals) || len(g0.pDecls) != len(g.pDecls) {
-		return false
-	}
-	for i := 0; i < len(g0.psi.tFormals); i++ {
-		if !g0.psi.tFormals[i].u_I.Equals(g.psi.tFormals[i].u_I) {
-			return false
-		}
-	}
-	for i := 0; i < len(g0.pDecls); i++ {
-		if !g0.pDecls[i].u.Equals(g.pDecls[i].u) {
-			return false
-		}
-	}
-	return g0.meth == g.meth && g0.u_ret.Equals(g.u_ret)
 }
 
 func (g Sig) String() string {
@@ -426,7 +351,7 @@ func (g Sig) String() string {
 /* Aux, helpers */
 
 func TDeclOk(ds []Decl, td TDecl) {
-	psi := td.GetPsi()
+	psi := td.GetBigPsi()
 	psi.Ok(ds)
 	delta := psi.ToDelta()
 	for _, v := range psi.tFormals {

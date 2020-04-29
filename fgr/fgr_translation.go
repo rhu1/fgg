@@ -81,7 +81,7 @@ func Translate(p fgg.FGGProgram) FGRProgram { // TODO FIXME: FGR -- TODO also ca
 
 		// Add duck-typing meths
 		c := fgg.GetTDecl(ds_fgg, v.super.String()).(fgg.ITypeLit)
-		tfs := c.GetPsi().GetTFormals()
+		tfs := c.GetBigPsi().GetTFormals()
 		us := make([]fgg.Type, len(tfs))
 		for i := 0; i < len(us); i++ {
 			us[i] = tfs[i].GetTParam()
@@ -136,7 +136,7 @@ func Translate(p fgg.FGGProgram) FGRProgram { // TODO FIXME: FGR -- TODO also ca
 /* TDecl */
 
 func fgrTransSTypeLit(s fgg.STypeLit) STypeLit {
-	delta := s.GetPsi().ToDelta()
+	delta := s.GetBigPsi().ToDelta()
 	/*tfs := s.GetPsi().GetTFormals()
 	rds := make([]RepDecl, len(tfs))
 	for i := 0; i < len(tfs); i++ {
@@ -152,7 +152,7 @@ func fgrTransSTypeLit(s fgg.STypeLit) STypeLit {
 }
 
 func fgrTransITypeLit(c fgg.ITypeLit) ITypeLit {
-	delta := c.GetPsi().ToDelta()
+	delta := c.GetBigPsi().ToDelta()
 	ss_fgg := c.GetSpecs()
 	ss := make([]Spec, len(ss_fgg)+1)
 	ss[0] = Type("t_0") // TODO: factor out
@@ -270,7 +270,7 @@ func fgrTransExpr(ds []Decl, delta fgg.Delta, gamma fgg.Gamma, e fgg.FGGExpr,
 		}
 		fds_fgg := fgg.Fields(ds, u)
 		subs := make(map[fgg.TParam]fgg.Type)
-		tfs := fgg.GetTDecl(ds, t).GetPsi().GetTFormals()
+		tfs := fgg.GetTDecl(ds, t).GetBigPsi().GetTFormals()
 		for i := 0; i < len(tfs); i++ {
 			subs[tfs[i].GetTParam()] = //us[i]  // !!! Cf. ParamDecls in Call
 				tfs[i].GetUpperBound()
@@ -299,7 +299,7 @@ func fgrTransExpr(ds []Decl, delta fgg.Delta, gamma fgg.Gamma, e fgg.FGGExpr,
 		if u_f == nil {
 			panic("Field not found in " + u_expr.String() + ": " + f)
 		}
-		delta1 := td.GetPsi().ToDelta()
+		delta1 := td.GetBigPsi().ToDelta()
 
 		////if isInterfaceTName(ds, u) {
 		//if isFggITypeLit(ds, toFgTypeFromBounds(delta, u)) {
@@ -326,7 +326,7 @@ func fgrTransExpr(ds []Decl, delta fgg.Delta, gamma fgg.Gamma, e fgg.FGGExpr,
 		// !!! wrap target should be "raw" FGR decl, not FGG type -- don't want type arg instantiation, which may be t_S, we always want upper bound t_I(?)
 		//t_recv := toFgTypeFromBounds(delta, u_recv)
 		td := fgg.GetTDecl(ds, fgg.Bounds(delta, u_recv).(fgg.TNamed).GetName())
-		tfs_recv := td.GetPsi().GetTFormals()
+		tfs_recv := td.GetBigPsi().GetTFormals()
 		//md := getMDecl(ds, t_recv, m)
 
 		// TODO factor out -- cf. add-wrapper-meths part in Translate

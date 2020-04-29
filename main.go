@@ -126,12 +126,19 @@ Options:
 
 // TODO
 // - refactor functionality into cmd dir
-// - add type pres to monom test -- DONE
+// - add type preserv to monom test -- DONE
 // - add tests for interface omega building
 // - fix embedding monom -- DONE
-// - fix monom name mangling
+// - fix monom name mangling -- partial: fix "commas" (test ANTLR unicode)
 // - fix parser nil vs. empty creation
 // - WF check for duplicate decl names
+// - WF recursive structs check
+// - WF types declared
+// - sig-equals-alpha and covariant receiver bounds -- expose test -- DONE -- TODO: oblit for map.fgg (memberBr)
+// - test and fix Delta in methods (re. covariant receiver bounds) -- expose test
+// - update "polyrec" check
+// - add p-closure replacement -- expose test
+// - test monom on latest examples
 func main() {
 	flag.Usage = usage
 	flag.Parse()
@@ -212,8 +219,8 @@ func testMonom(verbose bool, src string, steps int) {
 
 	// (Initial) left-vertical arrow
 	//p_mono := fgg.Monomorph(p_fgg)
-	omega := fgg.GetOmega(p_fgg.GetDecls(), p_fgg.GetMain().(fgg.FGGExpr))
-	p_mono := fgg.ApplyOmega(p_fgg, omega)
+	omega := fgg.GetOmega1(p_fgg.GetDecls(), p_fgg.GetMain().(fgg.FGGExpr))
+	p_mono := fgg.ApplyOmega1(p_fgg, omega)
 	vPrintln(verbose, "Monom expr: "+p_mono.GetMain().String())
 	t := p_mono.Ok(false).(fg.Type)
 	u_fg := fgg.ToMonomId(u)
@@ -235,7 +242,7 @@ func testMonom(verbose bool, src string, steps int) {
 }
 
 // Pre: u = p_fgg.Ok(), t = p_mono.Ok()
-func testMonomStep(verbose bool, omega fgg.Omega, p_fgg fgg.FGGProgram,
+func testMonomStep(verbose bool, omega fgg.Omega1, p_fgg fgg.FGGProgram,
 	u fgg.TNamed, p_mono fg.FGProgram) (fgg.FGGProgram, fgg.TNamed,
 	fg.FGProgram) {
 
@@ -260,7 +267,7 @@ func testMonomStep(verbose bool, omega fgg.Omega, p_fgg fgg.FGGProgram,
 
 	// Right-vertical arrow
 	//res := fgg.Monomorph(p1_fgg.(fgg.FGGProgram))
-	res := fgg.ApplyOmega(p1_fgg.(fgg.FGGProgram), omega)
+	res := fgg.ApplyOmega1(p1_fgg.(fgg.FGGProgram), omega)
 	e_fgg := res.GetMain()
 	e_mono := p1_mono.GetMain()
 	vPrintln(verbose, "Monom of one step'd FGG: "+e_fgg.String())
@@ -428,6 +435,8 @@ func checkErr(e error) {
 
 /**
 TODO:
+- mutual-poly-rec should blow up when ismonom check off -- omega sigs => t.m pairs
+- struct-poly-rec should be monomable -- more aggressive method dropping in omega *building*; need to distinguish actual receiver types from other seen types, for applying omega to mdecls
 - WF: e.g., repeat type decl
 - add monom-eval commutativity check
 - factor out more into base

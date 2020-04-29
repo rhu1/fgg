@@ -17,9 +17,11 @@ type RecvMethPair struct {
 
 var meths []RecvMethPair = make([]RecvMethPair, 0) // TODO refactor
 
+// TODO: rename
 func Foo(ds []Decl) {
 	graph := make(map[RecvMethPair]map[RecvMethPair]([][]Type))
 	bools := make(map[RecvMethPair]map[RecvMethPair]bool)
+	recvargs := make(map[RecvMethPair]map[RecvMethPair]([][]Type))
 	for _, v := range ds {
 		switch d := v.(type) {
 		case STypeLit:
@@ -29,8 +31,9 @@ func Foo(ds []Decl) {
 			tfs := d.GetRecvPsi().GetTFormals()
 			u_args := make([]Type, len(tfs))
 			for i := 0; i < len(tfs); i++ {
-				u_args[i] = tfs[i].GetUpperBound()
-				delta[tfs[i].GetTParam()] = u_args[i]
+				//u_args[i] = tfs[i].GetUpperBound()
+				u_args[i] = tfs[i].GetTParam()
+				delta[tfs[i].GetTParam()] = tfs[i].GetUpperBound()
 			}
 			u_recv := TNamed{d.t_recv, u_args}
 			gamma := make(Gamma)
@@ -38,17 +41,19 @@ func Foo(ds []Decl) {
 			for _, v := range d.GetParamDecls() {
 				gamma[v.GetName()] = v.GetType()
 			}
-			ctxt := RecvMethPair{u_recv.String(), d.name}
+			//ctxt := RecvMethPair{u_recv.TSubs(delta).String(), d.name}
+			ctxt := RecvMethPair{u_recv.t_name, d.name}
 			meths = append(meths, ctxt)
-			bar(ds, delta, gamma, ctxt, d.e_body, graph, bools)
+			bar(ds, delta, gamma, ctxt, d.e_body, graph, bools, recvargs)
 		default:
 			panic("Unknown Decl kind: " + reflect.TypeOf(v).String() + "\n\t" +
 				v.String())
 		}
 	}
 
-	war(bools)
-	//fmt.Println("1111: ", graph)
+	////war(bools)
+	//fmt.Println("1111a: ", graph, "\n")
+	//fmt.Println("1111b: ", recvargs)
 	//fmt.Println("2222: ", bools)
 
 	findCycles(bools)
@@ -63,18 +68,36 @@ func Foo(ds []Decl) {
 				next = v[i+1]
 			}
 			tmp := graph[v[i]]
-			if tmp == nil {
-				continue
+			if tmp != nil {
+				tmp2 := tmp[next]
+				if tmp2 != nil {
+					for _, t_args := range tmp2 {
+						for _, u := range t_args {
+							if u1, ok := u.(TNamed); ok {
+								for _, x := range u1.u_args {
+									if isOrContainsTParam(x) { // CHECKME: basically the naive syntactic restriction, OK?
+										panic("Not monomorphisable, potential polymorphic recursion: " +
+											fmt.Sprintf("%v", v))
+									}
+								}
+							}
+						}
+					}
+				}
 			}
-			tmp2 := tmp[next]
-			if tmp2 != nil {
-				for _, t_args := range tmp2 {
-					for _, u := range t_args {
-						if u1, ok := u.(TNamed); ok {
-							for _, x := range u1.u_args {
-								if isOrContainsTParam(x) {
-									panic("Not monomorphisable, potential polymorphic recursion: " +
-										fmt.Sprintf("%v", v))
+
+			rtmp := recvargs[v[i]]
+			if rtmp != nil {
+				rtmp2 := rtmp[next]
+				if rtmp2 != nil {
+					for _, t_args := range rtmp2 {
+						for _, u := range t_args {
+							if u1, ok := u.(TNamed); ok {
+								for _, x := range u1.u_args {
+									if isOrContainsTParam(x) { // CHECKME: basically the naive syntactic restriction, OK?
+										panic("Not monomorphisable, potential polymorphic recursion: " +
+											fmt.Sprintf("%v", v))
+									}
 								}
 							}
 						}
@@ -88,19 +111,20 @@ func Foo(ds []Decl) {
 // N.B. mutates graph
 func bar(ds []Decl, delta Delta, gamma Gamma, ctxt RecvMethPair, e FGGExpr,
 	graph map[RecvMethPair]map[RecvMethPair]([][]Type),
-	bools map[RecvMethPair]map[RecvMethPair]bool) {
-
+	bools map[RecvMethPair]map[RecvMethPair]bool,
+	recvargs map[RecvMethPair]map[RecvMethPair]([][]Type)) {
 	switch e1 := e.(type) {
 	case Variable:
 	case StructLit:
 		for _, elem := range e1.elems {
-			bar(ds, delta, gamma, ctxt, elem, graph, bools)
+			bar(ds, delta, gamma, ctxt, elem, graph, bools, recvargs)
 		}
 	case Select:
+		bar(ds, delta, gamma, ctxt, e1.e_S, graph, bools, recvargs)
 	case Call:
-		bar(ds, delta, gamma, ctxt, e1.e_recv, graph, bools)
+		bar(ds, delta, gamma, ctxt, e1.e_recv, graph, bools, recvargs)
 		for _, arg := range e1.args {
-			bar(ds, delta, gamma, ctxt, arg, graph, bools)
+			bar(ds, delta, gamma, ctxt, arg, graph, bools, recvargs)
 		}
 		//g := methods(u_recv)[e1.meth]  // Want u_recv from Typing...
 		/*var psi Psi
@@ -117,20 +141,24 @@ func bar(ds []Decl, delta Delta, gamma Gamma, ctxt RecvMethPair, e FGGExpr,
 		delta1 := delta // TODO refactor
 		u_recv := e1.e_recv.Typing(ds, delta1, gamma, true)
 
-		if _, ok := u_recv.(TParam); ok { // E.g., compose, x.Equal()(xs.head), x is `a`
+		/*if _, ok := u_recv.(TParam); ok { // E.g., compose, x.Equal()(xs.head), x is `a`
 			u_recv = delta[u_recv.(TParam)]
-		}
+		}*/
 
 		tmp := graph[ctxt]
 		btmp := bools[ctxt]
+		rtmp := recvargs[ctxt]
 		if tmp == nil {
 			tmp = make(map[RecvMethPair]([][]Type))
 			graph[ctxt] = tmp
 			btmp = make(map[RecvMethPair]bool)
 			bools[ctxt] = btmp
+			rtmp = make(map[RecvMethPair]([][]Type))
+			recvargs[ctxt] = rtmp
 		}
 		if isStructType(ds, u_recv) {
-			key := RecvMethPair{u_recv.String(), e1.meth}
+			//key := RecvMethPair{u_recv.TSubs(delta1).String(), e1.meth}
+			key := RecvMethPair{u_recv.TSubs(delta).(TNamed).t_name, e1.meth}
 			tmp2 := tmp[key]
 			if tmp2 == nil {
 				tmp2 = make([][]Type, 0)
@@ -138,29 +166,45 @@ func bar(ds []Decl, delta Delta, gamma Gamma, ctxt RecvMethPair, e FGGExpr,
 			tmp2 = append(tmp2, e1.t_args)
 			tmp[key] = tmp2
 			btmp[key] = true
+			if y, ok := u_recv.(TNamed); ok { // CHECKME: how about TParam?
+				rtmp2 := rtmp[key]
+				if rtmp2 == nil {
+					rtmp2 = make([][]Type, 0)
+				}
+				rtmp2 = append(rtmp2, y.u_args)
+				rtmp[key] = rtmp2
+			}
 		} else {
-			u_I := u_recv
+			u_I := u_recv // Or type param
 			for _, v := range ds {
 				switch d := v.(type) {
 				case STypeLit:
-					tfs := d.GetPsi().GetTFormals()
+					tfs := d.GetBigPsi().GetTFormals()
 					u_args := make([]Type, len(tfs))
 					for i := 0; i < len(tfs); i++ {
 						u_args[i] = tfs[i].GetUpperBound()
 					}
 					u_S := TNamed{d.t_name, u_args}
-
-					fmt.Println("aaaa: ", u_S, u_I, ",", delta1, "\n\t", e1)
-
-					if u_S.ImplsDelta(ds, delta1, u_I) {
-						key := RecvMethPair{u_S.String(), e1.meth}
-						tmp2 := tmp[key] // TODO factor out with above
+					if p, ok := u_I.(TParam); (ok && u_S.ImplsDelta(ds, delta1, delta1[p])) || // CHECKME: delta1[p] ?
+						(!ok && u_S.ImplsDelta(ds, delta1, u_I)) {
+						//key := RecvMethPair{u_S.TSubs(delta1).String(), e1.meth}
+						key := RecvMethPair{u_S.t_name, e1.meth}
+						// TODO factor out below with above
+						tmp2 := tmp[key]
 						if tmp2 == nil {
 							tmp2 = make([][]Type, 0)
 						}
 						tmp2 = append(tmp2, e1.t_args)
 						tmp[key] = tmp2
 						btmp[key] = true
+						if y, ok := u_recv.(TNamed); ok { // CHECKME: how about TParam?
+							rtmp2 := rtmp[key]
+							if rtmp2 == nil {
+								rtmp2 = make([][]Type, 0)
+							}
+							rtmp2 = append(rtmp2, y.u_args)
+							rtmp[key] = rtmp2
+						}
 					}
 				case ITypeLit:
 				case MDecl:
@@ -171,7 +215,7 @@ func bar(ds []Decl, delta Delta, gamma Gamma, ctxt RecvMethPair, e FGGExpr,
 			}
 		}
 	case Assert:
-		bar(ds, delta, gamma, ctxt, e1.e_I, graph, bools)
+		bar(ds, delta, gamma, ctxt, e1.e_I, graph, bools, recvargs)
 	default:
 		panic("Unknown Expr kind: " + reflect.TypeOf(e).String() + "\n\t" +
 			e.String())
@@ -180,6 +224,7 @@ func bar(ds []Decl, delta Delta, gamma Gamma, ctxt RecvMethPair, e FGGExpr,
 
 /* Aux */
 
+// Currently redundant
 // Mutates graph
 func war(graph map[RecvMethPair]map[RecvMethPair]bool) {
 	for k := 0; k < len(meths); k++ {
@@ -212,6 +257,7 @@ func findCycles(bools map[RecvMethPair]map[RecvMethPair]bool) {
 	}
 }
 
+// DFS
 func aux(bools map[RecvMethPair]map[RecvMethPair]bool, stack []RecvMethPair) {
 	tmp := bools[stack[len(stack)-1]]
 	if tmp == nil {

@@ -170,12 +170,15 @@ func (intrp *FGGInterp) Monom(monom bool, compile string) {
 	}
 
 	p_fgg := intrp.GetSource().(fgg.FGGProgram)
-	if e, ok := fgg.IsMonomable(p_fgg); !ok {
+	/*if e, ok := fgg.IsMonomable(p_fgg); !ok {
 		panic("\nNot monomorphisable according to \"type param under named type\"" +
 			" restriction.\n\t" + e.String())
-	}
+	}*/
 
+	//...HERE fix mutual-poly-rec (should blow up without ismonom) ..fix struct-poly-rec, omega building loops (add recursive struct WF?)
 	//fgg.Foo(intrp.orig.GetDecls())
+
+	//fmt.Println("zzzz:")
 
 	p_mono := fgg.Monomorph(p_fgg)
 	if monom {
@@ -228,9 +231,11 @@ func (intrp *FGGInterp) Oblit(compile string) {
 /* Aux */
 
 func monomOutputHack(out string) string {
-	out = strings.Replace(out, ",,", "ᐨ", -1) // TODO: refactor -- cf. fgg_monom, toMonomId
-	out = strings.Replace(out, "<", "ᐸ", -1)
-	out = strings.Replace(out, ">", "ᐳ", -1)
+	// TODO: refactor -- cf. fgg_monom, toMonomId
+	out = strings.Replace(out, ",,", "ᐨ", -1) // U+1428 Canadian Aboriginal Syllabics Final Short Horizontal Stroke
+	// U+035C Combining Double Breve Below -- CHECKME: doesn't work with ANTLR?
+	out = strings.Replace(out, "<", "ᐸ", -1) // U+1438 Canadian Aboriginal Syllabics Pa
+	out = strings.Replace(out, ">", "ᐳ", -1) // U+1433 Canadian Aboriginal Syllabics Po
 	return out
 }
 

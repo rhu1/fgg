@@ -43,7 +43,7 @@ func Obliterate(p_fgg fgg.FGGProgram) FGRProgram { // CHECKME can also subsume e
 		case fgg.STypeLit:
 			recv_getRep := NewParamDecl("x0", Type(d.GetName())) // TODO: factor out constant
 			t_S := d.GetName()
-			tfs := d.GetPsi().GetTFormals()
+			tfs := d.GetBigPsi().GetTFormals()
 			es := make([]FGRExpr, len(tfs))
 			for i := 0; i < len(es); i++ {
 				es[i] = NewSelect(NewVariable("x0"), tfs[i].GetTParam().String())
@@ -69,7 +69,7 @@ func Obliterate(p_fgg fgg.FGGProgram) FGRProgram { // CHECKME can also subsume e
 
 func oblitSTypeLit(s fgg.STypeLit) STypeLit {
 	t := Type(s.GetName())
-	psi := s.GetPsi()
+	psi := s.GetBigPsi()
 	tfs := psi.GetTFormals()
 	fds_fgg := s.GetFieldDecls()
 	fds_fgr := make([]FieldDecl, len(tfs)+len(fds_fgg))
@@ -271,7 +271,7 @@ func dtype(ds []Decl, delta fgg.Delta, gamma fgg.Gamma, d fgg.FGGExpr) fgg.Type 
 	case fgg.StructLit:
 		t_S := e.GetNamedType().GetName()
 		td := fgg.GetTDecl(ds, t_S).(fgg.STypeLit)
-		tfs := td.GetPsi().GetTFormals()
+		tfs := td.GetBigPsi().GetTFormals()
 		us := make([]fgg.Type, len(tfs))
 		for i := 0; i < len(us); i++ {
 			us[i] = fgg.TParam(tfs[i].GetTParam().String())

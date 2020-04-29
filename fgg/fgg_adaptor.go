@@ -83,7 +83,7 @@ func (a *FGGAdaptor) ExitTypeFormals(ctx *parser.TypeFormalsContext) {
 			tfs[i] = a.pop().(TFormal) // Adding backwards
 		}
 	}
-	a.push(Psi{tfs})
+	a.push(BigPsi{tfs})
 }
 
 func (a *FGGAdaptor) ExitTypeFDecl(ctx *parser.TypeFDeclContext) {
@@ -131,10 +131,10 @@ func (a *FGGAdaptor) ExitProgram(ctx *parser.ProgramContext) {
 func (a *FGGAdaptor) ExitTypeDecl(ctx *parser.TypeDeclContext) {
 	t := Name(ctx.GetChild(1).(*antlr.TerminalNodeImpl).GetText())
 	td := a.pop().(TDecl)
-	psi := a.pop().(Psi)
+	psi := a.pop().(BigPsi)
 	if s, ok := td.(STypeLit); ok { // N.B. s is a *copy* of td
 		s.t_name = t
-		s.psi = psi
+		s.Psi = psi
 		a.push(s)
 	} else if c, ok := td.(ITypeLit); ok {
 		c.t_I = t
@@ -158,7 +158,7 @@ func (a *FGGAdaptor) ExitStructTypeLit(ctx *parser.StructTypeLitContext) {
 			fds[i] = fd // Adding backwards
 		}
 	}
-	a.push(STypeLit{"^", Psi{}, fds}) // "^" and TFormals{} to be overwritten in ExitTypeDecl
+	a.push(STypeLit{"^", BigPsi{}, fds}) // "^" and TFormals{} to be overwritten in ExitTypeDecl
 }
 
 func (a *FGGAdaptor) ExitFieldDecl(ctx *parser.FieldDeclContext) {
@@ -174,7 +174,7 @@ func (a *FGGAdaptor) ExitMethDecl(ctx *parser.MethDeclContext) {
 	// Reverse order
 	e := a.pop().(FGGExpr)
 	g := a.pop().(Sig)
-	psi := a.pop().(Psi)
+	psi := a.pop().(BigPsi)
 	t := Name(ctx.GetTypn().GetText())
 	recv := Name(ctx.GetRecv().GetText())
 	a.push(MDecl{recv, t, psi, g.meth, g.psi, g.pDecls, g.u_ret, e})
@@ -200,7 +200,7 @@ func (a *FGGAdaptor) ExitInterfaceTypeLit(ctx *parser.InterfaceTypeLitContext) {
 			ss[i] = s // Adding backwards
 		}
 	}
-	a.push(ITypeLit{"^", Psi{}, ss}) // "^" and TFormals{} to be overwritten in ExitTypeDecl
+	a.push(ITypeLit{"^", BigPsi{}, ss}) // "^" and TFormals{} to be overwritten in ExitTypeDecl
 }
 
 func (a *FGGAdaptor) ExitSigSpec(ctx *parser.SigSpecContext) {
@@ -230,7 +230,7 @@ func (a *FGGAdaptor) ExitSig(ctx *parser.SigContext) {
 			pds[i] = a.pop().(ParamDecl) // Adding backwards
 		}
 	}
-	psi := a.pop().(Psi)
+	psi := a.pop().(BigPsi)
 	a.push(Sig{m, psi, pds, t})
 }
 
