@@ -219,8 +219,8 @@ func testMonom(verbose bool, src string, steps int) {
 
 	// (Initial) left-vertical arrow
 	//p_mono := fgg.Monomorph(p_fgg)
-	omega := fgg.GetOmega(p_fgg.GetDecls(), p_fgg.GetMain().(fgg.FGGExpr))
-	p_mono := fgg.ApplyOmega(p_fgg, omega)
+	omega := fgg.GetOmega1(p_fgg.GetDecls(), p_fgg.GetMain().(fgg.FGGExpr))
+	p_mono := fgg.ApplyOmega1(p_fgg, omega)
 	vPrintln(verbose, "Monom expr: "+p_mono.GetMain().String())
 	t := p_mono.Ok(false).(fg.Type)
 	u_fg := fgg.ToMonomId(u)
@@ -242,7 +242,7 @@ func testMonom(verbose bool, src string, steps int) {
 }
 
 // Pre: u = p_fgg.Ok(), t = p_mono.Ok()
-func testMonomStep(verbose bool, omega fgg.Omega, p_fgg fgg.FGGProgram,
+func testMonomStep(verbose bool, omega fgg.Omega1, p_fgg fgg.FGGProgram,
 	u fgg.TNamed, p_mono fg.FGProgram) (fgg.FGGProgram, fgg.TNamed,
 	fg.FGProgram) {
 
@@ -267,7 +267,7 @@ func testMonomStep(verbose bool, omega fgg.Omega, p_fgg fgg.FGGProgram,
 
 	// Right-vertical arrow
 	//res := fgg.Monomorph(p1_fgg.(fgg.FGGProgram))
-	res := fgg.ApplyOmega(p1_fgg.(fgg.FGGProgram), omega)
+	res := fgg.ApplyOmega1(p1_fgg.(fgg.FGGProgram), omega)
 	e_fgg := res.GetMain()
 	e_mono := p1_mono.GetMain()
 	vPrintln(verbose, "Monom of one step'd FGG: "+e_fgg.String())
