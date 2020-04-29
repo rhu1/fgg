@@ -312,6 +312,18 @@ func (tf TFormal) String() string {
 // Also ranged over by small phi
 type SmallPsi []Type
 
+func (x0 SmallPsi) Equals(x SmallPsi) bool {
+	if len(x0) != len(x) {
+		return false
+	}
+	for i := 0; i < len(x0); i++ {
+		if !x0[i].Equals(x[i]) {
+			return false
+		}
+	}
+	return true
+}
+
 func (x0 SmallPsi) String() string {
 	var b strings.Builder
 	for _, v := range x0 {

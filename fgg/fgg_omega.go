@@ -281,9 +281,15 @@ func collectExpr(ds []Decl, gamma GroundEnv, e FGGExpr,
 
 /* Aux */
 
+// N.B. no closure over types occurring in bounds, or *interface decl* method sigs
+// CHECKME: clone omega?
 func auxG(ds []Decl, omega Omega1) bool {
 	res := false
-	// CHECKME: clone omega?
+	//
+	// I/face embeddings
+	res = auxE(ds, omega) || res
+	res = auxE2(ds, omega) || res
+	//
 	res = auxF(ds, omega) || res
 	//fmt.Println("F\n", omega.us, "\n", omega.ms, "\n----\n")
 	res = auxI(ds, omega) || res
@@ -294,6 +300,62 @@ func auxG(ds []Decl, omega Omega1) bool {
 	//fmt.Println("S\n", omega.us, "\n", omega.ms, "\n----\n")
 	//res = auxP(ds, omega) || res
 	//fmt.Println("P\n", omega.us, "\n", omega.ms, "\n----\n")
+	return res
+}
+
+func auxE(ds []Decl, omega Omega1) bool {
+	res := false
+	tmp := make(map[string]TNamed)
+	for _, u := range omega.us {
+		if !isNamedIfaceType(ds, u) {
+			continue
+		}
+		td_I := getTDecl(ds, u.t_name).(ITypeLit)
+		eta := MakeEta(td_I.psi, u.u_args)
+		for _, s := range td_I.specs {
+			if u_emb, ok := s.(TNamed); ok {
+				u_sub := u_emb.SubsEta(eta)
+				tmp[toKey_Wt(u_sub)] = u_sub
+			}
+		}
+	}
+	for k, v := range tmp {
+		if _, ok := omega.us[k]; !ok {
+			omega.us[k] = v
+			res = true
+		}
+	}
+	return res
+}
+
+func auxE2(ds []Decl, omega Omega1) bool {
+	res := false
+	tmp := make(map[string]MethInstan)
+	for _, m := range omega.ms {
+		if !isNamedIfaceType(ds, m.u_recv) {
+			continue
+		}
+		td_I := getTDecl(ds, m.u_recv.t_name).(ITypeLit)
+		eta := MakeEta(td_I.psi, m.u_recv.u_args)
+		for _, s := range td_I.specs {
+			if u_emb, ok := s.(TNamed); ok {
+				u_sub := u_emb.SubsEta(eta)
+				gs := methods(ds, u_sub)
+				for _, g := range gs {
+					if m.meth == g.meth {
+						m_emb := MethInstan{u_sub, m.meth, m.psi}
+						tmp[toKey_Wm(m_emb)] = m_emb
+					}
+				}
+			}
+		}
+	}
+	for k, v := range tmp {
+		if _, ok := omega.ms[k]; !ok {
+			omega.ms[k] = v
+			res = true
+		}
+	}
 	return res
 }
 

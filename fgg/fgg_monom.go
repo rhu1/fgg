@@ -66,7 +66,11 @@ func monomTDecl1(ds []Decl, omega Omega1, td TDecl) []fg.TDecl {
 			eta := MakeEta(td.GetBigPsi(), u.u_args)
 			mu := make(Mu)
 			for k, m := range omega.ms {
-				if m.u_recv.t_name == t {
+				if m.u_recv.t_name == t { //&& m.psi.String() == SmallPsi(u.u_args).String() {
+					//fmt.Println("aaa:", m.u_recv.t_name, m.psi, t, u.u_args, m.psi.Equals(u.u_args))
+					//fmt.Println("bbb:", m.psi.String(), SmallPsi(u.u_args).String())
+				}
+				if m.u_recv.t_name == t && SmallPsi(m.u_recv.GetTArgs()).Equals(SmallPsi(u.u_args)) { // TODO: fix conversions
 					mu[k] = m
 				}
 			}
