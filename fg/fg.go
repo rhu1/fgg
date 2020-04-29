@@ -53,8 +53,7 @@ func (t0 Type) Impls(ds []Decl, t base.Type) bool {
 // From Spec
 func (t Type) GetSigs(ds []Decl) []Sig {
 	if !isInterfaceType(ds, t) { // isStructType would be more efficient
-		panic("Cannot use non-interface type as a Spec: " + t.String() +
-			" is a " + reflect.TypeOf(t).String())
+		panic("Cannot use non-interface type as a Spec: " + t.String())
 	}
 	td := getTDecl(ds, t).(ITypeLit)
 	var res []Sig

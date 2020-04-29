@@ -62,8 +62,8 @@ func (c *fg2fgg) convert() error {
 }
 
 // convertType converts a plain type to a parameterised type
-func (c *fg2fgg) convertType(t fg.Type) (Name, Psi) {
-	return Name(t.String()), Psi{tFormals: nil} // 0 formal parameters
+func (c *fg2fgg) convertType(t fg.Type) (Name, BigPsi) {
+	return Name(t.String()), BigPsi{tFormals: nil} // 0 formal parameters
 }
 
 func (c *fg2fgg) convertSTypeLit(s fg.STypeLit) (STypeLit, error) {
@@ -78,7 +78,7 @@ func (c *fg2fgg) convertSTypeLit(s fg.STypeLit) (STypeLit, error) {
 		fieldDecls = append(fieldDecls, fd)
 	}
 
-	return STypeLit{t_name: typeName, psi: typeFormals, fDecls: fieldDecls}, nil
+	return STypeLit{t_name: typeName, Psi: typeFormals, fDecls: fieldDecls}, nil
 }
 
 func (c *fg2fgg) convertITypeLit(i fg.ITypeLit) (ITypeLit, error) {
@@ -99,7 +99,7 @@ func (c *fg2fgg) convertITypeLit(i fg.ITypeLit) (ITypeLit, error) {
 
 		specs = append(specs, Sig{
 			meth:   Name(sig.GetMethod()),
-			psi:    Psi{tFormals: nil},
+			psi:    BigPsi{tFormals: nil},
 			pDecls: paramDecls,
 			u_ret:  TNamed{t_name: retTypeName},
 		})
@@ -137,14 +137,14 @@ func (c *fg2fgg) convertMDecl(md fg.MDecl) (MDecl, error) {
 	}
 
 	return MDecl{
-		x_recv:   md.GetReceiver().GetName(),
-		t_recv:   recvTypeName,
-		psi_recv: recvTypeFormals,
-		name:     Name(md.GetName()),
-		psi_meth: Psi{}, // empty parameter
-		pDecls:   paramDecls,
-		u_ret:    TNamed{t_name: retTypeName},
-		e_body:   methImpl,
+		x_recv:  md.GetReceiver().GetName(),
+		t_recv:  recvTypeName,
+		PsiRecv: recvTypeFormals,
+		name:    Name(md.GetName()),
+		PsiMeth: BigPsi{}, // empty parameter
+		pDecls:  paramDecls,
+		u_ret:   TNamed{t_name: retTypeName},
+		e_body:  methImpl,
 	}, nil
 }
 

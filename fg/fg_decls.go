@@ -146,6 +146,7 @@ func (s STypeLit) String() string {
 	return b.String()
 }
 
+// Rename FDecl?
 type FieldDecl struct {
 	name Name
 	t    Type
@@ -222,7 +223,7 @@ func (md MDecl) String() string {
 	return b.String()
 }
 
-// Cf. FieldDecl
+// Cf. FieldDecl  // Rename PDecl?
 type ParamDecl struct {
 	name Name // CHECKME: Variable? (also Env key)
 	t    Type
