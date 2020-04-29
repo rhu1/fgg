@@ -126,18 +126,18 @@ Options:
 
 // TODO
 // - refactor functionality into cmd dir
-// - add type pres to monom test -- DONE
+// - add type preserv to monom test -- DONE
 // - add tests for interface omega building
 // - fix embedding monom -- DONE
-// - fix monom name mangling -- partial: fix "commas"
+// - fix monom name mangling -- partial: fix "commas" (test ANTLR unicode)
 // - fix parser nil vs. empty creation
-// - Equals/Impls alpha -- e.g., interface/struct method overriding
 // - WF check for duplicate decl names
 // - WF recursive structs check
 // - WF types declared
+// - Equals/Impls alpha -- e.g., interface/struct method overriding -- expose test
+// - test and fix Delta in methods (re. covariant receiver bounds) -- expose test
 // - update "polyrec" check
-// - test and fix Delta in methods (re. covariant receiver bounds)
-// - add p-closure replacement
+// - add p-closure replacement -- expose test
 // - test monom on latest examples
 func main() {
 	flag.Usage = usage
