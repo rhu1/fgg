@@ -2,12 +2,14 @@ package fgg
 
 import "fmt"
 import "reflect"
+import "strconv"
 import "strings"
 
 import "github.com/rhu1/fgg/base"
 
 var _ = fmt.Errorf
 var _ = reflect.Append
+var _ = strconv.AppendBool
 
 /* Export */
 
@@ -91,7 +93,7 @@ func (a TParam) Equals(u base.Type) bool {
 			":\n\t" + u.String())
 	}
 	if b, ok := u.(TParam); ok {
-		return a == b
+		return a == b // TODO FIXME: need alpha -- pre- index-ify TNamed (and Impls)?  // TODO: add tests
 	}
 	return false
 }
@@ -149,13 +151,42 @@ func (u0 TNamed) ImplsDelta(ds []Decl, delta Delta, u Type) bool {
 	gs0 := methods(ds, u0)   // t0 may be any
 	for k, g := range gs {
 		g0, ok := gs0[k]
-		if ok {
-		}
-		if !ok || !g.EqExceptTParamsAndVars(g0) {
+		if !ok || !sigAlphaEquals(g0, g) {
 			return false
 		}
 	}
 	return true
+}
+
+// !!! Sig in FGG includes ~a and ~x, which naively breaks "impls"
+func sigAlphaEquals(g0 Sig, g Sig) bool {
+	if len(g0.psi.tFormals) != len(g.psi.tFormals) || len(g0.pDecls) != len(g.pDecls) {
+		return false
+	}
+	subs0 := makeParamIndexSubs(g0.psi)
+	subs := makeParamIndexSubs(g.psi)
+	for i := 0; i < len(g0.psi.tFormals); i++ {
+		if !g0.psi.tFormals[i].u_I.TSubs(subs0).
+			Equals(g.psi.tFormals[i].u_I.TSubs(subs)) {
+			return false
+		}
+	}
+	for i := 0; i < len(g0.pDecls); i++ {
+		if !g0.pDecls[i].u.TSubs(subs0).Equals(g.pDecls[i].u.TSubs(subs)) {
+			return false
+		}
+	}
+	return g0.meth == g.meth && g0.u_ret.Equals(g.u_ret)
+}
+
+// CHECKME: Used by sigAlphaEquals, and MDecl.OK (for covariant receiver bounds)
+func makeParamIndexSubs(Psi BigPsi) Delta {
+	subs := make(Delta)
+	for j := 0; j < len(Psi.tFormals); j++ {
+		//subs[Psi.tFormals[j].name] = Psi.tFormals[j].name
+		subs[Psi.tFormals[j].name] = TParam("α" + strconv.Itoa(j+1))
+	}
+	return subs
 }
 
 // Cf. base.Type

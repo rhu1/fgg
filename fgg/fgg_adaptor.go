@@ -208,7 +208,13 @@ func (a *FGGAdaptor) ExitSigSpec(ctx *parser.SigSpecContext) {
 }
 
 func (a *FGGAdaptor) ExitInterfaceSpec(ctx *parser.InterfaceSpecContext) {
-	a.push(a.pop().(TNamed)) // Check TName (should specifically be a \tau_I) -- CHECKME: enforce in BNF?
+	popped := a.pop()
+	cast, ok := popped.(TNamed)
+	if !ok {
+		panic("Expected TNamed, not: " + reflect.TypeOf(popped).String() +
+			"\n\t" + popped.String())
+	}
+	a.push(cast) // Check TName (should specifically be a \tau_I) -- CHECKME: enforce in BNF?
 }
 
 func (a *FGGAdaptor) ExitSig(ctx *parser.SigContext) {

@@ -169,6 +169,23 @@ func (md MDecl) Ok(ds []Decl) {
 	md.PsiRecv.Ok(ds)
 	md.PsiMeth.Ok(ds)
 
+	td := getTDecl(ds, md.t_recv)
+	tfs_td := td.GetBigPsi().tFormals
+	if len(tfs_td) != len(md.PsiRecv.tFormals) {
+		panic("Receiver parameter arity mismatch:\n\tmdecl=" + md.t_recv +
+			md.PsiRecv.String() + ", tdecl=" + td.GetName() + td.GetBigPsi().String())
+	}
+	for i := 0; i < len(tfs_td); i++ {
+		subs_md := makeParamIndexSubs(md.PsiRecv)
+		subs_td := makeParamIndexSubs(td.GetBigPsi())
+		if !md.PsiRecv.tFormals[i].u_I.TSubs(subs_md).
+			Impls(ds, tfs_td[i].u_I.TSubs(subs_td)) {
+			panic("Receiver parameter upperbound not a subtype of type decl upperbound:" +
+				"\n\tmdecl=" + md.PsiRecv.tFormals[i].String() + ", tdecl=" +
+				tfs_td[i].String())
+		}
+	}
+
 	delta := md.PsiRecv.ToDelta()
 	for _, v := range md.PsiRecv.tFormals {
 		v.u_I.Ok(ds, delta)
@@ -318,24 +335,6 @@ func (g Sig) Ok(ds []Decl) {
 
 func (g Sig) GetSigs(_ []Decl) []Sig {
 	return []Sig{g}
-}
-
-// !!! Sig in FGG includes ~a and ~x, which naively breaks "impls"
-func (g0 Sig) EqExceptTParamsAndVars(g Sig) bool {
-	if len(g0.psi.tFormals) != len(g.psi.tFormals) || len(g0.pDecls) != len(g.pDecls) {
-		return false
-	}
-	for i := 0; i < len(g0.psi.tFormals); i++ {
-		if !g0.psi.tFormals[i].u_I.Equals(g.psi.tFormals[i].u_I) {
-			return false
-		}
-	}
-	for i := 0; i < len(g0.pDecls); i++ {
-		if !g0.pDecls[i].u.Equals(g.pDecls[i].u) {
-			return false
-		}
-	}
-	return g0.meth == g.meth && g0.u_ret.Equals(g.u_ret)
 }
 
 func (g Sig) String() string {

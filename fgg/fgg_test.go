@@ -270,7 +270,7 @@ func Test013(t *testing.T) {
 	Any := "type Any(type ) interface {}"
 	A := "type A(type ) struct {}"
 	B := "type B(type a Any()) struct { f a }"
-	Bm := "func (x0 B(type )) m(type a Any())(x1 a) a { return x1 }"
+	Bm := "func (x0 B(type a Any())) m(type b Any())(x1 b) b { return x1 }"
 	e := "B(A()){A(){}}.m(B(A()))(B(A()){A(){}}).f"
 	parseAndOkGood(t, Any, A, B, Bm, e)
 }
@@ -280,9 +280,33 @@ func Test014(t *testing.T) {
 	Any := "type Any(type ) interface {}"
 	A := "type A(type ) struct {}"
 	B := "type B(type a Any()) struct { f a }"
-	Bm := "func (x0 B(type )) m(type a Any())() a { return A(){} }"
+	Bm := "func (x0 B(type a Any())) m(type b Any())() b { return A(){} }"
 	e := "B(A()){A(){}}.m(B(A()))(B(A()){A(){}}).f" // Eval would break type preservation, see TestEval001
 	parseAndOkBad(t, Any, A, B, Bm, e)
+}
+
+// testing sigAlphaEquals
+func Test015(t *testing.T) {
+	Any := "type Any(type ) interface {}"
+	A := "type A(type ) interface { m(type a Any())(x a) Any() }"
+	B := "type B(type ) interface { m(type b Any())(x b) Any() }"
+	C :="type C(type ) struct {}"
+	Cm := "func (x0 C(type )) m(type b Any())(x b) Any() { return x0 }"
+	D := "type D(type ) struct {}"
+	Dm := "func (x0 D(type )) foo(type )(x A()) Any() { return x0 }"
+	e := "D(){}.foo()(C(){})"
+	parseAndOkBad(t, Any, A, B, C, Cm, D, Dm, e)
+}
+
+// testing covariant receiver bounds (MDecl.OK) -- cf. map.fgg (memberBr)
+func Test016(t *testing.T) {
+	Any := "Any(type ) interface {}"
+	A := "type A(type a Any()) interface { m(type )(x a) Any() }"  // param must occur in a meth sig
+	B :="type B(type a A(a)) struct {}"  // must have recursive param
+	Bm := "func (x0 B(type b A(b))) m(type )(x b) Any() { return x0 }"
+	D := "type D(type ) struct{}"
+	e := "D(){}"
+	parseAndOkBad(t, Any, A, B, Bm, D, e)
 }
 
 /* Monom */
@@ -312,7 +336,7 @@ func TestEval001(t *testing.T) {
 	ToAny := "type ToAny(type ) struct { any Any() }"
 	A := "type A(type ) struct {}"
 	B := "type B(type a Any()) struct { f a }"
-	Bm := "func (x0 B(type )) m(type a Any())(x1 a) a { return ToAny(){A(){}}.any.(a) }"
+	Bm := "func (x0 B(type a Any())) m(type b Any())(x1 b) b { return ToAny(){A(){}}.any.(b) }"
 	e := "B(A()){A(){}}.m(B(A()))(B(A()){A(){}}).f"
 	prog := parseAndOkGood(t, Any, ToAny, A, B, Bm, e)
 	testutils.EvalAndOkBad(t, prog, "Cannot cast A() to B(A())", 3)

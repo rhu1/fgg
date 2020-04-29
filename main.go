@@ -134,7 +134,7 @@ Options:
 // - WF check for duplicate decl names
 // - WF recursive structs check
 // - WF types declared
-// - Equals/Impls alpha -- e.g., interface/struct method overriding -- expose test
+// - sig-equals-alpha and covariant receiver bounds -- expose test -- DONE -- TODO: oblit for map.fgg (memberBr)
 // - test and fix Delta in methods (re. covariant receiver bounds) -- expose test
 // - update "polyrec" check
 // - add p-closure replacement -- expose test
