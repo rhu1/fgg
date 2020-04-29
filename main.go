@@ -135,6 +135,10 @@ Options:
 // - WF check for duplicate decl names
 // - WF recursive structs check
 // - WF types declared
+// - update "polyrec" check
+// - test and fix Delta in methods (re. covariant receiver bounds)
+// - add p-closure replacement
+// - test monom on latest examples
 func main() {
 	flag.Usage = usage
 	flag.Parse()
