@@ -34,6 +34,7 @@ type Type interface {
 	base.Type
 	ImplsDelta(ds []Decl, delta Delta, u Type) bool
 	TSubs(subs map[TParam]Type) Type // N.B. map is Delta -- factor out a Subs type?
+	SubsEta(eta Eta) TNamed
 	Ok(ds []Decl, delta Delta)
 	ToGoString() string
 }
@@ -48,6 +49,14 @@ func (a TParam) TSubs(subs map[TParam]Type) Type {
 		//panic("Unknown param: " + a.String())
 		return a // CHECKME: ok? -- see TSubs in methods aux, w.r.t. meth-tparams that aren't in the subs map
 		// Cf. Variable.Subs?
+	}
+	return res
+}
+
+func (a TParam) SubsEta(eta Eta) TNamed {
+	res, ok := eta[a]
+	if !ok {
+		panic("Shouldn't get here: " + a)
 	}
 	return res
 }
@@ -98,14 +107,14 @@ func (a TParam) ToGoString() string {
 // Convention: t=type name (t), u=FGG type (tau)
 type TNamed struct {
 	t_name Name
-	u_args []Type
+	u_args []Type // SmallPsi
 }
 
 var _ Type = TNamed{}
 var _ Spec = TNamed{}
 
 func (u0 TNamed) GetName() Name    { return u0.t_name }
-func (u0 TNamed) GetTArgs() []Type { return u0.u_args }
+func (u0 TNamed) GetTArgs() []Type { return u0.u_args } // SmallPsi
 
 func (u0 TNamed) TSubs(subs map[TParam]Type) Type {
 	us := make([]Type, len(u0.u_args))
@@ -115,7 +124,17 @@ func (u0 TNamed) TSubs(subs map[TParam]Type) Type {
 	return TNamed{u0.t_name, us}
 }
 
+func (u0 TNamed) SubsEta(eta Eta) TNamed {
+	//fmt.Println("555:", u0, eta)
+	us := make([]Type, len(u0.u_args))
+	for i := 0; i < len(us); i++ {
+		us[i] = u0.u_args[i].SubsEta(eta)
+	}
+	return TNamed{u0.t_name, us}
+}
+
 // u0 <: u
+// delta unused here (cf. TParam.ImplsDelta)
 func (u0 TNamed) ImplsDelta(ds []Decl, delta Delta, u Type) bool {
 	u_fgg := u.(Type)
 	if isStructType(ds, u_fgg) {
@@ -150,7 +169,7 @@ func (u0 TNamed) Impls(ds []Decl, u base.Type) bool {
 
 func (u0 TNamed) Ok(ds []Decl, delta Delta) {
 	td := GetTDecl(ds, u0.t_name)
-	psi := td.GetPsi()
+	psi := td.GetBigPsi()
 	if len(psi.tFormals) != len(u0.u_args) {
 		var b strings.Builder
 		b.WriteString("Arity mismatch between type formals and actuals: formals=")
@@ -233,11 +252,96 @@ func (u TNamed) ToGoString() string {
 	return b.String()
 }
 
-/* Context, Type context */
+/* Type formals and actuals */
+
+// Pre: len(as) == len(us)
+// Wrapper for []TFormal (cf. e.g., FieldDecl), only because of "(type ...)" syntax
+// Also ranged over by big phi
+type BigPsi struct {
+	tFormals []TFormal
+}
+
+func (Psi BigPsi) GetTFormals() []TFormal { return Psi.tFormals }
+
+func (Psi BigPsi) Ok(ds []Decl) {
+	for _, v := range Psi.tFormals {
+		u, ok := v.u_I.(TNamed)
+		if !ok {
+			panic("Upper bound must be of the form \"t_I(type ...)\": not " +
+				v.u_I.String())
+		}
+		if !IsNamedIfaceType(ds, u) { // CHECKME: subsumes above TName check (looks for \tau_S)
+			panic("Upper bound must be an interface type: not " + u.String())
+		}
+	}
+}
+
+func (Psi BigPsi) ToDelta() Delta {
+	delta := make(map[TParam]Type)
+	for _, v := range Psi.tFormals {
+		delta[v.name] = v.u_I
+	}
+	return delta
+}
+
+func (Psi BigPsi) String() string {
+	var b strings.Builder
+	b.WriteString("(type ") // Includes "(...)" -- cf. e.g., writeFieldDecls
+	if len(Psi.tFormals) > 0 {
+		b.WriteString(Psi.tFormals[0].String())
+		for _, v := range Psi.tFormals[1:] {
+			b.WriteString(", ")
+			b.WriteString(v.String())
+		}
+	}
+	b.WriteString(")")
+	return b.String()
+}
+
+type TFormal struct {
+	name TParam
+	u_I  Type
+	// CHECKME: submission version, upper bound \tau_I is only "of the form t_I(~\tau)"? -- i.e., not \alpha?
+	// ^If so, then can refine to TNamed
+}
+
+func (tf TFormal) GetTParam() TParam   { return tf.name }
+func (tf TFormal) GetUpperBound() Type { return tf.u_I }
+
+func (tf TFormal) String() string {
+	return string(tf.name) + " " + tf.u_I.String()
+}
+
+// Type actuals
+// Also ranged over by small phi
+type SmallPsi []Type
+
+func (x0 SmallPsi) Equals(x SmallPsi) bool {
+	if len(x0) != len(x) {
+		return false
+	}
+	for i := 0; i < len(x0); i++ {
+		if !x0[i].Equals(x[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+func (x0 SmallPsi) String() string {
+	var b strings.Builder
+	for _, v := range x0 {
+		b.WriteString(v.String())
+	}
+	return b.String()
+}
+
+/* Context, Type context, Substitutions */
 
 //type Gamma map[Variable]Type  // CHECKME: refactor?
 type Gamma map[Name]Type
-type Delta map[TParam]Type
+type Delta map[TParam]Type // Type intended to be an upper bound
+type Eta map[TParam]TNamed // Type intended to be a ground TNamed
 
 func (delta Delta) String() string {
 	res := "["
@@ -253,13 +357,23 @@ func (delta Delta) String() string {
 	return res + "]"
 }
 
+// Pre: len(psi) == len(Psi.GetTFormals()); psi all ground
+func MakeEta(Psi BigPsi, psi SmallPsi) Eta {
+	eta := make(Eta)
+	tfs := Psi.tFormals
+	for i := 0; i < len(tfs); i++ {
+		eta[tfs[i].name] = psi[i].(TNamed)
+	}
+	return eta
+}
+
 /* AST base intefaces: FGGNode, Decl, TDecl, Spec, Expr */
 
 // FGGNode, Decl: see Aliases (at top)
 
 type TDecl interface {
 	Decl
-	GetPsi() Psi // TODO: rename? potential clash with, e.g., MDecl, can cause "false" interface satisfaction
+	GetBigPsi() BigPsi // TODO: rename? potential clash with, e.g., MDecl, can cause "false" interface satisfaction
 }
 
 type Spec interface {

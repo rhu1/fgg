@@ -32,8 +32,8 @@ func fields(ds []Decl, u_S TNamed) []FieldDecl {
 		panic("Not a struct type: " + u_S.String())
 	}
 	subs := make(map[TParam]Type)
-	for i := 0; i < len(s.psi.tFormals); i++ {
-		subs[s.psi.tFormals[i].name] = u_S.u_args[i]
+	for i := 0; i < len(s.Psi.tFormals); i++ {
+		subs[s.Psi.tFormals[i].name] = u_S.u_args[i]
 	}
 	fds := make([]FieldDecl, len(s.fDecls))
 	for i := 0; i < len(s.fDecls); i++ {
@@ -53,8 +53,8 @@ func methods(ds []Decl, u Type) map[Name]Sig {
 				u_S := u.(TNamed)
 				if md.t_recv == u_S.t_name {
 					subs := make(map[TParam]Type)
-					for i := 0; i < len(md.psi_recv.tFormals); i++ {
-						subs[md.psi_recv.tFormals[i].name] = u_S.u_args[i]
+					for i := 0; i < len(md.PsiRecv.tFormals); i++ {
+						subs[md.PsiRecv.tFormals[i].name] = u_S.u_args[i]
 					}
 					/*for i := 0; i < len(md.psi.tfs); i++ { // CHECKME: because TParam.TSubs will panic o/w -- refactor?
 						subs[md.psi.tfs[i].a] = md.psi.tfs[i].a
@@ -93,22 +93,26 @@ func methods(ds []Decl, u Type) map[Name]Sig {
 
 // Pre: t_S is a struct type
 // Submission version, m(~\rho) informal notation
-func body(ds []Decl, u_S TNamed, m Name, targs []Type) (Name, []Name, FGGExpr) {
+//func body(ds []Decl, u_S TNamed, m Name, targs []Type) (Name, []Name, FGGExpr) {
+func body(ds []Decl, u_S TNamed, m Name, targs []Type) (ParamDecl, []ParamDecl, FGGExpr) {
 	for _, v := range ds {
 		md, ok := v.(MDecl)
 		if ok && md.t_recv == u_S.t_name && md.name == m {
-			xs := make([]Name, len(md.pDecls))
-			for i := 0; i < len(md.pDecls); i++ {
-				xs[i] = md.pDecls[i].name
-			}
 			subs := make(map[TParam]Type)
-			for i := 0; i < len(md.psi_recv.tFormals); i++ {
-				subs[md.psi_recv.tFormals[i].name] = u_S.u_args[i]
+			for i := 0; i < len(md.PsiRecv.tFormals); i++ {
+				subs[md.PsiRecv.tFormals[i].name] = u_S.u_args[i]
 			}
-			for i := 0; i < len(md.psi_meth.tFormals); i++ {
-				subs[md.psi_meth.tFormals[i].name] = targs[i]
+			for i := 0; i < len(md.PsiMeth.tFormals); i++ {
+				subs[md.PsiMeth.tFormals[i].name] = targs[i]
 			}
-			return md.x_recv, xs, md.e_body.TSubs(subs)
+			recv := ParamDecl{md.x_recv, u_S}
+			pds := make([]ParamDecl, len(md.pDecls))
+			for i := 0; i < len(md.pDecls); i++ {
+				tmp := md.pDecls[i]
+				pds[i] = ParamDecl{tmp.name, tmp.u.TSubs(subs)}
+			}
+			//return md.x_recv, xs, md.e_body.TSubs(subs)
+			return recv, pds, md.e_body.TSubs(subs)
 		}
 	}
 	panic("Method not found: " + u_S.String() + "." + m)

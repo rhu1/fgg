@@ -1,3 +1,4 @@
+
 package main;
 
 type Any(type ) interface {};
