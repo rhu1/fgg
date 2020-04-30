@@ -9,8 +9,8 @@ var _ = fmt.Errorf
 
 /* GroundEnv */
 
-// Basically a Gamma for only TNamed
-type GroundEnv map[Name]TNamed // Pre: forall TName, isGround
+// Basically a Gamma for only ground TNamed
+type GroundGamma map[Name]TNamed // Pre: forall TName, isGround
 
 /**
  * Build Omega -- (morally) a map from ground FGG types to Sigs of (potential)
@@ -33,17 +33,17 @@ type GroundEnv map[Name]TNamed // Pre: forall TName, isGround
 // Pre: isMonomorphisable -- TODO
 func GetOmega1(ds []Decl, e_main FGGExpr) Omega1 {
 	omega1 := Omega1{make(map[string]TNamed), make(map[string]MethInstan)}
-	collectExpr(ds, make(GroundEnv), e_main, omega1)
+	collectExpr(ds, make(GroundGamma), e_main, omega1)
 	fixOmega1(ds, omega1)
 	//omega1.Println()
 	return omega1
 }
 
-/* Omega, GroundTypeAndSigs, GroundSig, GroundEnv */
+/* Omega, MethInstan */
 
 type Omega1 struct {
+	// Keys given by toKey_Wt, toKey_Wm
 	us map[string]TNamed // Pre: all TNamed are isGround
-	//ms map[string]GroundTypeAndSigs // Maps u_ground.String() -> GroundTypeAndSigs{u_ground, sigs}
 	ms map[string]MethInstan
 }
 
@@ -85,8 +85,7 @@ func fixOmega1(ds []Decl, omega Omega1) {
 /* Expressions */
 
 // gamma used to type Call receiver
-func collectExpr(ds []Decl, gamma GroundEnv, e FGGExpr, omega Omega1) {
-
+func collectExpr(ds []Decl, gamma GroundGamma, e FGGExpr, omega Omega1) {
 	switch e1 := e.(type) {
 	case Variable:
 		return
@@ -235,7 +234,7 @@ func auxS(ds []Decl, delta Delta, omega Omega1) bool {
 				continue
 			}
 			x0, xs, e := body(ds, u, m.meth, m.psi)
-			gamma := make(GroundEnv)
+			gamma := make(GroundGamma)
 			gamma[x0.name] = x0.u.(TNamed)
 			for _, pd := range xs {
 				gamma[pd.name] = pd.u.(TNamed)
