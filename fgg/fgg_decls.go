@@ -42,9 +42,9 @@ func (p FGGProgram) Ok(allowStupid bool) base.Type {
 	}
 	for _, v := range p.decls {
 		switch d := v.(type) {
-		case TDecl:
+		case TypeDecl:
 			d.Ok(p.decls)
-		case MDecl:
+		case MethDecl:
 			d.Ok(p.decls)
 		default:
 			panic("Unknown decl: " + reflect.TypeOf(v).String() + "\n\t" +
@@ -93,7 +93,7 @@ type STypeLit struct {
 	fDecls []FieldDecl
 }
 
-var _ TDecl = STypeLit{}
+var _ TypeDecl = STypeLit{}
 
 func (s STypeLit) GetName() Name              { return s.t_name }
 func (s STypeLit) GetBigPsi() BigPsi          { return s.Psi }
@@ -136,72 +136,72 @@ func (fd FieldDecl) String() string {
 	return fd.field + " " + fd.u.String()
 }
 
-/* MDecl, ParamDecl */
+/* MethDecl, ParamDecl */
 
-type MDecl struct {
-	x_recv  Name // CHECKME: better to be Variable?  (etc. for other such Names)
-	t_recv  Name // N.B. t_S
-	PsiRecv BigPsi
+type MethDecl struct {
+	x_recv   Name // CHECKME: better to be Variable?  (etc. for other such Names)
+	t_recv   Name // N.B. t_S
+	Psi_recv BigPsi
 	// N.B. receiver elements "decomposed" because Psi (not TNamed, cf. fg.MDecl uses ParamDecl)
-	name    Name // Refactor to embed Sig?
-	PsiMeth BigPsi
-	pDecls  []ParamDecl
-	u_ret   Type // Return
-	e_body  FGGExpr
+	name     Name // Refactor to embed Sig?
+	Psi_meth BigPsi
+	pDecls   []ParamDecl
+	u_ret    Type // Return
+	e_body   FGGExpr
 }
 
-var _ Decl = MDecl{}
+var _ Decl = MethDecl{}
 
-func (md MDecl) GetRecvName() Name          { return md.x_recv }
-func (md MDecl) GetRecvTypeName() Name      { return md.t_recv }
-func (md MDecl) GetRecvPsi() BigPsi         { return md.PsiRecv }
-func (md MDecl) GetName() Name              { return md.name }
-func (md MDecl) GetMDeclPsi() BigPsi        { return md.PsiMeth } // MDecl in name to prevent false capture by TDecl interface
-func (md MDecl) GetParamDecls() []ParamDecl { return md.pDecls }
-func (md MDecl) GetReturn() Type            { return md.u_ret }
-func (md MDecl) GetBody() FGGExpr           { return md.e_body }
+func (md MethDecl) GetRecvName() Name          { return md.x_recv }
+func (md MethDecl) GetRecvTypeName() Name      { return md.t_recv }
+func (md MethDecl) GetRecvPsi() BigPsi         { return md.Psi_recv }
+func (md MethDecl) GetName() Name              { return md.name }
+func (md MethDecl) GetMDeclPsi() BigPsi        { return md.Psi_meth } // MDecl in name to prevent false capture by TDecl interface
+func (md MethDecl) GetParamDecls() []ParamDecl { return md.pDecls }
+func (md MethDecl) GetReturn() Type            { return md.u_ret }
+func (md MethDecl) GetBody() FGGExpr           { return md.e_body }
 
-func (md MDecl) Ok(ds []Decl) {
+func (md MethDecl) Ok(ds []Decl) {
 	if !isStructName(ds, md.t_recv) {
 		panic("Receiver must be a struct type: not " + md.t_recv +
 			"\n\t" + md.String())
 	}
-	md.PsiRecv.Ok(ds)
-	md.PsiMeth.Ok(ds)
+	md.Psi_recv.Ok(ds)
+	md.Psi_meth.Ok(ds)
 
 	td := getTDecl(ds, md.t_recv)
 	tfs_td := td.GetBigPsi().tFormals
-	if len(tfs_td) != len(md.PsiRecv.tFormals) {
+	if len(tfs_td) != len(md.Psi_recv.tFormals) {
 		panic("Receiver parameter arity mismatch:\n\tmdecl=" + md.t_recv +
-			md.PsiRecv.String() + ", tdecl=" + td.GetName() + td.GetBigPsi().String())
+			md.Psi_recv.String() + ", tdecl=" + td.GetName() + td.GetBigPsi().String())
 	}
 	for i := 0; i < len(tfs_td); i++ {
-		subs_md := makeParamIndexSubs(md.PsiRecv)
+		subs_md := makeParamIndexSubs(md.Psi_recv)
 		subs_td := makeParamIndexSubs(td.GetBigPsi())
-		if !md.PsiRecv.tFormals[i].u_I.TSubs(subs_md).
+		if !md.Psi_recv.tFormals[i].u_I.TSubs(subs_md).
 			Impls(ds, tfs_td[i].u_I.TSubs(subs_td)) {
 			panic("Receiver parameter upperbound not a subtype of type decl upperbound:" +
-				"\n\tmdecl=" + md.PsiRecv.tFormals[i].String() + ", tdecl=" +
+				"\n\tmdecl=" + md.Psi_recv.tFormals[i].String() + ", tdecl=" +
 				tfs_td[i].String())
 		}
 	}
 
-	delta := md.PsiRecv.ToDelta()
-	for _, v := range md.PsiRecv.tFormals {
+	delta := md.Psi_recv.ToDelta()
+	for _, v := range md.Psi_recv.tFormals {
 		v.u_I.Ok(ds, delta)
 	}
 
-	delta1 := md.PsiMeth.ToDelta()
+	delta1 := md.Psi_meth.ToDelta()
 	for k, v := range delta {
 		delta1[k] = v
 	}
-	for _, v := range md.PsiMeth.tFormals {
+	for _, v := range md.Psi_meth.tFormals {
 		v.u_I.Ok(ds, delta1)
 	}
 
-	as := make([]Type, len(md.PsiRecv.tFormals)) // !!! submission version, x:t_S(a) => x:t_S(~a)
-	for i := 0; i < len(md.PsiRecv.tFormals); i++ {
-		as[i] = md.PsiRecv.tFormals[i].name
+	as := make([]Type, len(md.Psi_recv.tFormals)) // !!! submission version, x:t_S(a) => x:t_S(~a)
+	for i := 0; i < len(md.Psi_recv.tFormals); i++ {
+		as[i] = md.Psi_recv.tFormals[i].name
 	}
 	gamma := Gamma{md.x_recv: TNamed{md.t_recv, as}} // CHECKME: can we give the bounds directly here instead of 'as'?
 	for _, v := range md.pDecls {
@@ -215,21 +215,21 @@ func (md MDecl) Ok(ds []Decl) {
 	}
 }
 
-func (md MDecl) ToSig() Sig {
-	return Sig{md.name, md.PsiMeth, md.pDecls, md.u_ret}
+func (md MethDecl) ToSig() Sig {
+	return Sig{md.name, md.Psi_meth, md.pDecls, md.u_ret}
 }
 
-func (md MDecl) String() string {
+func (md MethDecl) String() string {
 	var b strings.Builder
 	b.WriteString("func (")
 	//b.WriteString(md.recv.String())
 	b.WriteString(md.x_recv)
 	b.WriteString(" ")
 	b.WriteString(md.t_recv)
-	b.WriteString(md.PsiRecv.String())
+	b.WriteString(md.Psi_recv.String())
 	b.WriteString(") ")
 	b.WriteString(md.name)
-	b.WriteString(md.PsiMeth.String())
+	b.WriteString(md.Psi_meth.String())
 	b.WriteString("(")
 	writeParamDecls(&b, md.pDecls)
 	b.WriteString(") ")
@@ -259,14 +259,14 @@ func (pd ParamDecl) String() string {
 
 type ITypeLit struct {
 	t_I   Name
-	psi   BigPsi // TODO: rename Psi
+	Psi   BigPsi
 	specs []Spec
 }
 
-var _ TDecl = ITypeLit{}
+var _ TypeDecl = ITypeLit{}
 
 func (c ITypeLit) GetName() Name     { return c.t_I }
-func (c ITypeLit) GetBigPsi() BigPsi { return c.psi }
+func (c ITypeLit) GetBigPsi() BigPsi { return c.Psi }
 func (c ITypeLit) GetSpecs() []Spec  { return c.specs }
 
 func (c ITypeLit) Ok(ds []Decl) {
@@ -284,7 +284,7 @@ func (c ITypeLit) String() string {
 	var b strings.Builder
 	b.WriteString("type ")
 	b.WriteString(string(c.t_I))
-	b.WriteString(c.psi.String())
+	b.WriteString(c.Psi.String())
 	b.WriteString(" interface {")
 	if len(c.specs) > 0 {
 		b.WriteString(" ")
@@ -301,7 +301,7 @@ func (c ITypeLit) String() string {
 
 type Sig struct {
 	meth   Name
-	psi    BigPsi // Add-meth-tparams  // TODO: rename Psi
+	Psi    BigPsi // Add-meth-tparams
 	pDecls []ParamDecl
 	u_ret  Type
 }
@@ -309,14 +309,14 @@ type Sig struct {
 var _ Spec = Sig{}
 
 func (g Sig) GetMethod() Name            { return g.meth }
-func (g Sig) GetPsi() BigPsi             { return g.psi }
+func (g Sig) GetPsi() BigPsi             { return g.Psi }
 func (g Sig) GetParamDecls() []ParamDecl { return g.pDecls }
 func (g Sig) GetReturn() Type            { return g.u_ret }
 
 func (g Sig) TSubs(subs map[TParam]Type) Sig {
-	tfs := make([]TFormal, len(g.psi.tFormals))
-	for i := 0; i < len(g.psi.tFormals); i++ {
-		tf := g.psi.tFormals[i]
+	tfs := make([]TFormal, len(g.Psi.tFormals))
+	for i := 0; i < len(g.Psi.tFormals); i++ {
+		tf := g.Psi.tFormals[i]
 		tfs[i] = TFormal{tf.name, tf.u_I.TSubs(subs)}
 	}
 	ps := make([]ParamDecl, len(g.pDecls))
@@ -329,7 +329,7 @@ func (g Sig) TSubs(subs map[TParam]Type) Sig {
 }
 
 func (g Sig) Ok(ds []Decl) {
-	g.psi.Ok(ds)
+	g.Psi.Ok(ds)
 	// TODO: check distinct param names, etc. -- N.B. interface may not be *used* (so may not be checked else where)
 }
 
@@ -340,7 +340,7 @@ func (g Sig) GetSigs(_ []Decl) []Sig {
 func (g Sig) String() string {
 	var b strings.Builder
 	b.WriteString(g.meth)
-	b.WriteString(g.psi.String())
+	b.WriteString(g.Psi.String())
 	b.WriteString("(")
 	writeParamDecls(&b, g.pDecls)
 	b.WriteString(") ")
@@ -350,7 +350,7 @@ func (g Sig) String() string {
 
 /* Aux, helpers */
 
-func TDeclOk(ds []Decl, td TDecl) {
+func TDeclOk(ds []Decl, td TypeDecl) {
 	psi := td.GetBigPsi()
 	psi.Ok(ds)
 	delta := psi.ToDelta()

@@ -130,7 +130,7 @@ func (a *FGGAdaptor) ExitProgram(ctx *parser.ProgramContext) {
 // Children: 1=NAME, 2=typeFormals, 3=typeLit
 func (a *FGGAdaptor) ExitTypeDecl(ctx *parser.TypeDeclContext) {
 	t := Name(ctx.GetChild(1).(*antlr.TerminalNodeImpl).GetText())
-	td := a.pop().(TDecl)
+	td := a.pop().(TypeDecl)
 	psi := a.pop().(BigPsi)
 	if s, ok := td.(STypeLit); ok { // N.B. s is a *copy* of td
 		s.t_name = t
@@ -138,7 +138,7 @@ func (a *FGGAdaptor) ExitTypeDecl(ctx *parser.TypeDeclContext) {
 		a.push(s)
 	} else if c, ok := td.(ITypeLit); ok {
 		c.t_I = t
-		c.psi = psi
+		c.Psi = psi
 		a.push(c)
 	} else {
 		panic("Unknown type decl: " + reflect.TypeOf(td).String())
@@ -177,7 +177,7 @@ func (a *FGGAdaptor) ExitMethDecl(ctx *parser.MethDeclContext) {
 	psi := a.pop().(BigPsi)
 	t := Name(ctx.GetTypn().GetText())
 	recv := Name(ctx.GetRecv().GetText())
-	a.push(MDecl{recv, t, psi, g.meth, g.psi, g.pDecls, g.u_ret, e})
+	a.push(MethDecl{recv, t, psi, g.meth, g.Psi, g.pDecls, g.u_ret, e})
 }
 
 // Cf. ExitFieldDecl

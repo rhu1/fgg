@@ -40,7 +40,7 @@ func (c *fg2fgg) convert() error {
 			}
 			c.fggProg.decls = append(c.fggProg.decls, iTypeLit)
 
-		case fg.MDecl:
+		case fg.MethDecl:
 			mDecl, err := c.convertMDecl(decl)
 			if err != nil {
 				return err
@@ -99,13 +99,13 @@ func (c *fg2fgg) convertITypeLit(i fg.ITypeLit) (ITypeLit, error) {
 
 		specs = append(specs, Sig{
 			meth:   Name(sig.GetMethod()),
-			psi:    BigPsi{tFormals: nil},
+			Psi:    BigPsi{tFormals: nil},
 			pDecls: paramDecls,
 			u_ret:  TNamed{t_name: retTypeName},
 		})
 	}
 
-	return ITypeLit{t_I: typeName, psi: typeFormals, specs: specs}, nil
+	return ITypeLit{t_I: typeName, Psi: typeFormals, specs: specs}, nil
 }
 
 func (c *fg2fgg) convertFieldDecl(fd fg.FieldDecl) (FieldDecl, error) {
@@ -118,14 +118,14 @@ func (c *fg2fgg) convertParamDecl(pd fg.ParamDecl) (ParamDecl, error) {
 	return ParamDecl{name: pd.GetName(), u: TNamed{t_name: typeName}}, nil
 }
 
-func (c *fg2fgg) convertMDecl(md fg.MDecl) (MDecl, error) {
+func (c *fg2fgg) convertMDecl(md fg.MethDecl) (MethDecl, error) {
 	recvTypeName, recvTypeFormals := c.convertType(md.GetReceiver().GetType())
 
 	var paramDecls []ParamDecl
 	for _, p := range md.GetParamDecls() {
 		pd, err := c.convertParamDecl(p)
 		if err != nil {
-			return MDecl{}, err
+			return MethDecl{}, err
 		}
 		paramDecls = append(paramDecls, pd)
 	}
@@ -133,18 +133,18 @@ func (c *fg2fgg) convertMDecl(md fg.MDecl) (MDecl, error) {
 	retTypeName, _ := c.convertType(md.GetReturn())
 	methImpl, err := c.convertExpr(md.GetBody())
 	if err != nil {
-		return MDecl{}, err
+		return MethDecl{}, err
 	}
 
-	return MDecl{
-		x_recv:  md.GetReceiver().GetName(),
-		t_recv:  recvTypeName,
-		PsiRecv: recvTypeFormals,
-		name:    Name(md.GetName()),
-		PsiMeth: BigPsi{}, // empty parameter
-		pDecls:  paramDecls,
-		u_ret:   TNamed{t_name: retTypeName},
-		e_body:  methImpl,
+	return MethDecl{
+		x_recv:   md.GetReceiver().GetName(),
+		t_recv:   recvTypeName,
+		Psi_recv: recvTypeFormals,
+		name:     Name(md.GetName()),
+		Psi_meth: BigPsi{}, // empty parameter
+		pDecls:   paramDecls,
+		u_ret:    TNamed{t_name: retTypeName},
+		e_body:   methImpl,
 	}, nil
 }
 

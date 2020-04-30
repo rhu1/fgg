@@ -160,14 +160,14 @@ func (u0 TNamed) ImplsDelta(ds []Decl, delta Delta, u Type) bool {
 
 // !!! Sig in FGG includes ~a and ~x, which naively breaks "impls"
 func sigAlphaEquals(g0 Sig, g Sig) bool {
-	if len(g0.psi.tFormals) != len(g.psi.tFormals) || len(g0.pDecls) != len(g.pDecls) {
+	if len(g0.Psi.tFormals) != len(g.Psi.tFormals) || len(g0.pDecls) != len(g.pDecls) {
 		return false
 	}
-	subs0 := makeParamIndexSubs(g0.psi)
-	subs := makeParamIndexSubs(g.psi)
-	for i := 0; i < len(g0.psi.tFormals); i++ {
-		if !g0.psi.tFormals[i].u_I.TSubs(subs0).
-			Equals(g.psi.tFormals[i].u_I.TSubs(subs)) {
+	subs0 := makeParamIndexSubs(g0.Psi)
+	subs := makeParamIndexSubs(g.Psi)
+	for i := 0; i < len(g0.Psi.tFormals); i++ {
+		if !g0.Psi.tFormals[i].u_I.TSubs(subs0).
+			Equals(g.Psi.tFormals[i].u_I.TSubs(subs)) {
 			return false
 		}
 	}
@@ -345,7 +345,7 @@ func (tf TFormal) String() string {
 
 // Type actuals
 // Also ranged over by small phi
-type SmallPsi []Type
+type SmallPsi []Type // CHECKME: Currently only used in omega/monom, maybe deprecate?
 
 func (x0 SmallPsi) Equals(x SmallPsi) bool {
 	if len(x0) != len(x) {
@@ -372,7 +372,7 @@ func (x0 SmallPsi) String() string {
 //type Gamma map[Variable]Type  // CHECKME: refactor?
 type Gamma map[Name]Type
 type Delta map[TParam]Type // Type intended to be an upper bound
-type Eta map[TParam]TNamed // Type intended to be a ground TNamed
+type Eta map[TParam]TNamed // TNamed intended to be a ground
 
 func (delta Delta) String() string {
 	res := "["
@@ -398,11 +398,11 @@ func MakeEta(Psi BigPsi, psi SmallPsi) Eta {
 	return eta
 }
 
-/* AST base intefaces: FGGNode, Decl, TDecl, Spec, Expr */
+/* AST base intefaces: FGGNode, Decl, TypeDecl, Spec, Expr */
 
 // FGGNode, Decl: see Aliases (at top)
 
-type TDecl interface {
+type TypeDecl interface {
 	Decl
 	GetBigPsi() BigPsi // TODO: rename? potential clash with, e.g., MDecl, can cause "false" interface satisfaction
 }

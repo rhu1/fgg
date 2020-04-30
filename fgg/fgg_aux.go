@@ -10,7 +10,7 @@ var _ = fmt.Errorf
 func Bounds(delta Delta, u Type) Type          { return bounds(delta, u) }
 func Fields(ds []Decl, u_S TNamed) []FieldDecl { return fields(ds, u_S) }
 func Methods(ds []Decl, u Type) map[Name]Sig   { return methods(ds, u) }
-func GetTDecl(ds []Decl, t Name) TDecl         { return getTDecl(ds, t) }
+func GetTDecl(ds []Decl, t Name) TypeDecl      { return getTDecl(ds, t) }
 
 /* bounds(delta, u), fields(u_S), methods(u), body(u_S, m) */
 
@@ -47,14 +47,14 @@ func methods(ds []Decl, u Type) map[Name]Sig {
 	res := make(map[Name]Sig)
 	if IsStructType(ds, u) {
 		for _, v := range ds {
-			md, ok := v.(MDecl)
+			md, ok := v.(MethDecl)
 			if ok && isStructName(ds, md.t_recv) {
 				//sd := md.recv.u.(TName)
 				u_S := u.(TNamed)
 				if md.t_recv == u_S.t_name {
 					subs := make(map[TParam]Type)
-					for i := 0; i < len(md.PsiRecv.tFormals); i++ {
-						subs[md.PsiRecv.tFormals[i].name] = u_S.u_args[i]
+					for i := 0; i < len(md.Psi_recv.tFormals); i++ {
+						subs[md.Psi_recv.tFormals[i].name] = u_S.u_args[i]
 					}
 					/*for i := 0; i < len(md.psi.tfs); i++ { // CHECKME: because TParam.TSubs will panic o/w -- refactor?
 						subs[md.psi.tfs[i].a] = md.psi.tfs[i].a
@@ -67,8 +67,8 @@ func methods(ds []Decl, u Type) map[Name]Sig {
 		u_I := u.(TNamed)
 		td := getTDecl(ds, u_I.t_name).(ITypeLit)
 		subs := make(map[TParam]Type)
-		for i := 0; i < len(td.psi.tFormals); i++ {
-			subs[td.psi.tFormals[i].name] = u_I.u_args[i]
+		for i := 0; i < len(td.Psi.tFormals); i++ {
+			subs[td.Psi.tFormals[i].name] = u_I.u_args[i]
 		}
 		for _, s := range td.specs {
 			/*for _, v := range s.GetSigs(ds) {
@@ -96,14 +96,14 @@ func methods(ds []Decl, u Type) map[Name]Sig {
 //func body(ds []Decl, u_S TNamed, m Name, targs []Type) (Name, []Name, FGGExpr) {
 func body(ds []Decl, u_S TNamed, m Name, targs []Type) (ParamDecl, []ParamDecl, FGGExpr) {
 	for _, v := range ds {
-		md, ok := v.(MDecl)
+		md, ok := v.(MethDecl)
 		if ok && md.t_recv == u_S.t_name && md.name == m {
 			subs := make(map[TParam]Type)
-			for i := 0; i < len(md.PsiRecv.tFormals); i++ {
-				subs[md.PsiRecv.tFormals[i].name] = u_S.u_args[i]
+			for i := 0; i < len(md.Psi_recv.tFormals); i++ {
+				subs[md.Psi_recv.tFormals[i].name] = u_S.u_args[i]
 			}
-			for i := 0; i < len(md.PsiMeth.tFormals); i++ {
-				subs[md.PsiMeth.tFormals[i].name] = targs[i]
+			for i := 0; i < len(md.Psi_meth.tFormals); i++ {
+				subs[md.Psi_meth.tFormals[i].name] = targs[i]
 			}
 			recv := ParamDecl{md.x_recv, u_S}
 			pds := make([]ParamDecl, len(md.pDecls))
@@ -120,9 +120,9 @@ func body(ds []Decl, u_S TNamed, m Name, targs []Type) (ParamDecl, []ParamDecl, 
 
 /* Additional */
 
-func getTDecl(ds []Decl, t Name) TDecl {
+func getTDecl(ds []Decl, t Name) TypeDecl {
 	for _, v := range ds {
-		td, ok := v.(TDecl)
+		td, ok := v.(TypeDecl)
 		if ok && td.GetName() == t {
 			return td
 		}

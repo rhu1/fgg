@@ -206,7 +206,7 @@ func auxM(ds []Decl, omega Omega1) bool {
 			if g.meth != m.meth {
 				continue
 			}
-			eta := MakeEta(g.psi, m.psi)
+			eta := MakeEta(g.Psi, m.psi)
 			//fmt.Println("333:", m.u_recv, ";", m.meth)
 			for _, pd := range g.pDecls {
 				//fmt.Println("444:", pd.name, pd.u)
@@ -266,7 +266,7 @@ func auxE1(ds []Decl, omega Omega1) bool {
 			continue
 		}
 		td_I := getTDecl(ds, u.t_name).(ITypeLit)
-		eta := MakeEta(td_I.psi, u.u_args)
+		eta := MakeEta(td_I.Psi, u.u_args)
 		for _, s := range td_I.specs {
 			if u_emb, ok := s.(TNamed); ok {
 				u_sub := u_emb.SubsEta(eta)
@@ -292,7 +292,7 @@ func auxE2(ds []Decl, omega Omega1) bool {
 			continue
 		}
 		td_I := getTDecl(ds, m.u_recv.t_name).(ITypeLit)
-		eta := MakeEta(td_I.psi, m.u_recv.u_args)
+		eta := MakeEta(td_I.Psi, m.u_recv.u_args)
 		for _, s := range td_I.specs {
 			if u_emb, ok := s.(TNamed); ok {
 				u_sub := u_emb.SubsEta(eta)

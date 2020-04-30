@@ -50,7 +50,7 @@ func Translate(p fgg.FGGProgram) FGRProgram { // TODO FIXME: FGR -- TODO also ca
 			ds_fgr = append(ds_fgr, s, getv)
 		case fgg.ITypeLit:
 			ds_fgr = append(ds_fgr, fgrTransITypeLit(d1))
-		case fgg.MDecl:
+		case fgg.MethDecl:
 			ds_fgr = append(ds_fgr, fgrTransMDecl(ds_fgg, d1, wrappers))
 		default:
 			panic("Unexpected Decl type " + reflect.TypeOf(d).String() +
@@ -189,7 +189,7 @@ func fgrTransSig(delta fgg.Delta, g fgg.Sig) Sig {
 
 /* MDecl */
 
-func fgrTransMDecl(ds []Decl, d1 fgg.MDecl, wrappers map[Type]adptrPair) MDecl {
+func fgrTransMDecl(ds []Decl, d1 fgg.MethDecl, wrappers map[Type]adptrPair) MDecl {
 	x_recv := d1.GetRecvName()
 	t_recv := d1.GetRecvTypeName()
 	psi_recv := d1.GetRecvPsi()
@@ -472,9 +472,9 @@ func isFggITypeLit(ds []Decl, t Type) bool {
 }
 
 // ds are from FGG source (t is from toFgTypeFromBounds)
-func getMDecl(ds []Decl, t Type, m Name) fgg.MDecl {
+func getMDecl(ds []Decl, t Type, m Name) fgg.MethDecl {
 	for _, v := range ds {
-		md, ok := v.(fgg.MDecl)
+		md, ok := v.(fgg.MethDecl)
 		if ok {
 			fmt.Println("bbb:", v.String(), (md.GetRecvTypeName() == t.String()), (md.GetName() == m))
 		}

@@ -304,12 +304,12 @@ func (c Call) Typing(ds []Decl, delta Delta, gamma Gamma, allowStupid bool) Type
 	} else {
 		g = tmp
 	}
-	if len(c.t_args) != len(g.psi.tFormals) {
+	if len(c.t_args) != len(g.Psi.tFormals) {
 		var b strings.Builder
 		b.WriteString("Arity mismatch: type actuals=[")
 		writeTypes(&b, c.t_args)
 		b.WriteString("], formals=[")
-		b.WriteString(g.psi.String())
+		b.WriteString(g.Psi.String())
 		b.WriteString("]\n\t")
 		b.WriteString(c.String())
 		panic(b.String())
@@ -326,10 +326,10 @@ func (c Call) Typing(ds []Decl, delta Delta, gamma Gamma, allowStupid bool) Type
 	}
 	subs := make(map[TParam]Type) // CHECKME: applying this subs vs. adding to a new delta?
 	for i := 0; i < len(c.t_args); i++ {
-		subs[g.psi.tFormals[i].name] = c.t_args[i]
+		subs[g.Psi.tFormals[i].name] = c.t_args[i]
 	}
 	for i := 0; i < len(c.t_args); i++ {
-		u := g.psi.tFormals[i].u_I.TSubs(subs)
+		u := g.Psi.tFormals[i].u_I.TSubs(subs)
 		if !c.t_args[i].ImplsDelta(ds, delta, u) {
 			panic("Type actual must implement type formal: actual=" +
 				c.t_args[i].String() + ", param=" + u.String())

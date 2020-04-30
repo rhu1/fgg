@@ -36,12 +36,12 @@ func ApplyOmega1(p FGGProgram, omega Omega1) fg.FGProgram {
 	var ds_monom []Decl
 	for _, v := range p.decls {
 		switch d := v.(type) {
-		case TDecl:
+		case TypeDecl:
 			tds_monom := monomTDecl1(p.decls, omega, d)
 			for _, v := range tds_monom {
 				ds_monom = append(ds_monom, v)
 			}
-		case MDecl:
+		case MethDecl:
 			mds_monom := monomMDecl1(omega, d)
 			for _, v := range mds_monom {
 				ds_monom = append(ds_monom, v)
@@ -58,7 +58,7 @@ func ApplyOmega1(p FGGProgram, omega Omega1) fg.FGProgram {
 // All m (MethInstan.meth) belong to the same t (MethInstan.u_recv.t_name)
 type Mu map[string]MethInstan // Cf. Omega1, toKey_Wm
 
-func monomTDecl1(ds []Decl, omega Omega1, td TDecl) []fg.TDecl {
+func monomTDecl1(ds []Decl, omega Omega1, td TypeDecl) []fg.TDecl {
 	var res []fg.TDecl
 	for _, u := range omega.us {
 		t := td.GetName()
@@ -106,7 +106,7 @@ func monomITypeLit1(t_monom fg.Type, c ITypeLit, eta Eta, mu Mu) fg.ITypeLit {
 				if m.meth != s.meth {
 					continue
 				}
-				theta := MakeEta(s.psi, m.psi)
+				theta := MakeEta(s.Psi, m.psi)
 				for k, v := range eta {
 					theta[k] = v
 				}
@@ -138,18 +138,18 @@ func monomSig1(g Sig, m MethInstan, eta Eta) fg.Sig {
 	return fg.NewSig(m_monom, pds_monom, ret_monom)
 }
 
-func monomMDecl1(omega Omega1, md MDecl) []fg.MDecl {
-	var res []fg.MDecl
+func monomMDecl1(omega Omega1, md MethDecl) []fg.MethDecl {
+	var res []fg.MethDecl
 	for _, m := range omega.ms {
 		if !(m.u_recv.t_name == md.t_recv && m.meth == md.name) {
 			continue
 		}
-		theta := MakeEta(md.PsiRecv, m.u_recv.u_args)
-		for i := 0; i < len(md.PsiMeth.tFormals); i++ {
-			theta[md.PsiMeth.tFormals[i].name] = m.psi[i].(TNamed)
+		theta := MakeEta(md.Psi_recv, m.u_recv.u_args)
+		for i := 0; i < len(md.Psi_meth.tFormals); i++ {
+			theta[md.Psi_meth.tFormals[i].name] = m.psi[i].(TNamed)
 		}
-		recv_monom := fg.NewParamDecl(md.x_recv, toMonomId(m.u_recv))                 // !!! t_S(phi) already ground receiver
-		g_monom := monomSig1(Sig{md.name, md.PsiMeth, md.pDecls, md.u_ret}, m, theta) // !!! small psi
+		recv_monom := fg.NewParamDecl(md.x_recv, toMonomId(m.u_recv))                  // !!! t_S(phi) already ground receiver
+		g_monom := monomSig1(Sig{md.name, md.Psi_meth, md.pDecls, md.u_ret}, m, theta) // !!! small psi
 		e_monom := monomExpr1(md.e_body, theta)
 		md_monom := fg.NewMDecl(recv_monom, g_monom.GetMethod(), g_monom.GetParamDecls(), g_monom.GetReturn(), e_monom)
 		res = append(res, md_monom)
@@ -262,7 +262,7 @@ func IsMonomable(p FGGProgram) (FGGExpr, bool) {
 		switch d := v.(type) {
 		case STypeLit:
 		case ITypeLit:
-		case MDecl:
+		case MethDecl:
 			if e, ok := isMonomableMDecl(d); !ok {
 				return e, false
 			}
@@ -274,7 +274,7 @@ func IsMonomable(p FGGProgram) (FGGExpr, bool) {
 	return isMonomableExpr(p.e_main)
 }
 
-func isMonomableMDecl(d MDecl) (FGGExpr, bool) {
+func isMonomableMDecl(d MethDecl) (FGGExpr, bool) {
 	return isMonomableExpr(d.e_body)
 }
 

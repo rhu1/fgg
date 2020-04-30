@@ -21,8 +21,8 @@ func NewFGProgram(ds []Decl, e FGExpr, printf bool) FGProgram {
 
 func NewSTypeLit(t Type, fds []FieldDecl) STypeLit { return STypeLit{t, fds} }
 func NewITypeLit(t Type, ss []Spec) ITypeLit       { return ITypeLit{t, ss} }
-func NewMDecl(recv ParamDecl, m Name, pds []ParamDecl, t Type, e FGExpr) MDecl {
-	return MDecl{recv, m, pds, t, e}
+func NewMDecl(recv ParamDecl, m Name, pds []ParamDecl, t Type, e FGExpr) MethDecl {
+	return MethDecl{recv, m, pds, t, e}
 }
 func NewFieldDecl(f Name, t Type) FieldDecl      { return FieldDecl{f, t} }
 func NewParamDecl(x Name, t Type) ParamDecl      { return ParamDecl{x, t} } // For fgg_monom.MakeWMap
@@ -51,7 +51,7 @@ func (p FGProgram) Ok(allowStupid bool) base.Type {
 		"(e.g., distinct field/param names, etc.)")*/
 	}
 	tds := make(map[Type]TDecl)
-	mds := make(map[string]MDecl) // Hack, string = string(md.recv.t) + "." + md.GetName()
+	mds := make(map[string]MethDecl) // Hack, string = string(md.recv.t) + "." + md.GetName()
 	for _, v := range p.decls {
 		switch d := v.(type) {
 		case TDecl:
@@ -63,7 +63,7 @@ func (p FGProgram) Ok(allowStupid bool) base.Type {
 					d.String())
 			}
 			tds[t] = d
-		case MDecl:
+		case MethDecl:
 			d.Ok(p.decls)
 			n := d.GetName()
 			hash := string(d.recv.t) + "." + n
@@ -168,9 +168,9 @@ func (fd FieldDecl) String() string {
 	return b.String()
 }
 
-/* MDecl, ParamDecl */
+/* MethDecl, ParamDecl */
 
-type MDecl struct {
+type MethDecl struct {
 	recv   ParamDecl
 	name   Name // Not embedding Sig because Sig doesn't take xs
 	pDecls []ParamDecl
@@ -178,15 +178,15 @@ type MDecl struct {
 	e_body FGExpr
 }
 
-var _ Decl = MDecl{}
+var _ Decl = MethDecl{}
 
-func (md MDecl) GetReceiver() ParamDecl     { return md.recv }
-func (md MDecl) GetName() Name              { return md.name }   // From Decl
-func (md MDecl) GetParamDecls() []ParamDecl { return md.pDecls } // Returns non-receiver params
-func (md MDecl) GetReturn() Type            { return md.t_ret }
-func (md MDecl) GetBody() FGExpr            { return md.e_body }
+func (md MethDecl) GetReceiver() ParamDecl     { return md.recv }
+func (md MethDecl) GetName() Name              { return md.name }   // From Decl
+func (md MethDecl) GetParamDecls() []ParamDecl { return md.pDecls } // Returns non-receiver params
+func (md MethDecl) GetReturn() Type            { return md.t_ret }
+func (md MethDecl) GetBody() FGExpr            { return md.e_body }
 
-func (md MDecl) Ok(ds []Decl) {
+func (md MethDecl) Ok(ds []Decl) {
 	if !isStructType(ds, md.recv.t) {
 		panic("Receiver must be a struct type: not " + md.recv.t.String() +
 			"\n\t" + md.String())
@@ -203,11 +203,11 @@ func (md MDecl) Ok(ds []Decl) {
 	}
 }
 
-func (md MDecl) ToSig() Sig {
+func (md MethDecl) ToSig() Sig {
 	return Sig{md.name, md.pDecls, md.t_ret}
 }
 
-func (md MDecl) String() string {
+func (md MethDecl) String() string {
 	var b strings.Builder
 	b.WriteString("func (")
 	b.WriteString(md.recv.String())
@@ -356,10 +356,10 @@ func isDistinctDecl(decl Decl, ds []Decl) bool {
 			if td, ok := decl.(TDecl); ok && d.GetName() == td.GetName() {
 				count++
 			}
-		case MDecl:
+		case MethDecl:
 			// checks that (method-type, method-name) is unique
 			// RH: CHECKME: this would allow (bad) "return overloading"? -- note, d.t is the method return type
-			if md, ok := decl.(MDecl); ok && d.t_ret.String() == md.t_ret.String() && d.GetName() == md.GetName() {
+			if md, ok := decl.(MethDecl); ok && d.t_ret.String() == md.t_ret.String() && d.GetName() == md.GetName() {
 				count++
 			}
 		}

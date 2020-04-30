@@ -26,7 +26,7 @@ func Foo(ds []Decl) {
 		switch d := v.(type) {
 		case STypeLit:
 		case ITypeLit:
-		case MDecl:
+		case MethDecl:
 			delta := d.GetMDeclPsi().ToDelta()
 			tfs := d.GetRecvPsi().GetTFormals()
 			u_args := make([]Type, len(tfs))
@@ -207,7 +207,7 @@ func bar(ds []Decl, delta Delta, gamma Gamma, ctxt RecvMethPair, e FGGExpr,
 						}
 					}
 				case ITypeLit:
-				case MDecl:
+				case MethDecl:
 				default:
 					panic("Unknown Decl kind: " + reflect.TypeOf(e).String() + "\n\t" +
 						e.String())

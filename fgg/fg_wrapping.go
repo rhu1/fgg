@@ -56,15 +56,15 @@ func FgAdptrTranslate(p FGGProgram) fg.FGProgram { // TODO FIXME: FGR -- TODO al
 			ds = append(ds, s, getv)
 		case ITypeLit:
 			ds = append(ds, fgAdaptITypeLit(d1))
-		case MDecl:
-			delta := d1.PsiRecv.ToDelta()
-			for _, v := range d1.PsiMeth.tFormals {
+		case MethDecl:
+			delta := d1.Psi_recv.ToDelta()
+			for _, v := range d1.Psi_meth.tFormals {
 				delta[v.name] = v.u_I
 			}
 			gamma := make(Gamma)
-			us := make([]Type, len(d1.PsiRecv.tFormals))
+			us := make([]Type, len(d1.Psi_recv.tFormals))
 			for i := 0; i < len(us); i++ {
-				us[i] = d1.PsiRecv.tFormals[i].name
+				us[i] = d1.Psi_recv.tFormals[i].name
 			}
 			gamma[d1.x_recv] = TNamed{d1.t_recv, us} // !!! also receiver
 			for _, v := range d1.pDecls {
@@ -106,9 +106,9 @@ func FgAdptrTranslate(p FGGProgram) fg.FGProgram { // TODO FIXME: FGR -- TODO al
 		// gettr := ...TODO...
 
 		c := GetTDecl(p.decls, string(v.super)).(ITypeLit)
-		us := make([]Type, len(c.psi.tFormals))
+		us := make([]Type, len(c.Psi.tFormals))
 		for i := 0; i < len(us); i++ {
-			us[i] = c.psi.tFormals[i].name
+			us[i] = c.Psi.tFormals[i].name
 		}
 		dummy := TNamed{c.t_I, us}    // `us` are just the decl TParams, args not actually needed for `methods` or below
 		gs := methods(p.decls, dummy) // !!! all meths of t_I target
@@ -116,10 +116,10 @@ func FgAdptrTranslate(p FGGProgram) fg.FGProgram { // TODO FIXME: FGR -- TODO al
 		//for _, s := range c.ss {
 		for _, g := range gs {
 			delta := make(Delta)
-			for _, v1 := range c.psi.tFormals {
+			for _, v1 := range c.Psi.tFormals {
 				delta[v1.name] = v1.u_I
 			}
-			for _, v1 := range g.psi.tFormals {
+			for _, v1 := range g.Psi.tFormals {
 				delta[v1.name] = v1.u_I
 			}
 			/*delta1 := make(TEnv)
@@ -168,7 +168,7 @@ func fgAdaptSTypeLit(s STypeLit) fg.STypeLit {
 }
 
 func fgAdaptITypeLit(c ITypeLit) fg.ITypeLit {
-	delta := c.psi.ToDelta()
+	delta := c.Psi.ToDelta()
 	ss := make([]fg.Spec, len(c.specs)+1)
 	ss[0] = fg.Type("t_0") // TODO: factor out
 	for i := 1; i <= len(c.specs); i++ {
@@ -190,7 +190,7 @@ func fgAdaptSig(delta Delta, g Sig) fg.Sig {
 	for k, v := range delta {
 		delta1[k] = v
 	}
-	for _, v := range g.psi.tFormals {
+	for _, v := range g.Psi.tFormals {
 		delta1[v.name] = v.u_I
 	}
 	pds := make([]fg.ParamDecl, len(g.pDecls))
@@ -247,9 +247,9 @@ func fgAdaptExpr(ds []Decl, delta Delta, gamma Gamma, e FGGExpr, fgWrappers map[
 		u_recv := e1.e_recv.Typing(ds, delta, gamma, false)
 		g := methods(ds, bounds(delta, u_recv))[e1.meth]
 		subs := make(map[TParam]Type)
-		for i := 0; i < len(g.psi.tFormals); i++ {
+		for i := 0; i < len(g.Psi.tFormals); i++ {
 			//subs[g.psi.tfs[i].a] = e1.targs[i]  // !!! cf. StructLit case
-			subs[g.psi.tFormals[i].name] = bounds(delta, e1.t_args[i])
+			subs[g.Psi.tFormals[i].name] = bounds(delta, e1.t_args[i])
 		}
 		args := make([]fg.FGExpr, len(e1.args))
 		for i := 0; i < len(e1.args); i++ {
@@ -267,8 +267,8 @@ func fgAdaptExpr(ds []Decl, delta Delta, gamma Gamma, e FGGExpr, fgWrappers map[
 		//u_ret := u.TSubs(subs) // Cf. bounds(delta, u) ?
 
 		delta1 := make(map[TParam]Type)
-		for i := 0; i < len(g.psi.tFormals); i++ {
-			tf := g.psi.tFormals[i]
+		for i := 0; i < len(g.Psi.tFormals); i++ {
+			tf := g.Psi.tFormals[i]
 			delta1[tf.name] = tf.u_I
 		}
 		td := GetTDecl(ds, bounds(delta, u_recv).(TNamed).t_name)

@@ -20,7 +20,7 @@ func methods(ds []Decl, t Type) map[Name]Sig {
 	res := make(map[Name]Sig)
 	if isStructType(ds, t) {
 		for _, v := range ds { // Factor out getMDecl?
-			md, ok := v.(MDecl)
+			md, ok := v.(MethDecl)
 			if ok && md.recv.t == t {
 				res[md.name] = md.ToSig()
 			}
@@ -41,7 +41,7 @@ func methods(ds []Decl, t Type) map[Name]Sig {
 // Pre: t_S is a struct type
 func body(ds []Decl, t_S Type, m Name) (Name, []Name, FGExpr) {
 	for _, v := range ds {
-		md, ok := v.(MDecl)
+		md, ok := v.(MethDecl)
 		if ok && md.recv.t == t_S && md.name == m {
 			xs := make([]Name, len(md.pDecls))
 			for i := 0; i < len(md.pDecls); i++ {

@@ -54,7 +54,7 @@ func Obliterate(p_fgg fgg.FGGProgram) FGRProgram { // CHECKME can also subsume e
 			ds_fgr = append(ds_fgr, oblitSTypeLit(d), getRep)
 		case fgg.ITypeLit:
 			ds_fgr = append(ds_fgr, oblitITypeLit(d))
-		case fgg.MDecl:
+		case fgg.MethDecl:
 			ds_fgr = append(ds_fgr, oblitMDecl(ds_fgg, d))
 		default:
 			panic("Unexpected Decl type " + reflect.TypeOf(d).String() + ": " +
@@ -121,7 +121,7 @@ func oblitSig(g_fgg fgg.Sig) Sig {
 
 /* Obliterate MDecl */
 
-func oblitMDecl(ds_fgg []Decl, d fgg.MDecl) MDecl {
+func oblitMDecl(ds_fgg []Decl, d fgg.MethDecl) MDecl {
 	x_recv := d.GetRecvName()
 	t_recv := Type(d.GetRecvTypeName())
 	recv_fgr := NewParamDecl(x_recv, t_recv)
