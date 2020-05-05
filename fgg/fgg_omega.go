@@ -106,8 +106,8 @@ func collectExpr(ds []Decl, gamma GroundGamma, e FGGExpr, omega Omega1) {
 			gamma1[k] = v
 		}
 		u_recv := e1.e_recv.Typing(ds, make(Delta), gamma1, false).(TNamed)
-		omega.us[toKey_Wt(u_recv)] = u_recv
-		m := MethInstan{u_recv, e1.meth, e1.GetTArgs()} // CHECKME: why add u_recv separately?
+		omega.us[toKey_Wt(u_recv)] = u_recv // N.B. type/method instans recorded separately
+		m := MethInstan{u_recv, e1.meth, e1.GetTArgs()}
 		omega.ms[toKey_Wm(m)] = m
 	case Assert:
 		collectExpr(ds, gamma, e1.e_I, omega)
