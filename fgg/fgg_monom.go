@@ -337,7 +337,7 @@ func isOrContainsTParam(u Type) bool {
 
  */
 
-/* OLD -- Simplistic conservative isMonom check:
+/* Deprecated -- Simplistic isMonom check:
    no typeparam nested in a named type in typeargs of StructLit/Call exprs */
 
 func IsMonomable(p FGGProgram) (FGGExpr, bool) {

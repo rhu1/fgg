@@ -315,6 +315,15 @@ func (Psi BigPsi) ToDelta() Delta {
 	return delta
 }
 
+// The ordered value set of ToDelta
+func (Psi BigPsi) Hat() SmallPsi {
+	res := make(SmallPsi, len(Psi.tFormals))
+	for i, v := range Psi.tFormals {
+		res[i] = v.u_I
+	}
+	return res
+}
+
 func (Psi BigPsi) String() string {
 	var b strings.Builder
 	b.WriteString("(type ") // Includes "(...)" -- cf. e.g., writeFieldDecls
