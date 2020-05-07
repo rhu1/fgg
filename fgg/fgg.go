@@ -356,6 +356,22 @@ func (tf TFormal) String() string {
 // Also ranged over by small phi
 type SmallPsi []Type // CHECKME: Currently only used in omega/monom, maybe deprecate?
 
+func (x0 SmallPsi) TSubs(subs map[TParam]Type) SmallPsi {
+	res := make(SmallPsi, len(x0))
+	for i, v := range x0 {
+		res[i] = v.TSubs(subs)
+	}
+	return res
+}
+
+func (x0 SmallPsi) String() string {
+	var b strings.Builder
+	for _, v := range x0 {
+		b.WriteString(v.String())
+	}
+	return b.String()
+}
+
 func (x0 SmallPsi) Equals(x SmallPsi) bool {
 	if len(x0) != len(x) {
 		return false
@@ -366,14 +382,6 @@ func (x0 SmallPsi) Equals(x SmallPsi) bool {
 		}
 	}
 	return true
-}
-
-func (x0 SmallPsi) String() string {
-	var b strings.Builder
-	for _, v := range x0 {
-		b.WriteString(v.String())
-	}
-	return b.String()
 }
 
 /* Context, Type context, Substitutions */

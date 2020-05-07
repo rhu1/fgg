@@ -14,7 +14,7 @@ var _ = strings.Compare
 
 type RecvMethPair struct {
 	t_recv Name // Pre: t_S
-	m      Name
+	m      Name // TODO rename
 }
 
 func (x0 RecvMethPair) equals(x RecvMethPair) bool {
@@ -44,6 +44,7 @@ func (x0 cgraph) String() string {
 		b.WriteString(k.m)
 		b.WriteString(": ")
 		b.WriteString(fmt.Sprintf("%v", v))
+		b.WriteString("\n")
 	}
 	return b.String()
 }
@@ -57,14 +58,84 @@ func IsMonomOK(p FGGProgram) bool {
 		}
 	}
 	//buildGraphExpr(ds, make(Delta), make(Gamma), ...)  // visit main unnecessary -- CHECKME: how about type instans?
-	fmt.Println("111:\n", graph, "\n---")
+	//fmt.Println("111:\n", graph.String(), "---")
 	cycles := make(map[string]cycle)
 	findCycles(graph, cycles)
 	for _, v := range cycles {
 		fmt.Println(v)
-
+		if isNomonoCycle(ds, graph, v) {
+			return false
+		}
 	}
-	return true // FIXME
+	return true
+}
+
+func isNomonoCycle(ds []Decl, graph cgraph, c cycle) bool {
+	for _, tArgs := range graph.edges[c[0]][c[1]] {
+		if isNomonoTypeArgs(tArgs) {
+			return true
+		}
+		isNomonoCycleAux(ds, graph, c, tArgs, 1)
+	}
+	return false
+}
+
+func isNomonoTypeArgs(tArgs cTypeArgs) bool {
+	for _, v := range tArgs.psi_recv {
+		if containsNestedTParam(v) {
+			return true
+		}
+	}
+	for _, v := range tArgs.psi_meth {
+		if containsNestedTParam(v) {
+			return true
+		}
+	}
+	return false
+}
+
+func isNomonoCycleAux(ds []Decl, graph cgraph, c cycle, tArgs cTypeArgs, i int) bool {
+	if i >= (len(c) - 1) {
+		return false
+	}
+	next := c[i]
+	md := getMDecl(ds, next.t_recv, next.m)
+	subs := make(Delta)
+	for i, v := range tArgs.psi_recv {
+		subs[md.Psi_recv.tFormals[i].name] = v
+	}
+	for i, v := range tArgs.psi_meth {
+		subs[md.Psi_meth.tFormals[i].name] = v
+	}
+
+	for _, v := range graph.edges[c[i]][c[i+1]] {
+		tArgs1 := cTypeArgs{v.psi_recv.TSubs(subs), v.psi_meth.TSubs(subs)}
+		if isNomonoTypeArgs(tArgs1) {
+			return true
+		}
+		isNomonoCycleAux(ds, graph, c, tArgs1, i+1)
+	}
+	return false
+}
+
+func getMDecl(ds []Decl, t_recv Name, meth Name) MethDecl {
+	for _, v := range ds {
+		if md, ok := v.(MethDecl); ok && md.t_recv == t_recv && md.name == meth {
+			return md
+		}
+	}
+	panic("MethDecl not found: " + t_recv + "." + meth)
+}
+
+func containsNestedTParam(u Type) bool {
+	if cast, ok := u.(TNamed); ok {
+		for _, v := range cast.u_args {
+			if isOrContainsTParam(v) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 type cycle []RecvMethPair
@@ -80,7 +151,7 @@ func findCycles(graph cgraph, cycles map[string]cycle) {
 	}
 }
 
-// DFS -- TODO: start from main more efficient?
+// DFS -- TODO: start from main more efficient? -- CHECKME: maybe more "correct", w.r.t. omega method discarding
 func findCyclesAux(graph cgraph, stack []RecvMethPair, cycles map[string]cycle) {
 	targets := graph.edges[stack[len(stack)-1]]
 	if targets == nil {
@@ -146,7 +217,7 @@ func buildGraphExpr(ds []Decl, delta Delta, gamma Gamma, curr RecvMethPair, e1 F
 			for _, v := range ds {
 				if d, ok := v.(STypeLit); ok {
 
-					// FIXME -- need method set unification instead of basic impls
+					// FIXME: need method set unification instead of basic impls -- maybe too conservative? trigger subtyping that never used?
 					u_S := TNamed{d.t_name, d.Psi.Hat()}                                     // !!!
 					if p, ok := u_I.(TParam); (ok && u_S.ImplsDelta(ds, delta, delta[p])) || // CHECKME: delta1[p] ?
 						(!ok && u_S.ImplsDelta(ds, delta, u_I)) {
