@@ -57,25 +57,29 @@ func IsMonomOK(p FGGProgram) bool {
 			buildGraph(ds, md, graph)
 		}
 	}
-	//buildGraphExpr(ds, make(Delta), make(Gamma), ...)  // visit main unnecessary -- CHECKME: how about type instans?
+	//buildGraphExpr(ds, make(Delta), make(Gamma), ...)  // visit main unnecessary -- CHECKME: all type instans seen?
 	//fmt.Println("111:\n", graph.String(), "---")
 	cycles := make(map[string]cycle)
 	findCycles(graph, cycles)
+	/*for _, v := range cycles {
+		fmt.Println("aaa:", v)
+	}*/
 	for _, v := range cycles {
-		fmt.Println(v)
+		//fmt.Println("bbb:", v)
 		if isNomonoCycle(ds, graph, v) {
 			return false
 		}
+		return true
 	}
 	return true
 }
 
+// Occurs check -- N.B. conservative w.r.t. whether type params actually used
 func isNomonoCycle(ds []Decl, graph cgraph, c cycle) bool {
 	for _, tArgs := range graph.edges[c[0]][c[1]] {
-		if isNomonoTypeArgs(tArgs) {
+		if isNomonoTypeArgs(tArgs) || isNomonoCycleAux(ds, graph, c, tArgs, 1) {
 			return true
 		}
-		isNomonoCycleAux(ds, graph, c, tArgs, 1)
 	}
 	return false
 }
@@ -157,6 +161,7 @@ func findCyclesAux(graph cgraph, stack []RecvMethPair, cycles map[string]cycle) 
 	if targets == nil {
 		panic("Shouldn't get in here:")
 	}
+lab:
 	for next, _ := range targets {
 		stack1 := append(stack, next)
 		if stack1[0].equals(next) {
@@ -165,7 +170,7 @@ func findCyclesAux(graph cgraph, stack []RecvMethPair, cycles map[string]cycle) 
 		}
 		for _, prev := range stack[1:] {
 			if prev.equals(next) {
-				continue
+				continue lab
 			}
 		}
 		findCyclesAux(graph, stack1, cycles)
@@ -250,24 +255,28 @@ func putTArgs(graph cgraph, curr RecvMethPair, u_recv TNamed, meth Name, psi_met
 	edges[target] = tArgs
 }
 
-/*func toNode(mi MethInstan) node {
-	var b strings.Builder
-	b.WriteString(mi.u_recv.String())
-	b.WriteString(".")
-	b.WriteString(mi.meth)
-	b.WriteString("(")
-	if len(mi.psi) > 0 {
-		b.WriteString(mi.psi[0].String())
-		for _, v := range mi.psi[1:] {
-			b.WriteString(", ")
-			b.WriteString(v.String())
-		}
-	}
-	b.WriteString(")")
-	return node(b.String())
-}*/
-
 /*
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
