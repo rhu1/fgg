@@ -47,6 +47,18 @@ type Omega1 struct {
 	ms map[string]MethInstan
 }
 
+func (w Omega1) clone() Omega1 {
+	us := make(map[string]TNamed)
+	ms := make(map[string]MethInstan)
+	for k, v := range w.us {
+		us[k] = v
+	}
+	for k, v := range w.ms {
+		ms[k] = v
+	}
+	return Omega1{us, ms}
+}
+
 func (w Omega1) Println() {
 	fmt.Println("=== Type instances:")
 	for _, v := range w.us {
@@ -78,74 +90,109 @@ func toKey_Wm(x MethInstan) string {
 /* fixOmega */
 
 func fixOmega1(ds []Decl, omega Omega1) {
+	/*fmt.Println("......initial.........", len(omega.us))
+	omega.Println()
+	fmt.Println(".............", len(omega.us))*/
 	for auxG(ds, omega) {
+		//omega.Println()
+		//fmt.Println(".............", len(omega.us))
 	}
 }
 
 /* Expressions */
 
 // gamma used to type Call receiver
-func collectExpr(ds []Decl, gamma GroundGamma, e FGGExpr, omega Omega1) {
+func collectExpr(ds []Decl, gamma GroundGamma, e FGGExpr, omega Omega1) bool {
+	res := false
 	switch e1 := e.(type) {
 	case Variable:
-		return
+		return res
 	case StructLit:
 		for _, elem := range e1.elems {
-			collectExpr(ds, gamma, elem, omega)
+			res = collectExpr(ds, gamma, elem, omega) || res
 		}
-		omega.us[toKey_Wt(e1.u_S)] = e1.u_S
+		k := toKey_Wt(e1.u_S)
+		if _, ok := omega.us[k]; !ok {
+			omega.us[k] = e1.u_S
+			res = true
+		}
 	case Select:
-		collectExpr(ds, gamma, e1.e_S, omega)
+		return collectExpr(ds, gamma, e1.e_S, omega)
 	case Call:
-		collectExpr(ds, gamma, e1.e_recv, omega)
+		res = collectExpr(ds, gamma, e1.e_recv, omega) || res
 		for _, e_arg := range e1.args {
-			collectExpr(ds, gamma, e_arg, omega)
+			res = collectExpr(ds, gamma, e_arg, omega) || res
 		}
 		gamma1 := make(Gamma)
 		for k, v := range gamma {
 			gamma1[k] = v
 		}
 		u_recv := e1.e_recv.Typing(ds, make(Delta), gamma1, false).(TNamed)
-		omega.us[toKey_Wt(u_recv)] = u_recv
+		k_t := toKey_Wt(u_recv)
+		if _, ok := omega.us[k_t]; !ok {
+			omega.us[k_t] = u_recv
+			res = true
+		}
 		m := MethInstan{u_recv, e1.meth, e1.GetTArgs()} // CHECKME: why add u_recv separately?
-		omega.ms[toKey_Wm(m)] = m
+		k_m := toKey_Wm(m)
+		if _, ok := omega.ms[k_m]; !ok {
+			omega.ms[k_m] = m
+			res = true
+		}
 	case Assert:
-		collectExpr(ds, gamma, e1.e_I, omega)
+		res = collectExpr(ds, gamma, e1.e_I, omega) || res
 		u := e1.u_cast.(TNamed)
-		omega.us[toKey_Wt(u)] = u
+		k := toKey_Wt(u)
+		if _, ok := omega.us[k]; !ok {
+			omega.us[k] = u
+			res = true
+		}
 	case String: // CHECKME
 		k := toKey_Wt(STRING_TYPE)
 		if _, ok := omega.us[k]; !ok {
 			omega.us[k] = STRING_TYPE
+			res = true // CHECKME
 		}
 	case Sprintf:
 		k := toKey_Wt(STRING_TYPE)
 		if _, ok := omega.us[k]; !ok {
 			omega.us[k] = STRING_TYPE
+			res = true
 		}
 		for _, arg := range e1.args {
-			collectExpr(ds, gamma, arg, omega) // Discard return
+			res = collectExpr(ds, gamma, arg, omega) || res
 		}
 	default:
 		panic("Unknown Expr kind: " + reflect.TypeOf(e).String() + "\n\t" +
 			e.String())
 	}
+	return res
 }
 
 /* Aux */
 
+// Return true if omega has changed
+// N.B. mutating omega in each sub-step -- can produce many levels of nesting within one G step
+// ^also non-deterministic progress, because mutating maps while ranging; also side-effect results may depend on iteration order over maps
 // N.B. no closure over types occurring in bounds, or *interface decl* method sigs
-// CHECKME: clone omega?
+//func auxG(ds []Decl, omega Omega1) bool {
 func auxG(ds []Decl, omega Omega1) bool {
 	res := false
 	res = auxF(ds, omega) || res
+	//fmt.Println("a1:", res)
 	res = auxI(ds, omega) || res
+	//fmt.Println("a2:", res)
 	res = auxM(ds, omega) || res
+	//fmt.Println("a3:", res)
 	res = auxS(ds, make(Delta), omega) || res
+	//fmt.Println("a4:", res)
 	// I/face embeddings
 	res = auxE1(ds, omega) || res
+	//fmt.Println("a5:", res)
 	res = auxE2(ds, omega) || res
+	//fmt.Println("a6:", res)
 	//res = auxP(ds, omega) || res
+	//fmt.Println("2222:", res)
 	return res
 }
 
@@ -228,8 +275,9 @@ func auxM(ds []Decl, omega Omega1) bool {
 func auxS(ds []Decl, delta Delta, omega Omega1) bool {
 	res := false
 	tmp := make(map[string]MethInstan)
-	for _, m := range omega.ms {
-		for _, u := range omega.us {
+	clone := omega.clone()
+	for _, m := range clone.ms {
+		for _, u := range clone.us {
 			if !isStructType(ds, u) || !u.ImplsDelta(ds, delta, m.u_recv) {
 				continue
 			}
@@ -243,7 +291,7 @@ func auxS(ds []Decl, delta Delta, omega Omega1) bool {
 			k := toKey_Wm(m1)
 			//if _, ok := omega.ms[k]; !ok { // No: initial collectExpr already adds to omega.ms
 			tmp[k] = m1
-			collectExpr(ds, gamma, e, omega)
+			res = collectExpr(ds, gamma, e, omega) || res
 			//}
 		}
 	}

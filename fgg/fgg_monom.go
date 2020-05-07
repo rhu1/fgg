@@ -296,21 +296,22 @@ func toHashSig(g Sig) string {
 	return res
 }
 
-// returns true iff u is a TParam or contains a TParam
-func isOrContainsTParam(u Type) bool {
-	if _, ok := u.(TParam); ok {
-		return true
-	}
-	u1 := u.(TNamed)
-	for _, v := range u1.u_args {
-		if isOrContainsTParam(v) {
-			return true
-		}
-	}
-	return false
-}
-
 /*
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -337,9 +338,10 @@ func isOrContainsTParam(u Type) bool {
 
  */
 
-/* OLD -- Simplistic conservative isMonom check:
+/* Deprecated -- Simplistic isMonom check:
    no typeparam nested in a named type in typeargs of StructLit/Call exprs */
 
+/*
 func IsMonomable(p FGGProgram) (FGGExpr, bool) {
 	for _, v := range p.decls {
 		switch d := v.(type) {
@@ -410,4 +412,19 @@ func isMonomableExpr(e FGGExpr) (FGGExpr, bool) {
 		panic("Unknown Expr kind: " + reflect.TypeOf(e).String() + "\n\t" +
 			e.String())
 	}
+}
+*/
+
+// returns true iff u is a TParam or contains a TParam
+func isOrContainsTParam(u Type) bool {
+	if _, ok := u.(TParam); ok {
+		return true
+	}
+	u1 := u.(TNamed)
+	for _, v := range u1.u_args {
+		if isOrContainsTParam(v) {
+			return true
+		}
+	}
+	return false
 }

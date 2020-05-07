@@ -123,6 +123,8 @@ test-monom:
 	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/mono-ok/one-pass-prob.go
 	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/contamination.go fgg/examples/monom/julien/mono-ok/contamination.go
 	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/mono-ok/contamination.go
+	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/struct-poly-rec.go fgg/examples/monom/julien/mono-ok/struct-poly-rec.go
+	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/mono-ok/struct-poly-rec.go
 
 	mkdir -p tmp/test/fg/monom/julien/mono-ko
 	#TODO
@@ -157,6 +159,7 @@ clean-test-monom:
 	rm -f tmp/test/fg/monom/julien/mono-ok/rcver-iface.go
 	rm -f tmp/test/fg/monom/julien/mono-ok/one-pass-prob.go
 	rm -f tmp/test/fg/monom/julien/mono-ok/contamination.go
+	rm -f tmp/test/fg/monom/julien/mono-ok/struct-poly-rec.go
 	rm -fd tmp/test/fg/monom/julien/mono-ok
 
 	rm -fd tmp/test/fg/monom/julien/mono-ko

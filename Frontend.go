@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -13,6 +14,7 @@ import (
 	"github.com/rhu1/fgg/fgr"
 )
 
+var _ = os.Args
 var _ = reflect.TypeOf
 var _ = strconv.Itoa
 
@@ -170,15 +172,16 @@ func (intrp *FGGInterp) Monom(monom bool, compile string) {
 	}
 
 	p_fgg := intrp.GetSource().(fgg.FGGProgram)
-	/*if e, ok := fgg.IsMonomable(p_fgg); !ok {
+
+	/*if e, ok := fgg.IsMonomable(p_fgg); !ok {  // First purely syntactic check
 		panic("\nNot monomorphisable according to \"type param under named type\"" +
 			" restriction.\n\t" + e.String())
 	}*/
-
-	//...HERE fix mutual-poly-rec (should blow up without ismonom) ..fix struct-poly-rec, omega building loops (add recursive struct WF?)
-	//fgg.Foo(intrp.orig.GetDecls())
-
-	//fmt.Println("zzzz:")
+	//if !fgg.IsMonomOK_CFG(intrp.orig) {  // Extended CFG-based CFG (also old)
+	if ok, msg := fgg.IsMonomOK(intrp.orig); !ok {
+		//fmt.Println("\nCannot monomorphise (nomono detected):\n\t" + msg)
+		panic("\nCannot monomorphise (nomono detected):\n\t" + msg)
+	}
 
 	p_mono := fgg.Monomorph(p_fgg)
 	if monom {
