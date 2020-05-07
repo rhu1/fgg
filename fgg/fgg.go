@@ -77,7 +77,16 @@ func (a TParam) ImplsDelta(ds []Decl, delta Delta, u Type) bool {
 	if a1, ok := u.(TParam); ok {
 		return a == a1
 	} else {
-		return bounds(delta, a).ImplsDelta(ds, delta, u)
+		return bounds(delta, a).ImplsDelta(ds, delta, u) // !!! more efficient?
+		/*gs0 := methodsDelta(ds, delta, a)
+		gs := methodsDelta(ds, delta, u)
+		for k, g := range gs {
+			g0, ok := gs0[k]
+			if !ok || !sigAlphaEquals(g0, g) {
+				return false
+			}
+		}
+		return true*/
 	}
 }
 
@@ -156,17 +165,16 @@ func (u0 TNamed) SubsEta2(eta Eta2) Type {
 // u0 <: u
 // delta unused here (cf. TParam.ImplsDelta)
 func (u0 TNamed) ImplsDelta(ds []Decl, delta Delta, u Type) bool {
-	u_fgg := u.(Type)
-	if isStructType(ds, u_fgg) {
-		return isStructType(ds, u0) && u0.Equals(u_fgg) // Asks equality of nested TParam
+	if isStructType(ds, u) {
+		return isStructType(ds, u0) && u0.Equals(u) // Asks equality of nested TParam
 	}
 	if _, ok := u.(TParam); ok { // e.g., fgg_test.go, Test014
 		panic("Type name does not implement open type param: found=" +
-			u0.String() + ", expected=" + u_fgg.String())
+			u0.String() + ", expected=" + u.String())
 	}
 
-	gs := methods(ds, u_fgg) // u is a t_I
-	gs0 := methods(ds, u0)   // t0 may be any
+	gs := methods(ds, u)   // u is a t_I
+	gs0 := methods(ds, u0) // t0 may be any
 	for k, g := range gs {
 		g0, ok := gs0[k]
 		if !ok || !sigAlphaEquals(g0, g) {

@@ -11,7 +11,7 @@ var _ = reflect.Append
 var _ = strings.Compare
 
 // Return true if *not* nomono
-func IsNomonoOK(p FGGProgram) (bool, string) {
+func IsMonomOK(p FGGProgram) (bool, string) {
 	ds := p.GetDecls()
 	for _, v := range ds {
 		if md, ok := v.(MethDecl); ok {
@@ -109,6 +109,18 @@ type Omega2 struct {
 	ms map[string]MethInstan2
 }
 
+func (w Omega2) clone() Omega2 {
+	us := make(map[string]Type)
+	ms := make(map[string]MethInstan2)
+	for k, v := range w.us {
+		us[k] = v
+	}
+	for k, v := range w.ms {
+		ms[k] = v
+	}
+	return Omega2{us, ms}
+}
+
 func (w Omega2) Println() {
 	fmt.Println("=== Type instances:")
 	for _, v := range w.us {
@@ -130,51 +142,71 @@ func toKey_Wm2(x MethInstan2) string {
 }
 
 // TODO: refactor with above
-func collectExpr2(ds []Decl, delta Delta, gamma Gamma, e FGGExpr, omega Omega2) {
+func collectExpr2(ds []Decl, delta Delta, gamma Gamma, e FGGExpr, omega Omega2) bool {
+	res := false
 	switch e1 := e.(type) {
 	case Variable:
-		return
+		return res
 	case StructLit:
 		for _, elem := range e1.elems {
-			collectExpr2(ds, delta, gamma, elem, omega)
+			res = collectExpr2(ds, delta, gamma, elem, omega) || res
 		}
-		omega.us[toKey_Wt2(e1.u_S)] = e1.u_S
+		k := toKey_Wt2(e1.u_S)
+		if _, ok := omega.us[k]; !ok {
+			omega.us[k] = e1.u_S
+			res = true
+		}
 	case Select:
-		collectExpr2(ds, delta, gamma, e1.e_S, omega)
+		return collectExpr2(ds, delta, gamma, e1.e_S, omega)
 	case Call:
-		collectExpr2(ds, delta, gamma, e1.e_recv, omega)
+		res = collectExpr2(ds, delta, gamma, e1.e_recv, omega) || res
 		for _, e_arg := range e1.args {
-			collectExpr2(ds, delta, gamma, e_arg, omega)
+			res = collectExpr2(ds, delta, gamma, e_arg, omega) || res
 		}
 		gamma1 := make(Gamma)
 		for k, v := range gamma {
 			gamma1[k] = v
 		}
-		u_recv := e1.e_recv.Typing(ds, delta, gamma1, false) // Can be TParam, cf. methodsDelta
-		omega.us[toKey_Wt2(u_recv)] = u_recv
+		u_recv := e1.e_recv.Typing(ds, delta, gamma1, false)
+		k_t := toKey_Wt2(u_recv)
+		if _, ok := omega.us[k_t]; !ok {
+			omega.us[k_t] = u_recv
+			res = true
+		}
 		m := MethInstan2{u_recv, e1.meth, e1.GetTArgs()} // CHECKME: why add u_recv separately?
-		omega.ms[toKey_Wm2(m)] = m
+		k_m := toKey_Wm2(m)
+		if _, ok := omega.ms[k_m]; !ok {
+			omega.ms[k_m] = m
+			res = true
+		}
 	case Assert:
-		collectExpr2(ds, delta, gamma, e1.e_I, omega)
+		res = collectExpr2(ds, delta, gamma, e1.e_I, omega) || res
 		u := e1.u_cast.(TNamed)
-		omega.us[toKey_Wt2(u)] = u
+		k := toKey_Wt2(u)
+		if _, ok := omega.us[k]; !ok {
+			omega.us[k] = u
+			res = true
+		}
 	case String: // CHECKME
 		k := toKey_Wt2(STRING_TYPE)
 		if _, ok := omega.us[k]; !ok {
 			omega.us[k] = STRING_TYPE
+			res = true // CHECKME
 		}
 	case Sprintf:
 		k := toKey_Wt2(STRING_TYPE)
 		if _, ok := omega.us[k]; !ok {
 			omega.us[k] = STRING_TYPE
+			res = true
 		}
 		for _, arg := range e1.args {
-			collectExpr2(ds, delta, gamma, arg, omega) // Discard return
+			res = collectExpr2(ds, delta, gamma, arg, omega) || res
 		}
 	default:
 		panic("Unknown Expr kind: " + reflect.TypeOf(e).String() + "\n\t" +
 			e.String())
 	}
+	return res
 }
 
 /* Aux */
@@ -275,8 +307,9 @@ func auxM2(ds []Decl, delta Delta, omega Omega2) bool {
 func auxS2(ds []Decl, delta Delta, omega Omega2) bool {
 	res := false
 	tmp := make(map[string]MethInstan2)
-	for _, m := range omega.ms {
-		for _, u := range omega.us {
+	clone := omega.clone()
+	for _, m := range clone.ms {
+		for _, u := range clone.us {
 			u_recv := bounds(delta, m.u_recv) // !!! cf. plain type param
 			if !isStructType(ds, u) || !u.ImplsDelta(ds, delta, u_recv) {
 				continue
@@ -291,7 +324,7 @@ func auxS2(ds []Decl, delta Delta, omega Omega2) bool {
 			k := toKey_Wm2(m1)
 			//if _, ok := omega.ms[k]; !ok { // No: initial collectExpr already adds to omega.ms
 			tmp[k] = m1
-			collectExpr2(ds, delta, gamma, e, omega)
+			res = collectExpr2(ds, delta, gamma, e, omega) || res
 			//}
 		}
 	}
@@ -404,6 +437,14 @@ func auxE22(ds []Decl, omega Omega2) bool {
 
 
 
+
+
+
+
+
+
+
+
  */
 
 /* Deprecated: Old CFG-based check */
@@ -446,7 +487,7 @@ func (x0 cgraph) String() string {
 }
 
 // CHECKME: generally, covariant receiver bounds specialisation
-func IsMonomOK(p FGGProgram) bool {
+func IsMonomOK_CFG(p FGGProgram) bool {
 	ds := p.GetDecls()
 	graph := cgraph{make(map[RecvMethPair]map[RecvMethPair]([]cTypeArgs))}
 	for _, v := range ds {
@@ -656,6 +697,19 @@ func putTArgs(graph cgraph, curr RecvMethPair, u_recv TNamed, meth Name, psi_met
 }
 
 /*
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

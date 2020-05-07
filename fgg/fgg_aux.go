@@ -89,10 +89,14 @@ func methodsDelta(ds []Decl, delta Delta, u Type) map[Name]Sig {
 				panic("Unknown Spec kind: " + reflect.TypeOf(s).String())
 			}
 		}
-	} else {
-		if cast, ok := u.(TParam); ok {
-			return methodsDelta(ds, delta, bounds(delta, cast)) // !!! delegate to bounds
+	} else if cast, ok := u.(TParam); ok {
+		upper, ok := delta[cast]
+		if !ok {
+			panic("Unknown type: " + u.String())
 		}
+		//return methodsDelta(ds, delta, bounds(delta, cast)) // !!! delegate to bounds
+		return methodsDelta(ds, delta, upper)
+	} else {
 		panic("Unknown type: " + u.String()) // Perhaps redundant if all TDecl OK checked first
 	}
 	return res

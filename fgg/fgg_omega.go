@@ -178,7 +178,6 @@ func collectExpr(ds []Decl, gamma GroundGamma, e FGGExpr, omega Omega1) bool {
 //func auxG(ds []Decl, omega Omega1) bool {
 func auxG(ds []Decl, omega Omega1) bool {
 	res := false
-	//clone := omega.Copy()
 	res = auxF(ds, omega) || res
 	//fmt.Println("a1:", res)
 	res = auxI(ds, omega) || res
