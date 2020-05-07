@@ -37,6 +37,7 @@ type Type interface {
 	ImplsDelta(ds []Decl, delta Delta, u Type) bool
 	TSubs(subs map[TParam]Type) Type // N.B. map is Delta -- factor out a Subs type?
 	SubsEta(eta Eta) TNamed
+	SubsEta2(eta Eta2) Type
 	Ok(ds []Decl, delta Delta)
 	ToGoString() string
 }
@@ -59,6 +60,14 @@ func (a TParam) SubsEta(eta Eta) TNamed {
 	res, ok := eta[a]
 	if !ok {
 		panic("Shouldn't get here: " + a)
+	}
+	return res
+}
+
+func (a TParam) SubsEta2(eta Eta2) Type {
+	res, ok := eta[a]
+	if !ok {
+		return a
 	}
 	return res
 }
@@ -131,6 +140,15 @@ func (u0 TNamed) SubsEta(eta Eta) TNamed {
 	us := make([]Type, len(u0.u_args))
 	for i := 0; i < len(us); i++ {
 		us[i] = u0.u_args[i].SubsEta(eta)
+	}
+	return TNamed{u0.t_name, us}
+}
+
+func (u0 TNamed) SubsEta2(eta Eta2) Type {
+	//fmt.Println("555:", u0, eta)
+	us := make([]Type, len(u0.u_args))
+	for i := 0; i < len(us); i++ {
+		us[i] = u0.u_args[i].SubsEta2(eta)
 	}
 	return TNamed{u0.t_name, us}
 }
@@ -391,6 +409,8 @@ type Gamma map[Name]Type
 type Delta map[TParam]Type // Type intended to be an upper bound
 type Eta map[TParam]TNamed // TNamed intended to be a ground
 
+type Eta2 map[TParam]Type
+
 func (delta Delta) String() string {
 	res := "["
 	first := true
@@ -413,6 +433,15 @@ func MakeEta(Psi BigPsi, psi SmallPsi) Eta {
 		eta[tfs[i].name] = psi[i].(TNamed)
 	}
 	return eta
+}
+
+func MakeEta2(Psi BigPsi, psi SmallPsi) Eta2 {
+	eta2 := make(Eta2)
+	tfs := Psi.tFormals
+	for i := 0; i < len(tfs); i++ {
+		eta2[tfs[i].name] = psi[i]
+	}
+	return eta2
 }
 
 /* AST base intefaces: FGGNode, Decl, TypeDecl, Spec, Expr */
