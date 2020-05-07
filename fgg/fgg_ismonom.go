@@ -10,7 +10,8 @@ var _ = fmt.Errorf
 var _ = reflect.Append
 var _ = strings.Compare
 
-func Aaa(p FGGProgram) (bool, string) {
+// Return true if *not* nomono
+func IsNomonoOK(p FGGProgram) (bool, string) {
 	ds := p.GetDecls()
 	for _, v := range ds {
 		if md, ok := v.(MethDecl); ok {
@@ -393,9 +394,19 @@ func auxE22(ds []Decl, omega Omega2) bool {
 
 
 
+
+
+
+
+
+
+
+
+
+
  */
 
-// CHECKME: covariant receiver bounds specialisation
+/* Deprecated: Old CFG-based check */
 
 type RecvMethPair struct {
 	t_recv Name // Pre: t_S
@@ -434,6 +445,7 @@ func (x0 cgraph) String() string {
 	return b.String()
 }
 
+// CHECKME: generally, covariant receiver bounds specialisation
 func IsMonomOK(p FGGProgram) bool {
 	ds := p.GetDecls()
 	graph := cgraph{make(map[RecvMethPair]map[RecvMethPair]([]cTypeArgs))}

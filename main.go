@@ -139,6 +139,7 @@ Options:
 // - update "polyrec" check
 // - add p-closure replacement -- expose test
 // - test monom on latest examples
+// - nomono: fix mutual-poly-rec (should blow up without ismonom) ...fix struct-poly-rec, omega building loops (add recursive struct WF?)
 func main() {
 	flag.Usage = usage
 	flag.Parse()

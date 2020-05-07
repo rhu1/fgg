@@ -170,19 +170,16 @@ func (intrp *FGGInterp) Monom(monom bool, compile string) {
 	}
 
 	p_fgg := intrp.GetSource().(fgg.FGGProgram)
-	/*if e, ok := fgg.IsMonomable(p_fgg); !ok {
+
+	/*if e, ok := fgg.IsMonomable(p_fgg); !ok {  // First purely syntactic check
 		panic("\nNot monomorphisable according to \"type param under named type\"" +
 			" restriction.\n\t" + e.String())
 	}*/
-
-	//...HERE fix mutual-poly-rec (should blow up without ismonom) ..fix struct-poly-rec, omega building loops (add recursive struct WF?)
-	//fgg.Foo(intrp.orig.GetDecls())
-	//if !fgg.IsMonomOK(intrp.orig) {
-	if ok, msg := fgg.Aaa(intrp.orig); !ok {
-		panic("\nnomono detected:\n\t" + msg)
+	//if !fgg.IsMonomOK(intrp.orig) {  // Extended CFG-based CFG (also old)
+	if ok, msg := fgg.IsNomonoOK(intrp.orig); !ok {
+		//fmt.Println("\nCannot monomorphise (nomono detected):\n\t" + msg)
+		panic("\nCannot monomorphise (nomono detected):\n\t" + msg)
 	}
-
-	//fmt.Println("zzzz:")
 
 	p_mono := fgg.Monomorph(p_fgg)
 	if monom {

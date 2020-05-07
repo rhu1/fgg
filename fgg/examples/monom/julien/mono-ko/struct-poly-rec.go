@@ -1,4 +1,6 @@
-//$ go run github.com/rhu1/fgg -fgg -monomc=tmp/fg/monom/julien/mono-ko/struct-prob.go -v fgg/examples/monom/julien/mono-ko/struct-poly-rec.go
+//$ go run github.com/rhu1/fgg -fgg -monomc=tmp/fg/monom/julien/mono-ok/struct-prob.go -v fgg/examples/monom/julien/mono-ok/struct-poly-rec.go
+//
+//$ go run github.com/rhu1/fgg -eval=-1 tmp/fg/monom/julien/mono-ok/struct-poly-rec.go
 
 // This should be monomorphisable!
 package main;

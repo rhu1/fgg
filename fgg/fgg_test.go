@@ -290,7 +290,7 @@ func Test015(t *testing.T) {
 	Any := "type Any(type ) interface {}"
 	A := "type A(type ) interface { m(type a Any())(x a) Any() }"
 	B := "type B(type ) interface { m(type b Any())(x b) Any() }"
-	C :="type C(type ) struct {}"
+	C := "type C(type ) struct {}"
 	Cm := "func (x0 C(type )) m(type b Any())(x b) Any() { return x0 }"
 	D := "type D(type ) struct {}"
 	Dm := "func (x0 D(type )) foo(type )(x A()) Any() { return x0 }"
@@ -301,8 +301,8 @@ func Test015(t *testing.T) {
 // testing covariant receiver bounds (MDecl.OK) -- cf. map.fgg (memberBr)
 func Test016(t *testing.T) {
 	Any := "Any(type ) interface {}"
-	A := "type A(type a Any()) interface { m(type )(x a) Any() }"  // param must occur in a meth sig
-	B :="type B(type a A(a)) struct {}"  // must have recursive param
+	A := "type A(type a Any()) interface { m(type )(x a) Any() }" // param must occur in a meth sig
+	B := "type B(type a A(a)) struct {}"                          // must have recursive param
 	Bm := "func (x0 B(type b A(b))) m(type )(x b) Any() { return x0 }"
 	D := "type D(type ) struct{}"
 	e := "D(){}"
@@ -324,7 +324,6 @@ func TestMonom001(t *testing.T) {
 //*/
 
 //TODO: add -monom compose.fgg bug -- missing field type collection when visiting struct lits (e.g., Compose f, g types)
-
 //TODO: add -monom map.fgg bug -- missing add-meth-param instans collection for interface type receivers (e.g., Bool().Cond(Bool())(...))
 
 /* Eval */
