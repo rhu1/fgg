@@ -132,10 +132,58 @@ func collectExpr(ds []Decl, gamma GroundGamma, e FGGExpr, omega Omega1) {
 	}
 }
 
+// TODO: refactor with above
+func collectExpr1(ds []Decl, gamma Gamma, e FGGExpr, omega Omega1) {
+	switch e1 := e.(type) {
+	case Variable:
+		return
+	case StructLit:
+		for _, elem := range e1.elems {
+			collectExpr1(ds, gamma, elem, omega)
+		}
+		omega.us[toKey_Wt(e1.u_S)] = e1.u_S
+	case Select:
+		collectExpr1(ds, gamma, e1.e_S, omega)
+	case Call:
+		collectExpr1(ds, gamma, e1.e_recv, omega)
+		for _, e_arg := range e1.args {
+			collectExpr1(ds, gamma, e_arg, omega)
+		}
+		gamma1 := make(Gamma)
+		for k, v := range gamma {
+			gamma1[k] = v
+		}
+		u_recv := e1.e_recv.Typing(ds, make(Delta), gamma1, false).(TNamed)
+		omega.us[toKey_Wt(u_recv)] = u_recv
+		m := MethInstan{u_recv, e1.meth, e1.GetTArgs()} // CHECKME: why add u_recv separately?
+		omega.ms[toKey_Wm(m)] = m
+	case Assert:
+		collectExpr1(ds, gamma, e1.e_I, omega)
+		u := e1.u_cast.(TNamed)
+		omega.us[toKey_Wt(u)] = u
+	case String: // CHECKME
+		k := toKey_Wt(STRING_TYPE)
+		if _, ok := omega.us[k]; !ok {
+			omega.us[k] = STRING_TYPE
+		}
+	case Sprintf:
+		k := toKey_Wt(STRING_TYPE)
+		if _, ok := omega.us[k]; !ok {
+			omega.us[k] = STRING_TYPE
+		}
+		for _, arg := range e1.args {
+			collectExpr1(ds, gamma, arg, omega) // Discard return
+		}
+	default:
+		panic("Unknown Expr kind: " + reflect.TypeOf(e).String() + "\n\t" +
+			e.String())
+	}
+}
+
 /* Aux */
 
+// Return true if omega has changed
 // N.B. no closure over types occurring in bounds, or *interface decl* method sigs
-// CHECKME: clone omega?
 func auxG(ds []Decl, omega Omega1) bool {
 	res := false
 	res = auxF(ds, omega) || res

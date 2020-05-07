@@ -10,6 +10,117 @@ var _ = fmt.Errorf
 var _ = reflect.Append
 var _ = strings.Compare
 
+func Aaa(p FGGProgram) bool {
+	ds := p.GetDecls()
+	for _, v := range ds {
+		if md, ok := v.(MethDecl); ok {
+			omega1 := Omega1{make(map[string]TNamed), make(map[string]MethInstan)}
+			gamma := make(Gamma)
+			psi_recv := make(SmallPsi, len(md.Psi_recv.tFormals))
+			for i, v := range md.Psi_recv.tFormals {
+				psi_recv[i] = v.name
+			}
+			psi_recv = md.Psi_recv.Hat()
+			u_recv := TNamed{md.t_recv, psi_recv}
+			gamma[md.x_recv] = u_recv
+			omega1.us[toKey_Wt(u_recv)] = u_recv
+			for _, v := range md.pDecls { // TODO: factor out
+				gamma[v.name] = v.u
+			}
+			collectExpr1(ds, gamma, md.e_body, omega1)
+			if nomonoOmega(ds, md, omega1) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+// Return true if nomono
+func nomonoOmega(ds []Decl, md MethDecl, omega1 Omega1) bool {
+	for auxG(ds, omega1) {
+		for _, v := range omega1.ms {
+			if v.u_recv.t_name == md.t_recv && v.meth == md.name {
+				if occurs(md.Psi_recv, v.u_recv.u_args) {
+					return true
+				}
+				if occurs(md.Psi_meth, v.psi) {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+// Pre: len(Psi) == len(psi)
+func occurs(Psi BigPsi, psi SmallPsi) bool {
+	for i, v := range Psi.tFormals {
+		if occursParam(v.name, psi[i]) {
+			return true
+		}
+	}
+	return false
+}
+
+func occursParam(a TParam, u Type) bool {
+	if cast, ok := u.(TParam); ok && cast.Equals(a) {
+		return false
+	}
+	for _, v := range fv(u.(TNamed)) {
+		if v.Equals(a) {
+			return true
+		}
+	}
+	return false
+}
+
+func fv(u Type) []TParam {
+	if cast, ok := u.(TParam); ok {
+		return []TParam{cast}
+	}
+	res := []TParam{}
+	cast := u.(TNamed)
+	for _, v := range cast.u_args {
+		res = append(res, fv(v)...)
+	}
+	return res
+}
+
+/*
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ */
+
 // CHECKME: covariant receiver bounds specialisation
 
 type RecvMethPair struct {
@@ -145,7 +256,7 @@ func containsNestedTParam(u Type) bool {
 type cycle []RecvMethPair
 
 func (x0 cycle) toHash() string {
-	return fmt.Sprintf("%v%", x0)
+	return fmt.Sprintf("%v", x0)
 }
 
 func findCycles(graph cgraph, cycles map[string]cycle) {
@@ -182,7 +293,7 @@ lab:
 func buildGraph(ds []Decl, md MethDecl, graph cgraph) {
 	n := RecvMethPair{md.t_recv, md.name}
 	graph.edges[n] = make(map[RecvMethPair]([]cTypeArgs))
-	delta := md.Psi_meth.ToDelta()
+	delta := md.Psi_meth.ToDelta() // recv params added below
 	gamma := make(Gamma)
 	psi := make(SmallPsi, len(md.Psi_recv.tFormals))
 	for i, v := range md.Psi_recv.tFormals {
@@ -219,15 +330,18 @@ func buildGraphExpr(ds []Decl, delta Delta, gamma Gamma, curr RecvMethPair, e1 F
 
 		} else { // TNamed interface or TParam
 			u_I := u_recv // Or type param
+			if _, ok := u_I.(TParam); ok {
+				u_I = u_I.TSubs(delta) // CHECKME
+			}
 			for _, v := range ds {
 				if d, ok := v.(STypeLit); ok {
 
-					// FIXME: need method set unification instead of basic impls -- maybe too conservative? trigger subtyping that never used?
-					u_S := TNamed{d.t_name, d.Psi.Hat()}                                     // !!!
-					if p, ok := u_I.(TParam); (ok && u_S.ImplsDelta(ds, delta, delta[p])) || // CHECKME: delta1[p] ?
-						(!ok && u_S.ImplsDelta(ds, delta, u_I)) {
+					// CHECKME: method set unification instead of basic impls? -- or is using bounds (hat) sufficient?
+					u_S := TNamed{d.t_name, d.Psi.Hat()} // !!!
+					if u_S.ImplsDelta(ds, delta, u_I) {
 						putTArgs(graph, curr, u_S, e.meth, e.t_args)
 					}
+
 				}
 			}
 		}

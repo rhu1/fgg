@@ -177,7 +177,8 @@ func (intrp *FGGInterp) Monom(monom bool, compile string) {
 
 	//...HERE fix mutual-poly-rec (should blow up without ismonom) ..fix struct-poly-rec, omega building loops (add recursive struct WF?)
 	//fgg.Foo(intrp.orig.GetDecls())
-	if !fgg.IsMonomOK(intrp.orig) {
+	//if !fgg.IsMonomOK(intrp.orig) {
+	if !fgg.Aaa(intrp.orig) {
 		panic("\nnomono...")
 	}
 
