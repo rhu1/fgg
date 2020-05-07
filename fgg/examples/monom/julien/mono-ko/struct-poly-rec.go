@@ -3,19 +3,23 @@
 // This should be monomorphisable!
 package main;
 
-
-
-
-
 type Any(type ) interface {};
 
 type A(type ) struct {};
 
 type B(type a Any()) struct {val C(a)};
 //type B(type a Any()) struct {val C(C(a))};
-
 type C(type a Any()) struct {};
 //type C(type a Any()) struct {val B(a)};
+
+type I(type a Any()) struct {
+	m(type )() B(C(a))
+};
+
+// B(a) <: I(a)
+
+// I(B(int)) -> m() B(C(B(int)))
+// B(B(int))
 
 func (x B(type a Any())) m(type )() B(C(a)) {
 	return B(C(a)){C(C(a)){}}  // N.B. no recursion
@@ -25,11 +29,9 @@ func (x A(type )) m(type a Any())() C(B(a)) {
 	return A(){}.m(a)()
 };
 */
-
 /*func (x A(type )) m(type a Any())() C(B(a)) {
 	return A(){}.m(a)()
 };*/
-
 func main() { _ =  B(A()){C(A()){}}.m()()}
 //func main() { _ =  A(){}.m(A())() }
 
