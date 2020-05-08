@@ -1,3 +1,6 @@
+//$ go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/alternate.go fgg/examples/monom/julien/mono-ok/alternate.go
+//$ go run github.com/rhu1/fgg -eval=10 -v tmp/test/fg/monom/julien/mono-ok/alternate.go
+
 // Should monomorphise
 
 package main;

@@ -1,4 +1,5 @@
-//$ go run github.com/rhu1/fgg -fgg -eval=-1 -v fgg/examples/monom/julien/Parameterised-Map.go
+//$ go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/Parameterised-Map.go -v fgg/examples/monom/julien/mono-ok/Parameterised-Map.go
+//$ go run github.com/rhu1/fgg -eval=-1 -v tmp/test/fg/monom/julien/mono-ok/Parameterised-Map.go
 
 package main;
 
