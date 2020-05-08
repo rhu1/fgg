@@ -136,10 +136,10 @@ Options:
 // - WF types declared, names in scope
 // - sig-equals-alpha and covariant receiver bounds -- expose test -- DONE -- TODO: oblit for map.fgg (memberBr, receiver param alpha)
 // - test and fix Delta in methods (re. covariant receiver bounds) -- expose test
-// - update "polyrec" check
+// - update "polyrec" check -- DONE: nomono
 // - add p-closure replacement -- expose test
-// - test monom on latest examples
-// - nomono: fix mutual-poly-rec (should blow up without ismonom) ...fix struct-poly-rec, omega building loops (add recursive struct WF?)
+// - test monom on latest examples -- DONE
+// - nomono: fix mutual-poly-rec (should blow up without ismonom) ...fix struct-poly-rec, omega building loops (add recursive struct WF?) -- DONE
 // artifact
 // - fg vs. go results, add to makefile
 // - reorganise example dirs

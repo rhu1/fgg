@@ -231,6 +231,9 @@ func monomExpr1(e1 FGGExpr, eta Eta) fg.FGExpr {
 /* Helpers */
 
 func toMonomId(u TNamed) fg.Type {
+	if u.Equals(STRING_TYPE) { // CHECKME
+		return "string"
+	}
 	res := u.String()
 	res = strings.Replace(res, ",", ",,", -1) // TODO: refactor, cf. Frontend.monomOutputHack
 	res = strings.Replace(res, "(", "<", -1)

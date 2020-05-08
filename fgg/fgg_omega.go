@@ -179,20 +179,13 @@ func collectExpr(ds []Decl, gamma GroundGamma, e FGGExpr, omega Omega1) bool {
 func auxG(ds []Decl, omega Omega1) bool {
 	res := false
 	res = auxF(ds, omega) || res
-	//fmt.Println("a1:", res)
 	res = auxI(ds, omega) || res
-	//fmt.Println("a2:", res)
 	res = auxM(ds, omega) || res
-	//fmt.Println("a3:", res)
 	res = auxS(ds, make(Delta), omega) || res
-	//fmt.Println("a4:", res)
 	// I/face embeddings
 	res = auxE1(ds, omega) || res
-	//fmt.Println("a5:", res)
 	res = auxE2(ds, omega) || res
-	//fmt.Println("a6:", res)
 	//res = auxP(ds, omega) || res
-	//fmt.Println("2222:", res)
 	return res
 }
 
