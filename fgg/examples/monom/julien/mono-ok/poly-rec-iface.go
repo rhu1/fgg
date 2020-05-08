@@ -1,3 +1,6 @@
+//$ go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/poly-rec-iface.go fgg/examples/monom/julien/mono-ok/poly-rec-iface.go
+//$ go run github.com/rhu1/fgg -eval=-1 -v tmp/test/fg/monom/julien/mono-ok/poly-rec-iface.go
+
 // This is monomorphisable !
 package main;
 

@@ -1,3 +1,6 @@
+//$ go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/i-closure-bad.go fgg/examples/monom/julien/mono-ok/i-closure-bad.go
+//$ go run github.com/rhu1/fgg -eval=-1 -v tmp/test/fg/monom/julien/mono-ok/i-closure-bad.go
+
 // This is monomorphisable !
 package main;
 
@@ -17,7 +20,7 @@ func (x Dummy(type )) useInterfaceB(type )(y IB()) Any() {
 };
 
 type IA(type ) interface { m1(type a Any())() IB()};
-type IB(type ) interface { 
+type IB(type ) interface {
 	m1(type a Any())() IB();   // IB.m1() never occurs => need I-closure()
 	m2(type a Any())() IB() }; // IB <: IA
 
@@ -25,7 +28,7 @@ type S(type ) struct {};
 func (x S(type )) m1(type a Any())() IB() {return S(){}};
 func (x S(type )) m2(type a Any())() IB() {return S(){}};
 
-func main() { _ =  
+func main() { _ =
 	Pair(){
 		Dummy(){}.useInterfaceA()(S(){})
 		,

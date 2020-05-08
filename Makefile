@@ -125,6 +125,19 @@ test-monom:
 	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/mono-ok/contamination.go
 	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/struct-poly-rec.go fgg/examples/monom/julien/mono-ok/struct-poly-rec.go
 	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/mono-ok/struct-poly-rec.go
+	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/Parameterised-Map.go -v fgg/examples/monom/julien/mono-ok/Parameterised-Map.go
+	go run github.com/rhu1/fgg -eval=-1 -v tmp/test/fg/monom/julien/mono-ok/Parameterised-Map.go
+	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/alternate.go fgg/examples/monom/julien/mono-ok/alternate.go
+	go run github.com/rhu1/fgg -eval=10 -v tmp/test/fg/monom/julien/mono-ok/alternate.go
+	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/i-closure.go -v fgg/examples/monom/julien/mono-ok/i-closure.go
+	go run github.com/rhu1/fgg -eval=-1 -v tmp/test/fg/monom/julien/mono-ok/i-closure.go
+	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/i-closure-bad.go fgg/examples/monom/julien/mono-ok/i-closure-bad.go
+	go run github.com/rhu1/fgg -eval=-1 -v tmp/test/fg/monom/julien/mono-ok/i-closure-bad.go
+	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/meth-clash.go fgg/examples/monom/julien/mono-ok/meth-clash.go
+	go run github.com/rhu1/fgg -eval=7 -v tmp/test/fg/monom/julien/mono-ok/meth-clash.go
+	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/param-meth-cast.go fgg/examples/monom/julien/mono-ok/param-meth-cast.go
+	go run github.com/rhu1/fgg -eval=2 -v tmp/test/fg/monom/julien/mono-ok/param-meth-cast.go
+
 
 	mkdir -p tmp/test/fg/monom/julien/mono-ko
 	#TODO
