@@ -140,6 +140,11 @@ Options:
 // - add p-closure replacement -- expose test
 // - test monom on latest examples
 // - nomono: fix mutual-poly-rec (should blow up without ismonom) ...fix struct-poly-rec, omega building loops (add recursive struct WF?)
+// artifact
+// - fg vs. go results, add to makefile
+// - reorganise example dirs
+// - bad assert eval, no panic -- -test-monom
+// - generally, exit codes instead of panic
 func main() {
 	flag.Usage = usage
 	flag.Parse()

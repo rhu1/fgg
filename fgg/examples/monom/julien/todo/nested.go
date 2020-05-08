@@ -1,3 +1,4 @@
+//$ go run github.com/rhu1/fgg -fgg -monomc=-- -v fgg/examples/monom/julien/nested.go
 
 package main;
 
@@ -18,6 +19,7 @@ type NestedCons(type a Any()) struct {
 type Arg(type a Any()) struct {};
 
 
+// Badly typed (correct) -- cf. nested-fix
 func (x Arg(type a Any())) mkNesting(type )(y a) Box(a) {
 	return NestedCons(a){
 		y,
