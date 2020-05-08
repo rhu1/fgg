@@ -223,6 +223,11 @@ func testMonom(verbose bool, src string, steps int) {
 	u := p_fgg.Ok(false).(fgg.TNamed)
 	vPrintln(verbose, "\nFGG expr: "+p_fgg.GetMain().String())
 
+	if ok, msg := fgg.IsMonomOK(p_fgg); !ok {
+		vPrintln(verbose, "\nAborting simulation: Cannot monomorphise (nomono detected):\n\t"+msg)
+		return
+	}
+
 	// (Initial) left-vertical arrow
 	//p_mono := fgg.Monomorph(p_fgg)
 	omega := fgg.GetOmega1(p_fgg.GetDecls(), p_fgg.GetMain().(fgg.FGGExpr))
