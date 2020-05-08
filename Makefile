@@ -124,19 +124,23 @@ test-monom:
 	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/contamination.go fgg/examples/monom/julien/mono-ok/contamination.go
 	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/mono-ok/contamination.go
 	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/struct-poly-rec.go fgg/examples/monom/julien/mono-ok/struct-poly-rec.go
+
+	# TODO: add to oblit
 	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/mono-ok/struct-poly-rec.go
-	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/Parameterised-Map.go -v fgg/examples/monom/julien/mono-ok/Parameterised-Map.go
-	go run github.com/rhu1/fgg -eval=-1 -v tmp/test/fg/monom/julien/mono-ok/Parameterised-Map.go
+	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/Parameterised-Map.go fgg/examples/monom/julien/mono-ok/Parameterised-Map.go
+	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/mono-ok/Parameterised-Map.go
 	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/alternate.go fgg/examples/monom/julien/mono-ok/alternate.go
-	go run github.com/rhu1/fgg -eval=10 -v tmp/test/fg/monom/julien/mono-ok/alternate.go
-	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/i-closure.go -v fgg/examples/monom/julien/mono-ok/i-closure.go
-	go run github.com/rhu1/fgg -eval=-1 -v tmp/test/fg/monom/julien/mono-ok/i-closure.go
+	go run github.com/rhu1/fgg -eval=10 tmp/test/fg/monom/julien/mono-ok/alternate.go
+	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/i-closure.go fgg/examples/monom/julien/mono-ok/i-closure.go
+	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/mono-ok/i-closure.go
 	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/i-closure-bad.go fgg/examples/monom/julien/mono-ok/i-closure-bad.go
-	go run github.com/rhu1/fgg -eval=-1 -v tmp/test/fg/monom/julien/mono-ok/i-closure-bad.go
+	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/mono-ok/i-closure-bad.go
 	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/meth-clash.go fgg/examples/monom/julien/mono-ok/meth-clash.go
-	go run github.com/rhu1/fgg -eval=7 -v tmp/test/fg/monom/julien/mono-ok/meth-clash.go
+	go run github.com/rhu1/fgg -eval=7 tmp/test/fg/monom/julien/mono-ok/meth-clash.go
 	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/param-meth-cast.go fgg/examples/monom/julien/mono-ok/param-meth-cast.go
-	go run github.com/rhu1/fgg -eval=2 -v tmp/test/fg/monom/julien/mono-ok/param-meth-cast.go
+	go run github.com/rhu1/fgg -eval=2 tmp/test/fg/monom/julien/mono-ok/param-meth-cast.go
+	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/poly-rec-iface.go fgg/examples/monom/julien/mono-ok/poly-rec-iface.go
+	go run github.com/rhu1/fgg -eval=10 tmp/test/fg/monom/julien/mono-ok/poly-rec-iface.go
 
 
 	mkdir -p tmp/test/fg/monom/julien/mono-ko
@@ -173,6 +177,14 @@ clean-test-monom:
 	rm -f tmp/test/fg/monom/julien/mono-ok/one-pass-prob.go
 	rm -f tmp/test/fg/monom/julien/mono-ok/contamination.go
 	rm -f tmp/test/fg/monom/julien/mono-ok/struct-poly-rec.go
+	rm -f tmp/test/fg/monom/julien/mono-ok/Parameterised-Map.go
+	rm -f tmp/test/fg/monom/julien/mono-ok/alternate.go
+	rm -f tmp/test/fg/monom/julien/mono-ok/i-closure.go
+	rm -f tmp/test/fg/monom/julien/mono-ok/i-closure-bad.go
+	rm -f tmp/test/fg/monom/julien/mono-ok/meth-clash.go
+	rm -f tmp/test/fg/monom/julien/mono-ok/param-meth-cast.go
+	rm -f tmp/test/fg/monom/julien/mono-ok/poly-rec-iface.go
+
 	rm -fd tmp/test/fg/monom/julien/mono-ok
 
 	rm -fd tmp/test/fg/monom/julien/mono-ko
@@ -200,6 +212,16 @@ simulate-monom:
 	go run github.com/rhu1/fgg -test-monom -eval=-1 fgg/examples/monom/julien/mono-ok/rcver-iface.go
 	go run github.com/rhu1/fgg -test-monom -eval=-1 fgg/examples/monom/julien/mono-ok/one-pass-prob.go
 	go run github.com/rhu1/fgg -test-monom -eval=-1 fgg/examples/monom/julien/mono-ok/contamination.go
+
+	# TODO: add to oblit
+	go run github.com/rhu1/fgg -test-monom -eval=-1 fgg/examples/monom/julien/mono-ok/struct-poly-rec.go
+	go run github.com/rhu1/fgg -test-monom -eval=-1 fgg/examples/monom/julien/mono-ok/Parameterised-Map.go
+	go run github.com/rhu1/fgg -test-monom -eval=10 fgg/examples/monom/julien/mono-ok/alternate.go
+	go run github.com/rhu1/fgg -test-monom -eval=-1 fgg/examples/monom/julien/mono-ok/i-closure.go
+	go run github.com/rhu1/fgg -test-monom -eval=-1 fgg/examples/monom/julien/mono-ok/i-closure-bad.go
+	go run github.com/rhu1/fgg -test-monom -eval=7 fgg/examples/monom/julien/mono-ok/meth-clash.go
+	go run github.com/rhu1/fgg -test-monom -eval=2 fgg/examples/monom/julien/mono-ok/param-meth-cast.go
+	go run github.com/rhu1/fgg -test-monom -eval=10 fgg/examples/monom/julien/mono-ok/poly-rec-iface.go
 
 
 .PHONY: test-oblit

@@ -1,7 +1,7 @@
 //$ go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/i-closure-bad.go fgg/examples/monom/julien/mono-ok/i-closure-bad.go
 //$ go run github.com/rhu1/fgg -eval=-1 -v tmp/test/fg/monom/julien/mono-ok/i-closure-bad.go
 
-// This is monomorphisable !
+// This is monomorphisable ! -- rename "-bad"
 package main;
 
 type Any(type ) interface {};
