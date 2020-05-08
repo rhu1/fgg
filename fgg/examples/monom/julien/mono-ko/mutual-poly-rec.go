@@ -1,4 +1,4 @@
-//$ go run github.com/rhu1/fgg -fgg -v -monom=-- fgg/examples/monom/julien/mutual-poly-rec.go
+//$ go run github.com/rhu1/fgg -fgg -v -monomc=-- fgg/examples/monom/julien/mono-ko/mutual-poly-rec.go
 
 package main;
 

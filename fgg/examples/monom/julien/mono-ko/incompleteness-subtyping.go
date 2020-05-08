@@ -1,3 +1,5 @@
+//$ go run github.com/rhu1/fgg -fgg -monomc=-- -v fgg/examples/monom/julien/mono-ko/incompleteness-subtyping.go
+
 // This is not monomorphisable !
 // panic: Not monomorphisable, potential polymorphic recursion: [{SA m1}]
 
@@ -25,6 +27,6 @@ func (x SA(type )) m1(type a Any())() S() {return SA(){}.m1(Box(a))()};
 type SB(type ) struct {};
 func (x SB(type )) m1(type a Any())() S() {return S(){}};
 
-func main() { _ =  
+func main() { _ =
 		Dummy(){}.useInterfaceA()(SB(){})
 	}
