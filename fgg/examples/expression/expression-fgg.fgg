@@ -1,4 +1,5 @@
 //$ go run github.com/rhu1/fgg -fgg -v -eval=-1 fgg/examples/expression/expression-fgg.fgg
+//$ go run github.com/rhu1/fgg -fgg -v -monomc=tmp/monom/scratch/scratch.go fgg/examples/expression/expression-fgg.fgg
 
 // A solution to the Expression Problem in generalised FGG.
 
