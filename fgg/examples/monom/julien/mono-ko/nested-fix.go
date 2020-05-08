@@ -1,4 +1,4 @@
-//$ go run github.com/rhu1/fgg -fgg -v -monom=-- fgg/examples/monom/julien/nested-fix.go
+//$ go run github.com/rhu1/fgg -fgg -v -monomc=-- fgg/examples/monom/julien/mono-ko/nested-fix.go
 
 package main;
 type Any(type ) interface {};

@@ -1,5 +1,5 @@
-//$ go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/one-pass-prob.go fgg/examples/monom/julien/one-pass-prob.go
-//$ go run github.com/rhu1/fgg -eval=-1 -v tmp/test/fg/monom/julien/one-pass-prob.go
+//$ go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/one-pass-prob.go fgg/examples/monom/julien/mono-ok/one-pass-prob.go
+//$ go run github.com/rhu1/fgg -eval=-1 -v tmp/test/fg/monom/julien/mono-ok/one-pass-prob.go
 
 package main;
 

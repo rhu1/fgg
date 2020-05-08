@@ -44,6 +44,10 @@ func fields(ds []Decl, u_S TNamed) []FieldDecl {
 
 // Go has no overloading, meth names are a unique key
 func methods(ds []Decl, u Type) map[Name]Sig {
+	return methodsDelta(ds, make(Delta), u)
+}
+
+func methodsDelta(ds []Decl, delta Delta, u Type) map[Name]Sig {
 	res := make(map[Name]Sig)
 	if IsStructType(ds, u) {
 		for _, v := range ds {
@@ -85,8 +89,15 @@ func methods(ds []Decl, u Type) map[Name]Sig {
 				panic("Unknown Spec kind: " + reflect.TypeOf(s).String())
 			}
 		}
-	} else { // Perhaps redundant if all TDecl OK checked first
-		panic("Unknown type: " + u.String())
+	} else if cast, ok := u.(TParam); ok {
+		upper, ok := delta[cast]
+		if !ok {
+			panic("Unknown type: " + u.String())
+		}
+		//return methodsDelta(ds, delta, bounds(delta, cast)) // !!! delegate to bounds
+		return methodsDelta(ds, delta, upper)
+	} else {
+		panic("Unknown type: " + u.String()) // Perhaps redundant if all TDecl OK checked first
 	}
 	return res
 }

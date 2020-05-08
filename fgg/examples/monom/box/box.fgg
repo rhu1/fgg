@@ -18,5 +18,5 @@ func (x0 D(type )) bad(type a Any())(x1 a)) Any() {
 };*/
 
 type A(type ) struct {};
-func main() { _ =  D(){}.bad(A()) (   A(){} )  }
+func main() { _ =  D(){}.bad(A())(A(){})  }
 

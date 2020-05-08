@@ -3,6 +3,7 @@ package fgg
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/rhu1/fgg/fg"
@@ -20,14 +21,17 @@ func ToMonomId(u TNamed) fg.Type {
 	return toMonomId(u)
 }
 
+/* */
+
+// All m (MethInstan.meth) belong to the same t (MethInstan.u_recv.t_name)
+type Mu map[string]MethInstan // Cf. Omega1, toKey_Wm
+
+var empty_S = fg.Type("Empty")
+
 /* Monomorph: FGGProgram -> FGProgram */
 
 func Monomorph(p FGGProgram) fg.FGProgram {
 	ds_fgg := p.GetDecls()
-
-	//fmt.Println("xxxx:")
-
-	//omega := GetOmega(ds_fgg, p.GetMain().(FGGExpr)) // TODO: do "supertype closure" over omega (cf. collectSuperMethInstans)
 	omega := GetOmega1(ds_fgg, p.GetMain().(FGGExpr))
 	return ApplyOmega1(p, omega)
 }
@@ -52,11 +56,9 @@ func ApplyOmega1(p FGGProgram, omega Omega1) fg.FGProgram {
 		}
 	}
 	e_monom := monomExpr1(p.e_main, make(Eta))
+	ds_monom = append(ds_monom, fg.NewSTypeLit(empty_S, []fg.FieldDecl{}))
 	return fg.NewFGProgram(ds_monom, e_monom, p.printf)
 }
-
-// All m (MethInstan.meth) belong to the same t (MethInstan.u_recv.t_name)
-type Mu map[string]MethInstan // Cf. Omega1, toKey_Wm
 
 func monomTDecl1(ds []Decl, omega Omega1, td TypeDecl) []fg.TDecl {
 	var res []fg.TDecl
@@ -99,6 +101,11 @@ func monomSTypeLit1(t_monom fg.Type, s STypeLit, eta Eta) fg.STypeLit {
 
 func monomITypeLit1(t_monom fg.Type, c ITypeLit, eta Eta, mu Mu) fg.ITypeLit {
 	var ss []fg.Spec
+	pds_empty := []fg.ParamDecl{}
+	subs := make(Delta) // TODO: refactor -- because of Sig.TSubs
+	for k, v := range eta {
+		subs[k] = v
+	}
 	for _, v := range c.specs {
 		switch s := v.(type) {
 		case Sig: // !!! M contains Psi
@@ -113,10 +120,12 @@ func monomITypeLit1(t_monom fg.Type, c ITypeLit, eta Eta, mu Mu) fg.ITypeLit {
 				g_monom := monomSig1(s, m, theta) // !!! small psi
 				ss = append(ss, g_monom)
 			}
+			hash := fg.NewSig(toHashSig(s.TSubs(subs)), pds_empty, empty_S)
+			ss = append(ss, hash)
 		case TNamed: // Embedded
 			u_I := s.SubsEta(eta)
-			t_monom := toMonomId(u_I)
-			ss = append(ss, t_monom)
+			emb_monom := toMonomId(u_I)
+			ss = append(ss, emb_monom)
 		default:
 			panic("Unknown Spec kind: " + reflect.TypeOf(v).String() +
 				"\n\t" + v.String())
@@ -153,6 +162,23 @@ func monomMDecl1(omega Omega1, md MethDecl) []fg.MethDecl {
 		e_monom := monomExpr1(md.e_body, theta)
 		md_monom := fg.NewMDecl(recv_monom, g_monom.GetMethod(), g_monom.GetParamDecls(), g_monom.GetReturn(), e_monom)
 		res = append(res, md_monom)
+	}
+	pds_empty := []fg.ParamDecl{}
+	empty := fg.Type("Empty")
+	e_empty := fg.NewStructLit(empty, []fg.FGExpr{})
+	for _, u := range omega.us {
+		recv_monom := fg.NewParamDecl(md.x_recv, toMonomId(u)) // !!! t_S(phi) already ground receiver
+		if u.t_name != md.t_recv {
+			continue
+		}
+		eta := MakeEta(md.Psi_recv, u.u_args)
+		subs := make(Delta) // TODO: refactor -- because of Sig.TSubs
+		for k, v := range eta {
+			subs[k] = v
+		}
+		g := md.ToSig().TSubs(subs)
+		hash := fg.NewMDecl(recv_monom, toHashSig(g), pds_empty, empty, e_empty)
+		res = append(res, hash)
 	}
 	return res
 }
@@ -206,7 +232,7 @@ func monomExpr1(e1 FGGExpr, eta Eta) fg.FGExpr {
 
 func toMonomId(u TNamed) fg.Type {
 	res := u.String()
-	res = strings.Replace(res, ",", ",,", -1) // TODO: refactor, cf. main.go, doMonom
+	res = strings.Replace(res, ",", ",,", -1) // TODO: refactor, cf. Frontend.monomOutputHack
 	res = strings.Replace(res, "(", "<", -1)
 	res = strings.Replace(res, ")", ">", -1)
 	res = strings.Replace(res, " ", "", -1)
@@ -234,29 +260,88 @@ func toMonomMethName1(m Name, psi SmallPsi, eta Eta) Name {
 	res := m + "<" + first.String()
 	for _, v := range psi[1:] {
 		next := toMonomId(v.SubsEta(eta))
-		res = res + "," + next.String()
+		res = res + ",," + next.String() // Cf. Frontend.monomOutputHack -- TODO: factor out
 	}
 	res = res + ">"
 	return Name(res)
 }
 
-// returns true iff u is a TParam or contains a TParam
-func isOrContainsTParam(u Type) bool {
-	if _, ok := u.(TParam); ok {
-		return true
+func toHashSig(g Sig) string {
+	subs := make(Delta)
+	for i := 0; i < len(g.Psi.tFormals); i++ {
+		subs[g.Psi.tFormals[i].name] = TParam("α" + strconv.Itoa(i+1))
 	}
-	u1 := u.(TNamed)
-	for _, v := range u1.u_args {
-		if isOrContainsTParam(v) {
-			return true
-		}
+	g1 := g.TSubs(subs)
+	var b strings.Builder
+	b.WriteString(g.meth)
+	b.WriteString("_")
+	for _, v := range g1.Psi.tFormals {
+		b.WriteString("_")
+		b.WriteString(v.name.String())
+		b.WriteString("_")
+		b.WriteString(v.u_I.String())
 	}
-	return false
+	b.WriteString("_")
+	for _, v := range g1.pDecls { // Formal param names discarded
+		b.WriteString("_")
+		b.WriteString(v.u.String())
+	}
+	b.WriteString("_")
+	b.WriteString(g1.u_ret.String())
+	res := b.String()
+	res = strings.Replace(res, "(", "_", -1) // TODO
+	res = strings.Replace(res, ")", "_", -1)
+	res = strings.Replace(res, ",", "_", -1)
+	res = strings.Replace(res, " ", "", -1)
+	return res
 }
 
-/* OLD -- Simplistic conservative isMonom check:
+/*
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ */
+
+/* Deprecated -- Simplistic isMonom check:
    no typeparam nested in a named type in typeargs of StructLit/Call exprs */
 
+/*
 func IsMonomable(p FGGProgram) (FGGExpr, bool) {
 	for _, v := range p.decls {
 		switch d := v.(type) {
@@ -327,4 +412,19 @@ func isMonomableExpr(e FGGExpr) (FGGExpr, bool) {
 		panic("Unknown Expr kind: " + reflect.TypeOf(e).String() + "\n\t" +
 			e.String())
 	}
+}
+*/
+
+// returns true iff u is a TParam or contains a TParam
+func isOrContainsTParam(u Type) bool {
+	if _, ok := u.(TParam); ok {
+		return true
+	}
+	u1 := u.(TNamed)
+	for _, v := range u1.u_args {
+		if isOrContainsTParam(v) {
+			return true
+		}
+	}
+	return false
 }

@@ -1,3 +1,4 @@
+//$ go run github.com/rhu1/fgg -fgg -monomc=-- -v fgg/examples/monom/julien/mono-ko/monom-imp.go
 
 package main;
 

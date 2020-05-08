@@ -1,3 +1,6 @@
+//$ go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/poly-rec-iface.go fgg/examples/monom/julien/mono-ok/poly-rec-iface.go
+//$ go run github.com/rhu1/fgg -eval=10 -v tmp/test/fg/monom/julien/mono-ok/poly-rec-iface.go
+
 // This is monomorphisable !
 package main;
 
@@ -14,7 +17,8 @@ type I(type a Any()) interface { m(type b Any())() I(I(b))};
 type A(type ) struct {};
 
 func (x A(type )) m(type b Any())() I(I(b)) {
-	return Dummy(){}.toAny()(A(){}).(I(a)).m(a)()
+	//return Dummy(){}.toAny()(A(){}).(I(a)).m(a)()
+	return Dummy(){}.toAny()(A(){}).(I(b)).m(b)()
 };
 
 func main() { _ =  A(){}.m(A())() }

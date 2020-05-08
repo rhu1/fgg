@@ -1,3 +1,6 @@
+//$ go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/meth-clash.go fgg/examples/monom/julien/mono-ok/meth-clash.go
+//$ go run github.com/rhu1/fgg -eval=7 -v tmp/test/fg/monom/julien/mono-ok/meth-clash.go
+
 // Proposed (correct) monomed: https://play.golang.org/p/9nT1MahKCvE
 package main;
 
@@ -28,10 +31,10 @@ func (x T(type )) m(type a Top())() Dummy() {
 	return Dummy(){}
 };
 
-func main() { _ =  
+func main() { _ =
 	// Here both S.m() and Foo.m()  -which dont have matching signatures-
 	// are instantiated to the same type (S).
-	// which leads to mono'd FGG to accept a cast that fails in FGG
+	// which leads to mono'd FGG to accept a cast that fails in FGG -- edit: now fine
 	Triple(){
 		S(){}.m(S())(),
 		//

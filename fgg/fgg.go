@@ -37,6 +37,7 @@ type Type interface {
 	ImplsDelta(ds []Decl, delta Delta, u Type) bool
 	TSubs(subs map[TParam]Type) Type // N.B. map is Delta -- factor out a Subs type?
 	SubsEta(eta Eta) TNamed
+	SubsEta2(eta Eta2) Type
 	Ok(ds []Decl, delta Delta)
 	ToGoString() string
 }
@@ -63,12 +64,29 @@ func (a TParam) SubsEta(eta Eta) TNamed {
 	return res
 }
 
+func (a TParam) SubsEta2(eta Eta2) Type {
+	res, ok := eta[a]
+	if !ok {
+		return a
+	}
+	return res
+}
+
 // u0 <: u
 func (a TParam) ImplsDelta(ds []Decl, delta Delta, u Type) bool {
 	if a1, ok := u.(TParam); ok {
 		return a == a1
 	} else {
-		return bounds(delta, a).ImplsDelta(ds, delta, u)
+		return bounds(delta, a).ImplsDelta(ds, delta, u) // !!! more efficient?
+		/*gs0 := methodsDelta(ds, delta, a)
+		gs := methodsDelta(ds, delta, u)
+		for k, g := range gs {
+			g0, ok := gs0[k]
+			if !ok || !sigAlphaEquals(g0, g) {
+				return false
+			}
+		}
+		return true*/
 	}
 }
 
@@ -135,20 +153,28 @@ func (u0 TNamed) SubsEta(eta Eta) TNamed {
 	return TNamed{u0.t_name, us}
 }
 
+func (u0 TNamed) SubsEta2(eta Eta2) Type {
+	//fmt.Println("555:", u0, eta)
+	us := make([]Type, len(u0.u_args))
+	for i := 0; i < len(us); i++ {
+		us[i] = u0.u_args[i].SubsEta2(eta)
+	}
+	return TNamed{u0.t_name, us}
+}
+
 // u0 <: u
 // delta unused here (cf. TParam.ImplsDelta)
 func (u0 TNamed) ImplsDelta(ds []Decl, delta Delta, u Type) bool {
-	u_fgg := u.(Type)
-	if isStructType(ds, u_fgg) {
-		return isStructType(ds, u0) && u0.Equals(u_fgg) // Asks equality of nested TParam
+	if isStructType(ds, u) {
+		return isStructType(ds, u0) && u0.Equals(u) // Asks equality of nested TParam
 	}
 	if _, ok := u.(TParam); ok { // e.g., fgg_test.go, Test014
 		panic("Type name does not implement open type param: found=" +
-			u0.String() + ", expected=" + u_fgg.String())
+			u0.String() + ", expected=" + u.String())
 	}
 
-	gs := methods(ds, u_fgg) // u is a t_I
-	gs0 := methods(ds, u0)   // t0 may be any
+	gs := methods(ds, u)   // u is a t_I
+	gs0 := methods(ds, u0) // t0 may be any
 	for k, g := range gs {
 		g0, ok := gs0[k]
 		if !ok || !sigAlphaEquals(g0, g) {
@@ -315,6 +341,15 @@ func (Psi BigPsi) ToDelta() Delta {
 	return delta
 }
 
+// The ordered value set of ToDelta
+func (Psi BigPsi) Hat() SmallPsi {
+	res := make(SmallPsi, len(Psi.tFormals))
+	for i, v := range Psi.tFormals {
+		res[i] = v.u_I
+	}
+	return res
+}
+
 func (Psi BigPsi) String() string {
 	var b strings.Builder
 	b.WriteString("(type ") // Includes "(...)" -- cf. e.g., writeFieldDecls
@@ -347,6 +382,22 @@ func (tf TFormal) String() string {
 // Also ranged over by small phi
 type SmallPsi []Type // CHECKME: Currently only used in omega/monom, maybe deprecate?
 
+func (x0 SmallPsi) TSubs(subs map[TParam]Type) SmallPsi {
+	res := make(SmallPsi, len(x0))
+	for i, v := range x0 {
+		res[i] = v.TSubs(subs)
+	}
+	return res
+}
+
+func (x0 SmallPsi) String() string {
+	var b strings.Builder
+	for _, v := range x0 {
+		b.WriteString(v.String())
+	}
+	return b.String()
+}
+
 func (x0 SmallPsi) Equals(x SmallPsi) bool {
 	if len(x0) != len(x) {
 		return false
@@ -359,20 +410,14 @@ func (x0 SmallPsi) Equals(x SmallPsi) bool {
 	return true
 }
 
-func (x0 SmallPsi) String() string {
-	var b strings.Builder
-	for _, v := range x0 {
-		b.WriteString(v.String())
-	}
-	return b.String()
-}
-
 /* Context, Type context, Substitutions */
 
 //type Gamma map[Variable]Type  // CHECKME: refactor?
 type Gamma map[Name]Type
 type Delta map[TParam]Type // Type intended to be an upper bound
 type Eta map[TParam]TNamed // TNamed intended to be a ground
+
+type Eta2 map[TParam]Type
 
 func (delta Delta) String() string {
 	res := "["
@@ -396,6 +441,15 @@ func MakeEta(Psi BigPsi, psi SmallPsi) Eta {
 		eta[tfs[i].name] = psi[i].(TNamed)
 	}
 	return eta
+}
+
+func MakeEta2(Psi BigPsi, psi SmallPsi) Eta2 {
+	eta2 := make(Eta2)
+	tfs := Psi.tFormals
+	for i := 0; i < len(tfs); i++ {
+		eta2[tfs[i].name] = psi[i]
+	}
+	return eta2
 }
 
 /* AST base intefaces: FGGNode, Decl, TypeDecl, Spec, Expr */

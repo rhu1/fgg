@@ -439,6 +439,7 @@ func (a Assert) Typing(ds []Decl, delta Delta, gamma Gamma, allowStupid bool) Ty
 		a.u_cast.String() + ", expr=" + u.String())
 }
 
+// CHECKME: make isStuck alternative? (i.e., bad cast)
 // From base.fgg
 func (a Assert) IsValue() bool {
 	return false
