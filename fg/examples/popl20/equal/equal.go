@@ -5,6 +5,8 @@
 
 package main;
 
+import "fmt";
+
 type I1 interface { Equal(that Any) Bool };
 type I2 interface { Equal(n Any) Bool };
 
@@ -15,5 +17,6 @@ type ToAny struct { any Any };
 type Bool struct {};  // Just for the purposes of this example
 
 func main() {
-	_ = ToAny{T{}}.any.(I1).(I2)
+	//_ = ToAny{T{}}.any.(I1).(I2)
+	fmt.Printf("%#v", ToAny{T{}}.any.(I1).(I2))
 }

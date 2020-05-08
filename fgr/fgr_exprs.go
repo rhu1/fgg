@@ -149,7 +149,18 @@ func (s StructLit) ToGoString(ds []Decl) string {
 	b.WriteString("main.")
 	b.WriteString(s.t_S.String())
 	b.WriteString("{")
-	writeToGoExprs(ds, &b, s.elems)
+	td := getTDecl(ds, s.t_S).(STypeLit)
+	if len(s.elems) > 0 {
+		b.WriteString(td.fDecls[0].name)
+		b.WriteString(":")
+		b.WriteString(s.elems[0].ToGoString(ds))
+		for i, v := range s.elems[1:] {
+			b.WriteString(", ")
+			b.WriteString(td.fDecls[i].name)
+			b.WriteString(":")
+			b.WriteString(v.ToGoString(ds))
+		}
+	}
 	b.WriteString("}")
 	return b.String()
 }

@@ -4,6 +4,8 @@
 
 package main;
 
+import "fmt";
+
 /* Base decls: Any, Booleans, Nautrals, Functions, Lists */
 
 type Any interface {};
@@ -99,5 +101,6 @@ func (d D) _3() Nat { return D{}._2().Add(D{}._1()) };
 
 func main() {
 	// Submission version: incr{2}.Apply(3).(Nat)
-	_ = incr{D{}._2()}.Apply(D{}._3()).(Nat)
+	//_ = incr{D{}._2()}.Apply(D{}._3()).(Nat)
+	fmt.Printf("%#v", incr{D{}._2()}.Apply(D{}._3()).(Nat))
 }

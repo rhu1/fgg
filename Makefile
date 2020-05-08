@@ -16,7 +16,8 @@
 test: test-all
 
 .PHONY: test-all
-test-all: test-fg test-fgg test-fg2fgg test-monom test-oblit
+test-all: test-fg test-fgg test-fg2fgg simulate-monom simulate-oblit
+#test-monom test-oblit
 
 
 .PHONY: clean
@@ -27,7 +28,7 @@ clean: clean-test-all
 
 
 .PHONY: test-fg
-test-fg: test-fg-unit test-fg-examples
+test-fg: test-fg-unit test-fg-examples-against-go
 
 
 .PHONY: test-fg-unit
@@ -35,8 +36,24 @@ test-fg-unit:
 	go test github.com/rhu1/fgg/fg
 
 
-.PHONY: check
-check:
+.PHONY: test-fg-examples
+test-fg-examples:
+	go run github.com/rhu1/fgg -eval=10 fg/examples/hello/hello.go
+	go run github.com/rhu1/fgg -eval=10 fg/examples/hello/fmtprintf.go
+	go run github.com/rhu1/fgg -eval=-1 fg/examples/popl20/booleans/booleans.go
+	go run github.com/rhu1/fgg -eval=-1 fg/examples/popl20/compose/compose.go
+	go run github.com/rhu1/fgg -eval=-1 fg/examples/popl20/equal/equal.go
+	go run github.com/rhu1/fgg -eval=-1 fg/examples/popl20/incr/incr.go
+	go run github.com/rhu1/fgg -eval=-1 fg/examples/popl20/map/map.go
+	go run github.com/rhu1/fgg -eval=-1 fg/examples/popl20/not/not.go
+
+# TODO: currently examples testing limited to "good" examples
+
+
+# cf. [cmd] > output.txt
+#     diff output.txt correct.txt
+.PHONY: test-fg-examples-against-go
+test-fg-examples-against-go:
 	if [ "`go run github.com/rhu1/fgg -eval=-1 -printf fg/examples/popl20/booleans/booleans.go`" != "`go run fg/examples/popl20/booleans/booleans.go`" ]; then \
 		echo "Not equal"; \
 		exit 1; \
@@ -61,23 +78,6 @@ check:
 		echo "Not equal"; \
 		exit 1; \
 	fi
-
-
-.PHONY: test-fg-examples
-test-fg-examples:
-	go run github.com/rhu1/fgg -eval=10 fg/examples/hello/hello.go
-	go run github.com/rhu1/fgg -eval=10 fg/examples/hello/fmtprintf.go
-	go run github.com/rhu1/fgg -eval=-1 fg/examples/popl20/booleans/booleans.go
-	go run github.com/rhu1/fgg -eval=-1 fg/examples/popl20/compose/compose.go
-	go run github.com/rhu1/fgg -eval=-1 fg/examples/popl20/equal/equal.go
-	go run github.com/rhu1/fgg -eval=-1 fg/examples/popl20/incr/incr.go
-	go run github.com/rhu1/fgg -eval=-1 fg/examples/popl20/map/map.go
-	go run github.com/rhu1/fgg -eval=-1 fg/examples/popl20/not/not.go
-
-# TODO: currently examples testing limited to "good" examples
-# TODO: check actual output, e.g.:
-#     [cmd] > output.txt
-#     diff output.txt correct.txt
 
 
 .PHONY: test-fgg

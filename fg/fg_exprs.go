@@ -539,13 +539,3 @@ func writeToGoExprs(ds []Decl, b *strings.Builder, es []FGExpr) {
 		}
 	}
 }
-
-func writeToGoFields(ds []Decl, b *strings.Builder, es []FGExpr) {
-	if len(es) > 0 {
-		b.WriteString(es[0].ToGoString(ds))
-		for _, v := range es[1:] {
-			b.WriteString(", ")
-			b.WriteString(v.ToGoString(ds))
-		}
-	}
-}
