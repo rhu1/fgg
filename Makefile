@@ -35,6 +35,34 @@ test-fg-unit:
 	go test github.com/rhu1/fgg/fg
 
 
+.PHONY: check
+check:
+	if [ "`go run github.com/rhu1/fgg -eval=-1 -printf fg/examples/popl20/booleans/booleans.go`" != "`go run fg/examples/popl20/booleans/booleans.go`" ]; then \
+		echo "Not equal"; \
+		exit 1; \
+	fi
+	if [ "`go run github.com/rhu1/fgg -eval=-1 -printf fg/examples/popl20/compose/compose.go`" != "`go run fg/examples/popl20/compose/compose.go`" ]; then \
+		echo "Not equal"; \
+		exit 1; \
+	fi
+	if [ "`go run github.com/rhu1/fgg -eval=-1 -printf fg/examples/popl20/equal/equal.go`" != "`go run fg/examples/popl20/equal/equal.go`" ]; then \
+		echo "Not equal"; \
+		exit 1; \
+	fi
+	if [ "`go run github.com/rhu1/fgg -eval=-1 -printf fg/examples/popl20/incr/incr.go`" != "`go run fg/examples/popl20/incr/incr.go`" ]; then \
+		echo "Not equal"; \
+		exit 1; \
+	fi
+	if [ "`go run github.com/rhu1/fgg -eval=-1 -printf fg/examples/popl20/map/map.go`" != "`go run fg/examples/popl20/map/map.go`" ]; then \
+		echo "Not equal"; \
+		exit 1; \
+	fi
+	if [ "`go run github.com/rhu1/fgg -eval=-1 -printf fg/examples/popl20/not/not.go`" != "`go run fg/examples/popl20/not/not.go`" ]; then \
+		echo "Not equal"; \
+		exit 1; \
+	fi
+
+
 .PHONY: test-fg-examples
 test-fg-examples:
 	go run github.com/rhu1/fgg -eval=10 fg/examples/hello/hello.go

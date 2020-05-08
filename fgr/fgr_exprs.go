@@ -57,7 +57,7 @@ func (x Variable) String() string {
 	return x.name
 }
 
-func (x Variable) ToGoString() string {
+func (x Variable) ToGoString(ds []Decl) string {
 	return x.name
 }
 
@@ -144,12 +144,12 @@ func (s StructLit) String() string {
 	return b.String()
 }
 
-func (s StructLit) ToGoString() string {
+func (s StructLit) ToGoString(ds []Decl) string {
 	var b strings.Builder
 	b.WriteString("main.")
 	b.WriteString(s.t_S.String())
 	b.WriteString("{")
-	writeToGoExprs(&b, s.elems)
+	writeToGoExprs(ds, &b, s.elems)
 	b.WriteString("}")
 	return b.String()
 }
@@ -211,9 +211,9 @@ func (s Select) String() string {
 	return b.String()
 }
 
-func (s Select) ToGoString() string {
+func (s Select) ToGoString(ds []Decl) string {
 	var b strings.Builder
-	b.WriteString(s.e_S.ToGoString())
+	b.WriteString(s.e_S.ToGoString(ds))
 	b.WriteString(".")
 	b.WriteString(s.field)
 	return b.String()
@@ -315,13 +315,13 @@ func (c Call) String() string {
 	return b.String()
 }
 
-func (c Call) ToGoString() string {
+func (c Call) ToGoString(ds []Decl) string {
 	var b strings.Builder
-	b.WriteString(c.e_recv.ToGoString())
+	b.WriteString(c.e_recv.ToGoString(ds))
 	b.WriteString(".")
 	b.WriteString(c.meth)
 	b.WriteString("(")
-	writeToGoExprs(&b, c.args)
+	writeToGoExprs(ds, &b, c.args)
 	b.WriteString(")")
 	return b.String()
 }
@@ -393,9 +393,9 @@ func (a Assert) String() string {
 	return b.String()
 }
 
-func (a Assert) ToGoString() string {
+func (a Assert) ToGoString(ds []Decl) string {
 	var b strings.Builder
-	b.WriteString(a.e_I.ToGoString())
+	b.WriteString(a.e_I.ToGoString(ds))
 	b.WriteString(".(main.")
 	b.WriteString(a.t_cast.String())
 	b.WriteString(")")
@@ -429,7 +429,7 @@ func (p Panic) String() string {
 	return "panic"
 }
 
-func (p Panic) ToGoString() string {
+func (p Panic) ToGoString(ds []Decl) string {
 	return "panic"
 }
 
@@ -505,14 +505,14 @@ func (c IfThenElse) String() string {
 	return b.String()
 }
 
-func (c IfThenElse) ToGoString() string {
+func (c IfThenElse) ToGoString(ds []Decl) string {
 	var b strings.Builder
 	b.WriteString("(if ")
-	b.WriteString(c.e1.ToGoString())
+	b.WriteString(c.e1.ToGoString(ds))
 	b.WriteString(" << ")
-	b.WriteString(c.e2.ToGoString())
+	b.WriteString(c.e2.ToGoString(ds))
 	b.WriteString(" then ")
-	b.WriteString(c.e3.ToGoString())
+	b.WriteString(c.e3.ToGoString(ds))
 	b.WriteString(" else panic)") // !!! hardcoded else-panic
 	return b.String()
 }
@@ -590,12 +590,12 @@ func (r TRep) String() string {
 	return b.String()
 }
 
-func (r TRep) ToGoString() string {
+func (r TRep) ToGoString(ds []Decl) string {
 	var b strings.Builder
 	b.WriteString("main.")
 	b.WriteString(r.t_name)
 	b.WriteString("[[")
-	writeToGoExprs(&b, r.args)
+	writeToGoExprs(ds, &b, r.args)
 	b.WriteString("]]")
 	return b.String()
 }
@@ -633,7 +633,7 @@ func (tmp TmpTParam) String() string {
 	return tmp.id
 }
 
-func (tmp TmpTParam) ToGoString() string {
+func (tmp TmpTParam) ToGoString(ds []Decl) string {
 	return tmp.id
 }
 
@@ -649,12 +649,12 @@ func writeExprs(b *strings.Builder, es []FGRExpr) {
 	}
 }
 
-func writeToGoExprs(b *strings.Builder, es []FGRExpr) {
+func writeToGoExprs(ds []Decl, b *strings.Builder, es []FGRExpr) {
 	if len(es) > 0 {
-		b.WriteString(es[0].ToGoString())
+		b.WriteString(es[0].ToGoString(ds))
 		for _, v := range es[1:] {
 			b.WriteString(", ")
-			b.WriteString(v.ToGoString())
+			b.WriteString(v.ToGoString(ds))
 		}
 	}
 }

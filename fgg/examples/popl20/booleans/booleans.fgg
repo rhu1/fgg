@@ -50,4 +50,5 @@ func (d Ex(type )) example(type )(b Bool(), x t(), y t()) t() {
 };
 func main() {
 	_ = Ex(){}.example()(TT(){}, t(){}, t(){})
+	//fmt.Printf("%#v", Ex(){}.example()(TT(){}, t(){}, t(){}))
 }

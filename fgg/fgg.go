@@ -39,7 +39,7 @@ type Type interface {
 	SubsEta(eta Eta) TNamed
 	SubsEta2(eta Eta2) Type
 	Ok(ds []Decl, delta Delta)
-	ToGoString() string
+	ToGoString(ds []Decl) string
 }
 
 type TParam Name
@@ -120,7 +120,7 @@ func (a TParam) String() string {
 	return string(a)
 }
 
-func (a TParam) ToGoString() string {
+func (a TParam) ToGoString(ds []Decl) string {
 	return string(a)
 }
 
@@ -299,12 +299,12 @@ func (u TNamed) String() string {
 	return b.String()
 }
 
-func (u TNamed) ToGoString() string {
+func (u TNamed) ToGoString(ds []Decl) string {
 	var b strings.Builder
 	b.WriteString("main.")
 	b.WriteString(string(u.t_name))
 	b.WriteString("(")
-	writeToGoTypes(&b, u.u_args)
+	writeToGoTypes(ds, &b, u.u_args)
 	b.WriteString(")")
 	return b.String()
 }
@@ -527,11 +527,11 @@ func writeTypes(b *strings.Builder, us []Type) {
 	}
 }
 
-func writeToGoTypes(b *strings.Builder, us []Type) {
+func writeToGoTypes(ds []Decl, b *strings.Builder, us []Type) {
 	if len(us) > 0 {
-		b.WriteString(us[0].ToGoString())
+		b.WriteString(us[0].ToGoString(ds))
 		for _, v := range us[1:] {
-			b.WriteString(", " + v.ToGoString())
+			b.WriteString(", " + v.ToGoString(ds))
 		}
 	}
 }

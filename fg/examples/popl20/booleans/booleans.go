@@ -4,6 +4,8 @@
 
 package main;
 
+import "fmt";
+
 /* Base decls: Any, Booleans */
 
 type Any interface {};
@@ -54,5 +56,6 @@ func (d Ex) example(b Bool, x t, y t) t {
 			m(t{}) // Extra
 };
 func main() {
-	_ = Ex{}.example(TT{}, t{}, t{})
+	//_ = Ex{}.example(TT{}, t{}, t{})
+	fmt.Printf("%#v", Ex{}.example(TT{}, t{}, t{}))
 }

@@ -62,7 +62,7 @@ func (x Variable) String() string {
 	return x.name
 }
 
-func (x Variable) ToGoString() string {
+func (x Variable) ToGoString(ds []Decl) string {
 	return x.name
 }
 
@@ -157,11 +157,11 @@ func (s StructLit) String() string {
 	return b.String()
 }
 
-func (s StructLit) ToGoString() string {
+func (s StructLit) ToGoString(ds []Decl) string {
 	var b strings.Builder
-	b.WriteString(s.u_S.ToGoString())
+	b.WriteString(s.u_S.ToGoString(ds))
 	b.WriteString("{")
-	writeToGoExprs(&b, s.elems)
+	writeToGoExprs(ds, &b, s.elems)
 	b.WriteString("}")
 	return b.String()
 }
@@ -225,8 +225,8 @@ func (s Select) String() string {
 	return s.e_S.String() + "." + s.field
 }
 
-func (s Select) ToGoString() string {
-	return s.e_S.ToGoString() + "." + s.field
+func (s Select) ToGoString(ds []Decl) string {
+	return s.e_S.ToGoString(ds) + "." + s.field
 }
 
 /* Call */
@@ -369,15 +369,15 @@ func (c Call) String() string {
 	return b.String()
 }
 
-func (c Call) ToGoString() string {
+func (c Call) ToGoString(ds []Decl) string {
 	var b strings.Builder
-	b.WriteString(c.e_recv.ToGoString())
+	b.WriteString(c.e_recv.ToGoString(ds))
 	b.WriteString(".")
 	b.WriteString(c.meth)
 	b.WriteString("(")
-	writeToGoTypes(&b, c.t_args)
+	writeToGoTypes(ds, &b, c.t_args)
 	b.WriteString(")(")
-	writeToGoExprs(&b, c.args)
+	writeToGoExprs(ds, &b, c.args)
 	b.WriteString(")")
 	return b.String()
 }
@@ -454,11 +454,11 @@ func (a Assert) String() string {
 	return b.String()
 }
 
-func (a Assert) ToGoString() string {
+func (a Assert) ToGoString(ds []Decl) string {
 	var b strings.Builder
-	b.WriteString(a.e_I.ToGoString())
+	b.WriteString(a.e_I.ToGoString(ds))
 	b.WriteString(".(")
-	b.WriteString(a.u_cast.ToGoString())
+	b.WriteString(a.u_cast.ToGoString(ds))
 	b.WriteString(")")
 	return b.String()
 }
@@ -499,7 +499,7 @@ func (s String) String() string {
 	return s.val
 }
 
-func (s String) ToGoString() string {
+func (s String) ToGoString(ds []Decl) string {
 	//return "\"" + s.val + "\""
 	return s.val
 }
@@ -574,13 +574,13 @@ func (s Sprintf) String() string {
 	return b.String()
 }
 
-func (s Sprintf) ToGoString() string {
+func (s Sprintf) ToGoString(ds []Decl) string {
 	var b strings.Builder
 	b.WriteString("fmt.Sprintf(")
 	b.WriteString(s.format)
 	if len(s.args) > 0 {
 		b.WriteString(", ")
-		writeToGoExprs(&b, s.args)
+		writeToGoExprs(ds, &b, s.args)
 	}
 	b.WriteString(")")
 	return b.String()
@@ -597,11 +597,11 @@ func writeExprs(b *strings.Builder, es []FGGExpr) {
 	}
 }
 
-func writeToGoExprs(b *strings.Builder, es []FGGExpr) {
+func writeToGoExprs(ds []Decl, b *strings.Builder, es []FGGExpr) {
 	if len(es) > 0 {
-		b.WriteString(es[0].ToGoString())
+		b.WriteString(es[0].ToGoString(ds))
 		for _, v := range es[1:] {
-			b.WriteString(", " + v.ToGoString())
+			b.WriteString(", " + v.ToGoString(ds))
 		}
 	}
 }

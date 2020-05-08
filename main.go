@@ -68,6 +68,7 @@ var (
 
 	evalSteps int  // number of steps to evaluate
 	verbose   bool // verbose mode
+	printf    bool // use ToGoString for output ("main." type prefix)
 )
 
 func init() {
@@ -107,6 +108,8 @@ func init() {
 		" N ⇒ evaluate N (≥ 0) steps; or\n-1 ⇒ evaluate to value (or panic)")
 	flag.BoolVar(&verbose, "v", false,
 		"enable verbose printing")
+	flag.BoolVar(&printf, "printf", false,
+		"use Go style output type name prefixes")
 }
 
 var usage = func() {
@@ -194,7 +197,13 @@ func main() {
 		intrp_fg := NewFGInterp(verbose, src, strictParse)
 		if evalSteps > NO_EVAL {
 			intrp_fg.Eval(evalSteps)
-			fmt.Println(intrp_fg.GetProgram().GetMain())
+			p_fg := intrp_fg.GetProgram()
+			res := p_fg.GetMain()
+			if printf {
+				fmt.Println(res.ToGoString(p_fg.GetDecls()))
+			} else {
+				fmt.Println(res)
+			}
 		}
 		// monom implicitly disabled
 	case interpFGG:
@@ -204,7 +213,13 @@ func main() {
 
 		if evalSteps > NO_EVAL {
 			intrp_fgg.Eval(evalSteps)
-			fmt.Println(intrp_fgg.GetProgram().GetMain())
+			p_fgg := intrp_fgg.GetProgram()
+			res := p_fgg.GetMain()
+			if printf {
+				fmt.Println(res.ToGoString(p_fgg.GetDecls()))
+			} else {
+				fmt.Println(res)
+			}
 		}
 
 		// TODO: further refactoring (cf. Frontend, Interp)
