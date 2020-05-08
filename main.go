@@ -140,6 +140,11 @@ Options:
 // - add p-closure replacement -- expose test
 // - test monom on latest examples
 // - nomono: fix mutual-poly-rec (should blow up without ismonom) ...fix struct-poly-rec, omega building loops (add recursive struct WF?)
+// artifact
+// - fg vs. go results, add to makefile
+// - reorganise example dirs
+// - bad assert eval, no panic -- -test-monom
+// - generally, exit codes instead of panic
 func main() {
 	flag.Usage = usage
 	flag.Parse()
@@ -232,8 +237,17 @@ func testMonom(verbose bool, src string, steps int) {
 
 	done := steps > EVAL_TO_VAL
 	for i := 0; i < steps || !done; i++ {
-		if p_fgg.GetMain().IsValue() {
+		if main_fgg := p_fgg.GetMain(); main_fgg.IsValue() {
+			if main_mono := p_mono.GetMain(); !main_mono.IsValue() { // TODO: add to -test-oblit
+				p_mono.Eval() // Maybe redundant
+				panic("FGG stuck but monom not:\n\tfgg = " + main_fgg.String() +
+					"\n\tmonom=" + main_mono.String())
+			}
 			break
+		} else if main_mono := p_mono.GetMain(); main_mono.IsValue() {
+			p_fgg.Eval() // Maybe redundant
+			panic("Monom stuck but FGG not:\n\tfgg = " + main_fgg.String() +
+				"\n\tmonom=" + main_mono.String())
 		}
 		// Repeat: horizontal arrows and right-vertical arrow
 		p_fgg, u, p_mono = testMonomStep(verbose, omega, p_fgg, u, p_mono)
@@ -248,7 +262,7 @@ func testMonomStep(verbose bool, omega fgg.Omega1, p_fgg fgg.FGGProgram,
 	fg.FGProgram) {
 
 	// Upper-horizontal arrow
-	p1_fgg, _ := p_fgg.Eval()
+	p1_fgg, _ := p_fgg.Eval() // TODO: also check p_mono if bad-assert panic
 	vPrintln(verbose, "\nEval FGG one step: "+p1_fgg.GetMain().String())
 	u1 := p1_fgg.Ok(true).(fgg.TNamed)
 	if !u1.Impls(p_fgg.GetDecls(), u) { // TODO: factor out with Frontend.eval
@@ -282,6 +296,7 @@ func testMonomStep(verbose bool, omega fgg.Omega1, p_fgg fgg.FGGProgram,
 
 /* oblit "weak" simulation check */
 
+// TODO: update following latest -test-monom
 func testOblit(verbose bool, src string) {
 	intrp_fgg := NewFGGInterp(verbose, src, true)
 	p_fgg := intrp_fgg.GetProgram().(fgg.FGGProgram)

@@ -1,3 +1,5 @@
+//$ go run github.com/rhu1/fgg -fgg -monomc=-- -v fgg/examples/monom/julien/mono-ko/two-type-param.go
+
 // Will not monomorphise
 package main;
 

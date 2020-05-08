@@ -232,7 +232,7 @@ func monomExpr1(e1 FGGExpr, eta Eta) fg.FGExpr {
 
 func toMonomId(u TNamed) fg.Type {
 	res := u.String()
-	res = strings.Replace(res, ",", ",,", -1) // TODO: refactor, cf. main.go, doMonom
+	res = strings.Replace(res, ",", ",,", -1) // TODO: refactor, cf. Frontend.monomOutputHack
 	res = strings.Replace(res, "(", "<", -1)
 	res = strings.Replace(res, ")", ">", -1)
 	res = strings.Replace(res, " ", "", -1)
@@ -260,7 +260,7 @@ func toMonomMethName1(m Name, psi SmallPsi, eta Eta) Name {
 	res := m + "<" + first.String()
 	for _, v := range psi[1:] {
 		next := toMonomId(v.SubsEta(eta))
-		res = res + "," + next.String()
+		res = res + ",," + next.String() // Cf. Frontend.monomOutputHack -- TODO: factor out
 	}
 	res = res + ">"
 	return Name(res)
@@ -282,7 +282,7 @@ func toHashSig(g Sig) string {
 		b.WriteString(v.u_I.String())
 	}
 	b.WriteString("_")
-	for _, v := range g1.pDecls { // Discard formal param names
+	for _, v := range g1.pDecls { // Formal param names discarded
 		b.WriteString("_")
 		b.WriteString(v.u.String())
 	}

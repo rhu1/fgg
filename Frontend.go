@@ -177,8 +177,11 @@ func (intrp *FGGInterp) Monom(monom bool, compile string) {
 		panic("\nNot monomorphisable according to \"type param under named type\"" +
 			" restriction.\n\t" + e.String())
 	}*/
-	//if !fgg.IsMonomOK_CFG(intrp.orig) {  // Extended CFG-based CFG (also old)
-	if ok, msg := fgg.IsMonomOK(intrp.orig); !ok {
+	//fgg.IsMonomOK_naive(intrp.orig.GetDecls())  // Any nested type params within a cycle
+	/*if !fgg.IsMonomOK_CFG(intrp.orig) { // CFG-based occurs check (also old) -- needs method set unification ("open" impls)
+		panic("\nCannot monomorphise (nested type param within call cycle).")
+	}*/
+	if ok, msg := fgg.IsMonomOK(intrp.orig); !ok { // nomonom
 		//fmt.Println("\nCannot monomorphise (nomono detected):\n\t" + msg)
 		panic("\nCannot monomorphise (nomono detected):\n\t" + msg)
 	}

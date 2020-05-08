@@ -67,20 +67,12 @@ func nomonoOmega(ds []Decl, delta Delta, md MethDecl, omega1 Omega2) (bool, stri
 // Pre: len(Psi) == len(psi)
 func occurs(Psi BigPsi, psi SmallPsi) bool {
 	for i, v := range Psi.tFormals {
-		if occursParam(v.name, psi[i]) {
-			return true
-		}
-	}
-	return false
-}
-
-func occursParam(a TParam, u Type) bool {
-	if cast, ok := u.(TParam); ok && cast.Equals(a) {
-		return false
-	}
-	for _, v := range fv(u.(TNamed)) {
-		if v.Equals(a) {
-			return true
+		if cast, ok := psi[i].(TNamed); ok { // !!! simplified
+			for _, x := range fv(cast) {
+				if x.Equals(v.name) {
+					return true
+				}
+			}
 		}
 	}
 	return false
@@ -486,6 +478,7 @@ func (x0 cgraph) String() string {
 	return b.String()
 }
 
+// CFG-based occurs check -- needs method set unification ("open" impls)
 // CHECKME: generally, covariant receiver bounds specialisation
 func IsMonomOK_CFG(p FGGProgram) bool {
 	ds := p.GetDecls()
@@ -757,8 +750,8 @@ type RecvMethPair1 struct {
 
 var meths []RecvMethPair1 = make([]RecvMethPair1, 0) // TODO refactor
 
-// TODO: rename
-func Foo(ds []Decl) {
+// Check for any nested type params in a cycle -- very conservative
+func IsMonomOK_naive(ds []Decl) {
 	graph := make(map[RecvMethPair1]map[RecvMethPair1]([][]Type))    // caller->callee->[list of meth type args]
 	bools := make(map[RecvMethPair1]map[RecvMethPair1]bool)          // caller->callee->true/false (cycle detection convenience) -- this more the actual call-graph
 	recvargs := make(map[RecvMethPair1]map[RecvMethPair1]([][]Type)) // caller->callee->[list of receiver type args]
@@ -797,7 +790,7 @@ func Foo(ds []Decl) {
 	//fmt.Println("2222: ", bools)
 
 	findCycles1(bools)
-	//fmt.Println("3333: ", cycles)
+	fmt.Println("3333: ", cycles)
 
 	for _, v := range cycles {
 		for i := 0; i < len(v); i++ {
