@@ -133,8 +133,8 @@ Options:
 // - fix parser nil vs. empty creation
 // - WF check for duplicate decl names
 // - WF recursive structs check
-// - WF types declared
-// - sig-equals-alpha and covariant receiver bounds -- expose test -- DONE -- TODO: oblit for map.fgg (memberBr)
+// - WF types declared, names in scope
+// - sig-equals-alpha and covariant receiver bounds -- expose test -- DONE -- TODO: oblit for map.fgg (memberBr, receiver param alpha)
 // - test and fix Delta in methods (re. covariant receiver bounds) -- expose test
 // - update "polyrec" check
 // - add p-closure replacement -- expose test
