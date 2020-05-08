@@ -28,7 +28,7 @@ type Program interface {
 type Expr interface {
 	AstNode
 	IsValue() bool
-	ToGoString() string // Basically, type T printed as main.T
+	ToGoString(ds []Decl) string // Basically, type T printed as main.T
 }
 
 /* Types */

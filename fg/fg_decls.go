@@ -34,6 +34,7 @@ type FGProgram struct {
 	decls  []Decl
 	e_main FGExpr
 	printf bool // false = "original" `_ = e_main` syntax; true = import-fmt/printf syntax
+	// N.B. coincidentally "behaves" like an actual printf because interpreter prints out final eval result
 }
 
 var _ base.Program = FGProgram{}

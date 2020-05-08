@@ -4,6 +4,8 @@
 
 package main;
 
+import "fmt";
+
 /* Base decls: Any, Booleans, Functions, Lists */
 
 type Any interface {};
@@ -71,6 +73,8 @@ func (xs Cons) Member(x Eq) Bool { return x.Equal(xs.head).Cond(memberBr{xs,x}).
 
 func main() {
 	// Submission version was missing a "}"
-	_ =  Cons{TT{}, Cons{FF{}, Nil{}}}.Map(not{}). // Main example
-			(Cons).head.(Bool).Not() // Extra, assertion necessary
+	/*_ =  Cons{TT{}, Cons{FF{}, Nil{}}}.Map(not{}). // Main example
+			(Cons).head.(Bool).Not() // Extra, assertion necessary*/
+	fmt.Printf("%#v", Cons{TT{}, Cons{FF{}, Nil{}}}.Map(not{}). // Main example
+			(Cons).head.(Bool).Not())
 }

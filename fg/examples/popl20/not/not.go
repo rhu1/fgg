@@ -4,6 +4,8 @@
 
 package main;
 
+import "fmt";
+
 /* Base decls: Any, Booleans, Functions */
 
 type Any interface {};
@@ -48,5 +50,6 @@ func (this compose) Apply(x Any) Any { return this.g.Apply(this.f.Apply(x)) };
 /* Example code */
 
 func main() {
-	_ = not{}.Apply(TT{}).(Bool)
+	//_ = not{}.Apply(TT{}).(Bool)
+	fmt.Printf("%#v", not{}.Apply(TT{}).(Bool))
 }

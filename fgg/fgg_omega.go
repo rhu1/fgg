@@ -246,9 +246,7 @@ func auxM(ds []Decl, omega Omega1) bool {
 				continue
 			}
 			eta := MakeEta(g.Psi, m.psi)
-			//fmt.Println("333:", m.u_recv, ";", m.meth)
 			for _, pd := range g.pDecls {
-				//fmt.Println("444:", pd.name, pd.u)
 				u_pd := pd.u.SubsEta(eta) // HERE: need receiver subs also? cf. map.fgg "type b Eq(b)" -- methods should be ok?
 				tmp[toKey_Wt(u_pd)] = u_pd
 			}

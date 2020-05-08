@@ -87,7 +87,7 @@ func eval(intrp Interp, steps int) base.Type {
 			done = true
 		}
 	}
-	intrp.vPrintln(p.GetMain().ToGoString()) // Final result
+	intrp.vPrintln(p.GetMain().String()) // Final result
 	//return p_res
 	return t
 }

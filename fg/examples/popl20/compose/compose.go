@@ -4,6 +4,8 @@
 
 package main;
 
+import "fmt";
+
 /* Base decls: Any, Booleans, Nautrals, Functions, Lists */
 
 type Any interface {};
@@ -100,9 +102,13 @@ func (d D) _3() Nat { return D{}._2().Add(D{}._1()) };
 func main() {
 	// Submission version: compose{incr{1},incr{2}}.Apply(3).(Nat)
 	//_ = compose{incr{Succ{Zero{}}},incr{Succ{Succ{Zero{}}}}}.Apply(Succ{Succ{Succ{Zero{}}}}).(Nat) // -eval=26
-	_ = compose{incr{D{}._1()}, incr{D{}._2()}}.Apply(D{}._3()).
+	/*_ = compose{incr{D{}._1()}, incr{D{}._2()}}.Apply(D{}._3()).
 				(Nat). // Main example (assertion necessary) // -eval=46
-				Add(Zero{}) // Extra
+				Add(Zero{}) // Extra*/
+
+	fmt.Printf("%#v", compose{incr{D{}._1()}, incr{D{}._2()}}.Apply(D{}._3()).
+				(Nat). // Main example (assertion necessary) // -eval=46
+				Add(Zero{}))
 
 	// Also: _ = incr{2}.Apply(3).(Nat)
 }

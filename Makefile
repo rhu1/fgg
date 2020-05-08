@@ -16,7 +16,8 @@
 test: test-all
 
 .PHONY: test-all
-test-all: test-fg test-fgg test-fg2fgg test-monom test-oblit
+test-all: test-fg test-fgg test-fg2fgg simulate-monom simulate-oblit
+#test-monom test-oblit
 
 
 .PHONY: clean
@@ -27,7 +28,7 @@ clean: clean-test-all
 
 
 .PHONY: test-fg
-test-fg: test-fg-unit test-fg-examples
+test-fg: test-fg-unit test-fg-examples-against-go
 
 
 .PHONY: test-fg-unit
@@ -47,9 +48,36 @@ test-fg-examples:
 	go run github.com/rhu1/fgg -eval=-1 fg/examples/popl20/not/not.go
 
 # TODO: currently examples testing limited to "good" examples
-# TODO: check actual output, e.g.:
-#     [cmd] > output.txt
+
+
+# cf. [cmd] > output.txt
 #     diff output.txt correct.txt
+.PHONY: test-fg-examples-against-go
+test-fg-examples-against-go:
+	if [ "`go run github.com/rhu1/fgg -eval=-1 -printf fg/examples/popl20/booleans/booleans.go`" != "`go run fg/examples/popl20/booleans/booleans.go`" ]; then \
+		echo "Not equal"; \
+		exit 1; \
+	fi
+	if [ "`go run github.com/rhu1/fgg -eval=-1 -printf fg/examples/popl20/compose/compose.go`" != "`go run fg/examples/popl20/compose/compose.go`" ]; then \
+		echo "Not equal"; \
+		exit 1; \
+	fi
+	if [ "`go run github.com/rhu1/fgg -eval=-1 -printf fg/examples/popl20/equal/equal.go`" != "`go run fg/examples/popl20/equal/equal.go`" ]; then \
+		echo "Not equal"; \
+		exit 1; \
+	fi
+	if [ "`go run github.com/rhu1/fgg -eval=-1 -printf fg/examples/popl20/incr/incr.go`" != "`go run fg/examples/popl20/incr/incr.go`" ]; then \
+		echo "Not equal"; \
+		exit 1; \
+	fi
+	if [ "`go run github.com/rhu1/fgg -eval=-1 -printf fg/examples/popl20/map/map.go`" != "`go run fg/examples/popl20/map/map.go`" ]; then \
+		echo "Not equal"; \
+		exit 1; \
+	fi
+	if [ "`go run github.com/rhu1/fgg -eval=-1 -printf fg/examples/popl20/not/not.go`" != "`go run fg/examples/popl20/not/not.go`" ]; then \
+		echo "Not equal"; \
+		exit 1; \
+	fi
 
 
 .PHONY: test-fgg
