@@ -146,8 +146,7 @@ test-fgg-examples:
 
 
 define nomono_bad
-	mkdir -p $(2); \
-	RES=`go run github.com/rhu1/fgg -fgg -monomc=$(2)/$(3) $(1) 2> /dev/null`; \
+	RES=`go run github.com/rhu1/fgg -fgg -monomc=-- $(1) 2> /dev/null`; \
 	EXIT=$$?; if [ $$EXIT -ne 1 ]; then \
 		echo "Expected nomono violation, but none occurred."; \
 		exit 1; \
@@ -156,14 +155,14 @@ endef
 
 .PHONY: test-nomono-bad
 test-nomono-bad:
-	$(call nomono_bad,fgg/examples/monom/box/box.fgg,tmp/test/fg/monom/box,box.go)
+	$(call nomono_bad,fgg/examples/monom/box/box.fgg)
 
-	$(call nomono_bad,fgg/examples/monom/julien/mono-ko/incompleteness-subtyping.go,tmp/test/fg/monom/julien/mono-ko/incompleteness-subtyping,incompleteness-subtyping.go)
-	$(call nomono_bad,fgg/examples/monom/julien/mono-ko/monom-imp.go,tmp/test/fg/monom/julien/mono-ko/monom-imp,monom-imp.go)
-	$(call nomono_bad,fgg/examples/monom/julien/mono-ko/mutual-poly-rec.go,tmp/test/fg/monom/julien/mono-ko/mutual-poly-rec,mutual-poly-rec.go)
-	$(call nomono_bad,fgg/examples/monom/julien/mono-ko/mutual-rec-iface.go,tmp/test/fg/monom/julien/mono-ko/mutual-rec-iface,mutual-rec-iface.go)
-	$(call nomono_bad,fgg/examples/monom/julien/mono-ko/nested-fix.go,tmp/test/fg/monom/julien/mono-ko/nested-fix,nested-fix.go)
-	$(call nomono_bad,fgg/examples/monom/julien/mono-ko/two-type-param.go,tmp/test/fg/monom/julien/mono-ko/two-type-param,two-type-param.go)
+	$(call nomono_bad,fgg/examples/monom/julien/mono-ko/incompleteness-subtyping.go)
+	$(call nomono_bad,fgg/examples/monom/julien/mono-ko/monom-imp.go)
+	$(call nomono_bad,fgg/examples/monom/julien/mono-ko/mutual-poly-rec.go)
+	$(call nomono_bad,fgg/examples/monom/julien/mono-ko/mutual-rec-iface.go)
+	$(call nomono_bad,fgg/examples/monom/julien/mono-ko/nested-fix.go)
+	$(call nomono_bad,fgg/examples/monom/julien/mono-ko/two-type-param.go)
 
 
 define sim_monom
