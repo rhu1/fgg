@@ -146,6 +146,7 @@ Options:
 // artifact
 // - add nomono tests
 // - fg vs. go results, add to makefile -- partial: need to generalise and extend to monom tests
+// - latest paper examples
 // - reorganise example dirs
 // - bad assert eval, no panic -- -test-monom
 // - generally, exit codes instead of panic

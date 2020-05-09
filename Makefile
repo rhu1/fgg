@@ -84,18 +84,35 @@ test-fgg-unit:
 	go test github.com/rhu1/fgg/fgg
 
 
+define eval_fgg
+	RES=`go run github.com/rhu1/fgg -fgg -eval=$(2) $(1)`; \
+	echo $$RES
+endef
+
+#.PHONY: foo
+#foo:
+#	declare -a arr=(\
+#		"element1" \
+#		"element2" \
+#		"element3"); \
+#	for i in "$${arr[@]}"; \
+#	do \
+#   	 echo "$$i"; \
+#	done
+
+
 .PHONY: test-fgg-examples
 test-fgg-examples:
-	go run github.com/rhu1/fgg -fgg -eval=10 fgg/examples/hello/hello.fgg
-	go run github.com/rhu1/fgg -fgg -eval=10 fgg/examples/hello/fmtprintf.fgg
-	go run github.com/rhu1/fgg -fgg -eval=-1 fgg/examples/popl20/booleans/booleans.fgg
-	go run github.com/rhu1/fgg -fgg -eval=-1 fgg/examples/popl20/compose/compose.fgg
-	go run github.com/rhu1/fgg -fgg -eval=-1 fgg/examples/popl20/graph/graph.fgg
-	go run github.com/rhu1/fgg -fgg -eval=-1 fgg/examples/popl20/irregular/irregular.fgg
-	go run github.com/rhu1/fgg -fgg -eval=-1 fgg/examples/popl20/map/map.fgg
-	go run github.com/rhu1/fgg -fgg -eval=-1 fgg/examples/popl20/monomorph/monomorph.fgg
-	go run github.com/rhu1/fgg -fgg -eval=10 fgg/examples/monom/box/box.fgg
-	go run github.com/rhu1/fgg -fgg -eval=10 fgg/examples/monom/box/box2.fgg
+	$(call eval_fgg,fgg/examples/hello/hello.fgg,10)
+	$(call eval_fgg,fgg/examples/hello/fmtprintf.fgg,10)
+	$(call eval_fgg,fgg/examples/popl20/booleans/booleans.fgg,-1)
+	$(call eval_fgg,fgg/examples/popl20/compose/compose.fgg,-1)
+	$(call eval_fgg,fgg/examples/popl20/graph/graph.fgg,-1)
+	$(call eval_fgg,fgg/examples/popl20/irregular/irregular.fgg,-1)
+	$(call eval_fgg,fgg/examples/popl20/map/map.fgg,-1)
+	$(call eval_fgg,fgg/examples/popl20/monomorph/monomorph.fgg,-1)
+	$(call eval_fgg,fgg/examples/monom/box/box.fgg,10)
+	$(call eval_fgg,fgg/examples/monom/box/box2.fgg,10)
 
 
 .PHONY: test-monom
