@@ -115,35 +115,43 @@ test-fgg-examples:
 	$(call eval_fgg,fgg/examples/monom/box/box2.fgg,10)
 
 
+define eval_monom_fgg
+	mkdir -p $(3); \
+	RES=`go run github.com/rhu1/fgg -fgg -eval=$(2) -monomc=$(3)/$(4) $(1)`; \
+	echo "fgg="$$RES; 
+	EXP=`go run github.com/rhu1/fgg -eval=$(2) $(3)/$(4)`; \
+	echo "fg= "$$EXP
+endef
+
+define eval_monom_fgg_against_go
+	mkdir -p $(2); \
+	RES=`go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=$(2)/$(3) $(1)`; \
+	echo "fgg="$$RES; \
+	EXP=`go run github.com/rhu1/fgg -eval=-1 -printf $(2)/$(3)`; \
+	echo "fg= "$$EXP; \
+	ACT=`go run $(2)/$(3)`; \
+	echo "go= "$$ACT; \
+	if [ "$$EXP" != "$$ACT" ]; then \
+		echo "Not equal."; \
+		exit 1; \
+	fi
+endef
+
+.PHONY: foo
+foo:
+	#$(call eval_monom_fgg_against_go,fgg/examples/popl20/booleans/booleans.fgg,tmp/test/fg/booleans,booleans.go)
+	#$(call eval_monom_fgg_against_go,fgg/examples/popl20/compose/compose.fgg,tmp/test/fg/compose,compose.go)
+	#$(call eval_monom_fgg_against_go,fgg/examples/popl20/graph/graph.fgg,tmp/test/fg/graph,graph.go)
+	#$(call eval_monom_fgg_against_go,fgg/examples/popl20/irregular/irregular.fgg,tmp/test/fg/irregular,irregular.go)
+	#$(call eval_monom_fgg_against_go,fgg/examples/popl20/map/map.fgg,tmp/test/fg/map,map.go)
+	#$(call eval_monom_fgg_against_go,fgg/examples/popl20/monomorph/monomorph.fgg,tmp/test/fg/monomorph,monomorph.go)
+
+	#$(call eval_monom_fgg,fgg/examples/monom/box/box2.fgg,10,tmp/test/fg/monom/box,box2.go)
+
+	$(call eval_monom_fgg_against_go,fgg/examples/monom/julien/mono-ok/iface-embedding-simple.go,tmp/test/fg/monom/julien/mono-ok/iface-embedding-simple,iface-embedding-simple.go)
+
 .PHONY: test-monom
 test-monom:
-	mkdir -p tmp/test/fg/booleans
-	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/booleans/booleans.go fgg/examples/popl20/booleans/booleans.fgg
-	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/booleans/booleans.go
-
-	mkdir -p tmp/test/fg/compose
-	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/compose/compose.go fgg/examples/popl20/compose/compose.fgg
-	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/compose/compose.go
-
-	mkdir -p tmp/test/fg/graph
-	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/graph/graph.go fgg/examples/popl20/graph/graph.fgg
-	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/graph/graph.go
-
-	mkdir -p tmp/test/fg/irregular
-	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/irregular/irregular.go fgg/examples/popl20/irregular/irregular.fgg
-	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/irregular/irregular.go
-
-	mkdir -p tmp/test/fg/map
-	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/map/map.go fgg/examples/popl20/map/map.fgg
-	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/map/map.go
-
-	mkdir -p tmp/test/fg/monomorph
-	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/monomorph/monomorph.go fgg/examples/popl20/monomorph/monomorph.fgg
-	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monomorph/monomorph.go
-
-	mkdir -p tmp/test/fg/monom/box
-	go run github.com/rhu1/fgg -fgg -eval=10 -monomc=tmp/test/fg/monom/box/box2.go fgg/examples/monom/box/box2.fgg
-	go run github.com/rhu1/fgg -eval=10 tmp/test/fg/monom/box/box2.go
 
 	mkdir -p tmp/test/fg/monom/julien/
 	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/monom/julien/ifacebox.go fgg/examples/monom/julien/ifacebox.fgg

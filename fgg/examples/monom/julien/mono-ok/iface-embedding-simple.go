@@ -3,6 +3,8 @@
 
 package main;
 
+import "fmt";
+
 type Any(type ) interface {};
 
 type DummyFunc(type A Any(), B Any()) interface { apply(type )(a A) B };
@@ -20,8 +22,11 @@ type DtoE(type ) struct {};
 func (x0 DtoE(type )) apply(type )(d D()) E() { return E(){} };
 
 
-func main() { _ =
-	DtoE(){}.apply()(D(){})
+func main() {
+	//_ =
+	fmt.Printf("%#v",
+		DtoE(){}.apply()(D(){})
+	)
 }
 
 

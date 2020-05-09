@@ -2,6 +2,8 @@
 
 package main;
 
+import "fmt";
+
 /* Base decls: Any, Booleans, Nautrals, Functions, Lists */
 
 type Any(type ) interface {};
@@ -74,7 +76,10 @@ func (xs Cons(type a Eq(a))) Member(type )(x a) Bool() { return x.Equal()(xs.hea
 
 func main() {
 	// Submission version was missing a "}"
-	_ =  Cons(Bool()){TT(){}, Cons(Bool()){FF(){}, Nil(Bool()){}}}.Map(Bool())(not(){}). // Main example
+	//_ =
+	fmt.Printf("%#v",
+		Cons(Bool()){TT(){}, Cons(Bool()){FF(){}, Nil(Bool()){}}}.Map(Bool())(not(){}). // Main example
 			(Cons(Bool())).head.Not()() // Extra, assertion not necessary
 			//.(Cons(Bool())).head.(Bool()).Not()()
+	)
 }

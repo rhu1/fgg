@@ -5,6 +5,8 @@
 
 package main;
 
+import "fmt";
+
 /* Base decls: Any, Booleans, Nautrals, Functions -- cut down versions */
 
 type Any(type ) interface {};
@@ -63,11 +65,14 @@ func (d D(type )) _1(type )() Nat() { return Succ(){Zero(){}} };
 func (d D(type )) _2(type )() Nat() { return Succ(){D(){}._1()()} };
 func (d D(type )) _3(type )() Nat() { return Succ(){D(){}._2()()} };
 
-func main() { _ =
-	Pair(List(Bool()), List(Nat())){
-		Cons(Bool()){TT(){}, Cons(Bool()){FF(){}, Nil(Bool()){}}}
-				.Map(Bool())(not(){}),
-		Cons(Nat()){D(){}._1()(), Cons(Nat()){D(){}._2()(), Cons(Nat()){D(){}._3()(), Nil(Nat()){}}}}
-				.Map(Nat())(incr(){D(){}._1()()})
-	}
+func main() {
+	//_ =
+	fmt.Printf("%#v",
+		Pair(List(Bool()), List(Nat())){
+			Cons(Bool()){TT(){}, Cons(Bool()){FF(){}, Nil(Bool()){}}}
+					.Map(Bool())(not(){}),
+			Cons(Nat()){D(){}._1()(), Cons(Nat()){D(){}._2()(), Cons(Nat()){D(){}._3()(), Nil(Nat()){}}}}
+					.Map(Nat())(incr(){D(){}._1()()})
+		}
+	)
 }
