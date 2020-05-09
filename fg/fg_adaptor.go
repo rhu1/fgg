@@ -7,6 +7,7 @@ import (
 	"github.com/antlr/antlr4/runtime/Go/antlr"
 
 	"github.com/rhu1/fgg/base"
+	"github.com/rhu1/fgg/base/testutils"
 	"github.com/rhu1/fgg/parser/fg"
 	"github.com/rhu1/fgg/parser/util"
 )
@@ -28,7 +29,7 @@ func (a *FGAdaptor) push(n FGNode) {
 
 func (a *FGAdaptor) pop() FGNode {
 	if len(a.stack) < 1 {
-		panic("Stack is empty")
+		panic(testutils.PARSER_PANIC_PREFIX + "Stack is empty")
 	}
 	res := a.stack[len(a.stack)-1]
 	a.stack = a.stack[:len(a.stack)-1]
@@ -62,18 +63,18 @@ func (a *FGAdaptor) ExitProgram(ctx *parser.ProgramContext) {
 	offset := 0 // TODO: refactor
 	printf := false
 	c3 := ctx.GetChild(3)
-	foo := ctx.GetChild(ctx.GetChildCount() - 4).GetPayload() // Checking for "=" in "_ = ..."
-	if _, ok := c3.GetPayload().(*antlr.CommonToken); ok {    // IMPORT
-		//c3.GetPayload().(*antlr.CommonToken).GetText() == "import" {
+	foo := ctx.GetChild(ctx.GetChildCount() - 4).GetPayload()     // Checking for "=" in "_ = ..."
+	if c3_cast, ok := c3.GetPayload().(*antlr.CommonToken); ok && // IMPORT
+		c3_cast.GetText() == "import" {
 		if pkg := ctx.GetChild(4).GetPayload().(*antlr.CommonToken).GetText(); pkg != "\"fmt\"" { // TODO: refactor
-			panic("The only allowed import is \"fmt\"; found: " + pkg)
+			panic(testutils.PARSER_PANIC_PREFIX + "The only allowed import is \"fmt\"; found: " + pkg)
 		}
 		offset = 3
 		if cast, ok := foo.(*antlr.CommonToken); !ok || cast.GetText() != "=" { // Looking for: _ = ...
 			printf = true
 		}
 	} else if cast, ok := foo.(*antlr.CommonToken); !ok || cast.GetText() != "=" {
-		panic("Missing \"import fmt;\".")
+		panic(testutils.PARSER_PANIC_PREFIX + "Missing \"import fmt;\".")
 	}
 	//if ctx.GetChildCount() > offset+13 {  // well-typed program must have at least one decl?
 	tmp := ctx.GetChild(offset + 3)
@@ -100,7 +101,7 @@ func (a *FGAdaptor) ExitTypeDecl(ctx *parser.TypeDeclContext) {
 		c.t_I = t
 		a.push(c)
 	} else {
-		panic("Unknown type decl: " + reflect.TypeOf(td).String())
+		panic(testutils.PARSER_PANIC_PREFIX + "Unknown type decl: " + reflect.TypeOf(td).String())
 	}
 }
 

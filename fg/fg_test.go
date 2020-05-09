@@ -15,13 +15,13 @@ import (
 
 /* Harness funcs */
 
-func parseAndOkGood(t *testing.T, elems ...string) base.Program {
+func fgParseAndOkGood(t *testing.T, elems ...string) base.Program {
 	var adptr fg.FGAdaptor
 	return testutils.ParseAndOkGood(t, &adptr, fg.MakeFgProgram(elems...))
 }
 
-// N.B. do not use to check for bad *syntax* -- see the "[Parser]" panic check in base.ParseAndOkBad
-func parseAndOkBad(t *testing.T, msg string, elems ...string) base.Program {
+// N.B. do not use to check for bad *syntax* -- see the PARSER_PANIC_PREFIX panic check in base.ParseAndOkBad
+func fgParseAndOkBad(t *testing.T, msg string, elems ...string) base.Program {
 	var adptr fg.FGAdaptor
 	return testutils.ParseAndOkBad(t, msg, &adptr, fg.MakeFgProgram(elems...))
 }
@@ -37,42 +37,42 @@ func Test001(t *testing.T) {
 	Am3 := "func (x0 A) m3(x1 A, x2 A) A { return x2 }"
 	B := "type B struct { f A }"
 	e := "B{A{}}"
-	parseAndOkGood(t, A, Am1, Am2, Am3, B, e)
+	fgParseAndOkGood(t, A, Am1, Am2, Am3, B, e)
 }
 
 func Test002(t *testing.T) {
 	//parseAndOkGood(t, "A{}") // Testing parseAndOkGood
-	parseAndOkGood(t, "type A struct {}", "A{}")
+	fgParseAndOkGood(t, "type A struct {}", "A{}")
 }
 
 func Test002b(t *testing.T) {
 	//parseAndOkBad(t, "type A not declared", "type A struct{}", "A{}")  // Testing parseAndOkBad
-	parseAndOkBad(t, "type A not declared", "A{}")
+	fgParseAndOkBad(t, "type A not declared", "A{}")
 }
 
 func Test002c(t *testing.T) {
-	parseAndOkBad(t, "A doesn't take anything", "type A struct {}", "A{A{}}")
+	fgParseAndOkBad(t, "A doesn't take anything", "type A struct {}", "A{A{}}")
 }
 
 func Test003(t *testing.T) {
 	A := "type A struct {}"
 	B := "type B struct { f A }"
 	e := "B{A{}}"
-	parseAndOkGood(t, A, B, e)
+	fgParseAndOkGood(t, A, B, e)
 }
 
 func Test003b(t *testing.T) {
 	A := "type A struct {}"
 	B := "type B struct { f A }"
 	e := "B{B{A{}}}"
-	parseAndOkBad(t, "B takes an A, not a B", A, B, e)
+	fgParseAndOkBad(t, "B takes an A, not a B", A, B, e)
 }
 
 func Test003c(t *testing.T) {
 	A := "type A struct {}"
 	B := "type B struct { f A }"
 	e := "B{}"
-	parseAndOkBad(t, "B takes an A", A, B, e)
+	fgParseAndOkBad(t, "B takes an A", A, B, e)
 }
 
 func Test004(t *testing.T) {
@@ -80,21 +80,21 @@ func Test004(t *testing.T) {
 	B := "type B struct { f A }"
 	C := "type C struct { f1 A; f2 B }"
 	e := "C{A{}, B{A{}}}"
-	parseAndOkGood(t, A, B, C, e)
+	fgParseAndOkGood(t, A, B, C, e)
 }
 
 func Test005(t *testing.T) {
 	A := "type A struct {}"
 	Am1 := "func (x0 A) m1() A { return x0 }"
 	e := "A{}"
-	parseAndOkGood(t, A, Am1, e)
+	fgParseAndOkGood(t, A, Am1, e)
 }
 
 func Test005b(t *testing.T) {
 	A := "type A struct {}"
 	Am1 := "func (x0 A) m1() A { return A{} }"
 	e := "A{}"
-	parseAndOkGood(t, A, Am1, e)
+	fgParseAndOkGood(t, A, Am1, e)
 }
 
 func Test005c(t *testing.T) {
@@ -102,7 +102,7 @@ func Test005c(t *testing.T) {
 	Am1 := "func (x0 A) m1() A { return x0 }"
 	Am2 := "func (x0 A) m2(x1 A) A { return x1 }"
 	e := "A{}"
-	parseAndOkGood(t, A, Am1, Am2, e)
+	fgParseAndOkGood(t, A, Am1, Am2, e)
 }
 
 /*func Test005d(t *testing.T) {
@@ -120,7 +120,7 @@ func Test005e(t *testing.T) {
 	Am3 := "func (x0 A) m3(x1 A, x2 B) B { return x2 }"
 	B := "type B struct { f A }"
 	e := "A{}"
-	parseAndOkGood(t, A, Am1, Am2, Am3, B, e)
+	fgParseAndOkGood(t, A, Am1, Am2, Am3, B, e)
 }
 
 func Test006(t *testing.T) {
@@ -128,7 +128,7 @@ func Test006(t *testing.T) {
 	A := "type A struct {}"
 	Am1 := "func (x0 A) m1() Any { return x0 }"
 	e := "A{}"
-	parseAndOkGood(t, Any, A, Am1, e)
+	fgParseAndOkGood(t, Any, A, Am1, e)
 }
 
 func Test007(t *testing.T) {
@@ -137,7 +137,7 @@ func Test007(t *testing.T) {
 	Am1 := "func (x0 A) m1(x1 A) A { return x1 }"
 	B := "type B struct { f IA }"
 	e := "B{A{}}"
-	parseAndOkGood(t, IA, A, Am1, B, e)
+	fgParseAndOkGood(t, IA, A, Am1, B, e)
 }
 
 func Test007b(t *testing.T) {
@@ -146,7 +146,7 @@ func Test007b(t *testing.T) {
 	Am1 := "func (x0 A) m2(x1 A) A { return x1 }"
 	B := "type B struct { f IA }"
 	e := "B{A{}}"
-	parseAndOkBad(t, "A is not an IA", IA, A, Am1, B, e)
+	fgParseAndOkBad(t, "A is not an IA", IA, A, Am1, B, e)
 }
 
 func Test007c(t *testing.T) {
@@ -155,7 +155,7 @@ func Test007c(t *testing.T) {
 	Am1 := "func (x0 A) m1() A { return x0 }"
 	B := "type B struct { f IA }"
 	e := "B{A{}}"
-	parseAndOkBad(t, "A is not an IA", IA, A, Am1, B, e)
+	fgParseAndOkBad(t, "A is not an IA", IA, A, Am1, B, e)
 }
 
 func Test007d(t *testing.T) {
@@ -165,14 +165,14 @@ func Test007d(t *testing.T) {
 	Am1 := "func (x0 A) m1(x1 A) Any { return x0 }"
 	B := "type B struct { f IA }"
 	e := "B{A{}}"
-	parseAndOkBad(t, "A is not an IA", Any, IA, A, Am1, B, e)
+	fgParseAndOkBad(t, "A is not an IA", Any, IA, A, Am1, B, e)
 }
 
 func Test008(t *testing.T) {
 	A := "type A struct {}"
 	Am1 := "func (x0 A) m1() A { return foo }"
 	e := "A{}"
-	parseAndOkBad(t, "foo is not bound", A, Am1, e)
+	fgParseAndOkBad(t, "foo is not bound", A, Am1, e)
 }
 
 func Test009(t *testing.T) {
@@ -182,7 +182,7 @@ func Test009(t *testing.T) {
 	Am1 := "func (x0 A) m1(x1 A) A { return x1 }"
 	B := "type B struct { f IA }"
 	e := "B{A{}}"
-	parseAndOkGood(t, Any, IA, A, Am1, B, e)
+	fgParseAndOkGood(t, Any, IA, A, Am1, B, e)
 }
 
 func Test009b(t *testing.T) {
@@ -193,7 +193,7 @@ func Test009b(t *testing.T) {
 	Afoo := "func (x0 A) foo(x1 A) A { return x1 }"
 	B := "type B struct { f IA }"
 	e := "B{A{}}"
-	parseAndOkGood(t, Any, IA, A, Am1, Afoo, B, e)
+	fgParseAndOkGood(t, Any, IA, A, Am1, Afoo, B, e)
 }
 
 func Test010b(t *testing.T) {
@@ -203,7 +203,7 @@ func Test010b(t *testing.T) {
 	Am1 := "func (x0 A) m1(x1 A) A { return x1 }"
 	B := "type B struct { f IA }"
 	e := "B{A{}}"
-	parseAndOkBad(t, "A is not an IA", Any, IA, A, Am1, B, e)
+	fgParseAndOkBad(t, "A is not an IA", Any, IA, A, Am1, B, e)
 }
 
 // Testing bad return
@@ -212,7 +212,7 @@ func Test011(t *testing.T) {
 	Am1 := "func (x0 A) m1() A { return B{A{}} }"
 	B := "type B struct { f A }"
 	e := "B{A{}}"
-	parseAndOkBad(t, "Cannot return a B as an A", A, Am1, B, e)
+	fgParseAndOkBad(t, "Cannot return a B as an A", A, Am1, B, e)
 }
 
 // Initial testing for select
@@ -220,21 +220,21 @@ func Test012(t *testing.T) {
 	A := "type A struct {}"
 	B := "type B struct { f A }"
 	e := "B{A{}}.f"
-	parseAndOkGood(t, A, B, e)
+	fgParseAndOkGood(t, A, B, e)
 }
 
 func Test012b(t *testing.T) {
 	A := "type A struct {}"
 	B := "type B struct { f A }"
 	e := "B{A{}}.f1"
-	parseAndOkBad(t, "B does not have a \"f1\" field", A, B, e)
+	fgParseAndOkBad(t, "B does not have a \"f1\" field", A, B, e)
 }
 
 func Test012c(t *testing.T) {
 	A := "type A struct {}"
 	B := "type B struct { f A }"
 	e := "B{B{A{}}.f}"
-	parseAndOkGood(t, A, B, e)
+	fgParseAndOkGood(t, A, B, e)
 }
 
 // Initial testing for call
@@ -242,21 +242,21 @@ func Test013(t *testing.T) {
 	A := "type A struct {}"
 	A1m := "func (x0 A) m1() A { return x0 }"
 	e := "A{}.m1()"
-	parseAndOkGood(t, A, A1m, e)
+	fgParseAndOkGood(t, A, A1m, e)
 }
 
 func Test013b(t *testing.T) {
 	A := "type A struct {}"
 	A1m := "func (x0 A) m1() A { return x0.m1() }"
 	e := "A{}.m1()"
-	parseAndOkGood(t, A, A1m, e)
+	fgParseAndOkGood(t, A, A1m, e)
 }
 
 func Test013c(t *testing.T) {
 	A := "type A struct {}"
 	A1m := "func (x0 A) m1(x1 A) A { return x1 }"
 	e := "A{}.m1(A{})"
-	parseAndOkGood(t, A, A1m, e)
+	fgParseAndOkGood(t, A, A1m, e)
 }
 
 func Test013d(t *testing.T) {
@@ -264,21 +264,21 @@ func Test013d(t *testing.T) {
 	A := "type A struct {}"
 	A1m := "func (x0 A) m1(x1 A) A { return x1.m1(x0) }"
 	e := "A{}.m1(A{}.m1(A{}))"
-	parseAndOkGood(t, A, A1m, e)
+	fgParseAndOkGood(t, A, A1m, e)
 }
 
 func Test013e(t *testing.T) {
 	A := "type A struct {}"
 	A1m := "func (x0 A) m1(x1 A) A { return x0 }"
 	e := "A{}.m1(A{}.m1())"
-	parseAndOkBad(t, "(Nested) m1 call missing arg", A, A1m, e)
+	fgParseAndOkBad(t, "(Nested) m1 call missing arg", A, A1m, e)
 }
 
 func Test013f(t *testing.T) {
 	A := "type A struct {}"
 	A1m := "func (x0 A) m1(x1 A) A { return x0 }"
 	e := "A{}.m1(A{}.m1(A{}, A{}))"
-	parseAndOkBad(t, "(Nested) m1 call too many args", A, A1m, e)
+	fgParseAndOkBad(t, "(Nested) m1 call too many args", A, A1m, e)
 }
 
 func Test013g(t *testing.T) {
@@ -287,7 +287,7 @@ func Test013g(t *testing.T) {
 	B := "type B struct { f A }"
 	A1m := "func (x0 A) m1(x1 A) A { return x0 }"
 	e := "A{}.m1(A{}.m1(B{A{}}))"
-	parseAndOkBad(t, "(Nested) m1 call given a B, expecting an A", A, A1m, B, e)
+	fgParseAndOkBad(t, "(Nested) m1 call given a B, expecting an A", A, A1m, B, e)
 }
 
 // Fixed bug in methods, md.t => md.recv.t
@@ -295,7 +295,7 @@ func Test014(t *testing.T) {
 	fmt.Println("Source:")
 	A := "type A struct {}"
 	e := "A{}.m1()"
-	parseAndOkBad(t, "A has no method m1", A, e)
+	fgParseAndOkBad(t, "A has no method m1", A, e)
 }
 
 func Test015(t *testing.T) {
@@ -304,7 +304,7 @@ func Test015(t *testing.T) {
 	B := "type B struct { f A }"
 	A1m := "func (x0 A) m1(x1 Any) Any { return B{x0} }"
 	e := "A{}.m1(B{A{}})"
-	parseAndOkGood(t, Any, A, A1m, B, e)
+	fgParseAndOkGood(t, Any, A, A1m, B, e)
 }
 
 func Test015b(t *testing.T) {
@@ -313,7 +313,7 @@ func Test015b(t *testing.T) {
 	A := "type A struct {}"
 	A1m := "func (x0 A) m1(x1 IA) A { return x0 }"
 	e := "A{}.m1(A{})"
-	parseAndOkBad(t, "A is a not an IA", IA, A, A1m, e)
+	fgParseAndOkBad(t, "A is a not an IA", IA, A, A1m, e)
 }
 
 // Initial testing for assert
@@ -322,13 +322,13 @@ func Test016(t *testing.T) {
 	ToAny := "type ToAny struct { any Any }"
 	A := "type A struct {}"
 	e := "ToAny{A{}}.any.(A)"
-	parseAndOkGood(t, Any, ToAny, A, e)
+	fgParseAndOkGood(t, Any, ToAny, A, e)
 }
 
 func Test016b(t *testing.T) {
 	A := "type A struct {}"
 	e := "A{}.(A)"
-	parseAndOkBad(t, "Stupid cast on A struct lit", A, e)
+	fgParseAndOkBad(t, "Stupid cast on A struct lit", A, e)
 }
 
 // FIXME: should be a parser panic (lexing error, bad token), but currently caught as a typing panic
@@ -336,21 +336,21 @@ func Test017(t *testing.T) {
 	Any := "type Any interface {}"
 	ToAny := "type ToAny struct { any Any }"
 	e := "ToAny{1}" // ANTLR "warning token recognition error at: '1'" -- need to escalate to strict
-	parseAndOkBad(t, "Bad token, \"1\"", Any, ToAny, e)
+	fgParseAndOkBad(t, "Bad token, \"1\"", Any, ToAny, e)
 }
 
 // Testing OK check for multiple declarations of a type/method name
 func Test018(t *testing.T) {
 	A := "type A struct {}"
 	e := "A{}"
-	parseAndOkBad(t, "Multiple declarations of type name 'A'", A, A, e)
+	fgParseAndOkBad(t, "Multiple declarations of type name 'A'", A, A, e)
 }
 
 func Test018b(t *testing.T) {
 	A := "type A struct {}"
 	Am := "func (x0 A) m() A { return x0 }"
 	e := "A{}"
-	parseAndOkBad(t, "Multiple declarations of method name 'm' for receiver A",
+	fgParseAndOkBad(t, "Multiple declarations of method name 'm' for receiver A",
 		A, Am, Am, e)
 }
 
@@ -364,7 +364,7 @@ func TestEval001(t *testing.T) {
 	A := "type A struct {}"
 	B := "type B struct { f A }"
 	e := "B{A{}}.f"
-	prog := parseAndOkGood(t, A, B, e)
+	prog := fgParseAndOkGood(t, A, B, e)
 	testutils.EvalAndOkGood(t, prog, 1)
 }
 
@@ -372,7 +372,7 @@ func TestEval002(t *testing.T) {
 	A := "type A struct {}"
 	Am1 := "func (x0 A) m1() A { return x0.m1() }"
 	e := "A{}.m1()"
-	prog := parseAndOkGood(t, A, Am1, e)
+	prog := fgParseAndOkGood(t, A, Am1, e)
 	testutils.EvalAndOkGood(t, prog, 10)
 }
 
@@ -381,7 +381,7 @@ func TestEval003(t *testing.T) {
 	Am1 := "func (x0 A) m1() B { return B{x0} }"
 	B := "type B struct { f A }"
 	e := "A{}.m1().f"
-	prog := parseAndOkGood(t, A, Am1, B, e)
+	prog := fgParseAndOkGood(t, A, Am1, B, e)
 	testutils.EvalAndOkGood(t, prog, 2)
 }
 
@@ -391,7 +391,7 @@ func TestEval004(t *testing.T) {
 	ToAny := "type ToAny struct { any Any }"
 	A := "type A struct {}"
 	e := "ToAny{A{}}.any.(A)"
-	prog := parseAndOkGood(t, Any, ToAny, A, e)
+	prog := fgParseAndOkGood(t, Any, ToAny, A, e)
 	testutils.EvalAndOkGood(t, prog, 2)
 }
 
@@ -401,7 +401,7 @@ func TestEval005(t *testing.T) {
 	ToAny := "type ToAny struct { any Any }"
 	A := "type A struct {}"
 	e := "ToAny{ToAny{ToAny{A{}}.any.(A)}}"
-	prog := parseAndOkGood(t, Any, ToAny, A, e)
+	prog := fgParseAndOkGood(t, Any, ToAny, A, e)
 	testutils.EvalAndOkGood(t, prog, 2)
 }
 
@@ -409,7 +409,7 @@ func TestEval005(t *testing.T) {
 func TestEval006(t *testing.T) {
 	A := "type A struct {}"
 	e := "A{}"
-	prog := parseAndOkGood(t, A, e)
+	prog := fgParseAndOkGood(t, A, e)
 	testutils.EvalAndOkGood(t, prog, 0)
 }
 
@@ -419,7 +419,7 @@ func TestEval007(t *testing.T) {
 	imp := "import \"fmt\""
 	A := "type A struct {}"
 	e := "fmt.Sprintf(\"\")"
-	prog := parseAndOkGood(t, imp, A, e)
+	prog := fgParseAndOkGood(t, imp, A, e)
 	testutils.EvalAndOkGood(t, prog, 1)
 }
 
@@ -427,6 +427,6 @@ func TestEval008(t *testing.T) {
 	imp := "import \"fmt\""
 	A := "type A struct {}"
 	e := "fmt.Sprintf(\"%v ,_()+- %v\", A{}, A{})"
-	prog := parseAndOkGood(t, imp, A, e)
+	prog := fgParseAndOkGood(t, imp, A, e)
 	testutils.EvalAndOkGood(t, prog, 1)
 }

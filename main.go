@@ -38,7 +38,7 @@ import (
 	"reflect"
 	"strconv"
 
-	//"github.com/rhu1/fgg/base"
+	"github.com/rhu1/fgg/base"
 	"github.com/rhu1/fgg/fg"
 	"github.com/rhu1/fgg/fgg"
 	"github.com/rhu1/fgg/fgr"
@@ -184,7 +184,7 @@ func main() {
 
 	// WIP
 	if monomtest {
-		testMonom(verbose, src, evalSteps)
+		testMonom(printf, verbose, src, evalSteps)
 		return // FIXME
 	} else if oblittest {
 		testOblit(verbose, src)
@@ -199,13 +199,7 @@ func main() {
 		intrp_fg := NewFGInterp(verbose, src, strictParse)
 		if evalSteps > NO_EVAL {
 			intrp_fg.Eval(evalSteps)
-			p_fg := intrp_fg.GetProgram()
-			res := p_fg.GetMain()
-			if printf {
-				fmt.Println(res.ToGoString(p_fg.GetDecls()))
-			} else {
-				fmt.Println(res)
-			}
+			printResult(printf, intrp_fg.GetProgram())
 		}
 		// monom implicitly disabled
 	case interpFGG:
@@ -215,13 +209,7 @@ func main() {
 
 		if evalSteps > NO_EVAL {
 			intrp_fgg.Eval(evalSteps)
-			p_fgg := intrp_fgg.GetProgram()
-			res := p_fgg.GetMain()
-			if printf {
-				fmt.Println(res.ToGoString(p_fgg.GetDecls()))
-			} else {
-				fmt.Println(res)
-			}
+			printResult(printf, intrp_fgg.GetProgram())
 		}
 
 		// TODO: further refactoring (cf. Frontend, Interp)
@@ -231,10 +219,19 @@ func main() {
 	}
 }
 
+func printResult(printf bool, p base.Program) {
+	res := p.GetMain()
+	if printf {
+		fmt.Println(res.ToGoString(p.GetDecls()))
+	} else {
+		fmt.Println(res)
+	}
+}
+
 /* monom simulation check */
 
 // TODO: refactor to cmd dir
-func testMonom(verbose bool, src string, steps int) {
+func testMonom(printf bool, verbose bool, src string, steps int) {
 	intrp_fgg := NewFGGInterp(verbose, src, true)
 	p_fgg := intrp_fgg.GetProgram().(fgg.FGGProgram)
 	u := p_fgg.Ok(false).(fgg.TNamed)

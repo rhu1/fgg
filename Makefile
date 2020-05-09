@@ -1,6 +1,5 @@
 # Temporary makefile for testing, e.g., -monom
 # TODO: ^should be integrated with `go test` instead
-# TODO: but if this makefile is to be retained, needs refactoring
 
 
 #.PHONY: build
@@ -21,7 +20,6 @@ test-all: test-fg test-fgg test-fg2fgg
 
 .PHONY: test-against-go
 test-against-go: test-fg-examples-against-go test-monom-against-go
-
 
 .PHONY: clean
 clean: clean-test-all
@@ -147,6 +145,46 @@ test-fgg-examples:
 	$(call eval_fgg,fgg/examples/monom/julien/mono-ok/poly-rec-iface.go,10)
 
 
+define sim_monom
+	`go run github.com/rhu1/fgg -test-monom -eval=$(2) $(1)`; \
+	EXIT=$$?; if [ $$EXIT -ne 0 ]; then exit $$EXIT; fi
+endef
+
+.PHONY: simulate-monom
+simulate-monom:
+	$(call sim_monom,fgg/examples/hello/hello.fgg,10)
+	$(call sim_monom,fgg/examples/hello/fmtprintf.fgg,10)
+
+	$(call sim_monom,fgg/examples/popl20/booleans/booleans.fgg,-1)
+	$(call sim_monom,fgg/examples/popl20/compose/compose.fgg,-1)
+	$(call sim_monom,fgg/examples/popl20/graph/graph.fgg,-1)
+	$(call sim_monom,fgg/examples/popl20/irregular/irregular.fgg,-1)
+	$(call sim_monom,fgg/examples/popl20/map/map.fgg,-1)
+	$(call sim_monom,fgg/examples/popl20/monomorph/monomorph.fgg,-1)
+
+	$(call sim_monom,fgg/examples/monom/box/box.fgg,10)
+	$(call sim_monom,fgg/examples/monom/box/box2.fgg,10)
+
+	$(call sim_monom,fgg/examples/monom/julien/ifacebox.fgg,-1)
+	$(call sim_monom,fgg/examples/monom/julien/ifacebox-nomethparam.fgg,-1)
+
+	$(call sim_monom,fgg/examples/monom/julien/mono-ok/iface-embedding-simple.go,-1)
+	$(call sim_monom,fgg/examples/monom/julien/mono-ok/iface-embedding.go,-1)
+	$(call sim_monom,fgg/examples/monom/julien/mono-ok/rcver-iface.go,-1)
+	$(call sim_monom,fgg/examples/monom/julien/mono-ok/one-pass-prob.go,-1)
+	$(call sim_monom,fgg/examples/monom/julien/mono-ok/contamination.go,-1)
+
+	# TODO: add to oblit
+	$(call sim_monom,fgg/examples/monom/julien/mono-ok/struct-poly-rec.go,-1)
+	$(call sim_monom,fgg/examples/monom/julien/mono-ok/Parameterised-Map.go,-1)
+	$(call sim_monom,fgg/examples/monom/julien/mono-ok/alternate.go,10)
+	$(call sim_monom,fgg/examples/monom/julien/mono-ok/i-closure.go,-1)
+	$(call sim_monom,fgg/examples/monom/julien/mono-ok/i-closure-bad.go,-1)
+	$(call sim_monom,fgg/examples/monom/julien/mono-ok/meth-clash.go,7)
+	$(call sim_monom,fgg/examples/monom/julien/mono-ok/param-meth-cast.go,2)
+	$(call sim_monom,fgg/examples/monom/julien/mono-ok/poly-rec-iface.go,10)
+
+
 define eval_monom_fgg
 	mkdir -p $(3); \
 	RES=`go run github.com/rhu1/fgg -fgg -eval=$(2) -monomc=$(3)/$(4) $(1)`; \
@@ -211,10 +249,6 @@ define rm_monom
 	rm -fd $(1)
 endef
 
-.PHONY: foo
-foo:
-	$(call rm_monom,tmp/test/fg/monom/julien/mono-ok/alternate,alternate.go)
-
 .PHONY: clean-test-monom-against-go
 clean-test-monom-against-go:
 	$(call rm_monom,tmp/test/fg/booleans,booleans.go)
@@ -246,37 +280,31 @@ clean-test-monom-against-go:
 	rm -fd tmp/test/fg/monom
 
 
-.PHONY: simulate-monom
-simulate-monom:
-	go run github.com/rhu1/fgg -test-monom -eval=-1 fgg/examples/popl20/booleans/booleans.fgg
-	go run github.com/rhu1/fgg -test-monom -eval=-1 fgg/examples/popl20/compose/compose.fgg
-	go run github.com/rhu1/fgg -test-monom -eval=-1 fgg/examples/popl20/graph/graph.fgg
-	go run github.com/rhu1/fgg -test-monom -eval=-1 fgg/examples/popl20/irregular/irregular.fgg
-	go run github.com/rhu1/fgg -test-monom -eval=-1 fgg/examples/popl20/map/map.fgg
-	go run github.com/rhu1/fgg -test-monom -eval=-1 fgg/examples/popl20/monomorph/monomorph.fgg
+.PHONY: simulate-oblit
+simulate-oblit:
+	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/popl20/booleans/booleans.fgg
+	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/popl20/compose/compose.fgg
+	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/popl20/graph/graph.fgg
+	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/popl20/irregular/irregular.fgg
+	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/popl20/map/map.fgg
+	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/popl20/monomorph/monomorph.fgg
+	# TODO: currently trying to run to termination
+	#go run github.com/rhu1/fgg -test-oblit -eval=10 fgg/examples/monom/box/box.fgg
+	#go run github.com/rhu1/fgg -test-oblit -eval=10 fgg/examples/monom/box/box2.fgg
 
-	go run github.com/rhu1/fgg -test-monom -eval=10 fgg/examples/monom/box/box2.fgg
+	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/monom/julien/ifacebox.fgg
+	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/monom/julien/ifacebox-nomethparam.fgg
 
-	go run github.com/rhu1/fgg -test-monom -eval=-1 fgg/examples/monom/julien/ifacebox.fgg
-	go run github.com/rhu1/fgg -test-monom -eval=-1 fgg/examples/monom/julien/ifacebox-nomethparam.fgg
+	# TODO?
+	#go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/monom/julien/iface-embedding-simple.go
+	#go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/monom/julien/iface-embedding.go
 
-	go run github.com/rhu1/fgg -test-monom -eval=-1 fgg/examples/monom/julien/mono-ok/iface-embedding-simple.go
-	go run github.com/rhu1/fgg -test-monom -eval=-1 fgg/examples/monom/julien/mono-ok/iface-embedding.go
-	go run github.com/rhu1/fgg -test-monom -eval=-1 fgg/examples/monom/julien/mono-ok/rcver-iface.go
-	go run github.com/rhu1/fgg -test-monom -eval=-1 fgg/examples/monom/julien/mono-ok/one-pass-prob.go
-	go run github.com/rhu1/fgg -test-monom -eval=-1 fgg/examples/monom/julien/mono-ok/contamination.go
-
-	# TODO: add to oblit
-	go run github.com/rhu1/fgg -test-monom -eval=-1 fgg/examples/monom/julien/mono-ok/struct-poly-rec.go
-	go run github.com/rhu1/fgg -test-monom -eval=-1 fgg/examples/monom/julien/mono-ok/Parameterised-Map.go
-	go run github.com/rhu1/fgg -test-monom -eval=10 fgg/examples/monom/julien/mono-ok/alternate.go
-	go run github.com/rhu1/fgg -test-monom -eval=-1 fgg/examples/monom/julien/mono-ok/i-closure.go
-	go run github.com/rhu1/fgg -test-monom -eval=-1 fgg/examples/monom/julien/mono-ok/i-closure-bad.go
-	go run github.com/rhu1/fgg -test-monom -eval=7 fgg/examples/monom/julien/mono-ok/meth-clash.go
-	go run github.com/rhu1/fgg -test-monom -eval=2 fgg/examples/monom/julien/mono-ok/param-meth-cast.go
-	go run github.com/rhu1/fgg -test-monom -eval=10 fgg/examples/monom/julien/mono-ok/poly-rec-iface.go
+	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/monom/julien/mono-ok/rcver-iface.go
+	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/monom/julien/mono-ok/one-pass-prob.go
+	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/monom/julien/mono-ok/contamination.go
 
 
+# TODO: update
 .PHONY: test-oblit
 test-oblit:
 	mkdir -p tmp/test-oblit/fgr/booleans
@@ -351,30 +379,6 @@ clean-test-oblit:
 	rm -f tmp/test-oblit/fgr/julien/ifacebox.fgr
 	rm -f tmp/test-oblit/fgr/julien/ifacebox-nomethparam.fgr
 	rm -fd tmp/test-oblit/fgr/julien
-
-
-.PHONY: simulate-oblit
-simulate-oblit:
-	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/popl20/booleans/booleans.fgg
-	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/popl20/compose/compose.fgg
-	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/popl20/graph/graph.fgg
-	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/popl20/irregular/irregular.fgg
-	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/popl20/map/map.fgg
-	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/popl20/monomorph/monomorph.fgg
-	# TODO: currently trying to run to termination
-	#go run github.com/rhu1/fgg -test-oblit -eval=10 fgg/examples/monom/box/box.fgg
-	#go run github.com/rhu1/fgg -test-oblit -eval=10 fgg/examples/monom/box/box2.fgg
-
-	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/monom/julien/ifacebox.fgg
-	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/monom/julien/ifacebox-nomethparam.fgg
-
-	# TODO?
-	#go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/monom/julien/iface-embedding-simple.go
-	#go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/monom/julien/iface-embedding.go
-
-	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/monom/julien/mono-ok/rcver-iface.go
-	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/monom/julien/mono-ok/one-pass-prob.go
-	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/monom/julien/mono-ok/contamination.go
 
 
 .PHONY: test-fg2fgg
