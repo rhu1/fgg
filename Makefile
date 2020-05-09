@@ -84,7 +84,7 @@ test-fg-examples-against-go:
 
 .PHONY: test-fgg
 #test-fgg: test-fgg-unit test-fgg-examples
-test-fgg: test-fgg-unit simulate-monom simulate-oblit
+test-fgg: test-fgg-unit test-nomono-bad simulate-monom simulate-oblit
 # add monom, oblit?
 
 
@@ -143,6 +143,27 @@ test-fgg-examples:
 	$(call eval_fgg,fgg/examples/monom/julien/mono-ok/meth-clash.go,7)
 	$(call eval_fgg,fgg/examples/monom/julien/mono-ok/param-meth-cast.go,2)
 	$(call eval_fgg,fgg/examples/monom/julien/mono-ok/poly-rec-iface.go,10)
+
+
+define nomono_bad
+	mkdir -p $(2); \
+	RES=`go run github.com/rhu1/fgg -fgg -monomc=$(2)/$(3) $(1) 2> /dev/null`; \
+	EXIT=$$?; if [ $$EXIT -ne 1 ]; then \
+		echo "Expected nomono violation, but none occurred."; \
+		exit 1; \
+	fi; 
+endef
+
+.PHONY: test-nomono-bad
+test-nomono-bad:
+	$(call nomono_bad,fgg/examples/monom/box/box.fgg,tmp/test/fg/monom/box,box.go)
+
+	$(call nomono_bad,fgg/examples/monom/julien/mono-ko/incompleteness-subtyping.go,tmp/test/fg/monom/julien/mono-ko/incompleteness-subtyping,incompleteness-subtyping.go)
+	$(call nomono_bad,fgg/examples/monom/julien/mono-ko/monom-imp.go,tmp/test/fg/monom/julien/mono-ko/monom-imp,monom-imp.go)
+	$(call nomono_bad,fgg/examples/monom/julien/mono-ko/mutual-poly-rec.go,tmp/test/fg/monom/julien/mono-ko/mutual-poly-rec,mutual-poly-rec.go)
+	$(call nomono_bad,fgg/examples/monom/julien/mono-ko/mutual-rec-iface.go,tmp/test/fg/monom/julien/mono-ko/mutual-rec-iface,mutual-rec-iface.go)
+	$(call nomono_bad,fgg/examples/monom/julien/mono-ko/nested-fix.go,tmp/test/fg/monom/julien/mono-ko/nested-fix,nested-fix.go)
+	$(call nomono_bad,fgg/examples/monom/julien/mono-ko/two-type-param.go,tmp/test/fg/monom/julien/mono-ko/two-type-param,two-type-param.go)
 
 
 define sim_monom

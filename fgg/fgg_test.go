@@ -28,8 +28,7 @@ func fggParseAndOkMonomGood(t *testing.T, elems ...string) base.Program {
 		t.Errorf("Unexpected nomono rejection:\n\t" + msg + "\n" +
 			p.String())
 	}
-	fgg.Monomorph(p)
-	return p
+	return fgg.Monomorph(p)
 }
 
 // N.B. do not use to check for bad *syntax* -- see the PARSER_PANIC_PREFIX panic check in base.ParseAndOkBad
@@ -57,10 +56,10 @@ func NomonoGood(t *testing.T, p fgg.FGGProgram) fgg.FGGProgram {
 // Based on testutils.EvalAndOkBad
 // Pre: parseAndOkGood
 func NomonoBad(t *testing.T, p fgg.FGGProgram, msg string) fgg.FGGProgram {
-	/*if ok, _ := fgg.IsMonomOK(p); ok {
+	if ok, _ := fgg.IsMonomOK(p); ok {
 		t.Errorf("Expected nomono violation, but none occurred: " + msg + "\n" +
 			p.String())
-	}*/
+	}
 	return p
 }
 
