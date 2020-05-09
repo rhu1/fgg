@@ -7,6 +7,7 @@ import (
 	"github.com/antlr/antlr4/runtime/Go/antlr"
 
 	"github.com/rhu1/fgg/base"
+	"github.com/rhu1/fgg/base/testutils"
 	"github.com/rhu1/fgg/parser/fgg"
 	"github.com/rhu1/fgg/parser/util"
 )
@@ -28,7 +29,7 @@ func (a *FGGAdaptor) push(n FGGNode) {
 
 func (a *FGGAdaptor) pop() FGGNode {
 	if len(a.stack) < 1 {
-		panic("Stack is empty")
+		panic(testutils.PARSER_PANIC_PREFIX + "Stack is empty")
 	}
 	res := a.stack[len(a.stack)-1]
 	a.stack = a.stack[:len(a.stack)-1]
@@ -100,19 +101,19 @@ func (a *FGGAdaptor) ExitProgram(ctx *parser.ProgramContext) {
 	var ds []Decl
 	offset := 0 // TODO: refactor
 	printf := false
-	c3 := ctx.GetChild(3)
 	foo := ctx.GetChild(ctx.GetChildCount() - 4).GetPayload() // Checking for "=" in "_ = ..."
-	if _, ok := c3.GetPayload().(*antlr.CommonToken); ok {    // IMPORT
-		//c3.GetPayload().(*antlr.CommonToken).GetText() == "import" {
+	c3 := ctx.GetChild(3)
+	if c3_cast, ok := c3.GetPayload().(*antlr.CommonToken); ok && // IMPORT
+		c3_cast.GetText() == "import" {
 		if pkg := ctx.GetChild(4).GetPayload().(*antlr.CommonToken).GetText(); pkg != "\"fmt\"" { // TODO: refactor
-			panic("The only allowed import is \"fmt\"; found: " + pkg)
+			panic(testutils.PARSER_PANIC_PREFIX + "The only allowed import is \"fmt\"; found: " + pkg)
 		}
 		offset = 3
 		if cast, ok := foo.(*antlr.CommonToken); !ok || cast.GetText() != "=" {
 			printf = true
 		}
 	} else if cast, ok := foo.(*antlr.CommonToken); !ok || cast.GetText() != "=" {
-		panic("Missing \"import fmt;\".")
+		panic(testutils.PARSER_PANIC_PREFIX + "Missing \"import fmt;\".")
 	}
 	//if ctx.GetChildCount() > offset+13 {  // well-typed program must have at least one decl?
 	tmp := ctx.GetChild(offset + 3)
@@ -142,7 +143,7 @@ func (a *FGGAdaptor) ExitTypeDecl(ctx *parser.TypeDeclContext) {
 		c.Psi = psi
 		a.push(c)
 	} else {
-		panic("Unknown type decl: " + reflect.TypeOf(td).String())
+		panic(testutils.PARSER_PANIC_PREFIX + "Unknown type decl: " + reflect.TypeOf(td).String())
 	}
 }
 
@@ -212,7 +213,7 @@ func (a *FGGAdaptor) ExitInterfaceSpec(ctx *parser.InterfaceSpecContext) {
 	popped := a.pop()
 	cast, ok := popped.(TNamed)
 	if !ok {
-		panic("Expected TNamed, not: " + reflect.TypeOf(popped).String() +
+		panic(testutils.PARSER_PANIC_PREFIX + "Expected TNamed, not: " + reflect.TypeOf(popped).String() +
 			"\n\t" + popped.String())
 	}
 	a.push(cast) // Check TName (should specifically be a \tau_I) -- CHECKME: enforce in BNF?

@@ -14,7 +14,7 @@ import (
 
 /* Harness funcs */
 
-func parseAndOkGood(t *testing.T, elems ...string) base.Program {
+func fggParseAndOkGood(t *testing.T, elems ...string) base.Program {
 	var adptr fgg.FGGAdaptor
 	p := testutils.ParseAndOkGood(t, &adptr,
 		fgg.MakeFggProgram(elems...)).(fgg.FGGProgram)
@@ -22,8 +22,8 @@ func parseAndOkGood(t *testing.T, elems ...string) base.Program {
 	return p
 }
 
-// N.B. do not use to check for bad *syntax* -- see the "[Parser]" panic check in base.ParseAndOkBad
-func parseAndOkBad(t *testing.T, msg string, elems ...string) base.Program {
+// N.B. do not use to check for bad *syntax* -- see the PARSER_PANIC_PREFIX panic check in base.ParseAndOkBad
+func fggParseAndOkBad(t *testing.T, msg string, elems ...string) base.Program {
 	var adptr fgg.FGGAdaptor
 	return testutils.ParseAndOkBad(t, msg, &adptr, fgg.MakeFggProgram(elems...))
 	// Not attempting monom on bad program
@@ -43,7 +43,7 @@ func Test001(t *testing.T) {
 	e := "B(A()){A(){}}"
 	//type IA(type ) interface { m1(type )() Any };
 	//type A1(type ) struct { };
-	parseAndOkGood(t, Any, A, B, e)
+	fggParseAndOkGood(t, Any, A, B, e)
 }
 
 func Test001b(t *testing.T) {
@@ -52,7 +52,7 @@ func Test001b(t *testing.T) {
 	A1 := "type A1(type ) struct {}"
 	B := "type B(type a Any()) struct { f a }"
 	e := "B(A()){A1(){}}"
-	parseAndOkBad(t, "A1() is not an A()", Any, A, A1, B, e)
+	fggParseAndOkBad(t, "A1() is not an A()", Any, A, A1, B, e)
 }
 
 // Testing StructLit typing, t_S OK
@@ -62,7 +62,7 @@ func Test002(t *testing.T) {
 	Am1 := "func (x0 A(type )) m1(type )() A() { return x0 }"
 	B := "type B(type a IA()) struct { f a }"
 	e := "B(A()){A(){}}"
-	parseAndOkGood(t, IA, A, Am1, B, e)
+	fggParseAndOkGood(t, IA, A, Am1, B, e)
 }
 
 func Test002b(t *testing.T) {
@@ -70,7 +70,7 @@ func Test002b(t *testing.T) {
 	A := "type A(type ) struct {}"
 	B := "type B(type a IA()) struct { f a }"
 	e := "B(A()){A(){}}"
-	parseAndOkBad(t, "A() is not an A1()", IA, A, B, e)
+	fggParseAndOkBad(t, "A() is not an A1()", IA, A, B, e)
 }
 
 // Testing fields (and t-args subs)
@@ -82,7 +82,7 @@ func Test003(t *testing.T) {
 	A1 := "type A1(type ) struct { }"
 	B := "type B(type a IA()) struct { f a }"
 	e := "B(A()){A(){}}"
-	parseAndOkGood(t, Any, IA, A, Am1, A1, B, e)
+	fggParseAndOkGood(t, Any, IA, A, Am1, A1, B, e)
 }
 
 func Test003b(t *testing.T) {
@@ -93,7 +93,7 @@ func Test003b(t *testing.T) {
 	A1 := "type A1(type ) struct { }"
 	B := "type B(type a IA()) struct { f a }"
 	e := "B(A()){A1(){}}"
-	parseAndOkBad(t, "A1() is not an A()", Any, IA, A, Am1, A1, B, e)
+	fggParseAndOkBad(t, "A1() is not an A()", Any, IA, A, Am1, A1, B, e)
 }
 
 // Initial testing for select on parameterised struct
@@ -104,7 +104,7 @@ func Test004(t *testing.T) {
 	A1 := "type A1(type ) struct { }"
 	B := "type B(type a Any()) struct { fB a }"
 	e := "B(A()){A(){A1(){}}}.fB.fA"
-	parseAndOkGood(t, Any, A, Am1, A1, B, e)
+	fggParseAndOkGood(t, Any, A, Am1, A1, B, e)
 }
 
 func Test004b(t *testing.T) {
@@ -114,7 +114,7 @@ func Test004b(t *testing.T) {
 	A1 := "type A1(type ) struct { }"
 	B := "type B(type a Any()) struct { fB a }"
 	e := "B(A1()){A1(){}}.fB.fA"
-	parseAndOkBad(t, "A1 has no field fA", Any, A, Am1, A1, B, e)
+	fggParseAndOkBad(t, "A1 has no field fA", Any, A, Am1, A1, B, e)
 }
 
 // Initial testing for call
@@ -122,21 +122,21 @@ func Test005(t *testing.T) {
 	A := "type A(type ) struct {}"
 	Am1 := "func (x0 A(type )) m1(type )() A() { return x0 }"
 	e := "A(){}.m1()()"
-	parseAndOkGood(t, A, Am1, e)
+	fggParseAndOkGood(t, A, Am1, e)
 }
 
 func Test006(t *testing.T) {
 	IA := "type IA(type ) interface { m1(type a IA())() A() }"
 	A := "type A(type ) struct {}"
 	e := "A(){}"
-	parseAndOkGood(t, IA, A, e)
+	fggParseAndOkGood(t, IA, A, e)
 }
 
 func Test006b(t *testing.T) {
 	IA := "type IA(type ) interface { m1(type a A())() A() }"
 	A := "type A(type ) struct {}"
 	e := "A(){}"
-	parseAndOkBad(t, "A() invalid upper bound", IA, A, e)
+	fggParseAndOkBad(t, "A() invalid upper bound", IA, A, e)
 }
 
 func Test007(t *testing.T) {
@@ -146,7 +146,7 @@ func Test007(t *testing.T) {
 	Am1 := "func (x0 A(type )) m1(type a IA())() A() { return x0 }"
 	A1 := "type A1(type ) struct {}"
 	e := "A(){}.m1(A())()"
-	parseAndOkGood(t, Any, IA, A, Am1, A1, e)
+	fggParseAndOkGood(t, Any, IA, A, Am1, A1, e)
 }
 
 func Test007b(t *testing.T) {
@@ -156,7 +156,7 @@ func Test007b(t *testing.T) {
 	Am1 := "func (x0 A(type )) m1(type a IA())() A() { return x0 }"
 	A1 := "type A1(type ) struct {}"
 	e := "A(){}.m1()()"
-	parseAndOkBad(t, "Missing type actual", Any, IA, A, Am1, A1, e)
+	fggParseAndOkBad(t, "Missing type actual", Any, IA, A, Am1, A1, e)
 }
 
 func Test007c(t *testing.T) {
@@ -166,7 +166,7 @@ func Test007c(t *testing.T) {
 	Am1 := "func (x0 A(type )) m1(type a IA())() A() { return x0 }"
 	A1 := "type A1(type ) struct {}"
 	e := "A(){}.m1(A1())()"
-	parseAndOkBad(t, "A1() is not an IA()", Any, IA, A, Am1, A1, e)
+	fggParseAndOkBad(t, "A1() is not an IA()", Any, IA, A, Am1, A1, e)
 }
 
 func Test007d(t *testing.T) {
@@ -176,7 +176,7 @@ func Test007d(t *testing.T) {
 	Am1 := "func (x0 A(type )) m1(type a IA())() IA() { return x0 }"
 	A1 := "type A1(type ) struct {}"
 	e := "A(){}.m1(A())()"
-	parseAndOkGood(t, Any, IA, A, Am1, A1, e)
+	fggParseAndOkGood(t, Any, IA, A, Am1, A1, e)
 }
 
 // Testing Sig parsing
@@ -187,7 +187,7 @@ func Test008(t *testing.T) {
 	B := "type B(type a IA()) struct {}"
 	Bm2 := "func (x0 B(type a IA())) m2(type )(x1 a) B(a) { return x0 }"
 	e := "A(){}"
-	parseAndOkGood(t, IA, A, Am1, B, Bm2, e)
+	fggParseAndOkGood(t, IA, A, Am1, B, Bm2, e)
 }
 
 // Testing calls on parameterised struct
@@ -199,7 +199,7 @@ func Test009(t *testing.T) {
 	B := "type B(type a IA()) struct {}"
 	Bm2 := "func (x0 B(type a IA())) m2(type )(x1 a) B(a) { return x0 }"
 	e := "B(A()){}.m2()(A(){})"
-	parseAndOkGood(t, Any, IA, A, Am1, B, Bm2, e)
+	fggParseAndOkGood(t, Any, IA, A, Am1, B, Bm2, e)
 }
 
 func Test009b(t *testing.T) {
@@ -211,7 +211,7 @@ func Test009b(t *testing.T) {
 	B := "type B(type a IA()) struct {}"
 	Bm2 := "func (x0 B(type a IA())) m2(type )(x1 a) B(a) { return x0 }"
 	e := "B(A()){}.m2()(A1(){})"
-	parseAndOkBad(t, "A1() is not an A()", Any, IA, A, Am1, A1, B, Bm2, e)
+	fggParseAndOkBad(t, "A1() is not an A()", Any, IA, A, Am1, A1, B, Bm2, e)
 }
 
 // Initial test for generic type assertion
@@ -224,7 +224,7 @@ func Test010(t *testing.T) {
 	B := "type B(type a IA()) struct {}"
 	Bm2 := "func (x0 B(type a IA())) m2(type )(x1 a) Any() { return x1 }" // Unnecessary
 	e := "ToAny(){B(A()){}}.any.(B(A()))"
-	parseAndOkGood(t, Any, ToAny, IA, A, Am1, B, Bm2, e)
+	fggParseAndOkGood(t, Any, ToAny, IA, A, Am1, B, Bm2, e)
 }
 
 func Test011(t *testing.T) {
@@ -233,7 +233,7 @@ func Test011(t *testing.T) {
 	A := "type A(type ) struct {}"
 	Am1 := "func (x0 A(type )) m1(type a IA())() IA() { return x0 }"
 	e := "ToIA(){A(){}}.upcast.(A())"
-	parseAndOkGood(t, IA, ToIA, A, Am1, e)
+	fggParseAndOkGood(t, IA, ToIA, A, Am1, e)
 }
 
 func Test011b(t *testing.T) {
@@ -243,7 +243,7 @@ func Test011b(t *testing.T) {
 	Am1 := "func (x0 A(type )) m1(type a IA())() IA() { return x0 }"
 	A1 := "type A1(type ) struct {}"
 	e := "ToIA(){A(){}}.upcast.(A1())"
-	parseAndOkBad(t, "A1() is not an IA", IA, ToIA, A, Am1, A1, e)
+	fggParseAndOkBad(t, "A1() is not an IA", IA, ToIA, A, Am1, A1, e)
 }
 
 func Test011c(t *testing.T) {
@@ -252,7 +252,7 @@ func Test011c(t *testing.T) {
 	B := "type B(type ) struct {}"
 	Bm3 := "func (x0 B(type )) m3(type b Any())(x1 b) Any() { return x1 }"
 	e := "ToAny(){B(){}}"
-	parseAndOkGood(t, Any, ToAny, B, Bm3, e)
+	fggParseAndOkGood(t, Any, ToAny, B, Bm3, e)
 }
 
 // Testing parsing for Call with both targ and arg
@@ -262,7 +262,7 @@ func Test012(t *testing.T) {
 	B := "type B(type ) struct {}"
 	Bm := "func (x0 B(type )) m(type a Any())(x1 a) a { return x1 }"
 	e := "B(){}.m(A())(A(){})"
-	parseAndOkGood(t, Any, A, B, Bm, e)
+	fggParseAndOkGood(t, Any, A, B, Bm, e)
 }
 
 // Testing Call typing, meth-tparam TSubs of result
@@ -272,7 +272,7 @@ func Test013(t *testing.T) {
 	B := "type B(type a Any()) struct { f a }"
 	Bm := "func (x0 B(type a Any())) m(type b Any())(x1 b) b { return x1 }"
 	e := "B(A()){A(){}}.m(B(A()))(B(A()){A(){}}).f"
-	parseAndOkGood(t, Any, A, B, Bm, e)
+	fggParseAndOkGood(t, Any, A, B, Bm, e)
 }
 
 // Testing u <: a, i.e., upper is open type param
@@ -282,7 +282,7 @@ func Test014(t *testing.T) {
 	B := "type B(type a Any()) struct { f a }"
 	Bm := "func (x0 B(type a Any())) m(type b Any())() b { return A(){} }"
 	e := "B(A()){A(){}}.m(B(A()))(B(A()){A(){}}).f" // Eval would break type preservation, see TestEval001
-	parseAndOkBad(t, Any, A, B, Bm, e)
+	fggParseAndOkBad(t, Any, A, B, Bm, e)
 }
 
 // testing sigAlphaEquals
@@ -295,7 +295,7 @@ func Test015(t *testing.T) {
 	D := "type D(type ) struct {}"
 	Dm := "func (x0 D(type )) foo(type )(x A()) Any() { return x0 }"
 	e := "D(){}.foo()(C(){})"
-	parseAndOkBad(t, Any, A, B, C, Cm, D, Dm, e)
+	fggParseAndOkBad(t, Any, A, B, C, Cm, D, Dm, e)
 }
 
 // testing covariant receiver bounds (MDecl.OK) -- cf. map.fgg (memberBr)
@@ -306,7 +306,7 @@ func Test016(t *testing.T) {
 	Bm := "func (x0 B(type b A(b))) m(type )(x b) Any() { return x0 }"
 	D := "type D(type ) struct{}"
 	e := "D(){}"
-	parseAndOkBad(t, Any, A, B, Bm, D, e)
+	fggParseAndOkBad(t, Any, A, B, Bm, D, e)
 }
 
 /* Monom */
@@ -337,7 +337,7 @@ func TestEval001(t *testing.T) {
 	B := "type B(type a Any()) struct { f a }"
 	Bm := "func (x0 B(type a Any())) m(type b Any())(x1 b) b { return ToAny(){A(){}}.any.(b) }"
 	e := "B(A()){A(){}}.m(B(A()))(B(A()){A(){}}).f"
-	prog := parseAndOkGood(t, Any, ToAny, A, B, Bm, e)
+	prog := fggParseAndOkGood(t, Any, ToAny, A, B, Bm, e)
 	testutils.EvalAndOkBad(t, prog, "Cannot cast A() to B(A())", 3)
 }
 
@@ -347,7 +347,7 @@ func TestEval002(t *testing.T) {
 	imp := "import \"fmt\""
 	A := "type A(type ) struct {}"
 	e := "fmt.Sprintf(\"\")"
-	prog := parseAndOkGood(t, imp, A, e)
+	prog := fggParseAndOkGood(t, imp, A, e)
 	testutils.EvalAndOkGood(t, prog, 1)
 }
 
@@ -355,6 +355,6 @@ func TestEval003(t *testing.T) {
 	imp := "import \"fmt\""
 	A := "type A(type ) struct {}"
 	e := "fmt.Sprintf(\"%v ,_()+- %v\", A(){}, A(){})"
-	prog := parseAndOkGood(t, imp, A, e)
+	prog := fggParseAndOkGood(t, imp, A, e)
 	testutils.EvalAndOkGood(t, prog, 1)
 }
