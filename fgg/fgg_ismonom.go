@@ -173,7 +173,7 @@ func collectExpr2(ds []Decl, delta Delta, gamma Gamma, e FGGExpr, omega Omega2) 
 		}
 	case Assert:
 		res = collectExpr2(ds, delta, gamma, e1.e_I, omega) || res
-		u := e1.u_cast.(TNamed)
+		u := e1.u_cast
 		k := toKey_Wt2(u)
 		if _, ok := omega.us[k]; !ok {
 			omega.us[k] = u
@@ -277,9 +277,7 @@ func auxM2(ds []Decl, delta Delta, omega Omega2) bool {
 				continue
 			}
 			eta := MakeEta2(g.Psi, m.psi)
-			//fmt.Println("333:", m.u_recv, ";", m.meth)
 			for _, pd := range g.pDecls {
-				//fmt.Println("444:", pd.name, pd.u)
 				u_pd := pd.u.SubsEta2(eta) // HERE: need receiver subs also? cf. map.fgg "type b Eq(b)" -- methods should be ok?
 				tmp[toKey_Wt2(u_pd)] = u_pd
 			}
@@ -306,13 +304,14 @@ func auxS2(ds []Decl, delta Delta, omega Omega2) bool {
 			if !isStructType(ds, u) || !u.ImplsDelta(ds, delta, u_recv) {
 				continue
 			}
-			x0, xs, e := body(ds, u.(TNamed), m.meth, m.psi)
+			u_S := u.(TNamed)
+			x0, xs, e := body(ds, u_S, m.meth, m.psi)
 			gamma := make(Gamma)
 			gamma[x0.name] = x0.u.(TNamed)
 			for _, pd := range xs {
-				gamma[pd.name] = pd.u //.(TNamed)
+				gamma[pd.name] = pd.u
 			}
-			m1 := MethInstan2{u.(TNamed), m.meth, m.psi}
+			m1 := MethInstan2{u_S, m.meth, m.psi}
 			k := toKey_Wm2(m1)
 			//if _, ok := omega.ms[k]; !ok { // No: initial collectExpr already adds to omega.ms
 			tmp[k] = m1
@@ -337,8 +336,9 @@ func auxE12(ds []Decl, omega Omega2) bool {
 		if !isNamedIfaceType(ds, u) { // TODO CHECKME: type param
 			continue
 		}
-		td_I := getTDecl(ds, u.(TNamed).t_name).(ITypeLit)
-		eta := MakeEta2(td_I.Psi, u.(TNamed).u_args)
+		u_I := u.(TNamed)
+		td_I := getTDecl(ds, u_I.t_name).(ITypeLit)
+		eta := MakeEta2(td_I.Psi, u_I.u_args)
 		for _, s := range td_I.specs {
 			if u_emb, ok := s.(TNamed); ok {
 				u_sub := u_emb.SubsEta2(eta).(TNamed)
@@ -363,8 +363,9 @@ func auxE22(ds []Decl, omega Omega2) bool {
 		if !isNamedIfaceType(ds, m.u_recv) { // TODO CHECKME: type param
 			continue
 		}
-		td_I := getTDecl(ds, m.u_recv.(TNamed).t_name).(ITypeLit)
-		eta := MakeEta2(td_I.Psi, m.u_recv.(TNamed).u_args)
+		u_I := m.u_recv.(TNamed)
+		td_I := getTDecl(ds, u_I.t_name).(ITypeLit)
+		eta := MakeEta2(td_I.Psi, u_I.u_args)
 		for _, s := range td_I.specs {
 			if u_emb, ok := s.(TNamed); ok {
 				u_sub := u_emb.SubsEta2(eta).(TNamed)
