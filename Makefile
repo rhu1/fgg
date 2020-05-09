@@ -41,13 +41,14 @@ test-fg-unit:
 
 define eval_fg
 	RES=`go run github.com/rhu1/fgg -eval=$(2) $(1)`; \
+	EXIT=$$?; if [ $$EXIT -ne 0 ]; then exit $$EXIT; fi; \
 	echo $$RES
 endef
 
 .PHONY: test-fg-examples
 test-fg-examples:
 	$(call eval_fg,fg/examples/hello/hello.go,10)
-	$(call eval_fg,fg/examples/fmtprintf/fmtprintf.go,10)
+	$(call eval_fg,fg/examples/hello/fmtprintf.go,10)
 
 	$(call eval_fg,fg/examples/popl20/booleans/booleans.go,-1)
 	$(call eval_fg,fg/examples/popl20/compose/compose.go,-1)
@@ -96,6 +97,7 @@ test-fgg-unit:
 
 define eval_fgg
 	RES=`go run github.com/rhu1/fgg -fgg -eval=$(2) $(1)`; \
+	EXIT=$$?; if [ $$EXIT -ne 0 ]; then exit $$EXIT; fi; \
 	echo $$RES
 endef
 
@@ -148,14 +150,17 @@ test-fgg-examples:
 define eval_monom_fgg
 	mkdir -p $(3); \
 	RES=`go run github.com/rhu1/fgg -fgg -eval=$(2) -monomc=$(3)/$(4) $(1)`; \
-	echo "fgg="$$RES; 
+	EXIT=$$?; if [ $$EXIT -ne 0 ]; then exit $$EXIT; fi; \
+	echo "fgg="$$RES; \
 	EXP=`go run github.com/rhu1/fgg -eval=$(2) $(3)/$(4)`; \
+	EXIT=$$?; if [ $$EXIT -ne 0 ]; then exit $$EXIT; fi; \
 	echo "fg= "$$EXP
 endef
 
 define eval_monom_fgg_against_go
 	mkdir -p $(2); \
 	RES=`go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=$(2)/$(3) $(1)`; \
+	EXIT=$$?; if [ $$EXIT -ne 0 ]; then exit $$EXIT; fi; \
 	echo "fgg="$$RES; \
 	EXP=`go run github.com/rhu1/fgg -eval=-1 -printf $(2)/$(3)`; \
 	echo "fg= "$$EXP; \
@@ -236,12 +241,9 @@ clean-test-monom-against-go:
 	$(call rm_monom,tmp/test/fg/monom/julien/mono-ok/i-closure-bad,i-closure-bad.go)
 
 	rm -fd tmp/test/fg/monom/julien/mono-ok
-
 	rm -fd tmp/test/fg/monom/julien/mono-ko
-
-	rm -f tmp/test/fg/monom/julien/ifacebox.go
-	rm -f tmp/test/fg/monom/julien/ifacebox-nomethparam.go
 	rm -fd tmp/test/fg/monom/julien
+	rm -fd tmp/test/fg/monom
 
 
 .PHONY: simulate-monom
