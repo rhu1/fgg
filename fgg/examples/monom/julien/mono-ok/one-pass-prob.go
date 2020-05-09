@@ -3,6 +3,8 @@
 
 package main;
 
+import "fmt";
+
 type Any(type ) interface {};
 
 type Int(type ) struct {};
@@ -30,8 +32,11 @@ func (x Dummy(type )) CallFunction(type )(y IA()) Int() {
 };
 
 
-func main() { _ =
-	Dummy(){}.CallFunction()(SA(){})
+func main() {
+	//_ =
+	fmt.Printf("%#v",
+		Dummy(){}.CallFunction()(SA(){})
+	)
 }
 
 

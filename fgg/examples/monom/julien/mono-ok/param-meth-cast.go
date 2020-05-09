@@ -5,6 +5,8 @@
 // Proposed fix: https://play.golang.org/p/yya08l04Nbg
 package main;
 
+import "fmt";
+
 type Any(type ) interface {};
 
 type S(type ) struct {};
@@ -26,5 +28,10 @@ func (x V(type )) m(type a Any())(z a, y S) Any() { // m<Any>(x Any, y S)
 	return z.(Any())
 };
 
-func main() { _ =  V(){}.toAny()(V(){}).(Bar()) } // cast fails
+func main() {
+	//_ =
+	fmt.Printf("%#v",
+		V(){}.toAny()(V(){}).(Bar()) // cast fails
+	)
+}
 

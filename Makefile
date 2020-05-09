@@ -16,8 +16,11 @@
 test: test-all
 
 .PHONY: test-all
-test-all: test-fg test-fgg test-fg2fgg simulate-monom simulate-oblit
+test-all: test-fg test-fgg test-fg2fgg
 #test-monom test-oblit
+
+.PHONY: test-against-go
+test-against-go: test-fg-examples-against-go test-monom-against-go
 
 
 .PHONY: clean
@@ -28,7 +31,7 @@ clean: clean-test-all
 
 
 .PHONY: test-fg
-test-fg: test-fg-unit test-fg-examples-against-go
+test-fg: test-fg-unit test-fg-examples
 
 
 .PHONY: test-fg-unit
@@ -36,53 +39,55 @@ test-fg-unit:
 	go test github.com/rhu1/fgg/fg
 
 
+define eval_fg
+	RES=`go run github.com/rhu1/fgg -eval=$(2) $(1)`; \
+	EXIT=$$?; if [ $$EXIT -ne 0 ]; then exit $$EXIT; fi; \
+	echo $$RES
+endef
+
 .PHONY: test-fg-examples
 test-fg-examples:
-	go run github.com/rhu1/fgg -eval=10 fg/examples/hello/hello.go
-	go run github.com/rhu1/fgg -eval=10 fg/examples/hello/fmtprintf.go
-	go run github.com/rhu1/fgg -eval=-1 fg/examples/popl20/booleans/booleans.go
-	go run github.com/rhu1/fgg -eval=-1 fg/examples/popl20/compose/compose.go
-	go run github.com/rhu1/fgg -eval=-1 fg/examples/popl20/equal/equal.go
-	go run github.com/rhu1/fgg -eval=-1 fg/examples/popl20/incr/incr.go
-	go run github.com/rhu1/fgg -eval=-1 fg/examples/popl20/map/map.go
-	go run github.com/rhu1/fgg -eval=-1 fg/examples/popl20/not/not.go
+	$(call eval_fg,fg/examples/hello/hello.go,10)
+	$(call eval_fg,fg/examples/hello/fmtprintf.go,10)
 
+	$(call eval_fg,fg/examples/popl20/booleans/booleans.go,-1)
+	$(call eval_fg,fg/examples/popl20/compose/compose.go,-1)
+	$(call eval_fg,fg/examples/popl20/equal/equal.go,-1)
+	$(call eval_fg,fg/examples/popl20/incr/incr.go,-1)
+	$(call eval_fg,fg/examples/popl20/map/map.go,-1)
+	$(call eval_fg,fg/examples/popl20/not/not.go,-1)
 # TODO: currently examples testing limited to "good" examples
+#
+
+# N.B. semicolons and line esacapes, and double-dollar
+define test_fg_against_go
+	EXP=`go run github.com/rhu1/fgg -eval=-1 -printf $(1)`; \
+	echo "fg="$$EXP; \
+	ACT=`go run $(1)`; \
+	echo "go="$$ACT; \
+	if [ "$$EXP" != "$$ACT" ]; then \
+		echo "Not equal."; \
+		exit 1; \
+	fi
+endef
 
 
 # cf. [cmd] > output.txt
 #     diff output.txt correct.txt
 .PHONY: test-fg-examples-against-go
 test-fg-examples-against-go:
-	if [ "`go run github.com/rhu1/fgg -eval=-1 -printf fg/examples/popl20/booleans/booleans.go`" != "`go run fg/examples/popl20/booleans/booleans.go`" ]; then \
-		echo "Not equal"; \
-		exit 1; \
-	fi
-	if [ "`go run github.com/rhu1/fgg -eval=-1 -printf fg/examples/popl20/compose/compose.go`" != "`go run fg/examples/popl20/compose/compose.go`" ]; then \
-		echo "Not equal"; \
-		exit 1; \
-	fi
-	if [ "`go run github.com/rhu1/fgg -eval=-1 -printf fg/examples/popl20/equal/equal.go`" != "`go run fg/examples/popl20/equal/equal.go`" ]; then \
-		echo "Not equal"; \
-		exit 1; \
-	fi
-	if [ "`go run github.com/rhu1/fgg -eval=-1 -printf fg/examples/popl20/incr/incr.go`" != "`go run fg/examples/popl20/incr/incr.go`" ]; then \
-		echo "Not equal"; \
-		exit 1; \
-	fi
-	if [ "`go run github.com/rhu1/fgg -eval=-1 -printf fg/examples/popl20/map/map.go`" != "`go run fg/examples/popl20/map/map.go`" ]; then \
-		echo "Not equal"; \
-		exit 1; \
-	fi
-	if [ "`go run github.com/rhu1/fgg -eval=-1 -printf fg/examples/popl20/not/not.go`" != "`go run fg/examples/popl20/not/not.go`" ]; then \
-		echo "Not equal"; \
-		exit 1; \
-	fi
+		$(call test_fg_against_go,fg/examples/popl20/booleans/booleans.go)
+		$(call test_fg_against_go,fg/examples/popl20/compose/compose.go)
+		$(call test_fg_against_go,fg/examples/popl20/equal/equal.go)
+		$(call test_fg_against_go,fg/examples/popl20/incr/incr.go)
+		$(call test_fg_against_go,fg/examples/popl20/map/map.go)
+		$(call test_fg_against_go,fg/examples/popl20/not/not.go)
 
 
 .PHONY: test-fgg
-test-fgg: test-fgg-unit test-fgg-examples
-# add monom + oblit?
+#test-fgg: test-fgg-unit test-fgg-examples
+test-fgg: test-fgg-unit simulate-monom simulate-oblit
+# add monom, oblit?
 
 
 .PHONY: test-fgg-unit
@@ -90,136 +95,155 @@ test-fgg-unit:
 	go test github.com/rhu1/fgg/fgg
 
 
+define eval_fgg
+	RES=`go run github.com/rhu1/fgg -fgg -eval=$(2) $(1)`; \
+	EXIT=$$?; if [ $$EXIT -ne 0 ]; then exit $$EXIT; fi; \
+	echo $$RES
+endef
+
+#.PHONY: foo
+#foo:
+#	declare -a arr=(\
+#		"element1" \
+#		"element2" \
+#		"element3"); \
+#	for i in "$${arr[@]}"; \
+#	do \
+#   	 echo "$$i"; \
+#	done
+
+
+# Subsumed by, e.g., simulate-monom
 .PHONY: test-fgg-examples
 test-fgg-examples:
-	go run github.com/rhu1/fgg -fgg -eval=10 fgg/examples/hello/hello.fgg
-	go run github.com/rhu1/fgg -fgg -eval=10 fgg/examples/hello/fmtprintf.fgg
-	go run github.com/rhu1/fgg -fgg -eval=-1 fgg/examples/popl20/booleans/booleans.fgg
-	go run github.com/rhu1/fgg -fgg -eval=-1 fgg/examples/popl20/compose/compose.fgg
-	go run github.com/rhu1/fgg -fgg -eval=-1 fgg/examples/popl20/graph/graph.fgg
-	go run github.com/rhu1/fgg -fgg -eval=-1 fgg/examples/popl20/irregular/irregular.fgg
-	go run github.com/rhu1/fgg -fgg -eval=-1 fgg/examples/popl20/map/map.fgg
-	go run github.com/rhu1/fgg -fgg -eval=-1 fgg/examples/popl20/monomorph/monomorph.fgg
-	go run github.com/rhu1/fgg -fgg -eval=10 fgg/examples/monom/box/box.fgg
-	go run github.com/rhu1/fgg -fgg -eval=10 fgg/examples/monom/box/box2.fgg
+	$(call eval_fgg,fgg/examples/hello/hello.fgg,10)
+	$(call eval_fgg,fgg/examples/hello/fmtprintf.fgg,10)
+
+	$(call eval_fgg,fgg/examples/popl20/booleans/booleans.fgg,-1)
+	$(call eval_fgg,fgg/examples/popl20/compose/compose.fgg,-1)
+	$(call eval_fgg,fgg/examples/popl20/graph/graph.fgg,-1)
+	$(call eval_fgg,fgg/examples/popl20/irregular/irregular.fgg,-1)
+	$(call eval_fgg,fgg/examples/popl20/map/map.fgg,-1)
+	$(call eval_fgg,fgg/examples/popl20/monomorph/monomorph.fgg,-1)
+
+	$(call eval_fgg,fgg/examples/monom/box/box.fgg,10)
+	$(call eval_fgg,fgg/examples/monom/box/box2.fgg,10)
+
+	$(call eval_fgg,fgg/examples/monom/julien/ifacebox.fgg,-1)
+	$(call eval_fgg,fgg/examples/monom/julien/ifacebox-nomethparam.fgg,-1)
+
+	$(call eval_fgg,fgg/examples/monom/julien/mono-ok/iface-embedding-simple.go,-1)
+	$(call eval_fgg,fgg/examples/monom/julien/mono-ok/iface-embedding.go,-1)
+	$(call eval_fgg,fgg/examples/monom/julien/mono-ok/rcver-iface.go,-1)
+	$(call eval_fgg,fgg/examples/monom/julien/mono-ok/one-pass-prob.go,-1)
+	$(call eval_fgg,fgg/examples/monom/julien/mono-ok/contamination.go,-1)
+	$(call eval_fgg,fgg/examples/monom/julien/mono-ok/struct-poly-rec.go,-1)
+	$(call eval_fgg,fgg/examples/monom/julien/mono-ok/Parameterised-Map.go,-1)
+	$(call eval_fgg,fgg/examples/monom/julien/mono-ok/alternate.go,10)
+	$(call eval_fgg,fgg/examples/monom/julien/mono-ok/i-closure.go,-1)
+	$(call eval_fgg,fgg/examples/monom/julien/mono-ok/i-closure-bad.go,-1)
+	$(call eval_fgg,fgg/examples/monom/julien/mono-ok/meth-clash.go,7)
+	$(call eval_fgg,fgg/examples/monom/julien/mono-ok/param-meth-cast.go,2)
+	$(call eval_fgg,fgg/examples/monom/julien/mono-ok/poly-rec-iface.go,10)
 
 
-.PHONY: test-monom
-test-monom:
-	mkdir -p tmp/test/fg/booleans
-	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/booleans/booleans.go fgg/examples/popl20/booleans/booleans.fgg
-	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/booleans/booleans.go
+define eval_monom_fgg
+	mkdir -p $(3); \
+	RES=`go run github.com/rhu1/fgg -fgg -eval=$(2) -monomc=$(3)/$(4) $(1)`; \
+	EXIT=$$?; if [ $$EXIT -ne 0 ]; then exit $$EXIT; fi; \
+	echo "fgg="$$RES; \
+	EXP=`go run github.com/rhu1/fgg -eval=$(2) $(3)/$(4)`; \
+	EXIT=$$?; if [ $$EXIT -ne 0 ]; then exit $$EXIT; fi; \
+	echo "fg= "$$EXP
+endef
 
-	mkdir -p tmp/test/fg/compose
-	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/compose/compose.go fgg/examples/popl20/compose/compose.fgg
-	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/compose/compose.go
+define eval_monom_fgg_against_go
+	mkdir -p $(2); \
+	RES=`go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=$(2)/$(3) $(1)`; \
+	EXIT=$$?; if [ $$EXIT -ne 0 ]; then exit $$EXIT; fi; \
+	echo "fgg="$$RES; \
+	EXP=`go run github.com/rhu1/fgg -eval=-1 -printf $(2)/$(3)`; \
+	echo "fg= "$$EXP; \
+	ACT=`go run $(2)/$(3)`; \
+	echo "go= "$$ACT; \
+	if [ "$$EXP" != "$$ACT" ]; then \
+		echo "Not equal."; \
+		exit 1; \
+	fi
+endef
 
-	mkdir -p tmp/test/fg/graph
-	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/graph/graph.go fgg/examples/popl20/graph/graph.fgg
-	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/graph/graph.go
+# Non-terminating examples tested by simulate-monom
+.PHONY: test-monom-against-go
+test-monom-against-go:
+	$(call eval_monom_fgg_against_go,fgg/examples/popl20/booleans/booleans.fgg,tmp/test/fg/booleans,booleans.go)
+	$(call eval_monom_fgg_against_go,fgg/examples/popl20/compose/compose.fgg,tmp/test/fg/compose,compose.go)
+	$(call eval_monom_fgg_against_go,fgg/examples/popl20/graph/graph.fgg,tmp/test/fg/graph,graph.go)
+	$(call eval_monom_fgg_against_go,fgg/examples/popl20/irregular/irregular.fgg,tmp/test/fg/irregular,irregular.go)
+	$(call eval_monom_fgg_against_go,fgg/examples/popl20/map/map.fgg,tmp/test/fg/map,map.go)
+	$(call eval_monom_fgg_against_go,fgg/examples/popl20/monomorph/monomorph.fgg,tmp/test/fg/monomorph,monomorph.go)
 
-	mkdir -p tmp/test/fg/irregular
-	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/irregular/irregular.go fgg/examples/popl20/irregular/irregular.fgg
-	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/irregular/irregular.go
+	#$(call eval_monom_fgg,fgg/examples/monom/box/box2.fgg,10,tmp/test/fg/monom/box,box2.go)
 
-	mkdir -p tmp/test/fg/map
-	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/map/map.go fgg/examples/popl20/map/map.fgg
-	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/map/map.go
+	$(call eval_monom_fgg_against_go,fgg/examples/monom/julien/ifacebox.fgg,tmp/test/fg/monom/julien/ifacebox,ifacebox.go)
+	$(call eval_monom_fgg_against_go,fgg/examples/monom/julien/ifacebox-nomethparam.fgg,tmp/test/fg/monom/julien/ifacebox-nomethparam,ifacebox-nomethparam.go)
 
-	mkdir -p tmp/test/fg/monomorph
-	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/monomorph/monomorph.go fgg/examples/popl20/monomorph/monomorph.fgg
-	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monomorph/monomorph.go
+	$(call eval_monom_fgg_against_go,fgg/examples/monom/julien/mono-ok/iface-embedding-simple.go,tmp/test/fg/monom/julien/mono-ok/iface-embedding-simple,iface-embedding-simple.go)
+	$(call eval_monom_fgg_against_go,fgg/examples/monom/julien/mono-ok/iface-embedding.go,tmp/test/fg/monom/julien/mono-ok/iface-embedding,iface-embedding.go)
+	$(call eval_monom_fgg_against_go,fgg/examples/monom/julien/mono-ok/rcver-iface.go,tmp/test/fg/monom/julien/mono-ok/rcver-iface,rcver-iface.go)
+	$(call eval_monom_fgg_against_go,fgg/examples/monom/julien/mono-ok/one-pass-prob.go,tmp/test/fg/monom/julien/mono-ok/one-pass-prob,one-pass-prob.go)
+	$(call eval_monom_fgg_against_go,fgg/examples/monom/julien/mono-ok/contamination.go,tmp/test/fg/monom/julien/mono-ok/contamination,contamination.go)
 
-	mkdir -p tmp/test/fg/monom/box
-	go run github.com/rhu1/fgg -fgg -eval=10 -monomc=tmp/test/fg/monom/box/box2.go fgg/examples/monom/box/box2.fgg
-	go run github.com/rhu1/fgg -eval=10 tmp/test/fg/monom/box/box2.go
+	# TODO: add to olbit
+	$(call eval_monom_fgg_against_go,fgg/examples/monom/julien/mono-ok/struct-poly-rec.go,tmp/test/fg/monom/julien/mono-ok/struct-poly-rec,struct-poly-rec.go)
+	$(call eval_monom_fgg_against_go,fgg/examples/monom/julien/mono-ok/Parameterised-Map.go,tmp/test/fg/monom/julien/mono-ok/Parameterised-Map,Parameterised-Map.go)
+	#$(call eval_monom_fgg,fgg/examples/monom/julien/mono-ok/alternate.go,10,tmp/test/fg/monom/julien/mono-ok/alternate,alternate.go)
+	$(call eval_monom_fgg_against_go,fgg/examples/monom/julien/mono-ok/i-closure.go,tmp/test/fg/monom/julien/mono-ok/i-closure,i-closure.go)
+	$(call eval_monom_fgg_against_go,fgg/examples/monom/julien/mono-ok/i-closure-bad.go,tmp/test/fg/monom/julien/mono-ok/i-closure-bad,i-closure-bad.go)
+	#$(call eval_monom_fgg,fgg/examples/monom/julien/mono-ok/meth-clash.go,7,tmp/test/fg/monom/julien/mono-ok/meth-clash,meth-clash.go)
+	#$(call eval_monom_fgg,fgg/examples/monom/julien/mono-ok/param-meth-cast.go,2,tmp/test/fg/monom/julien/mono-ok/param-meth-cast,param-meth-cast.go)
+	#$(call eval_monom_fgg,fgg/examples/monom/julien/mono-ok/poly-rec-iface.go,10,tmp/test/fg/monom/julien/mono-ok/poly-rec-iface,poly-rec-iface.go)
 
-	mkdir -p tmp/test/fg/monom/julien/
-	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/monom/julien/ifacebox.go fgg/examples/monom/julien/ifacebox.fgg
-	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/ifacebox.go
-	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/monom/julien/ifacebox-nomethparam.go fgg/examples/monom/julien/ifacebox-nomethparam.fgg
-	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/ifacebox-nomethparam.go
-
-	mkdir -p tmp/test/fg/monom/julien/mono-ok
-	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/monom/julien/mono-ok/iface-embedding-simple.go fgg/examples/monom/julien/mono-ok/iface-embedding-simple.go
-	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/mono-ok/iface-embedding-simple.go
-	go run github.com/rhu1/fgg -fgg -eval=-1 -monomc=tmp/test/fg/monom/julien/mono-ok/iface-embedding.go fgg/examples/monom/julien/mono-ok/iface-embedding.go
-	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/mono-ok/iface-embedding.go
-	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/rcver-iface.go fgg/examples/monom/julien/mono-ok/rcver-iface.go
-	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/mono-ok/rcver-iface.go
-	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/one-pass-prob.go fgg/examples/monom/julien/mono-ok/one-pass-prob.go
-	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/mono-ok/one-pass-prob.go
-	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/contamination.go fgg/examples/monom/julien/mono-ok/contamination.go
-	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/mono-ok/contamination.go
-	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/struct-poly-rec.go fgg/examples/monom/julien/mono-ok/struct-poly-rec.go
-
-	# TODO: add to oblit
-	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/mono-ok/struct-poly-rec.go
-	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/Parameterised-Map.go fgg/examples/monom/julien/mono-ok/Parameterised-Map.go
-	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/mono-ok/Parameterised-Map.go
-	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/alternate.go fgg/examples/monom/julien/mono-ok/alternate.go
-	go run github.com/rhu1/fgg -eval=10 tmp/test/fg/monom/julien/mono-ok/alternate.go
-	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/i-closure.go fgg/examples/monom/julien/mono-ok/i-closure.go
-	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/mono-ok/i-closure.go
-	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/i-closure-bad.go fgg/examples/monom/julien/mono-ok/i-closure-bad.go
-	go run github.com/rhu1/fgg -eval=-1 tmp/test/fg/monom/julien/mono-ok/i-closure-bad.go
-	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/meth-clash.go fgg/examples/monom/julien/mono-ok/meth-clash.go
-	go run github.com/rhu1/fgg -eval=7 tmp/test/fg/monom/julien/mono-ok/meth-clash.go
-	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/param-meth-cast.go fgg/examples/monom/julien/mono-ok/param-meth-cast.go
-	go run github.com/rhu1/fgg -eval=2 tmp/test/fg/monom/julien/mono-ok/param-meth-cast.go
-	go run github.com/rhu1/fgg -fgg -monomc=tmp/test/fg/monom/julien/mono-ok/poly-rec-iface.go fgg/examples/monom/julien/mono-ok/poly-rec-iface.go
-	go run github.com/rhu1/fgg -eval=10 tmp/test/fg/monom/julien/mono-ok/poly-rec-iface.go
+	#mkdir -p tmp/test/fg/monom/julien/mono-ko
 
 
-	mkdir -p tmp/test/fg/monom/julien/mono-ko
-	#TODO
+define rm_monom
+	rm -f $(1)/$(2); \
+	rm -fd $(1)
+endef
 
+.PHONY: foo
+foo:
+	$(call rm_monom,tmp/test/fg/monom/julien/mono-ok/alternate,alternate.go)
 
-.PHONY: clean-test-monom
-clean-test-monom:
-	rm -f tmp/test/fg/booleans/booleans.go
-	rm -fd tmp/test/fg/booleans
-# TODO: use test-monom dir instead of test
+.PHONY: clean-test-monom-against-go
+clean-test-monom-against-go:
+	$(call rm_monom,tmp/test/fg/booleans,booleans.go)
+	$(call rm_monom,tmp/test/fg/compose,compose.go)
+	$(call rm_monom,tmp/test/fg/graph,graph.go)
+	$(call rm_monom,tmp/test/fg/irregular,irregular.go)
+	$(call rm_monom,tmp/test/fg/map,map.go)
+	$(call rm_monom,tmp/test/fg/monomorph,monomorph.go)
 
-	rm -f tmp/test/fg/compose/compose.go
-	rm -fd tmp/test/fg/compose
+	#rm -f tmp/test/fg/monom/box/box2.go
+	#rm -fd tmp/test/fg/monom/box
 
-	rm -f tmp/test/fg/graph/graph.go
-	rm -fd tmp/test/fg/graph
+	$(call rm_monom,tmp/test/fg/monom/julien/ifacebox,ifacebox.go)
+	$(call rm_monom,tmp/test/fg/monom/julien/ifacebox-nomethparam,ifacebox-nomethparam.go)
 
-	rm -f tmp/test/fg/irregular/irregular.go
-	rm -fd tmp/test/fg/irregular
-
-	rm -f tmp/test/fg/map/map.go
-	rm -fd tmp/test/fg/map
-
-	rm -f tmp/test/fg/monomorph/monomorph.go
-	rm -fd tmp/test/fg/monomorph
-
-	rm -f tmp/test/fg/monom/box/box2.go
-	rm -fd tmp/test/fg/monom/box
-
-	rm -f tmp/test/fg/monom/julien/mono-ok/iface-embedding-simple.go
-	rm -f tmp/test/fg/monom/julien/mono-ok/iface-embedding.go
-	rm -f tmp/test/fg/monom/julien/mono-ok/rcver-iface.go
-	rm -f tmp/test/fg/monom/julien/mono-ok/one-pass-prob.go
-	rm -f tmp/test/fg/monom/julien/mono-ok/contamination.go
-	rm -f tmp/test/fg/monom/julien/mono-ok/struct-poly-rec.go
-	rm -f tmp/test/fg/monom/julien/mono-ok/Parameterised-Map.go
-	rm -f tmp/test/fg/monom/julien/mono-ok/alternate.go
-	rm -f tmp/test/fg/monom/julien/mono-ok/i-closure.go
-	rm -f tmp/test/fg/monom/julien/mono-ok/i-closure-bad.go
-	rm -f tmp/test/fg/monom/julien/mono-ok/meth-clash.go
-	rm -f tmp/test/fg/monom/julien/mono-ok/param-meth-cast.go
-	rm -f tmp/test/fg/monom/julien/mono-ok/poly-rec-iface.go
+	$(call rm_monom,tmp/test/fg/monom/julien/mono-ok/iface-embedding-simple,iface-embedding-simple.go)
+	$(call rm_monom,tmp/test/fg/monom/julien/mono-ok/iface-embedding,iface-embedding.go)
+	$(call rm_monom,tmp/test/fg/monom/julien/mono-ok/rcver-iface,rcver-iface.go)
+	$(call rm_monom,tmp/test/fg/monom/julien/mono-ok/one-pass-prob,one-pass-prob.go)
+	$(call rm_monom,tmp/test/fg/monom/julien/mono-ok/contamination,contamination.go)
+	$(call rm_monom,tmp/test/fg/monom/julien/mono-ok/struct-poly-rec,struct-poly-rec.go)
+	$(call rm_monom,tmp/test/fg/monom/julien/mono-ok/Parameterised-Map,Parameterised-Map.go)
+	$(call rm_monom,tmp/test/fg/monom/julien/mono-ok/i-closure,i-closure.go)
+	$(call rm_monom,tmp/test/fg/monom/julien/mono-ok/i-closure-bad,i-closure-bad.go)
 
 	rm -fd tmp/test/fg/monom/julien/mono-ok
-
 	rm -fd tmp/test/fg/monom/julien/mono-ko
-
-	rm -f tmp/test/fg/monom/julien/ifacebox.go
-	rm -f tmp/test/fg/monom/julien/ifacebox-nomethparam.go
 	rm -fd tmp/test/fg/monom/julien
+	rm -fd tmp/test/fg/monom
 
 
 .PHONY: simulate-monom
@@ -230,6 +254,7 @@ simulate-monom:
 	go run github.com/rhu1/fgg -test-monom -eval=-1 fgg/examples/popl20/irregular/irregular.fgg
 	go run github.com/rhu1/fgg -test-monom -eval=-1 fgg/examples/popl20/map/map.fgg
 	go run github.com/rhu1/fgg -test-monom -eval=-1 fgg/examples/popl20/monomorph/monomorph.fgg
+
 	go run github.com/rhu1/fgg -test-monom -eval=10 fgg/examples/monom/box/box2.fgg
 
 	go run github.com/rhu1/fgg -test-monom -eval=-1 fgg/examples/monom/julien/ifacebox.fgg
@@ -403,5 +428,5 @@ clean-test-fg2fgg:
 
 
 .PHONY: clean-test-all
-clean-test-all: clean-test-fg2fgg clean-test-monom clean-test-oblit
+clean-test-all: clean-test-fg2fgg clean-test-monom-against-go clean-test-oblit
 

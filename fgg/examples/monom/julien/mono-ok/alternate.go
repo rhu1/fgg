@@ -5,6 +5,8 @@
 
 package main;
 
+import "fmt";
+
 type Any(type ) interface {};
 
 type Box(type a Any()) interface { unbox(type )() a};
@@ -23,5 +25,10 @@ func (x A(type )) m2(type a Any(), b Box(a))(y Box(a)) A(){
 	return A(){}.m1(a)(y.unbox()())
 };
 
-func main() { _ =  A(){}.m1(A())(A(){}) }
+func main() {
+	//_ =
+	fmt.Printf("%#v",
+		A(){}.m1(A())(A(){})
+	)
+}
 

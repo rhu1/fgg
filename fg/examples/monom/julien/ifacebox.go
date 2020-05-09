@@ -1,4 +1,5 @@
 package main;
+import "fmt";
 type Any interface {};
 type FuncDE interface { apply(a D) E };
 type BoxE interface {};
@@ -12,4 +13,9 @@ type E struct {};
 type DtoE struct {};
 func (x0 DtoE) apply(d D) E { return E{} };
 func (x Dummy) takeBox(b BoxD) Any { return b.MapE(DtoE{}) };
-func main() { _ = Dummy{}.takeBox(ABoxD{D{}}) }
+func main() {
+	//_ =
+	fmt.Printf("%#v",
+		Dummy{}.takeBox(ABoxD{D{}})
+	)
+}

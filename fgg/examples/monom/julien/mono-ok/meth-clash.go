@@ -4,6 +4,8 @@
 // Proposed (correct) monomed: https://play.golang.org/p/9nT1MahKCvE
 package main;
 
+import "fmt";
+
 type Any(type ) interface {};
 
 type Top(type ) interface {};
@@ -31,15 +33,18 @@ func (x T(type )) m(type a Top())() Dummy() {
 	return Dummy(){}
 };
 
-func main() { _ =
+func main() {
 	// Here both S.m() and Foo.m()  -which dont have matching signatures-
 	// are instantiated to the same type (S).
 	// which leads to mono'd FGG to accept a cast that fails in FGG -- edit: now fine
-	Triple(){
-		S(){}.m(S())(),
-		//
-		Dummy(){}.toAny()(T(){}).(Foo()).m(S())(),  // type-assert succeeds
-		//
-		Dummy(){}.toAny()(S(){}).(Foo()) // type-assert fails
-	}
-	}
+	//_ =
+	fmt.Printf("%#v",
+		Triple(){
+			S(){}.m(S())(),
+			//
+			Dummy(){}.toAny()(T(){}).(Foo()).m(S())(),  // type-assert succeeds
+			//
+			Dummy(){}.toAny()(S(){}).(Foo()) // type-assert fails
+		}
+	)
+}

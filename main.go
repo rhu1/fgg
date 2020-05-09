@@ -144,7 +144,9 @@ Options:
 // - test monom on latest examples -- DONE
 // - nomono: fix mutual-poly-rec (should blow up without ismonom) ...fix struct-poly-rec, omega building loops (add recursive struct WF?) -- DONE
 // artifact
-// - fg vs. go results, add to makefile
+// - add nomono tests
+// - fg vs. go results, add to makefile -- partial: need to generalise and extend to monom tests
+// - latest paper examples
 // - reorganise example dirs
 // - bad assert eval, no panic -- -test-monom
 // - generally, exit codes instead of panic

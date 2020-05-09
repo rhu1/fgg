@@ -5,6 +5,8 @@
 
 package main;
 
+import "fmt";
+
 /* Base decls: Any, Booleans, Nautrals, Functions -- cut down versions */
 
 type Any(type ) interface {};
@@ -81,7 +83,9 @@ func (d D(type )) _6(type )() Nat() { return Succ(){D(){}._5()()} };
 func (d D(type )) _7(type )() Nat() { return Succ(){D(){}._6()()} };
 
 func main() { 
-	_ = Node(Nat()){
+	//_ =
+	fmt.Printf("%#v",
+		Node(Nat()){
 				D(){}._1()(),
 				Node(Pair(Nat())){
 					Pair(Nat()){D(){}._2()(), D(){}._3()()},
@@ -94,6 +98,7 @@ func main() {
 					}
 				}
 			}.BalancedMap()(incr(){D(){}._1()()})
+	)
 }
 
 /*func main() {   // TODO: add test (monom)

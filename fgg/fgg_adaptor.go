@@ -101,17 +101,18 @@ func (a *FGGAdaptor) ExitProgram(ctx *parser.ProgramContext) {
 	offset := 0 // TODO: refactor
 	printf := false
 	c3 := ctx.GetChild(3)
-	if _, ok := c3.GetPayload().(*antlr.CommonToken); ok { // IMPORT
+	foo := ctx.GetChild(ctx.GetChildCount() - 4).GetPayload() // Checking for "=" in "_ = ..."
+	if _, ok := c3.GetPayload().(*antlr.CommonToken); ok {    // IMPORT
 		//c3.GetPayload().(*antlr.CommonToken).GetText() == "import" {
 		if pkg := ctx.GetChild(4).GetPayload().(*antlr.CommonToken).GetText(); pkg != "\"fmt\"" { // TODO: refactor
 			panic("The only allowed import is \"fmt\"; found: " + pkg)
 		}
 		offset = 3
-		printf = false
-		tmp := ctx.GetChild(ctx.GetChildCount() - 4).GetPayload()
-		if cast, ok := tmp.(*antlr.CommonToken); !ok || cast.GetText() != "=" { // Looking for: _ = ...
+		if cast, ok := foo.(*antlr.CommonToken); !ok || cast.GetText() != "=" {
 			printf = true
 		}
+	} else if cast, ok := foo.(*antlr.CommonToken); !ok || cast.GetText() != "=" {
+		panic("Missing \"import fmt;\".")
 	}
 	//if ctx.GetChildCount() > offset+13 {  // well-typed program must have at least one decl?
 	tmp := ctx.GetChild(offset + 3)

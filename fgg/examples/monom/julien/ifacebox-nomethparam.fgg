@@ -5,6 +5,8 @@
 
 package main;
 
+import "fmt";
+
 type Any(type ) interface {};
 
 type Func(type A Any(), B Any()) interface { apply(type )(a A) B };
@@ -50,9 +52,12 @@ func (x Dummy(type )) makeBox(type A Any())() Box(A){
  return ABox(A){}
 };
 
-func main() { _ =
-	Dummy(){}.doSomething()(Dummy(){}.makeBox(E())())
-	// Dummy(){}.doSomething()(ABox(E()){})
+func main() {
+	//_ =
+	fmt.Printf("%#v",
+		Dummy(){}.doSomething()(Dummy(){}.makeBox(E())())
+		// Dummy(){}.doSomething()(ABox(E()){})
+	)
 }
 
 

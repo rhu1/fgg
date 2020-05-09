@@ -168,7 +168,7 @@ func (s StructLit) ToGoString(ds []Decl) string {
 		b.WriteString(s.elems[0].ToGoString(ds))
 		for i, v := range s.elems[1:] {
 			b.WriteString(", ")
-			b.WriteString(td.fDecls[i].field)
+			b.WriteString(td.fDecls[i+1].field)
 			b.WriteString(":")
 			b.WriteString(v.ToGoString(ds))
 		}

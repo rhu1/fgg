@@ -4,6 +4,8 @@
 // This is monomorphisable !
 package main;
 
+import "fmt";
+
 type Any(type ) interface {};
 
 type Dummy(type ) struct {};
@@ -24,4 +26,9 @@ type S(type ) struct {};
 func (x S(type )) m1(type a Any())() S() {return S(){}};
 func (x S(type )) m2(type a Any())() S() {return S(){}};
 
-func main() { _ =  Dummy(){}.useInterface()(S(){}).(IB()) }
+func main() {
+	//_ =
+	fmt.Printf("%#v",
+		Dummy(){}.useInterface()(S(){}).(IB())
+	)
+}

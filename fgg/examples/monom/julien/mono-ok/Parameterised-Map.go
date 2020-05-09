@@ -3,6 +3,7 @@
 
 package main;
 
+import "fmt";
 
 type Any(type ) interface {};
 
@@ -41,7 +42,9 @@ func (x Dummy(type )) CallFunctionBool(type )(y Box(Bool())) Box(Int()) {
 };
 
 
-func main() { _ =
-	Dummy(){}.CallFunctionBool()(BoolBox(){Bool(){}})
-
+func main() {
+	//_ =
+	fmt.Printf("%#v",
+		Dummy(){}.CallFunctionBool()(BoolBox(){Bool(){}})
+	)
 }

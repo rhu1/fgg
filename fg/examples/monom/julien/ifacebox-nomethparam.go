@@ -1,4 +1,5 @@
 package main;
+import "fmt";
 type Any interface {};
 type BoxE interface { Make() BoxE };
 type ABoxE struct {};
@@ -8,4 +9,9 @@ type D struct { val E };
 type Dummy struct {};
 func (x Dummy) doSomething(y BoxE) BoxE { return y.Make() };
 func (x Dummy) makeBoxE() BoxE { return ABoxE{} };
-func main() { _ = Dummy{}.doSomething(Dummy{}.makeBoxE()) }
+func main() {
+	//_ =
+	fmt.Printf("%#v",
+		Dummy{}.doSomething(Dummy{}.makeBoxE())
+	)
+}

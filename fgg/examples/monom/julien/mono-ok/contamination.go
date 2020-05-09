@@ -1,5 +1,7 @@
 package main;
 
+import "fmt";
+
 type Any(type ) interface {};
 type Bool(type ) struct {};
 
@@ -28,7 +30,7 @@ type Human(type ) struct {};
 type Road(type ) struct {};
 
 
-type Pair(type a Any(), b Any() ) struct { 
+type Pair(type a Any(), b Any() ) struct {
 	fst a;
 	snd b
 };
@@ -40,9 +42,11 @@ func (x Dummy(type )) makePair(type )(c Clothing(Any()), t Tyre(Any())) Pair(Boo
 };
 
 
-func main() { _ =
-
-	Dummy(){}.makePair()(Shirt(){}, Bridgestone(){})
+func main() {
+	//_ =
+	fmt.Printf("%#v",
+		Dummy(){}.makePair()(Shirt(){}, Bridgestone(){})
+	)
 }
 
 
