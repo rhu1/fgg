@@ -40,7 +40,7 @@ func ParseAndOkBad(t *testing.T, msg string, a base.Adaptor, src string) base.Pr
 			if strings.HasPrefix(rec, PARSER_PANIC_PREFIX) {
 				t.Errorf("Unexpected panic: " + rec + "\n" + src)
 			}
-			// TODO FIXME: check panic more specifically
+			// TODO: check panic more specifically
 		}
 	}()
 	return parseAndCheckOk(a, src)
@@ -70,7 +70,7 @@ func EvalAndOkBad(t *testing.T, p base.Program, msg string, steps int) base.Prog
 				p.String())
 		} else {
 			// PARSER_PANIC_PREFIX panic should be already checked by parseAndOkGood
-			// TODO FIXME: check panic more specifically
+			// TODO: check panic more specifically
 		}
 	}()
 	allowStupid := true
