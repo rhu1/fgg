@@ -3,6 +3,8 @@
 
 package main;
 
+import "fmt";
+
 type Any(type ) interface {};
 
 type DummyFunc(type X Any(), Y Any()) interface { apply(type )(a X) Y };
@@ -34,8 +36,11 @@ func (x Dummy(type )) takeBox(type )(b Box(D())) Any() {
 	return b.Map(E())(DtoE(){})  // Map<E>     // m(type a tau) ---> t\dagger
 };
 
-func main() { _ =
-	Dummy(){}.takeBox()(ABox(D()){D(){}}) // ABox<D>
+func main() {
+	//_ =
+	fmt.Printf("%#v",
+		Dummy(){}.takeBox()(ABox(D()){D(){}}) // ABox<D>
+	)
 }
 
 

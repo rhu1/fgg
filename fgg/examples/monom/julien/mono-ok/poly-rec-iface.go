@@ -4,6 +4,8 @@
 // This is monomorphisable !
 package main;
 
+import "fmt";
+
 type Any(type ) interface {};
 
 type Dummy(type ) struct {};
@@ -21,4 +23,9 @@ func (x A(type )) m(type b Any())() I(I(b)) {
 	return Dummy(){}.toAny()(A(){}).(I(b)).m(b)()
 };
 
-func main() { _ =  A(){}.m(A())() }
+func main() {
+	//_ =
+	fmt.Printf("%#v",
+		A(){}.m(A())()
+	)
+}

@@ -5,7 +5,7 @@
 // This should be monomorphisable!
 package main;
 
-
+import "fmt";
 
 
 
@@ -32,7 +32,12 @@ func (x A(type )) m(type a Any())() C(B(a)) {
 	return A(){}.m(a)()
 };*/
 
-func main() { _ =  B(A()){C(A()){}}.m()()}
+func main() {
+	//_ =
+	fmt.Printf("%#v",
+		B(A()){C(A()){}}.m()()
+	)
+}
 //func main() { _ =  A(){}.m(A())() }
 
 

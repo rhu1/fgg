@@ -3,6 +3,8 @@
 
 package main;
 
+import "fmt";
+
 /* SA{} is an IA(Int()) and SB an IA(Bool()). In a "method-driven
  * mono, the call to CallFunctionBool observes that MyFunction(Int) is called
  * on an IA(Bool) and so all possible MyFunction(Int) would be mono'd. This
@@ -42,8 +44,11 @@ func (x Dummy(type )) CallFunctionBool(type )(y IA(Bool())) Bool() {
 // 	snd b
 // };
 
-func main() { _ =
-	Dummy(){}.CallFunctionBool()(SB(){})
+func main() {
+	//_ =
+	fmt.Printf("%#v",
+		Dummy(){}.CallFunctionBool()(SB(){})
+	)
 
 	// Pair(Int(),Bool()){Dummy(){}.CallFunctionInt()(SA(){}),
 	// 	   Dummy(){}.CallFunctionBool()(SB(){})

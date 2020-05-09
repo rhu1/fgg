@@ -4,6 +4,8 @@
 // This is monomorphisable ! -- rename "-bad"
 package main;
 
+import "fmt";
+
 type Any(type ) interface {};
 
 type Dummy(type ) struct {};
@@ -28,10 +30,13 @@ type S(type ) struct {};
 func (x S(type )) m1(type a Any())() IB() {return S(){}};
 func (x S(type )) m2(type a Any())() IB() {return S(){}};
 
-func main() { _ =
-	Pair(){
-		Dummy(){}.useInterfaceA()(S(){})
-		,
-		Dummy(){}.useInterfaceB()(S(){})
+func main() {
+	//_ =
+	fmt.Printf("%#v",
+		Pair(){
+			Dummy(){}.useInterfaceA()(S(){})
+			,
+			Dummy(){}.useInterfaceB()(S(){})
 		}
-	}
+	)
+}
