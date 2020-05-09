@@ -46,43 +46,37 @@ test-fg-examples:
 	go run github.com/rhu1/fgg -eval=-1 fg/examples/popl20/incr/incr.go
 	go run github.com/rhu1/fgg -eval=-1 fg/examples/popl20/map/map.go
 	go run github.com/rhu1/fgg -eval=-1 fg/examples/popl20/not/not.go
-
 # TODO: currently examples testing limited to "good" examples
+
+
+# N.B. semicolons and line esacapes, and double-dollar
+define test_fg_against_go
+	EXP=`go run github.com/rhu1/fgg -eval=-1 -printf $(1)`; \
+	echo "fg="$$EXP; \
+	ACT=`go run $(1)`; \
+	echo "go="$$ACT; \
+	if [ "$$EXP" != "$$ACT" ]; then \
+		echo "Not equal."; \
+		exit 1; \
+	fi
+endef
 
 
 # cf. [cmd] > output.txt
 #     diff output.txt correct.txt
 .PHONY: test-fg-examples-against-go
 test-fg-examples-against-go:
-	if [ "`go run github.com/rhu1/fgg -eval=-1 -printf fg/examples/popl20/booleans/booleans.go`" != "`go run fg/examples/popl20/booleans/booleans.go`" ]; then \
-		echo "Not equal"; \
-		exit 1; \
-	fi
-	if [ "`go run github.com/rhu1/fgg -eval=-1 -printf fg/examples/popl20/compose/compose.go`" != "`go run fg/examples/popl20/compose/compose.go`" ]; then \
-		echo "Not equal"; \
-		exit 1; \
-	fi
-	if [ "`go run github.com/rhu1/fgg -eval=-1 -printf fg/examples/popl20/equal/equal.go`" != "`go run fg/examples/popl20/equal/equal.go`" ]; then \
-		echo "Not equal"; \
-		exit 1; \
-	fi
-	if [ "`go run github.com/rhu1/fgg -eval=-1 -printf fg/examples/popl20/incr/incr.go`" != "`go run fg/examples/popl20/incr/incr.go`" ]; then \
-		echo "Not equal"; \
-		exit 1; \
-	fi
-	if [ "`go run github.com/rhu1/fgg -eval=-1 -printf fg/examples/popl20/map/map.go`" != "`go run fg/examples/popl20/map/map.go`" ]; then \
-		echo "Not equal"; \
-		exit 1; \
-	fi
-	if [ "`go run github.com/rhu1/fgg -eval=-1 -printf fg/examples/popl20/not/not.go`" != "`go run fg/examples/popl20/not/not.go`" ]; then \
-		echo "Not equal"; \
-		exit 1; \
-	fi
+		$(call test_fg_against_go,fg/examples/popl20/booleans/booleans.go)
+		$(call test_fg_against_go,fg/examples/popl20/compose/compose.go)
+		$(call test_fg_against_go,fg/examples/popl20/equal/equal.go)
+		$(call test_fg_against_go,fg/examples/popl20/incr/incr.go)
+		$(call test_fg_against_go,fg/examples/popl20/map/map.go)
+		$(call test_fg_against_go,fg/examples/popl20/not/not.go)
 
 
 .PHONY: test-fgg
 test-fgg: test-fgg-unit test-fgg-examples
-# add monom + oblit?
+# add monom, oblit?
 
 
 .PHONY: test-fgg-unit
