@@ -414,62 +414,84 @@ func TestNomono002(t *testing.T) {
 	NomonoBad(t, prog, "ma1 receiver polymorphic recursion, a -> A(A(a))")
 }
 
-/*// Testing nomono -- good
-type Any(type ) interface {};
-type A(type ) struct {};
-func (x0 A(type )) ma1(type a Any())() Any() { return A(){}.ma1(a)() };
-func main() { _ = A(){}.ma1(Any())() }
+func TestNomono003(t *testing.T) {
+	Any := "type Any(type ) interface {}"
+	A := "type A(type ) struct {}"
+	ma1 := "func (x0 A(type )) ma1(type a Any())() Any() { return A(){}.ma1(a)() }"
+	e := "A(){}.ma1(Any())()"
 	prog := fggParseAndOkGood(t, Any, A, ma1, e).(fgg.FGGProgram)
 	NomonoGood(t, prog)
-//*/
+}
 
-/*// Testing nomono -- bad
-type Any(type ) interface {};
-type A(type ) struct {};
-func (x0 A(type )) ma1(type a Any())() Any() { return A(){}.ma1(A(a))() };
-func main() { _ = A(){}.ma1(Any())() }
+func TestNomono004(t *testing.T) {
+	Any := "type Any(type ) interface {}"
+	A := "type A(type ) struct {}"
+	ma1 := "func (x0 A(type )) ma1(type a Any())() Any() { return A(){}.ma1(A(a))() }"
+	e := "A(){}.ma1(Any())()"
 	prog := fggParseAndOkGood(t, Any, A, ma1, e).(fgg.FGGProgram)
-	NomonoGood(t, prog)
-//*/
+	NomonoBad(t, prog, "ma1 meth-param polymorphic recursion, a -> A(a)")
+}
 
-/*// Testing nomono -- good
-type Any(type ) interface {};
-type A(type ) struct {};
-func (x0 A(type )) ma1(type a Any())() Any() { return B(){}.mb1(a)() };
-type B(type ) struct {};
-func (x0 B(type )) mb1(type b Any())() Any() { return A(){}.ma1(b)() };
-func main() { _ = A(){}.ma1(Any())() }
-	prog := fggParseAndOkGood(t, Any, A, ma1, e).(fgg.FGGProgram)
+func TestNomono005(t *testing.T) {
+	Any := "type Any(type ) interface {}"
+	A := "type A(type a Any()) struct {}"
+	ma1 := "func (x0 A(type a Any())) ma1(type )() Any() { return B(a){}.mb1()() }"
+	B := "type B(type b Any()) struct {}"
+	mb1 := "func (x0 B(type b Any())) mb1(type )() Any() { return A(b){}.ma1()() }"
+	e := "A(Any()){}.ma1()()"
+	prog := fggParseAndOkGood(t, Any, A, ma1, B, mb1, e).(fgg.FGGProgram)
 	NomonoGood(t, prog)
-//*/
+}
 
-/*// Testing nomono -- bad
-type Any(type ) interface {};
-type A(type ) struct {};
-type B(type ) struct {};
-func (x0 A(type )) ma1(type a Any())() Any() { return B(){}.mb1(a)() };
-func (x0 B(type )) mb1(type b Any())() Any() { return A(){}.ma1(A(b))() };
-func main() { _ = A(){}.ma1(Any())() }
-	prog := fggParseAndOkGood(t, Any, A, ma1, e).(fgg.FGGProgram)
-	NomonoGood(t, prog)
-//*/
+func TestNomono006(t *testing.T) {
+	Any := "type Any(type ) interface {}"
+	A := "type A(type a Any()) struct {}"
+	ma1 := "func (x0 A(type a Any())) ma1(type )() Any() { return B(a){}.mb1()() }"
+	B := "type B(type b Any()) struct {}"
+	mb1 := "func (x0 B(type b Any())) mb1(type )() Any() { return A(A(b)){}.ma1()() }"
+	e := "A(Any()){}.ma1()()"
+	prog := fggParseAndOkGood(t, Any, A, ma1, B, mb1, e).(fgg.FGGProgram)
+	NomonoBad(t, prog, "ma1 receiver polymorphic mutual recursion, a -> b -> A(A(b))")
+}
 
-/*
-// Testing nomono -- good
-type Any(type ) interface {};
-type IA(type ) interface { ma1(type )() Any() };
-type A(type ) struct {};
-func (x0 A(type )) ma1(type )() Any() { return B(){}.mb1()() };
-func (x0 A(type )) ma2(type )() Any() { return B(){}.mb3()() };
-type B(type ) struct {};
-func (x0 B(type )) mb1(type )() Any() { return x0 };
-func (x0 B(type )) mb2(type )() Any() { return x0.mb2()() };
-func (x0 B(type )) mb3(type )() Any() { return A(){}.ma2()() };
-type C(type ) struct {};
-func (x0 C(type )) ma1(type )() Any() { return x0 };
-type D(type ) struct {};
-func (x0 D(type )) foo(type )(x IA()) Any() { return x.ma1()() };
-func main() { _ = A(){}.ma1()() }
-	prog := fggParseAndOkGood(t, Any, A, ma1, e).(fgg.FGGProgram)
+func TestNomono007(t *testing.T) {
+	Any := "type Any(type ) interface {}"
+	A := "type A(type ) struct {}"
+	ma1 := "func (x0 A(type )) ma1(type a Any())() Any() { return B(){}.mb1(a)() }"
+	B := "type B(type ) struct {}"
+	mb1 := "func (x0 B(type )) mb1(type b Any())() Any() { return A(){}.ma1(b)() }"
+	e := "A(){}.ma1(Any())()"
+	prog := fggParseAndOkGood(t, Any, A, ma1, B, mb1, e).(fgg.FGGProgram)
 	NomonoGood(t, prog)
-//*/
+}
+
+func TestNomono008(t *testing.T) {
+	Any := "type Any(type ) interface {}"
+	A := "type A(type ) struct {}"
+	ma1 := "func (x0 A(type )) ma1(type a Any())() Any() { return B(){}.mb1(a)() }"
+	B := "type B(type ) struct {}"
+	mb1 := "func (x0 B(type )) mb1(type b Any())() Any() { return A(){}.ma1(A(b))() }"
+	e := "A(){}.ma1(Any())()"
+	//e := "A(){}"  // TODO: nomono conservative (ma1 not called)
+	prog := fggParseAndOkGood(t, Any, A, ma1, B, mb1, e).(fgg.FGGProgram)
+	NomonoBad(t, prog, "ma1+mb1 meth-param polymorphic mutual recursion, a -> b -> A(b)")
+}
+
+func TestNomono009(t *testing.T) {
+	Any := "type Any(type ) interface {}"
+	IA := "type IA(type ) interface { ma1(type )() Any() }"
+	A := "type A(type ) struct {}"
+	ma1 := "func (x0 A(type )) ma1(type )() Any() { return B(){}.mb1()() }"
+	ma2 := "func (x0 A(type )) ma2(type )() Any() { return B(){}.mb3()() }"
+	B := "type B(type ) struct {}"
+	mb1 := "func (x0 B(type )) mb1(type )() Any() { return x0 }"
+	mb2 := "func (x0 B(type )) mb2(type )() Any() { return x0.mb2()() }"
+	mb3 := "func (x0 B(type )) mb3(type )() Any() { return A(){}.ma2()() }"
+	C := "type C(type ) struct {}"
+	mc1 := "func (x0 C(type )) ma1(type )() Any() { return x0 }" // C <: IA
+	D := "type D(type ) struct {}"
+	foo := "func (x0 D(type )) foo(type )(x IA()) Any() { return x.ma1()() }"
+	e := "A(){}.ma1()()"
+	prog := fggParseAndOkGood(t, Any, IA, A, ma1, ma2, B, mb1, mb2, mb3, C, mc1, D, foo, e).(fgg.FGGProgram)
+	NomonoGood(t, prog)
+}
