@@ -269,7 +269,7 @@ func toMonomMethName1(m Name, psi SmallPsi, eta Eta) Name {
 	return Name(res)
 }
 
-/* Duck typing as nominal method sets, cf.
+/* Works because duck typing uses nominal method sets, cf.
 type Any1 interface {};
 type Any2 interface {};
 type A struct {};
