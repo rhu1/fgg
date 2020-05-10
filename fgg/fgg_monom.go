@@ -269,6 +269,14 @@ func toMonomMethName1(m Name, psi SmallPsi, eta Eta) Name {
 	return Name(res)
 }
 
+/* Duck typing as nominal method sets, cf.
+type Any1 interface {};
+type Any2 interface {};
+type A struct {};
+func (x0 A) foo() Any1 { return x0 };
+type IB interface { foo() Any2 };
+type toAny1 struct { any Any1 };
+func main() { _ = toAny1{A{}}.any.(IB) } // assertion failure */
 func toHashSig(g Sig) string {
 	subs := make(Delta)
 	for i := 0; i < len(g.Psi.tFormals); i++ {
