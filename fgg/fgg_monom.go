@@ -26,6 +26,7 @@ func ToMonomId(u TNamed) fg.Type {
 // All m (MethInstan.meth) belong to the same t (MethInstan.u_recv.t_name)
 type Mu map[string]MethInstan // Cf. Omega1, toKey_Wm
 
+var empty_I = fg.Type("Top")
 var empty_S = fg.Type("Empty")
 
 /* Monomorph: FGGProgram -> FGProgram */
@@ -56,7 +57,8 @@ func ApplyOmega1(p FGGProgram, omega Omega1) fg.FGProgram {
 		}
 	}
 	e_monom := monomExpr1(p.e_main, make(Eta))
-	ds_monom = append(ds_monom, fg.NewSTypeLit(empty_S, []fg.FieldDecl{}))
+	//ds_monom = append(ds_monom, fg.NewSTypeLit(empty_S, []fg.FieldDecl{}))
+	ds_monom = append(ds_monom, fg.NewITypeLit(empty_I, []fg.Spec{}))
 	return fg.NewFGProgram(ds_monom, e_monom, p.printf)
 }
 
@@ -120,7 +122,7 @@ func monomITypeLit1(t_monom fg.Type, c ITypeLit, eta Eta, mu Mu) fg.ITypeLit {
 				g_monom := monomSig1(s, m, theta) // !!! small psi
 				ss = append(ss, g_monom)
 			}
-			hash := fg.NewSig(toHashSig(s.TSubs(subs)), pds_empty, empty_S)
+			hash := fg.NewSig(toHashSig(s.TSubs(subs)), pds_empty, empty_I)
 			ss = append(ss, hash)
 		case TNamed: // Embedded
 			u_I := s.SubsEta(eta)
@@ -164,8 +166,8 @@ func monomMDecl1(omega Omega1, md MethDecl) []fg.MethDecl {
 		res = append(res, md_monom)
 	}
 	pds_empty := []fg.ParamDecl{}
-	empty := fg.Type("Empty")
-	e_empty := fg.NewStructLit(empty, []fg.FGExpr{})
+	//e_empty := fg.NewStructLit(empty, []fg.FGExpr{})
+	e_empty := fg.NewVariable(md.x_recv)
 	for _, u := range omega.us {
 		recv_monom := fg.NewParamDecl(md.x_recv, toMonomId(u)) // !!! t_S(phi) already ground receiver
 		if u.t_name != md.t_recv {
@@ -177,7 +179,7 @@ func monomMDecl1(omega Omega1, md MethDecl) []fg.MethDecl {
 			subs[k] = v
 		}
 		g := md.ToSig().TSubs(subs)
-		hash := fg.NewMDecl(recv_monom, toHashSig(g), pds_empty, empty, e_empty)
+		hash := fg.NewMDecl(recv_monom, toHashSig(g), pds_empty, empty_I, e_empty)
 		res = append(res, hash)
 	}
 	return res
