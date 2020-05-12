@@ -137,9 +137,12 @@ func (s STypeLit) Ok(ds []Decl) {
 				"\n\t" + s.String())
 		}
 		if _, ok := fs[v.name]; ok {
-			panic("Multiple fields with name: " + v.name + "\n\t" + string(s.t_S))
+			panic("Multiple fields with name: " + v.name + "\n\t" + s.String())
 		}
 		fs[v.name] = v
+	}
+	if isRecursiveFieldType(ds, make(map[Type]Type), s.t_S) {
+		panic("Invalid recursive struct type:\n\t" + s.String())
 	}
 }
 
@@ -288,11 +291,14 @@ func (c ITypeLit) Ok(ds []Decl) {
 			if _, ok := seen[s.meth]; ok {
 				panic("Multiple sigs with name: " + s.meth + "\n\t" + c.String())
 			}
-			s.Ok(ds)
+			seen[s.meth] = s
 		case Type:
 			if !isInterfaceType(ds, s) {
 				panic("Embedded type must be an interface, not: " + string(s) +
 					"\n\t" + s.String())
+			}
+			if isRecursiveInterfaceEmbedding(ds, make(map[Type]Type), s) {
+				panic("Invalid recursive interface embedding type:\n\t" + c.String())
 			}
 		}
 	}
@@ -384,6 +390,49 @@ func isType(ds []Decl, t Type) bool { // Cf. isStructType, etc.
 		if d, ok := v.(STypeLit); ok && d.t_S == t {
 			return true
 		} else if d, ok := v.(ITypeLit); ok && d.t_I == t {
+			return true
+		}
+	}
+	return false
+}
+
+func isRecursiveFieldType(ds []Decl, seen map[Type]Type, t_S Type) bool {
+	if _, ok := seen[t_S]; ok {
+		return true
+	}
+	for _, v := range fields(ds, t_S) {
+		if !isStructType(ds, v.t) {
+			continue
+		}
+		seen1 := make(map[Type]Type)
+		for k, v := range seen {
+			seen1[k] = v
+		}
+		seen1[t_S] = t_S
+		if isRecursiveFieldType(ds, seen1, v.t) {
+			return true
+		}
+	}
+	return false
+}
+
+// Pre: t_I OK already checked
+func isRecursiveInterfaceEmbedding(ds []Decl, seen map[Type]Type, t_I Type) bool {
+	if _, ok := seen[t_I]; ok {
+		return true
+	}
+	td := getTDecl(ds, t_I).(ITypeLit)
+	for _, v := range td.specs {
+		emb, ok := v.(Type)
+		if !ok {
+			continue
+		}
+		seen1 := make(map[Type]Type)
+		for k, v := range seen {
+			seen1[k] = v
+		}
+		seen1[t_I] = t_I
+		if isRecursiveInterfaceEmbedding(ds, seen1, emb) {
 			return true
 		}
 	}
