@@ -57,7 +57,7 @@ func methodsDelta(ds []Decl, delta Delta, u Type) map[Name]Sig {
 				u_S := u.(TNamed)
 				if md.t_recv == u_S.t_name {
 					subs := make(map[TParam]Type)
-					for i := 0; i < len(md.Psi_recv.tFormals); i++ {
+					for i := 0; i < len(md.Psi_recv.tFormals); i++ { // TODO: md.Psi_recv.ToDelta
 						subs[md.Psi_recv.tFormals[i].name] = u_S.u_args[i]
 					}
 					/*for i := 0; i < len(md.psi.tfs); i++ { // CHECKME: because TParam.TSubs will panic o/w -- refactor?
