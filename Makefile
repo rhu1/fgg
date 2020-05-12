@@ -12,14 +12,13 @@
 #	go install github.com/rhu1/fgg
 
 .PHONY: test
-test: test-all
-
-.PHONY: test-all
-test-all: test-fg test-fgg test-fg2fgg
-#test-monom test-oblit
+test: test-fg test-fgg test-fg2fgg
 
 .PHONY: test-against-go
 test-against-go: test-fg-examples-against-go test-monom-against-go
+
+.PHONY: test-all
+test-all: test test-against-go
 
 .PHONY: clean
 clean: clean-test-all
