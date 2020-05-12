@@ -246,7 +246,7 @@ func testMonom(printf bool, verbose bool, src string, steps int) {
 	//p_mono := fgg.Monomorph(p_fgg)
 	ds_fgg := p_fgg.GetDecls()
 	omega := fgg.GetOmega1(ds_fgg, p_fgg.GetMain().(fgg.FGGExpr))
-	p_mono := fgg.ApplyOmega1(p_fgg, omega)
+	p_mono := fgg.ApplyOmega1(p_fgg, omega) // TODO: can just monom expr (ground main) directly
 	vPrintln(verbose, "Monom expr: "+p_mono.GetMain().String())
 	t := p_mono.Ok(false).(fg.Type)
 	ds_mono := p_mono.GetDecls()
