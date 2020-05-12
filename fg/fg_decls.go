@@ -130,7 +130,17 @@ func (s STypeLit) GetName() Name { return Name(s.t_S) }
 
 // From Decl
 func (s STypeLit) Ok(ds []Decl) {
-	// TODO
+	fs := make(map[Name]FieldDecl)
+	for _, v := range s.fDecls {
+		if !isType(ds, v.t) {
+			panic("Field " + v.name + " has an unknown type: " + string(v.t) +
+				"\n\t" + s.String())
+		}
+		if _, ok := fs[v.name]; ok {
+			panic("Multiple fields with name: " + v.name + "\n\t" + string(s.t_S))
+		}
+		fs[v.name] = v
+	}
 }
 
 func (s STypeLit) String() string {
@@ -194,7 +204,18 @@ func (md MethDecl) Ok(ds []Decl) {
 	}
 	env := Gamma{md.recv.name: md.recv.t}
 	for _, v := range md.pDecls {
+		if !isType(ds, v.t) {
+			panic("Parameter " + v.name + " has an unknown type: " + string(v.t) +
+				"\n\t" + md.String())
+		}
+		if _, ok := env[v.name]; ok {
+			panic("Multiple receiver/parameters with name " + v.name + "\n\t" +
+				md.String())
+		}
 		env[v.name] = v.t
+	}
+	if !isType(ds, md.t_ret) {
+		panic("Unknown return type: " + string(md.t_ret) + "\n\t" + md.String())
 	}
 	allowStupid := false
 	t := md.e_body.Typing(ds, env, allowStupid)
@@ -260,7 +281,21 @@ func (c ITypeLit) GetName() Name { return Name(c.t_I) }
 
 // From Decl
 func (c ITypeLit) Ok(ds []Decl) {
-	// TODO
+	seen := make(map[Name]Sig)
+	for _, v := range c.specs {
+		switch s := v.(type) {
+		case Sig:
+			if _, ok := seen[s.meth]; ok {
+				panic("Multiple sigs with name: " + s.meth + "\n\t" + c.String())
+			}
+			s.Ok(ds)
+		case Type:
+			if !isInterfaceType(ds, s) {
+				panic("Embedded type must be an interface, not: " + string(s) +
+					"\n\t" + s.String())
+			}
+		}
+	}
 }
 
 func (c ITypeLit) String() string {
@@ -293,6 +328,24 @@ func (g Sig) GetMethod() Name            { return g.meth }
 func (g Sig) GetParamDecls() []ParamDecl { return g.pDecls }
 func (g Sig) GetReturn() Type            { return g.t_ret }
 
+func (g0 Sig) Ok(ds []Decl) {
+	seen := make(map[Type]ParamDecl)
+	for _, v := range g0.pDecls {
+		if !isType(ds, v.t) {
+			panic("Parameter " + v.name + " has an unknown type: " + string(v.t) +
+				"\n\t" + g0.String())
+		}
+		if _, ok := seen[v.t]; ok {
+			panic("Multiple parameters with same name: " + v.name +
+				"\n\t" + g0.String())
+		}
+	}
+	if !isType(ds, g0.t_ret) {
+		panic("Unknown return type: " + string(g0.t_ret) +
+			"\n\t" + g0.String())
+	}
+}
+
 // !!! Sig in FG (also, Go spec) includes ~x, which naively breaks "impls"
 func (g0 Sig) EqExceptVars(g Sig) bool {
 	if len(g0.pDecls) != len(g.pDecls) {
@@ -322,6 +375,20 @@ func (g Sig) String() string {
 }
 
 /* Helpers */
+
+func isType(ds []Decl, t Type) bool { // Cf. isStructType, etc.
+	if t == STRING_TYPE {
+		return true
+	}
+	for _, v := range ds {
+		if d, ok := v.(STypeLit); ok && d.t_S == t {
+			return true
+		} else if d, ok := v.(ITypeLit); ok && d.t_I == t {
+			return true
+		}
+	}
+	return false
+}
 
 // Doesn't include "(...)" -- slightly more convenient for debug messages
 func writeFieldDecls(b *strings.Builder, fds []FieldDecl) {
