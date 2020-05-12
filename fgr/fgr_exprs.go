@@ -53,6 +53,10 @@ func (x Variable) IsValue() bool {
 	return false
 }
 
+func (x Variable) CanEval(ds []Decl) bool {
+	return false
+}
+
 func (x Variable) String() string {
 	return x.name
 }
@@ -133,6 +137,17 @@ func (s StructLit) IsValue() bool {
 	return true
 }
 
+func (s StructLit) CanEval(ds []Decl) bool {
+	for _, v := range s.elems {
+		if v.CanEval(ds) {
+			return true
+		} else if !v.IsValue() {
+			return false
+		}
+	}
+	return false
+}
+
 func (s StructLit) String() string {
 	var b strings.Builder
 	b.WriteString(s.t_S.String())
@@ -211,6 +226,20 @@ func (s Select) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 }
 
 func (s Select) IsValue() bool {
+	return false
+}
+
+func (s Select) CanEval(ds []Decl) bool {
+	if s.e_S.CanEval(ds) {
+		return true
+	} else if !s.e_S.IsValue() {
+		return false
+	}
+	for _, v := range fields(ds, s.e_S.(StructLit).t_S) { // N.B. "purely operational", no typing aspect
+		if v.name == s.field {
+			return true
+		}
+	}
 	return false
 }
 
@@ -315,6 +344,28 @@ func (c Call) IsValue() bool {
 	return false
 }
 
+func (c Call) CanEval(ds []Decl) bool {
+	if c.e_recv.CanEval(ds) {
+		return true
+	} else if !c.e_recv.IsValue() {
+		return false
+	}
+	for _, v := range c.args {
+		if v.CanEval(ds) {
+			return true
+		} else if !v.IsValue() {
+			return false
+		}
+	}
+	for _, d := range ds { // TODO: factor out GetMethDecl
+		if md, ok := d.(MDecl); ok &&
+			md.recv.t == c.e_recv.(StructLit).t_S { // i.e., Impls, Cf. typing, methods
+			return len(md.pDecls) == len(c.args) // Needed?
+		}
+	}
+	return false
+}
+
 func (c Call) String() string {
 	var b strings.Builder
 	b.WriteString(c.e_recv.String())
@@ -395,6 +446,15 @@ func (a Assert) IsValue() bool {
 	return false
 }
 
+func (a Assert) CanEval(ds []Decl) bool {
+	if a.e_I.CanEval(ds) {
+		return true
+	} else if !a.e_I.IsValue() {
+		return false
+	}
+	return a.e_I.(StructLit).t_S.Impls(ds, a.t_cast)
+}
+
 func (a Assert) String() string {
 	var b strings.Builder
 	b.WriteString(a.e_I.String())
@@ -434,6 +494,10 @@ func (p Panic) Eval(ds []Decl) (FGRExpr, string) {
 // From base.Expr
 func (p Panic) IsValue() bool {
 	return true
+}
+
+func (p Panic) CanEval(ds []Decl) bool {
+	return false
 }
 
 func (p Panic) String() string {
@@ -502,6 +566,20 @@ func (c IfThenElse) Eval(ds []Decl) (FGRExpr, string) {
 // From base.Expr
 func (c IfThenElse) IsValue() bool {
 	return false
+}
+
+func (c IfThenElse) CanEval(ds []Decl) bool {
+	if c.e1.CanEval(ds) {
+		return true
+	} else if !c.e1.IsValue() {
+		return false
+	}
+	if c.e2.CanEval(ds) {
+		return true
+	} else if !c.e2.IsValue() {
+		return false
+	}
+	return c.e3.CanEval(ds)
 }
 
 func (c IfThenElse) String() string {
@@ -584,12 +662,23 @@ func (r TRep) Eval(ds []Decl) (FGRExpr, string) {
 
 // From base.Expr
 func (r TRep) IsValue() bool {
-	for i := 0; i < len(r.args); i++ {
-		if !r.args[i].IsValue() {
+	for _, v := range r.args {
+		if !v.IsValue() {
 			return false
 		}
 	}
 	return true
+}
+
+func (r TRep) CanEval(ds []Decl) bool {
+	for _, v := range r.args {
+		if v.CanEval(ds) {
+			return true
+		} else if !v.IsValue() {
+			return false
+		}
+	}
+	return false
 }
 
 func (r TRep) String() string {
@@ -637,6 +726,10 @@ func (tmp TmpTParam) Eval(ds []Decl) (FGRExpr, string) {
 }
 
 func (tmp TmpTParam) IsValue() bool {
+	panic("Shouldn't get in here: " + tmp.String())
+}
+
+func (tmp TmpTParam) CanEval(ds []Decl) bool {
 	panic("Shouldn't get in here: " + tmp.String())
 }
 

@@ -50,6 +50,10 @@ func (x Variable) IsValue() bool {
 	return false
 }
 
+func (x Variable) CanEval(ds []Decl) bool {
+	return false
+}
+
 func (x Variable) String() string {
 	return x.name
 }
@@ -128,6 +132,17 @@ func (s StructLit) IsValue() bool {
 		}
 	}
 	return true
+}
+
+func (s StructLit) CanEval(ds []Decl) bool {
+	for _, v := range s.elems {
+		if v.CanEval(ds) {
+			return true
+		} else if !v.IsValue() {
+			return false
+		}
+	}
+	return false
 }
 
 func (s StructLit) String() string {
@@ -209,6 +224,20 @@ func (s Select) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 
 // From base.Expr
 func (s Select) IsValue() bool {
+	return false
+}
+
+func (s Select) CanEval(ds []Decl) bool {
+	if s.e_S.CanEval(ds) {
+		return true
+	} else if !s.e_S.IsValue() {
+		return false
+	}
+	for _, v := range fields(ds, s.e_S.(StructLit).t_S) { // N.B. "purely operational", no typing aspect
+		if v.name == s.field {
+			return true
+		}
+	}
 	return false
 }
 
@@ -305,6 +334,28 @@ func (c Call) IsValue() bool {
 	return false
 }
 
+func (c Call) CanEval(ds []Decl) bool {
+	if c.e_recv.CanEval(ds) {
+		return true
+	} else if !c.e_recv.IsValue() {
+		return false
+	}
+	for _, v := range c.args {
+		if v.CanEval(ds) {
+			return true
+		} else if !v.IsValue() {
+			return false
+		}
+	}
+	for _, d := range ds { // TODO: factor out GetMethDecl
+		if md, ok := d.(MethDecl); ok &&
+			md.recv.t == c.e_recv.(StructLit).t_S { // i.e., Impls, Cf. typing, methods
+			return len(md.pDecls) == len(c.args) // Needed?
+		}
+	}
+	return false
+}
+
 func (c Call) String() string {
 	var b strings.Builder
 	b.WriteString(c.e_recv.String())
@@ -385,6 +436,15 @@ func (a Assert) IsValue() bool {
 	return false
 }
 
+func (a Assert) CanEval(ds []Decl) bool {
+	if a.e_I.CanEval(ds) {
+		return true
+	} else if !a.e_I.IsValue() {
+		return false
+	}
+	return a.e_I.(StructLit).t_S.Impls(ds, a.t_cast)
+}
+
 func (a Assert) String() string {
 	var b strings.Builder
 	b.WriteString(a.e_I.String())
@@ -428,6 +488,10 @@ func (s String) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 // From base.Expr
 func (s String) IsValue() bool {
 	return true
+}
+
+func (s String) CanEval(ds []Decl) bool {
+	return false
 }
 
 func (s String) String() string {
@@ -492,6 +556,10 @@ func (s Sprintf) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 // From base.Expr
 func (s Sprintf) IsValue() bool {
 	return false
+}
+
+func (s Sprintf) CanEval(ds []Decl) bool {
+	return true
 }
 
 func (s Sprintf) String() string {
