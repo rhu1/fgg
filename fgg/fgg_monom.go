@@ -26,8 +26,8 @@ func ToMonomId(u TNamed) fg.Type {
 // All m (MethInstan.meth) belong to the same t (MethInstan.u_recv.t_name)
 type Mu map[string]MethInstan // Cf. Omega1, toKey_Wm
 
-var empty_I = fg.Type("Top")
-var empty_S = fg.Type("Empty")
+var empty_I = fg.Type("Top") // !!!
+//var empty_S = fg.Type("Empty")
 
 /* Monomorph: FGGProgram -> FGProgram */
 
