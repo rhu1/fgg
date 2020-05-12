@@ -27,8 +27,5 @@ func (x C(type )) mtop(type )(y tI()) Any() {
 
 
 func main() { _ =
-	Pair(){
-		C(){}.mtop()(A(){})
-		, B(){}
-	}
+	Pair(){ A(){}, B(){}}
 }
