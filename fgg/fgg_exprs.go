@@ -412,9 +412,11 @@ func (c Call) CanEval(ds []Decl) bool {
 	u_S := c.e_recv.(StructLit).u_S
 	for _, d := range ds { // TODO: factor out GetMethDecl
 		if md, ok := d.(MethDecl); ok &&
-			md.t_recv == u_S.t_name &&
-			len(md.Psi_recv.tFormals) == len(u_S.u_args) { // Disregard type bounds (also, len type args?) -- cf. typing, methods
-			return len(md.pDecls) == len(c.args) // Needed?
+			md.t_recv == u_S.t_name && md.name == c.meth {
+			// Disregard type bounds -- cf. actual typing, methods aux
+			return len(md.Psi_recv.tFormals) == len(u_S.u_args) && // Needed, or also disregard?
+				len(md.Psi_meth.tFormals) == len(c.t_args) &&
+				len(md.pDecls) == len(c.args)
 		}
 	}
 	return false

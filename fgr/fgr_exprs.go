@@ -357,9 +357,10 @@ func (c Call) CanEval(ds []Decl) bool {
 			return false
 		}
 	}
+	t_S := c.e_recv.(StructLit).t_S
 	for _, d := range ds { // TODO: factor out GetMethDecl
 		if md, ok := d.(MDecl); ok &&
-			md.recv.t == c.e_recv.(StructLit).t_S { // i.e., Impls, Cf. typing, methods
+			md.recv.t == t_S && md.name == c.meth { // i.e., Impls, Cf. typing, aux methods
 			return len(md.pDecls) == len(c.args) // Needed?
 		}
 	}
