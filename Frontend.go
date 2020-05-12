@@ -74,25 +74,8 @@ func eval(intrp Interp, steps int) base.Type {
 	p := p_init
 	t := t_init
 
-	/*var e_tmp base.Expr
-	var caneval bool
-	var skip bool = false
-	defer func() {
-		if skip {
-			return
-		}
-		if caneval {
-			panic("[CanEval] ... " + e_tmp.String())
-		}
-	}()*/
-
 	for i := 1; i <= steps || !done; i++ {
-		/*e_tmp = p.GetMain()
-		caneval = e_tmp.CanEval(ds)*/
 		p, rule = p.Eval()
-		/*if !caneval {
-			panic("[CanEval] " + reflect.TypeOf(e_tmp).String() + "\n\t" + e_tmp.String() + " -> " + p.GetMain().String())
-		}*/
 		intrp.SetProgram(p)
 		intrp.vPrintln(fmt.Sprintf("%6d: %8s %v", i, "["+rule+"]", p.GetMain()))
 		intrp.vPrint("Checking OK:") // TODO: maybe disable by default, enable by flag
@@ -105,7 +88,6 @@ func eval(intrp Interp, steps int) base.Type {
 			done = true
 		}
 	}
-	skip = true
 	intrp.vPrintln(p.GetMain().String()) // Final result  // CHECKME: check prog.printf, for ToGoString?
 	//return p_res
 	return t
