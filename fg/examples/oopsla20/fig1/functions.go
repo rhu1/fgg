@@ -1,4 +1,4 @@
-//$ go run github.com/rhu1/fgg -v -eval=-1 fg/examples/oopsla20/fig1/functions.go
+//$ go run github.com/rhu1/fgg -eval=-1 -v fg/examples/oopsla20/fig1/functions.go
 
 package main;
 
@@ -68,15 +68,15 @@ func (x0 Neg) IsNeg() Bool { return TT{} };
 
 type Ints struct {};
 func (d Ints) _1() Int { return Pos{Zero{}} };
-func (d Ints) _2() Int { return Ints{}._1().Add(Ints{}._1()) };
-func (d Ints) _3() Int { return Ints{}._2().Add(Ints{}._1()) };
-//func (d Ints) _4() Int { return Ints{}._3().Add(Ints{}._1()) };
-//func (d Ints) _5() Int { return Ints{}._4().Add(Ints{}._1()) };
+func (d Ints) _2() Int { return d._1().Add(d._1()) };
+func (d Ints) _3() Int { return d._2().Add(d._1()) };
+//func (d Ints) _4() Int { return d._3().Add(d._1()) };
+//func (d Ints) _5() Int { return d._4().Add(d._1()) };
 func (d Ints) __1() Int { return Neg{Zero{}} };
-func (d Ints) __2() Int { return Ints{}.__1().Add(Ints{}.__1()) };
-func (d Ints) __3() Int { return Ints{}.__2().Add(Ints{}.__1()) };
-func (d Ints) __4() Int { return Ints{}.__3().Add(Ints{}.__1()) };
-func (d Ints) __5() Int { return Ints{}.__4().Add(Ints{}.__1()) };
+func (d Ints) __2() Int { return d.__1().Add(d.__1()) };
+func (d Ints) __3() Int { return d.__2().Add(d.__1()) };
+func (d Ints) __4() Int { return d.__3().Add(d.__1()) };
+func (d Ints) __5() Int { return d.__4().Add(d.__1()) };
 
 
 /* Later example */
