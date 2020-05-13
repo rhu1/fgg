@@ -1,0 +1,147 @@
+//$ go run github.com/rhu1/fgg -fgg -eval=-1 -v fgg/examples/oopsla20/fig6/expression.fgg
+
+package main;
+
+import "fmt";
+
+
+/* Library: Bool, Int */
+
+type Bool(type ) interface {
+	Not(type )() Bool();
+	Equal(type )(that Bool()) Bool();
+	Cond(type a Any())(br Branches(a)) a
+};
+type Branches(type a Any()) interface {
+	IfTT(type )() a;
+	IfFF(type )() a
+};
+type TT(type ) struct {};
+type FF(type ) struct {};
+func (this TT(type )) Not(type )() Bool() { return FF(){} };
+func (this FF(type )) Not(type )() Bool() { return TT(){} };
+func (this TT(type )) Equal(type )(that Bool()) Bool() { return that };
+func (this FF(type )) Equal(type )(that Bool()) Bool() { return that.Not()() };
+func (this TT(type )) Cond(type a Any())(br Branches(a)) a { return br.IfTT()() };
+func (this FF(type )) Cond(type a Any())(br Branches(a)) a { return br.IfFF()() };
+
+type Int(type ) interface {
+	Inc(type )() Int();
+	Dec(type )() Int();
+	Equal(type )(x Int()) Bool();
+	EqualZero(type )() Bool();
+	EqualNonZero(type )(x Int()) Bool();
+	Add(type )(x Int()) Int();
+	Gt(type )(x Int()) Bool();
+	IsNeg(type )() Bool();
+	String(type )() string  // !!!
+};
+
+type Zero(type ) struct {};
+func (x0 Zero(type )) Inc(type )() Int() { return Pos(){x0} };
+func (x0 Zero(type )) Dec(type )() Int() { return Neg(){x0} };
+func (x0 Zero(type )) Equal(type )(x Int()) Bool() { return x.EqualZero()() };
+func (x0 Zero(type )) EqualZero(type )() Bool() { return TT(){} };
+func (x0 Zero(type )) EqualNonZero(type )(x Int()) Bool() { return FF(){} };
+func (x0 Zero(type )) Add(type )(x Int()) Int() { return x };
+func (x0 Zero(type )) Gt(type )(x Int()) Bool() { return x.IsNeg()() };
+func (x0 Zero(type )) IsNeg(type )() Bool() { return FF(){} };
+
+type Pos(type ) struct { dec Int() };
+func (x0 Pos(type )) Inc(type )() Int() { return Pos(){x0} };
+func (x0 Pos(type )) Dec(type )() Int() { return x0.dec };
+func (x0 Pos(type )) Equal(type )(x Int()) Bool() { return x0.EqualNonZero()(x) };
+func (x0 Pos(type )) EqualZero(type )() Bool() { return FF(){} };
+func (x0 Pos(type )) EqualNonZero(type )(x Int()) Bool() { return x.Equal()(x0.dec) };
+func (x0 Pos(type )) Add(type )(x Int()) Int() { return x0.dec.Add()(x.Inc()()) };
+func (x0 Pos(type )) Gt(type )(x Int()) Bool() { return x0.dec.Gt()(x.Dec()()) };
+func (x0 Pos(type )) IsNeg(type )() Bool() { return FF(){} };
+
+type Neg(type ) struct { inc Int() };
+func (x0 Neg(type )) Inc(type )() Int() { return x0.inc };
+func (x0 Neg(type )) Dec(type )() Int() { return Neg(){x0} };
+func (x0 Neg(type )) Equal(type )(x Int()) Bool() { return x0.EqualNonZero()(x) };
+func (x0 Neg(type )) EqualZero(type )() Bool() { return FF(){} };
+func (x0 Neg(type )) EqualNonZero(type )(x Int()) Bool() { return x.Equal()(x0.inc) };
+func (x0 Neg(type )) Add(type )(x Int()) Int() { return x0.inc.Add()(x.Dec()()) };
+func (x0 Neg(type )) Gt(type )(x Int()) Bool() { return x0.inc.Gt()(x.Inc()()) };
+func (x0 Neg(type )) IsNeg(type )() Bool() { return TT(){} };
+
+type Ints(type ) struct {};
+func (d Ints(type )) _1(type )() Int() { return Pos(){Zero(){}} };
+func (d Ints(type )) _2(type )() Int() { return d._1()().Add()(d._1()()) };
+func (d Ints(type )) _3(type )() Int() { return d._2()().Add()(d._1()()) };
+func (d Ints(type )) _4(type )() Int() { return d._3()().Add()(d._1()()) };
+func (d Ints(type )) _5(type )() Int() { return d._4()().Add()(d._1()()) };
+func (d Ints(type )) _6(type )() Int() { return d._5()().Add()(d._1()()) };
+func (d Ints(type )) __1(type )() Int() { return Neg(){Zero(){}} };
+func (d Ints(type )) __2(type )() Int() { return d.__1()().Add()(d.__1()()) };
+func (d Ints(type )) __3(type )() Int() { return d.__2()().Add()(d.__1()()) };
+func (d Ints(type )) __4(type )() Int() { return d.__3()().Add()(d.__1()()) };
+func (d Ints(type )) __5(type )() Int() { return d.__4()().Add()(d.__1()()) };
+
+
+/* Assumption */
+
+func (x0 Zero(type )) String(type )() string { return fmt.Sprintf("%v", x0) };
+func (x0 Pos(type )) String(type )() string { return fmt.Sprintf("%v", x0) };
+func (x0 Neg(type )) String(type )() string { return fmt.Sprintf("%v", x0) };
+
+
+/* Prev. example */
+
+type Any(type ) interface {};
+
+
+/* Example code */
+
+type Evaler(type ) interface {
+  Eval(type )() Int()
+};
+
+type Num(type ) struct {
+  value Int()
+};
+
+func (e Num(type )) Eval(type )() Int() {
+  return e.value
+};
+
+type Plus(type a Any()) struct {
+  left a;
+  right a
+};
+
+func (e Plus(type a Evaler())) Eval(type )() Int() {
+  return e.left.Eval()().Add()(e.right.Eval()())
+};
+
+
+type Stringer(type ) interface {
+  String(type )() string
+};
+
+func (e Num(type )) String(type )() string {
+  //return fmt.Sprintf("%d", e.value)
+  return fmt.Sprintf("%v", e.value)
+};
+
+func (e Plus(type a Stringer())) String(type )() string {
+  return fmt.Sprintf("(%s+%s)",  // CHECKME: omit FGG StringLit quotes? 
+  		e.left.String()(), e.right.String()())
+};
+
+type Expr(type ) interface {
+  Evaler();
+  Stringer()
+};
+
+
+func main() {
+  /*var e Expr = Plus(Expr){Num{1}, {Num{2}}
+	var v Int = e.Eval() // 3
+	var s string = e.String() //"(1+2)"*/
+  //_ = Plus(Expr()){Num(){Ints(){}._1()()}, Num(){Ints(){}._2()()}}.Eval()()
+  _ = Plus(Expr()){Num(){Ints(){}._1()()}, Num(){Ints(){}._2()()}}.String()()
+}
+

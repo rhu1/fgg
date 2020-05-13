@@ -179,7 +179,7 @@ func collectExpr2(ds []Decl, delta Delta, gamma Gamma, e FGGExpr, omega Omega2) 
 			omega.us[k] = u
 			res = true
 		}
-	case String: // CHECKME
+	case StringLit: // CHECKME
 		k := toKey_Wt2(STRING_TYPE)
 		if _, ok := omega.us[k]; !ok {
 			omega.us[k] = STRING_TYPE
@@ -224,7 +224,7 @@ func auxF2(ds []Decl, omega Omega2) bool {
 	res := false
 	tmp := make(map[string]Type)
 	for _, u := range omega.us {
-		if !isStructType(ds, u) || u.Equals(STRING_TYPE) { // CHECKME
+		if !isStructType(ds, u) { //|| u.Equals(STRING_TYPE) { // CHECKME
 			continue
 		}
 		for _, u_f := range Fields(ds, u.(TNamed)) {

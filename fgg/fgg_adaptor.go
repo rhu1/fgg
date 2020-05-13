@@ -255,8 +255,13 @@ func (a *FGGAdaptor) ExitStructLit(ctx *parser.StructLitContext) {
 		}
 	}
 	// If targs omitted, following will fail attempting to cast the non-param name parsed as a TParam
-	u := a.pop().(TNamed) // N.B. \tau_S, means "of the form t_S(~\tau)" (so a TName) -- i.e., not \alpha
-	a.push(StructLit{u, es})
+	tmp := a.pop()
+	cast, ok := tmp.(TNamed)
+	if !ok { // N.B. \tau_S, means "of the form t_S(~\tau)" (so a TName) -- i.e., not \alpha
+	panic(testutils.PARSER_PANIC_PREFIX + "Expected named type, not: " +
+		reflect.TypeOf(tmp).String() + "\n\t" + tmp.String())
+	}
+	a.push(StructLit{cast, es})
 }
 
 // Same as Fg

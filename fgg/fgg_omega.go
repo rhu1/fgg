@@ -7,6 +7,10 @@ import (
 
 var _ = fmt.Errorf
 
+/* Constants */
+
+var STRING_TYPE_MONOM = TNamed{string(STRING_TYPE), SmallPsi{}} // Because TNamed required
+
 /* GroundEnv */
 
 // Basically a Gamma for only ground TNamed
@@ -147,16 +151,18 @@ func collectExpr(ds []Decl, gamma GroundGamma, e FGGExpr, omega Omega1) bool {
 			omega.us[k] = u
 			res = true
 		}
-	case String: // CHECKME
-		k := toKey_Wt(STRING_TYPE)
+	case StringLit: // CHECKME
+		//k := toKey_Wt(STRING_TYPE)
+		k := string(STRING_TYPE)
 		if _, ok := omega.us[k]; !ok {
-			omega.us[k] = STRING_TYPE
+			omega.us[k] = STRING_TYPE_MONOM
 			res = true // CHECKME
 		}
 	case Sprintf:
-		k := toKey_Wt(STRING_TYPE)
+		//k := toKey_Wt(STRING_TYPE)
+		k := string(STRING_TYPE)
 		if _, ok := omega.us[k]; !ok {
-			omega.us[k] = STRING_TYPE
+			omega.us[k] = STRING_TYPE_MONOM
 			res = true
 		}
 		for _, arg := range e1.args {
@@ -193,7 +199,7 @@ func auxF(ds []Decl, omega Omega1) bool {
 	res := false
 	tmp := make(map[string]TNamed)
 	for _, u := range omega.us {
-		if !isStructType(ds, u) || u.Equals(STRING_TYPE) { // CHECKME
+		if !isStructType(ds, u) { //|| u.Equals(STRING_TYPE) { // CHECKME
 			continue
 		}
 		for _, u_f := range Fields(ds, u) {
