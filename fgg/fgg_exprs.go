@@ -541,47 +541,47 @@ func (a Assert) ToGoString(ds []Decl) string {
 	return b.String()
 }
 
-/* String, fmt.Sprintf */
+/* StringLit, fmt.Sprintf */
 
-type String struct {
+type StringLit struct {
 	val string
 }
 
-var _ FGGExpr = String{}
+var _ FGGExpr = StringLit{}
 
-func (s String) GetValue() string { return s.val }
+func (s StringLit) GetValue() string { return s.val }
 
-func (s String) Subs(subs map[Variable]FGGExpr) FGGExpr {
+func (s StringLit) Subs(subs map[Variable]FGGExpr) FGGExpr {
 	return s
 }
 
-func (s String) TSubs(subs map[TParam]Type) FGGExpr {
+func (s StringLit) TSubs(subs map[TParam]Type) FGGExpr {
 	return s
 }
 
-func (s String) Eval(ds []Decl) (FGGExpr, string) {
+func (s StringLit) Eval(ds []Decl) (FGGExpr, string) {
 	panic("Cannot reduce: " + s.String())
 }
 
-func (s String) Typing(ds []Decl, delta Delta, gamma Gamma, allowStupid bool) Type {
+func (s StringLit) Typing(ds []Decl, delta Delta, gamma Gamma, allowStupid bool) Type {
 	return STRING_TYPE
 }
 
 // From base.Expr
-func (s String) IsValue() bool {
+func (s StringLit) IsValue() bool {
 	return true
 }
 
-func (s String) CanEval(ds []Decl) bool {
+func (s StringLit) CanEval(ds []Decl) bool {
 	return false
 }
 
-func (s String) String() string {
+func (s StringLit) String() string {
 	//return "\"" + s.val + "\""
 	return s.val
 }
 
-func (s String) ToGoString(ds []Decl) string {
+func (s StringLit) ToGoString(ds []Decl) string {
 	//return "\"" + s.val + "\""
 	return s.val
 }
@@ -627,7 +627,7 @@ func (s Sprintf) Eval(ds []Decl) (FGGExpr, string) {
 		for i := range args {
 			cast[i] = args[i]
 		}
-		return String{fmt.Sprintf(s.format, cast...)}, "Sprintf"
+		return StringLit{fmt.Sprintf(s.format, cast...)}, "Sprintf"
 	}
 }
 

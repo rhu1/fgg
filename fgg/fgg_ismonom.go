@@ -179,7 +179,7 @@ func collectExpr2(ds []Decl, delta Delta, gamma Gamma, e FGGExpr, omega Omega2) 
 			omega.us[k] = u
 			res = true
 		}
-	case String: // CHECKME
+	case StringLit: // CHECKME
 		k := toKey_Wt2(STRING_TYPE)
 		if _, ok := omega.us[k]; !ok {
 			omega.us[k] = STRING_TYPE

@@ -151,7 +151,7 @@ func collectExpr(ds []Decl, gamma GroundGamma, e FGGExpr, omega Omega1) bool {
 			omega.us[k] = u
 			res = true
 		}
-	case String: // CHECKME
+	case StringLit: // CHECKME
 		//k := toKey_Wt(STRING_TYPE)
 		k := string(STRING_TYPE)
 		if _, ok := omega.us[k]; !ok {

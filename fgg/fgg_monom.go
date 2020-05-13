@@ -225,7 +225,7 @@ func monomExpr1(e1 FGGExpr, eta Eta) fg.FGExpr {
 		u_cast := e.u_cast.SubsEta(eta) // "Inlined" substitution actions here -- cf. M-Type
 		t_monom := toMonomId(u_cast)
 		return fg.NewAssert(e_monom, t_monom)
-	case String: // CHECKME
+	case StringLit: // CHECKME
 		return fg.NewString(e.val)
 	case Sprintf:
 		args := make([]fg.FGExpr, len(e.args))
