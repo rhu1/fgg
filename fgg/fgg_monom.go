@@ -17,8 +17,17 @@ var _ = fmt.Errorf
 
 /* Export */
 
-func ToMonomId(u TNamed) fg.Type {
-	return toMonomId(u)
+func ToMonomId(u Type) fg.Type {
+	if a, ok := u.(TParam); ok {
+		if _, foo := PRIMITIVE_TYPES[a]; foo {
+			return fg.Type(string(a))
+		}
+	}
+	return toMonomId(u.(TNamed))
+}
+
+func MonomExpr(e FGGExpr) fg.FGExpr {
+	return monomExpr1(e, make(Eta))
 }
 
 /* */
@@ -233,8 +242,8 @@ func monomExpr1(e1 FGGExpr, eta Eta) fg.FGExpr {
 /* Helpers */
 
 func toMonomId(u TNamed) fg.Type {
-	if u.Equals(STRING_TYPE) { // CHECKME
-		return "string"
+	if u.Equals(STRING_TYPE_MONOM) { // HACK
+		return fg.STRING_TYPE
 	}
 	res := u.String()
 	res = strings.Replace(res, ",", ",,", -1) // TODO: refactor, cf. Frontend.monomOutputHack

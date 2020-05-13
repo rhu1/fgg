@@ -19,7 +19,19 @@ func IsNamedIfaceType(ds []Decl, u Type) bool { return isNamedIfaceType(ds, u) }
 
 /* Constants */
 
-var STRING_TYPE TNamed = TNamed{"string", []Type{}}
+// Hacks
+var STRING_TYPE = TParam("string")
+var PRIMITIVE_TYPES map[TParam]TParam = make(map[TParam]TParam)
+var PRIMITIVE_PSI BigPsi // Because prim types parsed as TParams, need to check OK
+
+func init() {
+	PRIMITIVE_TYPES[STRING_TYPE] = STRING_TYPE
+	tfs := []TFormal{}
+	for k, v := range PRIMITIVE_TYPES {
+		tfs = append(tfs, TFormal{k, v})
+	}
+	PRIMITIVE_PSI = BigPsi{tfs}
+}
 
 /* Aliases from base */
 // TODO: refactor?
@@ -57,6 +69,9 @@ func (a TParam) TSubs(subs map[TParam]Type) Type {
 }
 
 func (a TParam) SubsEta(eta Eta) TNamed {
+	if _, ok := PRIMITIVE_TYPES[a]; ok {
+		return STRING_TYPE_MONOM // HACK TODO: refactor prims map as TParam->TNamed (map to monom rep)
+	}
 	res, ok := eta[a]
 	if !ok {
 		panic("Shouldn't get here: " + a)
@@ -100,6 +115,9 @@ func (a TParam) Impls(ds []Decl, u base.Type) bool {
 }
 
 func (a TParam) Ok(ds []Decl, delta Delta) {
+	if _, ok := PRIMITIVE_TYPES[a]; ok {
+		return
+	}
 	if _, ok := delta[a]; !ok {
 		panic("Type param " + a.String() + " unknown in context: " + delta.String())
 	}
@@ -225,6 +243,7 @@ func (u0 TNamed) Impls(ds []Decl, u base.Type) bool {
 }
 
 func (u0 TNamed) Ok(ds []Decl, delta Delta) {
+	//if _, ok
 	td := GetTDecl(ds, u0.t_name)
 	psi := td.GetBigPsi()
 	if len(psi.tFormals) != len(u0.u_args) {
@@ -331,11 +350,18 @@ func (Psi BigPsi) Ok(ds []Decl, env BigPsi) {
 	} // Delta built
 	for _, v := range Psi.tFormals {
 		u_I, ok := v.u_I.(TNamed)
-		if !ok || !isNamedIfaceType(ds, u_I) {
-			panic("Upper bound must be an interface type: not " + v.u_I.String() +
-				"\n\t" + Psi.String())
+		if !ok {
+			if _, foo := PRIMITIVE_TYPES[v.u_I.(TParam)]; !foo { // Only because PRIMITIVE_PSI hacks the upperbound like this
+				panic("Upper bound must be a named interface type: not " + v.u_I.String() +
+					"\n\t" + Psi.String())
+			}
+		} else {
+			if !isNamedIfaceType(ds, u_I) {
+				panic("Upper bound must be a named interface type: not " + v.u_I.String() +
+					"\n\t" + Psi.String())
+			}
+			u_I.Ok(ds, delta) // Checks params bound under delta -- N.B. can forward ref (not restricted left-to-right)
 		}
-		u_I.Ok(ds, delta) // Checks params bound under delta -- N.B. can forward ref (not restricted left-to-right)
 	}
 }
 
@@ -498,9 +524,6 @@ func isStructName(ds []Decl, t Name) bool {
 // Check if u is a \tau_S -- implicitly must be a TNamed
 func isStructType(ds []Decl, u Type) bool {
 	if u1, ok := u.(TNamed); ok {
-		if u1.Equals(STRING_TYPE) { // TODO CHECKME
-			return true
-		}
 		for _, v := range ds {
 			d, ok := v.(STypeLit)
 			if ok && d.t_name == u1.t_name {

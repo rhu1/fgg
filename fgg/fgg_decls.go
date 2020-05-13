@@ -111,9 +111,11 @@ func (s STypeLit) GetBigPsi() BigPsi          { return s.Psi }
 func (s STypeLit) GetFieldDecls() []FieldDecl { return s.fDecls }
 
 func (s STypeLit) Ok(ds []Decl) {
-	s.Psi.Ok(ds, BigPsi{})
+	s.Psi.Ok(ds, PRIMITIVE_PSI)
 	seen := make(map[Name]FieldDecl)
-	delta := s.Psi.ToDelta()
+	//delta := s.Psi.ToDelta()
+	root := makeRootPsi(s.Psi)
+	delta := root.ToDelta()
 	for _, v := range s.fDecls {
 		if _, ok := seen[v.field]; ok {
 			panic("Duplicate field name: " + v.field + "\n\t" + s.String())
@@ -291,7 +293,9 @@ func (c ITypeLit) GetBigPsi() BigPsi { return c.Psi }
 func (c ITypeLit) GetSpecs() []Spec  { return c.specs }
 
 func (c ITypeLit) Ok(ds []Decl) {
-	c.Psi.Ok(ds, BigPsi{})
+	c.Psi.Ok(ds, PRIMITIVE_PSI)
+	root := makeRootPsi(c.Psi)
+	delta := root.ToDelta()
 	seen_g := make(map[Name]Sig)    // !!! unique(~S) more flexible
 	seen_u := make(map[string]Type) // key is u.String()
 	for _, v := range c.specs {
@@ -301,7 +305,7 @@ func (c ITypeLit) Ok(ds []Decl) {
 				panic("Multiple sigs with name: " + s.meth + "\n\t" + c.String())
 			}
 			seen_g[s.meth] = s
-			s.Ok(ds, c.Psi)
+			s.Ok(ds, root)
 		case TNamed:
 			k := s.String()
 			if _, ok := seen_u[k]; ok {
@@ -311,7 +315,7 @@ func (c ITypeLit) Ok(ds []Decl) {
 			if !IsNamedIfaceType(ds, s) { // CHECKME: allow embed type param?
 				panic("Embedded type must be a named interface, not: " + k + "\n\t" + c.String())
 			}
-			s.Ok(ds, c.Psi.ToDelta())
+			s.Ok(ds, delta)
 			if isRecursiveInterfaceEmbedding(ds, make(map[string]TNamed), s) {
 				panic("Invalid recursive interface embedding type:\n\t" + c.String())
 			}
@@ -413,6 +417,17 @@ func (g Sig) String() string {
 		u_I.Ok(ds, delta)        // !!! Submission version T-Type, t_i => t_I
 	}
 }*/
+
+func makeRootPsi(Psi BigPsi) BigPsi {
+	tFormals := make([]TFormal, len(PRIMITIVE_PSI.tFormals)+len(Psi.tFormals))
+	for i, v := range PRIMITIVE_PSI.tFormals {
+		tFormals[i] = v
+	}
+	for i, v := range Psi.tFormals {
+		tFormals[i+len(PRIMITIVE_PSI.tFormals)] = v
+	}
+	return BigPsi{tFormals}
+}
 
 // Pre: isStruct(ds, u_S)
 func isRecursiveFieldType(ds []Decl, seen map[string]TNamed,

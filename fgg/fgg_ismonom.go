@@ -224,7 +224,7 @@ func auxF2(ds []Decl, omega Omega2) bool {
 	res := false
 	tmp := make(map[string]Type)
 	for _, u := range omega.us {
-		if !isStructType(ds, u) || u.Equals(STRING_TYPE) { // CHECKME
+		if !isStructType(ds, u) { //|| u.Equals(STRING_TYPE) { // CHECKME
 			continue
 		}
 		for _, u_f := range Fields(ds, u.(TNamed)) {

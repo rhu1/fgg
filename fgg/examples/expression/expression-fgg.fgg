@@ -27,10 +27,10 @@
 package main;
 
 // TODO
-type Int(type ) interface { isInt(type )() Int(); String(type )() string() };
+type Int(type ) interface { isInt(type )() Int(); String(type )() string };
 type One(type ) struct {};
 func (x0 One(type )) isInt(type )() Int() { return x0 };
-func (x0 One(type )) String(type )() string() { return fmt.Sprintf("%v", x0) };
+func (x0 One(type )) String(type )() string { return fmt.Sprintf("%v", x0) };
 
 
 // 1
@@ -68,14 +68,14 @@ func main() {
 // 2
 
 type Stringable(type ) interface {
-  String(type )() string()
+  String(type )() string
 };
 
-func (e Con(type )) String(type )() string() {
+func (e Con(type )) String(type )() string {
   return fmt.Sprintf("%d", e.value)
 };
 
-func (e Add(type a Stringable())) String(type )() string() {
+func (e Add(type a Stringable())) String(type )() string {
   return fmt.Sprintf("(%d+%d)", e.left.String()(), e.right.String()())
 };
 
@@ -97,7 +97,7 @@ func (e Neg(type a Evalable())) Eval(type )() Int() {
 
 // 4
 
-func (e Neg(type a Stringable())) String(type )() string() {
+func (e Neg(type a Stringable())) String(type )() string {
   return fmt.Sprintf("-%d", e.expr.String()())
 };
 
