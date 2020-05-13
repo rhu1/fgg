@@ -1,0 +1,45 @@
+//$ go run github.com/rhu1/fgg -fgg -eval=-1 -v fgg/examples/oopsla20/fig5/graph.fgg
+
+package main;
+
+import "fmt";
+
+/* Prev. examples */
+
+type Any(type ) interface {};
+type Function(type a Any(), b Any()) interface {
+	Apply(type )(x a) b
+};
+
+type List(type a Any()) interface {
+	Map(type b Any())(f Function(a, b)) List(b)
+};
+type Nil(type a Any()) struct {};
+type Cons(type a Any()) struct {
+	head a;
+	tail List(a)
+};
+func (xs Nil(type a Any())) 
+			Map(type b Any())(f Function(a, b)) List(b) {
+	return Nil(b){}
+};
+func (xs Cons(type a Any())) 
+			Map(type b Any())(f Function(a, b)) List(b) {
+	return Cons(b){f.Apply()(xs.head), xs.tail.Map(b)(f)}
+};
+
+
+/* Example code */
+
+type Edge(type e Edge(e, v), v Vertex(e, v)) interface {
+	Source(type )() v;
+	Target(type )() v
+};
+type Vertex(type e Edge(e, v), v Vertex(e, v)) interface {
+	Edges(type )() List(e)
+};
+
+type A(type ) struct {};
+func main() {
+	fmt.Printf("%#v", A(){})
+}
