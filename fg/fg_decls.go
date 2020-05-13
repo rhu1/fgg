@@ -47,30 +47,25 @@ func (p FGProgram) IsPrintf() bool     { return p.printf } // HACK
 
 // From base.Program
 func (p FGProgram) Ok(allowStupid bool) base.Type {
-	if !allowStupid { // Hack, to print the following only for "top-level" programs (not during Eval)
-		/*fmt.Println("[Warning] Type/method decl OK not fully checked yet " +
-		"(e.g., distinct field/param names, etc.)")*/
-	}
-	tds := make(map[Type]TDecl)
-	mds := make(map[string]MethDecl) // Hack, string = string(md.recv.t) + "." + md.GetName()
+	tds := make(map[string]TDecl)    // Type name
+	mds := make(map[string]MethDecl) // Hack, string = string(md.recv.t) + "." + md.name
 	for _, v := range p.decls {
 		switch d := v.(type) {
 		case TDecl:
 			d.Ok(p.decls) // Currently empty -- TODO: check, e.g., unique field names -- cf., above [Warning]
 			// N.B. checks also omitted from submission version
-			t := Type(d.GetName())
+			t := d.GetName()
 			if _, ok := tds[t]; ok {
-				panic("Multiple declarations of type name: " + string(t) + "\n\t" +
+				panic("Multiple declarations of type name: " + t + "\n\t" +
 					d.String())
 			}
 			tds[t] = d
 		case MethDecl:
 			d.Ok(p.decls)
-			n := d.GetName()
-			hash := string(d.recv.t) + "." + n
+			hash := string(d.recv.t) + "." + d.name
 			if _, ok := mds[hash]; ok {
 				panic("Multiple declarations for receiver " + string(d.recv.t) +
-					" of the method name: " + n + "\n\t" + d.String())
+					" of the method name: " + d.name + "\n\t" + d.String())
 			}
 			mds[hash] = d
 		default:
@@ -130,7 +125,20 @@ func (s STypeLit) GetName() Name { return Name(s.t_S) }
 
 // From Decl
 func (s STypeLit) Ok(ds []Decl) {
-	// TODO
+	fs := make(map[Name]FieldDecl)
+	for _, v := range s.fDecls {
+		if !isType(ds, v.t) {
+			panic("Field " + v.name + " has an unknown type: " + string(v.t) +
+				"\n\t" + s.String())
+		}
+		if _, ok := fs[v.name]; ok {
+			panic("Multiple fields with name: " + v.name + "\n\t" + s.String())
+		}
+		fs[v.name] = v
+	}
+	if isRecursiveFieldType(ds, make(map[Type]Type), s.t_S) {
+		panic("Invalid recursive struct type:\n\t" + s.String())
+	}
 }
 
 func (s STypeLit) String() string {
@@ -194,7 +202,18 @@ func (md MethDecl) Ok(ds []Decl) {
 	}
 	env := Gamma{md.recv.name: md.recv.t}
 	for _, v := range md.pDecls {
+		if !isType(ds, v.t) {
+			panic("Parameter " + v.name + " has an unknown type: " + string(v.t) +
+				"\n\t" + md.String())
+		}
+		if _, ok := env[v.name]; ok {
+			panic("Multiple receiver/parameters with name " + v.name + "\n\t" +
+				md.String())
+		}
 		env[v.name] = v.t
+	}
+	if !isType(ds, md.t_ret) {
+		panic("Unknown return type: " + string(md.t_ret) + "\n\t" + md.String())
 	}
 	allowStupid := false
 	t := md.e_body.Typing(ds, env, allowStupid)
@@ -260,7 +279,24 @@ func (c ITypeLit) GetName() Name { return Name(c.t_I) }
 
 // From Decl
 func (c ITypeLit) Ok(ds []Decl) {
-	// TODO
+	seen := make(map[Name]Sig)
+	for _, v := range c.specs {
+		switch s := v.(type) {
+		case Sig:
+			if _, ok := seen[s.meth]; ok {
+				panic("Multiple sigs with name: " + s.meth + "\n\t" + c.String())
+			}
+			seen[s.meth] = s
+		case Type:
+			if !isInterfaceType(ds, s) {
+				panic("Embedded type must be an interface, not: " + string(s) +
+					"\n\t" + s.String())
+			}
+			if isRecursiveInterfaceEmbedding(ds, make(map[Type]Type), s) {
+				panic("Invalid recursive interface embedding type:\n\t" + c.String())
+			}
+		}
+	}
 }
 
 func (c ITypeLit) String() string {
@@ -293,6 +329,24 @@ func (g Sig) GetMethod() Name            { return g.meth }
 func (g Sig) GetParamDecls() []ParamDecl { return g.pDecls }
 func (g Sig) GetReturn() Type            { return g.t_ret }
 
+func (g0 Sig) Ok(ds []Decl) {
+	seen := make(map[Type]ParamDecl)
+	for _, v := range g0.pDecls {
+		if !isType(ds, v.t) {
+			panic("Parameter " + v.name + " has an unknown type: " + string(v.t) +
+				"\n\t" + g0.String())
+		}
+		if _, ok := seen[v.t]; ok {
+			panic("Multiple parameters with same name: " + v.name +
+				"\n\t" + g0.String())
+		}
+	}
+	if !isType(ds, g0.t_ret) {
+		panic("Unknown return type: " + string(g0.t_ret) +
+			"\n\t" + g0.String())
+	}
+}
+
 // !!! Sig in FG (also, Go spec) includes ~x, which naively breaks "impls"
 func (g0 Sig) EqExceptVars(g Sig) bool {
 	if len(g0.pDecls) != len(g.pDecls) {
@@ -322,6 +376,63 @@ func (g Sig) String() string {
 }
 
 /* Helpers */
+
+func isType(ds []Decl, t Type) bool { // Cf. isStructType, etc.
+	if t == STRING_TYPE {
+		return true
+	}
+	for _, v := range ds {
+		if d, ok := v.(STypeLit); ok && d.t_S == t {
+			return true
+		} else if d, ok := v.(ITypeLit); ok && d.t_I == t {
+			return true
+		}
+	}
+	return false
+}
+
+func isRecursiveFieldType(ds []Decl, seen map[Type]Type, t_S Type) bool {
+	if _, ok := seen[t_S]; ok {
+		return true
+	}
+	for _, v := range fields(ds, t_S) {
+		if !isStructType(ds, v.t) {
+			continue
+		}
+		seen1 := make(map[Type]Type)
+		for k, v := range seen {
+			seen1[k] = v
+		}
+		seen1[t_S] = t_S
+		if isRecursiveFieldType(ds, seen1, v.t) {
+			return true
+		}
+	}
+	return false
+}
+
+// Pre: t_I OK already checked
+func isRecursiveInterfaceEmbedding(ds []Decl, seen map[Type]Type, t_I Type) bool {
+	if _, ok := seen[t_I]; ok {
+		return true
+	}
+	td := getTDecl(ds, t_I).(ITypeLit)
+	for _, v := range td.specs {
+		emb, ok := v.(Type)
+		if !ok {
+			continue
+		}
+		seen1 := make(map[Type]Type)
+		for k, v := range seen {
+			seen1[k] = v
+		}
+		seen1[t_I] = t_I
+		if isRecursiveInterfaceEmbedding(ds, seen1, emb) {
+			return true
+		}
+	}
+	return false
+}
 
 // Doesn't include "(...)" -- slightly more convenient for debug messages
 func writeFieldDecls(b *strings.Builder, fds []FieldDecl) {

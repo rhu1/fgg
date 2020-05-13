@@ -26,8 +26,8 @@ func ToMonomId(u TNamed) fg.Type {
 // All m (MethInstan.meth) belong to the same t (MethInstan.u_recv.t_name)
 type Mu map[string]MethInstan // Cf. Omega1, toKey_Wm
 
-var empty_I = fg.Type("Top")
-var empty_S = fg.Type("Empty")
+var empty_I = fg.Type("Top") // !!!
+//var empty_S = fg.Type("Empty")
 
 /* Monomorph: FGGProgram -> FGProgram */
 
@@ -271,6 +271,14 @@ func toMonomMethName1(m Name, psi SmallPsi, eta Eta) Name {
 	return Name(res)
 }
 
+/* Works because duck typing uses nominal method sets, cf.
+type Any1 interface {};
+type Any2 interface {};
+type A struct {};
+func (x0 A) foo() Any1 { return x0 };
+type IB interface { foo() Any2 };
+type toAny1 struct { any Any1 };
+func main() { _ = toAny1{A{}}.any.(IB) } // assertion failure */
 func toHashSig(g Sig) string {
 	subs := make(Delta)
 	for i := 0; i < len(g.Psi.tFormals); i++ {

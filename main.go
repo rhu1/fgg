@@ -68,7 +68,7 @@ var (
 
 	evalSteps int  // number of steps to evaluate
 	verbose   bool // verbose mode
-	printf    bool // use ToGoString for output ("main." type prefix)
+	printf    bool // use ToGoString for output (e.g., "main." type prefix)
 )
 
 func init() {
@@ -140,16 +140,19 @@ Options:
 // - sig-equals-alpha and covariant receiver bounds -- expose test -- DONE -- TODO: oblit for map.fgg (memberBr, receiver param alpha)
 // - test and fix Delta in methods (re. covariant receiver bounds) -- expose test
 // - update "polyrec" check -- DONE: nomono
-// - add p-closure replacement -- expose test
+// - add p-closure replacement DONE -- expose test
 // - test monom on latest examples -- DONE
 // - nomono: fix mutual-poly-rec (should blow up without ismonom) ...fix struct-poly-rec, omega building loops (add recursive struct WF?) -- DONE
 // artifact
-// - add nomono tests
-// - fg vs. go results, add to makefile -- partial: need to generalise and extend to monom tests
+// - add nomono tests -- DONE
+// - fg vs. go results, add to makefile -- partial: need to generalise and extend to monom tests -- DONE
 // - latest paper examples
 // - reorganise example dirs
 // - bad assert eval, no panic -- -test-monom
 // - generally, exit codes instead of panic
+// design
+// - unification based impls/nomono
+// - assert-driven duck typing dummies -- dummy meths as nominal duck typing (cf. nominal type names)
 func main() {
 	flag.Usage = usage
 	flag.Parse()
@@ -244,10 +247,12 @@ func testMonom(printf bool, verbose bool, src string, steps int) {
 
 	// (Initial) left-vertical arrow
 	//p_mono := fgg.Monomorph(p_fgg)
-	omega := fgg.GetOmega1(p_fgg.GetDecls(), p_fgg.GetMain().(fgg.FGGExpr))
-	p_mono := fgg.ApplyOmega1(p_fgg, omega)
+	ds_fgg := p_fgg.GetDecls()
+	omega := fgg.GetOmega1(ds_fgg, p_fgg.GetMain().(fgg.FGGExpr))
+	p_mono := fgg.ApplyOmega1(p_fgg, omega) // TODO: can just monom expr (ground main) directly
 	vPrintln(verbose, "Monom expr: "+p_mono.GetMain().String())
 	t := p_mono.Ok(false).(fg.Type)
+	ds_mono := p_mono.GetDecls()
 	u_fg := fgg.ToMonomId(u)
 	if !t.Equals(u_fg) {
 		panic("-test-monom failed: types do not match\n\tFGG type=" + u.String() +
@@ -255,19 +260,32 @@ func testMonom(printf bool, verbose bool, src string, steps int) {
 	}
 
 	done := steps > EVAL_TO_VAL
+	var main_fgg base.Expr
+	var main_mono base.Expr
 	for i := 0; i < steps || !done; i++ {
-		if main_fgg := p_fgg.GetMain(); main_fgg.IsValue() {
-			if main_mono := p_mono.GetMain(); !main_mono.IsValue() { // TODO: add to -test-oblit
-				p_mono.Eval() // Maybe redundant
-				panic("FGG stuck but monom not:\n\tfgg = " + main_fgg.String() +
+		main_fgg = p_fgg.GetMain()
+		main_mono = p_mono.GetMain()
+		if main_fgg.IsValue() { // N.B. IsValue -- not CanEval (checked below)
+			if !main_mono.IsValue() { // TODO: add to -test-oblit
+				panic("FGG is value but monom is not:\n\tfgg = " + main_fgg.String() +
 					"\n\tmonom=" + main_mono.String())
 			}
-			break
-		} else if main_mono := p_mono.GetMain(); main_mono.IsValue() {
-			p_fgg.Eval() // Maybe redundant
-			panic("Monom stuck but FGG not:\n\tfgg = " + main_fgg.String() +
+			break // Both are values
+		} else if main_mono.IsValue() {
+			panic("Monom is value but FGG is not:\n\tfgg = " + main_fgg.String() +
 				"\n\tmonom=" + main_mono.String())
 		}
+		// Both non-values, check for stuck (e.g., bad asserts -- though panic is technically not stuck)
+		if main_fgg.CanEval(ds_fgg) {
+			if !main_mono.CanEval(ds_mono) {
+				panic("FGG is stuck but monom is not:\n\tfgg = " + main_fgg.String() +
+					"\n\tmonom=" + main_mono.String())
+			}
+		} else if main_mono.CanEval(ds_mono) {
+			panic("Monom is stuck but FGG is not:\n\tfgg = " + main_fgg.String() +
+				"\n\tmonom=" + main_mono.String())
+		}
+
 		// Repeat: horizontal arrows and right-vertical arrow
 		p_fgg, u, p_mono = testMonomStep(verbose, omega, p_fgg, u, p_mono)
 	}
@@ -275,13 +293,13 @@ func testMonom(printf bool, verbose bool, src string, steps int) {
 		"\n\tmono="+p_mono.GetMain().String())
 }
 
-// Pre: u = p_fgg.Ok(), t = p_mono.Ok()
+// Pre: u = p_fgg.Ok(), t = p_mono.Ok(), both CanEval
 func testMonomStep(verbose bool, omega fgg.Omega1, p_fgg fgg.FGGProgram,
 	u fgg.TNamed, p_mono fg.FGProgram) (fgg.FGGProgram, fgg.TNamed,
 	fg.FGProgram) {
 
 	// Upper-horizontal arrow
-	p1_fgg, _ := p_fgg.Eval() // TODO: also check p_mono if bad-assert panic
+	p1_fgg, _ := p_fgg.Eval()
 	vPrintln(verbose, "\nEval FGG one step: "+p1_fgg.GetMain().String())
 	u1 := p1_fgg.Ok(true).(fgg.TNamed)
 	if !u1.Impls(p_fgg.GetDecls(), u) { // TODO: factor out with Frontend.eval

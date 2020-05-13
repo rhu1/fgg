@@ -12,14 +12,13 @@
 #	go install github.com/rhu1/fgg
 
 .PHONY: test
-test: test-all
-
-.PHONY: test-all
-test-all: test-fg test-fgg test-fg2fgg
-#test-monom test-oblit
+test: test-fg test-fgg test-fg2fgg
 
 .PHONY: test-against-go
 test-against-go: test-fg-examples-against-go test-monom-against-go
+
+.PHONY: test-all
+test-all: test test-against-go
 
 .PHONY: clean
 clean: clean-test-all
@@ -251,7 +250,7 @@ test-monom-against-go:
 	$(call eval_monom_fgg_against_go,fgg/examples/monom/julien/mono-ok/one-pass-prob.go,tmp/test/fg/monom/julien/mono-ok/one-pass-prob,one-pass-prob.go)
 	$(call eval_monom_fgg_against_go,fgg/examples/monom/julien/mono-ok/contamination.go,tmp/test/fg/monom/julien/mono-ok/contamination,contamination.go)
 
-	# TODO: add to olbit
+	# TODO: add to oblit
 	$(call eval_monom_fgg_against_go,fgg/examples/monom/julien/mono-ok/struct-poly-rec.go,tmp/test/fg/monom/julien/mono-ok/struct-poly-rec,struct-poly-rec.go)
 	$(call eval_monom_fgg_against_go,fgg/examples/monom/julien/mono-ok/Parameterised-Map.go,tmp/test/fg/monom/julien/mono-ok/Parameterised-Map,Parameterised-Map.go)
 	#$(call eval_monom_fgg,fgg/examples/monom/julien/mono-ok/alternate.go,10,tmp/test/fg/monom/julien/mono-ok/alternate,alternate.go)

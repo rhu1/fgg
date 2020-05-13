@@ -73,6 +73,7 @@ func eval(intrp Interp, steps int) base.Type {
 	var rule string
 	p := p_init
 	t := t_init
+
 	for i := 1; i <= steps || !done; i++ {
 		p, rule = p.Eval()
 		intrp.SetProgram(p)
@@ -83,7 +84,7 @@ func eval(intrp Interp, steps int) base.Type {
 		if !t.Impls(ds, t_init) { // Check type preservation
 			panic("Type not preserved by evaluation.")
 		}
-		if !done && p.GetMain().IsValue() {
+		if !done && p.GetMain().IsValue() { // N.B. IsValue, not CanEval -- bad asserts panics, like Go (but not actual FGG)
 			done = true
 		}
 	}

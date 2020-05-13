@@ -31,7 +31,7 @@ func fields(ds []Decl, u_S TNamed) []FieldDecl {
 	if !ok {
 		panic("Not a struct type: " + u_S.String())
 	}
-	subs := make(map[TParam]Type)
+	subs := make(map[TParam]Type) // Cf. MakeEta
 	for i := 0; i < len(s.Psi.tFormals); i++ {
 		subs[s.Psi.tFormals[i].name] = u_S.u_args[i]
 	}
@@ -56,8 +56,8 @@ func methodsDelta(ds []Decl, delta Delta, u Type) map[Name]Sig {
 				//sd := md.recv.u.(TName)
 				u_S := u.(TNamed)
 				if md.t_recv == u_S.t_name {
-					subs := make(map[TParam]Type)
-					for i := 0; i < len(md.Psi_recv.tFormals); i++ {
+					subs := make(map[TParam]Type)                    // Cf. MakeEta
+					for i := 0; i < len(md.Psi_recv.tFormals); i++ { // TODO: md.Psi_recv.ToDelta
 						subs[md.Psi_recv.tFormals[i].name] = u_S.u_args[i]
 					}
 					/*for i := 0; i < len(md.psi.tfs); i++ { // CHECKME: because TParam.TSubs will panic o/w -- refactor?
@@ -70,7 +70,7 @@ func methodsDelta(ds []Decl, delta Delta, u Type) map[Name]Sig {
 	} else if IsNamedIfaceType(ds, u) { // N.B. u is a TName, \tau_I (not a TParam)
 		u_I := u.(TNamed)
 		td := getTDecl(ds, u_I.t_name).(ITypeLit)
-		subs := make(map[TParam]Type)
+		subs := make(map[TParam]Type) // Cf. MakeEta
 		for i := 0; i < len(td.Psi.tFormals); i++ {
 			subs[td.Psi.tFormals[i].name] = u_I.u_args[i]
 		}
@@ -78,11 +78,11 @@ func methodsDelta(ds []Decl, delta Delta, u Type) map[Name]Sig {
 			/*for _, v := range s.GetSigs(ds) {
 				res[v.m] = v
 			}*/
-			switch c := s.(type) {
+			switch s1 := s.(type) {
 			case Sig:
-				res[c.meth] = c.TSubs(subs)
+				res[s1.meth] = s1.TSubs(subs)
 			case TNamed: // Embedded u_I
-				for k, v := range methods(ds, c.TSubs(subs)) { // CHECKME: can this cycle indefinitely? (cf. submission version)
+				for k, v := range methods(ds, s1.TSubs(subs)) { // CHECKME: can this cycle indefinitely? (cf. submission version)
 					res[k] = v
 				}
 			default:
@@ -109,7 +109,7 @@ func body(ds []Decl, u_S TNamed, m Name, targs []Type) (ParamDecl, []ParamDecl, 
 	for _, v := range ds {
 		md, ok := v.(MethDecl)
 		if ok && md.t_recv == u_S.t_name && md.name == m {
-			subs := make(map[TParam]Type)
+			subs := make(map[TParam]Type) // Cf. MakeEta
 			for i := 0; i < len(md.Psi_recv.tFormals); i++ {
 				subs[md.Psi_recv.tFormals[i].name] = u_S.u_args[i]
 			}
