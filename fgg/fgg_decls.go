@@ -118,7 +118,12 @@ func (s STypeLit) Ok(ds []Decl) {
 		if _, ok := seen[v.field]; ok {
 			panic("Duplicate field name: " + v.field + "\n\t" + s.String())
 		}
+		seen[v.field] = v
 		v.u.Ok(ds, delta)
+	}
+	u_S := TNamed{s.t_name, s.Psi.Hat()}
+	if isRecursiveFieldType(ds, make(map[string]TNamed), u_S) {
+		panic("Invalid recursive struct type:\n\t" + s.String())
 	}
 }
 
@@ -307,6 +312,9 @@ func (c ITypeLit) Ok(ds []Decl) {
 				panic("Embedded type must be a named interface, not: " + k + "\n\t" + c.String())
 			}
 			s.Ok(ds, c.Psi.ToDelta())
+			if isRecursiveInterfaceEmbedding(ds, make(map[string]TNamed), s) {
+				panic("Invalid recursive interface embedding type:\n\t" + c.String())
+			}
 		default:
 			panic("Unknown Spec kind: " + reflect.TypeOf(v).String() + "\n\t" +
 				c.String())
@@ -405,6 +413,54 @@ func (g Sig) String() string {
 		u_I.Ok(ds, delta)        // !!! Submission version T-Type, t_i => t_I
 	}
 }*/
+
+// Pre: isStruct(ds, u_S)
+func isRecursiveFieldType(ds []Decl, seen map[string]TNamed,
+	u_S TNamed) bool {
+	k := u_S.String()
+	if _, ok := seen[k]; ok {
+		return true
+	}
+	for _, v := range fields(ds, u_S) {
+		if !isStructType(ds, v.u) { // v.u is TNamed -- params OK, type args don't allow writing recursive struct
+			continue
+		}
+		seen1 := make(map[string]TNamed)
+		for k1, v1 := range seen {
+			seen1[k1] = v1
+		}
+		seen1[k] = u_S
+		if isRecursiveFieldType(ds, seen1, v.u.(TNamed)) {
+			return true
+		}
+	}
+	return false
+}
+
+// Pre: isNamedIfaceType(ds, t_I), t_I OK already checked
+func isRecursiveInterfaceEmbedding(ds []Decl, seen map[string]TNamed,
+	u_I TNamed) bool {
+	k := u_I.String()
+	if _, ok := seen[k]; ok {
+		return true
+	}
+	td := getTDecl(ds, u_I.t_name).(ITypeLit)
+	for _, v := range td.specs {
+		emb, ok := v.(TNamed)
+		if !ok {
+			continue
+		}
+		seen1 := make(map[string]TNamed)
+		for k1, v1 := range seen {
+			seen1[k1] = v1
+		}
+		seen1[k] = u_I
+		if isRecursiveInterfaceEmbedding(ds, seen1, emb) {
+			return true
+		}
+	}
+	return false
+}
 
 // Doesn't include "(...)" -- slightly more convenient for debug messages
 func writeFieldDecls(b *strings.Builder, fds []FieldDecl) {

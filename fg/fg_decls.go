@@ -127,14 +127,14 @@ func (s STypeLit) GetName() Name { return Name(s.t_S) }
 func (s STypeLit) Ok(ds []Decl) {
 	fs := make(map[Name]FieldDecl)
 	for _, v := range s.fDecls {
-		if !isTypeOk(ds, v.t) {
-			panic("Field " + v.name + " has an unknown type: " + string(v.t) +
-				"\n\t" + s.String())
-		}
 		if _, ok := fs[v.name]; ok {
 			panic("Multiple fields with name: " + v.name + "\n\t" + s.String())
 		}
 		fs[v.name] = v
+		if !isTypeOk(ds, v.t) {
+			panic("Field " + v.name + " has an unknown type: " + string(v.t) +
+				"\n\t" + s.String())
+		}
 	}
 	if isRecursiveFieldType(ds, make(map[Type]Type), s.t_S) {
 		panic("Invalid recursive struct type:\n\t" + s.String())
@@ -391,6 +391,7 @@ func isTypeOk(ds []Decl, t Type) bool { // Cf. isStructType, etc.
 	return false
 }
 
+// Pre: isStruct(ds, t_S)
 func isRecursiveFieldType(ds []Decl, seen map[Type]Type, t_S Type) bool {
 	if _, ok := seen[t_S]; ok {
 		return true
@@ -411,7 +412,7 @@ func isRecursiveFieldType(ds []Decl, seen map[Type]Type, t_S Type) bool {
 	return false
 }
 
-// Pre: t_I OK already checked
+// Pre: isNamedIfaceType(ds, t_I), t_I OK already checked
 func isRecursiveInterfaceEmbedding(ds []Decl, seen map[Type]Type, t_I Type) bool {
 	if _, ok := seen[t_I]; ok {
 		return true
