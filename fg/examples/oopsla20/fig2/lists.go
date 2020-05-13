@@ -1,4 +1,4 @@
-//$ go run github.com/rhu1/fgg -v -eval=-1 fg/examples/oopsla20/fig2/lists.go
+//$ go run github.com/rhu1/fgg -eval=-1 -v fg/examples/oopsla20/fig2/lists.go
 
 package main;
 
@@ -104,7 +104,7 @@ func (this pos) Apply(x Any) Any {
 type Eq interface {
 	Equal(that Eq) Bool
 };
-/*func (this int) Equal(that Eq) bool {  // CHECKME:
+/*func (this int) Equal(that Eq) bool {  // "already" implemented
 	return this == that.(int)
 };
 func (this bool) Equal(that Eq) bool {
@@ -128,7 +128,7 @@ func (xs Cons) Map(f Function) List {
 
 
 func main() {
-	/*var xs List = Cons{3, Cons{6), Nil{}}}
+	/*var xs List = Cons{3, Cons{6, Nil{}}}
 	var ys List = xs.Map(incr{-5})
 	var zs List = ys.Map(pos)*/
 	_ = Cons{Ints{}._3(), Cons{Ints{}._6(), Nil{}}}.
