@@ -244,7 +244,7 @@ func (u0 TNamed) Impls(ds []Decl, u base.Type) bool {
 
 func (u0 TNamed) Ok(ds []Decl, delta Delta) {
 	//if _, ok
-	td := GetTDecl(ds, u0.t_name)
+	td := getTDecl(ds, u0.t_name) // Panics if type not found
 	psi := td.GetBigPsi()
 	if len(psi.tFormals) != len(u0.u_args) {
 		var b strings.Builder

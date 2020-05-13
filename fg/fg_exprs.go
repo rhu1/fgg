@@ -102,6 +102,9 @@ func (s StructLit) Eval(ds []Decl) (FGExpr, string) {
 }
 
 func (s StructLit) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
+	if !isTypeOk(ds, s.t_S) {
+		panic("Unknown type: " + string(s.t_S) + "\n\t" + s.String())
+	}
 	fs := fields(ds, s.t_S)
 	if len(s.elems) != len(fs) {
 		var b strings.Builder
@@ -415,7 +418,9 @@ func (a Assert) Eval(ds []Decl) (FGExpr, string) {
 
 func (a Assert) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 	t := a.e_I.Typing(ds, gamma, allowStupid)
-	isTypeOk(ds, a.t_cast)
+	if !isTypeOk(ds, a.t_cast) {
+		panic("Unknown type: " + string(a.t_cast) + "\n\t" + a.String())
+	}
 	if isStructType(ds, t) {
 		if allowStupid {
 			return a.t_cast
