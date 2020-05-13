@@ -27,9 +27,6 @@ func (this FF(type )) Cond(type a Any())(br Branches(a)) a { return br.IfFF()() 
 type Int(type ) interface {
 	Inc(type )() Int();
 	Dec(type )() Int();
-	Equal(type )(x Int()) Bool();
-	EqualZero(type )() Bool();
-	EqualNonZero(type )(x Int()) Bool();
 	Add(type )(x Int()) Int();
 	Gt(type )(x Int()) Bool();
 	IsNeg(type )() Bool()
@@ -38,9 +35,6 @@ type Int(type ) interface {
 type Zero(type ) struct {};
 func (x0 Zero(type )) Inc(type )() Int() { return Pos(){x0} };
 func (x0 Zero(type )) Dec(type )() Int() { return Neg(){x0} };
-func (x0 Zero(type )) Equal(type )(x Int()) Bool() { return x.EqualZero()() };
-func (x0 Zero(type )) EqualZero(type )() Bool() { return TT(){} };
-func (x0 Zero(type )) EqualNonZero(type )(x Int()) Bool() { return FF(){} };
 func (x0 Zero(type )) Add(type )(x Int()) Int() { return x };
 func (x0 Zero(type )) Gt(type )(x Int()) Bool() { return x.IsNeg()() };
 func (x0 Zero(type )) IsNeg(type )() Bool() { return FF(){} };
@@ -48,9 +42,6 @@ func (x0 Zero(type )) IsNeg(type )() Bool() { return FF(){} };
 type Pos(type ) struct { dec Int() };
 func (x0 Pos(type )) Inc(type )() Int() { return Pos(){x0} };
 func (x0 Pos(type )) Dec(type )() Int() { return x0.dec };
-func (x0 Pos(type )) Equal(type )(x Int()) Bool() { return x0.EqualNonZero()(x) };
-func (x0 Pos(type )) EqualZero(type )() Bool() { return FF(){} };
-func (x0 Pos(type )) EqualNonZero(type )(x Int()) Bool() { return x.Equal()(x0.dec) };
 func (x0 Pos(type )) Add(type )(x Int()) Int() { return x0.dec.Add()(x.Inc()()) };
 func (x0 Pos(type )) Gt(type )(x Int()) Bool() { return x0.dec.Gt()(x.Dec()()) };
 func (x0 Pos(type )) IsNeg(type )() Bool() { return FF(){} };
@@ -58,9 +49,6 @@ func (x0 Pos(type )) IsNeg(type )() Bool() { return FF(){} };
 type Neg(type ) struct { inc Int() };
 func (x0 Neg(type )) Inc(type )() Int() { return x0.inc };
 func (x0 Neg(type )) Dec(type )() Int() { return Neg(){x0} };
-func (x0 Neg(type )) Equal(type )(x Int()) Bool() { return x0.EqualNonZero()(x) };
-func (x0 Neg(type )) EqualZero(type )() Bool() { return FF(){} };
-func (x0 Neg(type )) EqualNonZero(type )(x Int()) Bool() { return x.Equal()(x0.inc) };
 func (x0 Neg(type )) Add(type )(x Int()) Int() { return x0.inc.Add()(x.Dec()()) };
 func (x0 Neg(type )) Gt(type )(x Int()) Bool() { return x0.inc.Gt()(x.Inc()()) };
 func (x0 Neg(type )) IsNeg(type )() Bool() { return TT(){} };
@@ -93,7 +81,7 @@ type incr(type ) struct { n Int() };
 func (this incr(type )) Apply(type )(x Int()) Int() {
 	return x.Add()(this.n)
 };
-type pos(type ) struct {};
+type pos(type ) struct {};  // We already have IsNeg, though
 func (this pos(type )) Apply(type )(x Int()) Bool() {
 	return x.Gt()(Zero(){})
 };
