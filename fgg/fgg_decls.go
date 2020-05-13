@@ -287,11 +287,25 @@ func (c ITypeLit) GetSpecs() []Spec  { return c.specs }
 
 func (c ITypeLit) Ok(ds []Decl) {
 	c.Psi.Ok(ds, BigPsi{})
+	seen_g := make(map[Name]Sig)    // !!! unique(~S) more flexible
+	seen_u := make(map[string]Type) // key is u.String()
 	for _, v := range c.specs {
 		switch s := v.(type) {
 		case Sig:
+			if _, ok := seen_g[s.meth]; ok {
+				panic("Multiple sigs with name: " + s.meth + "\n\t" + c.String())
+			}
+			seen_g[s.meth] = s
 			s.Ok(ds, c.Psi)
 		case TNamed:
+			k := s.String()
+			if _, ok := seen_u[k]; ok {
+				panic("Repeat embedding of type: " + k + "\n\t" + c.String())
+			}
+			seen_u[k] = s
+			if !IsNamedIfaceType(ds, s) { // CHECKME: allow embed type param?
+				panic("Embedded type must be a named interface, not: " + k + "\n\t" + c.String())
+			}
 			s.Ok(ds, c.Psi.ToDelta())
 		default:
 			panic("Unknown Spec kind: " + reflect.TypeOf(v).String() + "\n\t" +

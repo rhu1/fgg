@@ -127,7 +127,7 @@ func (s STypeLit) GetName() Name { return Name(s.t_S) }
 func (s STypeLit) Ok(ds []Decl) {
 	fs := make(map[Name]FieldDecl)
 	for _, v := range s.fDecls {
-		if !isType(ds, v.t) {
+		if !isTypeOk(ds, v.t) {
 			panic("Field " + v.name + " has an unknown type: " + string(v.t) +
 				"\n\t" + s.String())
 		}
@@ -202,7 +202,7 @@ func (md MethDecl) Ok(ds []Decl) {
 	}
 	env := Gamma{md.recv.name: md.recv.t}
 	for _, v := range md.pDecls {
-		if !isType(ds, v.t) {
+		if !isTypeOk(ds, v.t) {
 			panic("Parameter " + v.name + " has an unknown type: " + string(v.t) +
 				"\n\t" + md.String())
 		}
@@ -212,7 +212,7 @@ func (md MethDecl) Ok(ds []Decl) {
 		}
 		env[v.name] = v.t
 	}
-	if !isType(ds, md.t_ret) {
+	if !isTypeOk(ds, md.t_ret) {
 		panic("Unknown return type: " + string(md.t_ret) + "\n\t" + md.String())
 	}
 	allowStupid := false
@@ -332,7 +332,7 @@ func (g Sig) GetReturn() Type            { return g.t_ret }
 func (g0 Sig) Ok(ds []Decl) {
 	seen := make(map[Type]ParamDecl)
 	for _, v := range g0.pDecls {
-		if !isType(ds, v.t) {
+		if !isTypeOk(ds, v.t) {
 			panic("Parameter " + v.name + " has an unknown type: " + string(v.t) +
 				"\n\t" + g0.String())
 		}
@@ -341,7 +341,7 @@ func (g0 Sig) Ok(ds []Decl) {
 				"\n\t" + g0.String())
 		}
 	}
-	if !isType(ds, g0.t_ret) {
+	if !isTypeOk(ds, g0.t_ret) {
 		panic("Unknown return type: " + string(g0.t_ret) +
 			"\n\t" + g0.String())
 	}
@@ -377,7 +377,7 @@ func (g Sig) String() string {
 
 /* Helpers */
 
-func isType(ds []Decl, t Type) bool { // Cf. isStructType, etc.
+func isTypeOk(ds []Decl, t Type) bool { // Cf. isStructType, etc.
 	if t == STRING_TYPE {
 		return true
 	}
