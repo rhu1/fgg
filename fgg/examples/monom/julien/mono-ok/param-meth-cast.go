@@ -13,9 +13,9 @@ type S(type ) struct {};
 
 type T(type ) struct {};
 
-type Foo(type ) interface { m(type a Any())(x a, y S) Any() }; // m<Any>(x Any, y S)
+type Foo(type ) interface { m(type a Any())(x a, y S()) Any() }; // m<Any>(x Any, y S)
 
-type Bar(type ) interface { m(type a Any())(x a, y T) Any() }; // m<Any>(x Any, y T)
+type Bar(type ) interface { m(type a Any())(x a, y T()) Any() }; // m<Any>(x Any, y T)
 
 type V(type ) struct {};
 
@@ -24,7 +24,7 @@ func (x V(type )) toAny(type )(y Foo()) Any() {
 };
 
 // V <: Foo
-func (x V(type )) m(type a Any())(z a, y S) Any() { // m<Any>(x Any, y S)
+func (x V(type )) m(type a Any())(z a, y S()) Any() { // m<Any>(x Any, y S)
 	return z.(Any())
 };
 

@@ -47,30 +47,25 @@ func (p FGProgram) IsPrintf() bool     { return p.printf } // HACK
 
 // From base.Program
 func (p FGProgram) Ok(allowStupid bool) base.Type {
-	if !allowStupid { // Hack, to print the following only for "top-level" programs (not during Eval)
-		/*fmt.Println("[Warning] Type/method decl OK not fully checked yet " +
-		"(e.g., distinct field/param names, etc.)")*/
-	}
-	tds := make(map[Type]TDecl)
-	mds := make(map[string]MethDecl) // Hack, string = string(md.recv.t) + "." + md.GetName()
+	tds := make(map[string]TDecl)    // Type name
+	mds := make(map[string]MethDecl) // Hack, string = string(md.recv.t) + "." + md.name
 	for _, v := range p.decls {
 		switch d := v.(type) {
 		case TDecl:
 			d.Ok(p.decls) // Currently empty -- TODO: check, e.g., unique field names -- cf., above [Warning]
 			// N.B. checks also omitted from submission version
-			t := Type(d.GetName())
+			t := d.GetName()
 			if _, ok := tds[t]; ok {
-				panic("Multiple declarations of type name: " + string(t) + "\n\t" +
+				panic("Multiple declarations of type name: " + t + "\n\t" +
 					d.String())
 			}
 			tds[t] = d
 		case MethDecl:
 			d.Ok(p.decls)
-			n := d.GetName()
-			hash := string(d.recv.t) + "." + n
+			hash := string(d.recv.t) + "." + d.name
 			if _, ok := mds[hash]; ok {
 				panic("Multiple declarations for receiver " + string(d.recv.t) +
-					" of the method name: " + n + "\n\t" + d.String())
+					" of the method name: " + d.name + "\n\t" + d.String())
 			}
 			mds[hash] = d
 		default:

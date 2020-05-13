@@ -77,8 +77,8 @@ func (a TParam) ImplsDelta(ds []Decl, delta Delta, u Type) bool {
 	if a1, ok := u.(TParam); ok {
 		return a == a1
 	} else {
-		return bounds(delta, a).ImplsDelta(ds, delta, u) // !!! more efficient?
-		/*gs0 := methodsDelta(ds, delta, a)
+		//return bounds(delta, a).ImplsDelta(ds, delta, u) // !!! more efficient?
+		gs0 := methodsDelta(ds, delta, a)
 		gs := methodsDelta(ds, delta, u)
 		for k, g := range gs {
 			g0, ok := gs0[k]
@@ -86,7 +86,7 @@ func (a TParam) ImplsDelta(ds []Decl, delta Delta, u Type) bool {
 				return false
 			}
 		}
-		return true*/
+		return true
 	}
 }
 
@@ -101,7 +101,7 @@ func (a TParam) Impls(ds []Decl, u base.Type) bool {
 
 func (a TParam) Ok(ds []Decl, delta Delta) {
 	if _, ok := delta[a]; !ok {
-		panic("Unknown type param: " + a.String())
+		panic("Type param " + a.String() + " unknown in context: " + delta.String())
 	}
 }
 
@@ -320,16 +320,22 @@ type BigPsi struct {
 
 func (Psi BigPsi) GetTFormals() []TFormal { return Psi.tFormals }
 
-func (Psi BigPsi) Ok(ds []Decl) {
+func (Psi BigPsi) Ok(ds []Decl, env BigPsi) {
+	delta := env.ToDelta()
 	for _, v := range Psi.tFormals {
-		u, ok := v.u_I.(TNamed)
-		if !ok {
-			panic("Upper bound must be of the form \"t_I(type ...)\": not " +
-				v.u_I.String())
+		if _, ok := delta[v.name]; ok {
+			panic("Duplicate param name " + string(v.name) + " under context: " +
+				env.String() + "\n\t" + Psi.String())
 		}
-		if !IsNamedIfaceType(ds, u) { // CHECKME: subsumes above TName check (looks for \tau_S)
-			panic("Upper bound must be an interface type: not " + u.String())
+		delta[v.name] = v.u_I
+	} // Delta built
+	for _, v := range Psi.tFormals {
+		u_I, ok := v.u_I.(TNamed)
+		if !ok || !isNamedIfaceType(ds, u_I) {
+			panic("Upper bound must be an interface type: not " + v.u_I.String() +
+				"\n\t" + Psi.String())
 		}
+		u_I.Ok(ds, delta) // Checks params bound under delta -- N.B. can forward ref (not restricted left-to-right)
 	}
 }
 
@@ -345,7 +351,7 @@ func (Psi BigPsi) ToDelta() Delta {
 func (Psi BigPsi) Hat() SmallPsi {
 	res := make(SmallPsi, len(Psi.tFormals))
 	for i, v := range Psi.tFormals {
-		res[i] = v.u_I
+		res[i] = v.name
 	}
 	return res
 }

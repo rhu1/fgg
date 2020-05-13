@@ -4,7 +4,10 @@ package main;
 
 import "fmt";
 
+
 type Any(type ) interface {};
+type List(type a Any()) interface { /*snip*/ };
+
 type Edge(type e Edge(e, v), v Vertex(e, v)) interface {
 	Source(type )() v;
 	Target(type )() v

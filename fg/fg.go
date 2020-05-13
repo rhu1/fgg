@@ -79,7 +79,7 @@ func (t Type) String() string {
 
 // FGNode, Decl: see Aliases (at top)
 
-type TDecl interface {
+type TDecl interface { // Rename TypeDecl
 	Decl
 	GetType() Type // In FG, GetType() == Type(GetName())
 }
