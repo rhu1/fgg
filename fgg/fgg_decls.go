@@ -37,16 +37,26 @@ func (p FGGProgram) GetMain() base.Expr { return p.e_main }
 func (p FGGProgram) IsPrintf() bool     { return p.printf } // HACK
 
 func (p FGGProgram) Ok(allowStupid bool) base.Type {
-	if !allowStupid { // Hack, to print only "top-level" programs (not during Eval) -- cf. verbose
-		/*fmt.Println("[Warning] Type lit OK (\"T ok\") not fully implemented yet " +
-		"(e.g., distinct type/field/method names, etc.)")*/
-	}
+	tds := make(map[string]TypeDecl) // Type name
+	mds := make(map[string]MethDecl) // Hack, string = md.recv.t + "." + md.name
 	for _, v := range p.decls {
 		switch d := v.(type) {
 		case TypeDecl:
 			d.Ok(p.decls)
+			t := d.GetName()
+			if _, ok := tds[t]; ok {
+				panic("Multiple declarations of type name: " + t + "\n\t" +
+					d.String())
+			}
+			tds[t] = d
 		case MethDecl:
 			d.Ok(p.decls)
+			hash := string(d.t_recv) + "." + d.name
+			if _, ok := mds[hash]; ok {
+				panic("Multiple declarations for receiver " + string(d.t_recv) +
+					" of the method name: " + d.name + "\n\t" + d.String())
+			}
+			mds[hash] = d
 		default:
 			panic("Unknown decl: " + reflect.TypeOf(v).String() + "\n\t" +
 				v.String())
@@ -101,7 +111,15 @@ func (s STypeLit) GetBigPsi() BigPsi          { return s.Psi }
 func (s STypeLit) GetFieldDecls() []FieldDecl { return s.fDecls }
 
 func (s STypeLit) Ok(ds []Decl) {
-	TDeclOk(ds, s)
+	s.Psi.Ok(ds, BigPsi{})
+	seen := make(map[Name]FieldDecl)
+	delta := s.Psi.ToDelta()
+	for _, v := range s.fDecls {
+		if _, ok := seen[v.field]; ok {
+			panic("Duplicate field name: " + v.field + "\n\t" + s.String())
+		}
+		v.u.Ok(ds, delta)
+	}
 }
 
 func (s STypeLit) String() string {
@@ -167,50 +185,47 @@ func (md MethDecl) Ok(ds []Decl) {
 		panic("Receiver must be a struct type: not " + md.t_recv +
 			"\n\t" + md.String())
 	}
-	md.Psi_recv.Ok(ds)
-	md.Psi_meth.Ok(ds)
+	md.Psi_recv.Ok(ds, BigPsi{}) // !!! premise ok missing
+	md.Psi_meth.Ok(ds, md.Psi_recv)
+	delta := md.Psi_recv.ToDelta()
+	for _, v := range md.Psi_meth.tFormals {
+		delta[v.name] = v.u_I
+	}
 
 	td := getTDecl(ds, md.t_recv)
 	tfs_td := td.GetBigPsi().tFormals
 	if len(tfs_td) != len(md.Psi_recv.tFormals) {
-		panic("Receiver parameter arity mismatch:\n\tmdecl=" + md.t_recv +
-			md.Psi_recv.String() + ", tdecl=" + td.GetName() + td.GetBigPsi().String())
+		panic("Receiver type parameter arity mismatch:\n\tmdecl=" + md.t_recv +
+			md.Psi_recv.String() + ", tdecl=" + td.GetName() +
+			"\n\t" + td.GetBigPsi().String())
 	}
 	for i := 0; i < len(tfs_td); i++ {
 		subs_md := makeParamIndexSubs(md.Psi_recv)
 		subs_td := makeParamIndexSubs(td.GetBigPsi())
-		if !md.Psi_recv.tFormals[i].u_I.TSubs(subs_md).
-			Impls(ds, tfs_td[i].u_I.TSubs(subs_td)) {
+		if !md.Psi_recv.tFormals[i].u_I.TSubs(subs_md). // Canonicalised
+								Impls(ds, tfs_td[i].u_I.TSubs(subs_td)) {
 			panic("Receiver parameter upperbound not a subtype of type decl upperbound:" +
 				"\n\tmdecl=" + md.Psi_recv.tFormals[i].String() + ", tdecl=" +
 				tfs_td[i].String())
 		}
 	}
 
-	delta := md.Psi_recv.ToDelta()
-	for _, v := range md.Psi_recv.tFormals {
-		v.u_I.Ok(ds, delta)
-	}
-
-	delta1 := md.Psi_meth.ToDelta()
-	for k, v := range delta {
-		delta1[k] = v
-	}
-	for _, v := range md.Psi_meth.tFormals {
-		v.u_I.Ok(ds, delta1)
-	}
-
-	as := make([]Type, len(md.Psi_recv.tFormals)) // !!! submission version, x:t_S(a) => x:t_S(~a)
-	for i := 0; i < len(md.Psi_recv.tFormals); i++ {
-		as[i] = md.Psi_recv.tFormals[i].name
-	}
+	as := md.Psi_recv.Hat()                          // !!! submission version, x:t_S(a) => x:t_S(~a)
 	gamma := Gamma{md.x_recv: TNamed{md.t_recv, as}} // CHECKME: can we give the bounds directly here instead of 'as'?
+	seen := make(map[Name]Name)
+	seen[md.x_recv] = md.x_recv
 	for _, v := range md.pDecls {
+		if _, ok := seen[v.name]; ok {
+			panic("Duplicate receiver/param name: " + v.name + "\n\t" + md.String())
+		}
+		seen[v.name] = v.name
+		v.u.Ok(ds, delta)
 		gamma[v.name] = v.u
 	}
+	md.u_ret.Ok(ds, delta)
 	allowStupid := false
-	u := md.e_body.Typing(ds, delta1, gamma, allowStupid)
-	if !u.ImplsDelta(ds, delta1, md.u_ret) {
+	u := md.e_body.Typing(ds, delta, gamma, allowStupid)
+	if !u.ImplsDelta(ds, delta, md.u_ret) {
 		panic("Method body type must implement declared return type: found=" +
 			u.String() + ", expected=" + md.u_ret.String() + "\n\t" + md.String())
 	}
@@ -271,14 +286,18 @@ func (c ITypeLit) GetBigPsi() BigPsi { return c.Psi }
 func (c ITypeLit) GetSpecs() []Spec  { return c.specs }
 
 func (c ITypeLit) Ok(ds []Decl) {
-	TDeclOk(ds, c)
+	c.Psi.Ok(ds, BigPsi{})
 	for _, v := range c.specs {
-		// TODO: check Sigs OK?  e.g., "type IA(type ) interface { m1(type )() Any };" while missing Any
-		if g, ok := v.(Sig); ok {
-			g.Ok(ds)
+		switch s := v.(type) {
+		case Sig:
+			s.Ok(ds, c.Psi)
+		case TNamed:
+			s.Ok(ds, c.Psi.ToDelta())
+		default:
+			panic("Unknown Spec kind: " + reflect.TypeOf(v).String() + "\n\t" +
+				c.String())
 		}
 	}
-	// In general, also missing checks for, e.g., unique type/field/method names -- cf., TDeclOk
 }
 
 func (c ITypeLit) String() string {
@@ -329,9 +348,22 @@ func (g Sig) TSubs(subs map[TParam]Type) Sig {
 	return Sig{g.meth, BigPsi{tfs}, ps, u}
 }
 
-func (g Sig) Ok(ds []Decl) {
-	g.Psi.Ok(ds)
-	// TODO: check distinct param names, etc. -- N.B. interface may not be *used* (so may not be checked else where)
+func (g Sig) Ok(ds []Decl, env BigPsi) {
+	env.Ok(ds, BigPsi{})
+	g.Psi.Ok(ds, env)
+	delta := env.ToDelta()
+	for _, v := range g.Psi.tFormals {
+		delta[v.name] = v.u_I
+	}
+	seen := make(map[Name]ParamDecl)
+	for _, v := range g.pDecls {
+		if _, ok := seen[v.name]; ok {
+			panic("Duplicate variable name " + v.name + ":\n\t" + g.String())
+		}
+		seen[v.name] = v
+		v.u.Ok(ds, delta)
+	}
+	g.u_ret.Ok(ds, delta)
 }
 
 func (g Sig) GetSigs(_ []Decl) []Sig {
@@ -351,16 +383,14 @@ func (g Sig) String() string {
 
 /* Aux, helpers */
 
-func TDeclOk(ds []Decl, td TypeDecl) {
-	psi := td.GetBigPsi()
-	psi.Ok(ds)
-	delta := psi.ToDelta()
-	for _, v := range psi.tFormals {
+/*func BigPsiOk(ds []Decl, env BigPsi, Psi BigPsi) {
+	Psi.Ok(ds)
+	delta := Psi.ToDelta()
+	for _, v := range Psi.tFormals {
 		u_I, _ := v.u_I.(TNamed) // \tau_I, already checked by psi.Ok
 		u_I.Ok(ds, delta)        // !!! Submission version T-Type, t_i => t_I
 	}
-	// TODO: Check, e.g., unique type/field/method names -- cf., FGGProgram.OK [Warning]
-}
+}*/
 
 // Doesn't include "(...)" -- slightly more convenient for debug messages
 func writeFieldDecls(b *strings.Builder, fds []FieldDecl) {

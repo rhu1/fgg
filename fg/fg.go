@@ -79,7 +79,7 @@ func (t Type) String() string {
 
 // FGNode, Decl: see Aliases (at top)
 
-type TDecl interface {
+type TDecl interface { // Rename TypeDecl
 	Decl
 	GetType() Type // In FG, GetType() == Type(GetName())
 }
@@ -112,8 +112,7 @@ func isStructType(ds []Decl, t Type) bool {
 		return true
 	}
 	for _, v := range ds {
-		d, ok := v.(STypeLit)
-		if ok && d.t_S == t {
+		if d, ok := v.(STypeLit); ok && d.t_S == t {
 			return true
 		}
 	}

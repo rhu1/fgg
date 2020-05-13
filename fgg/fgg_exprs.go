@@ -364,7 +364,7 @@ func (c Call) Typing(ds []Decl, delta Delta, gamma Gamma, allowStupid bool) Type
 		b.WriteString(c.String())
 		panic(b.String())
 	}
-	subs := make(map[TParam]Type) // CHECKME: applying this subs vs. adding to a new delta?
+	subs := make(map[TParam]Type) // CHECKME: applying this subs vs. adding to a new delta?  // Cf. MakeEta
 	for i := 0; i < len(c.t_args); i++ {
 		subs[g.Psi.tFormals[i].name] = c.t_args[i]
 	}

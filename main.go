@@ -68,7 +68,7 @@ var (
 
 	evalSteps int  // number of steps to evaluate
 	verbose   bool // verbose mode
-	printf    bool // use ToGoString for output ("main." type prefix)
+	printf    bool // use ToGoString for output (e.g., "main." type prefix)
 )
 
 func init() {
@@ -140,16 +140,19 @@ Options:
 // - sig-equals-alpha and covariant receiver bounds -- expose test -- DONE -- TODO: oblit for map.fgg (memberBr, receiver param alpha)
 // - test and fix Delta in methods (re. covariant receiver bounds) -- expose test
 // - update "polyrec" check -- DONE: nomono
-// - add p-closure replacement -- expose test
+// - add p-closure replacement DONE -- expose test
 // - test monom on latest examples -- DONE
 // - nomono: fix mutual-poly-rec (should blow up without ismonom) ...fix struct-poly-rec, omega building loops (add recursive struct WF?) -- DONE
 // artifact
-// - add nomono tests
-// - fg vs. go results, add to makefile -- partial: need to generalise and extend to monom tests
+// - add nomono tests -- DONE
+// - fg vs. go results, add to makefile -- partial: need to generalise and extend to monom tests -- DONE
 // - latest paper examples
 // - reorganise example dirs
 // - bad assert eval, no panic -- -test-monom
 // - generally, exit codes instead of panic
+// design
+// - unification based impls/nomono
+// - assert-driven duck typing dummies -- dummy meths as nominal duck typing (cf. nominal type names)
 func main() {
 	flag.Usage = usage
 	flag.Parse()
