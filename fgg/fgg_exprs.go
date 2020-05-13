@@ -485,6 +485,7 @@ func (a Assert) Eval(ds []Decl) (FGGExpr, string) {
 
 func (a Assert) Typing(ds []Decl, delta Delta, gamma Gamma, allowStupid bool) Type {
 	u := a.e_I.Typing(ds, delta, gamma, allowStupid)
+	a.u_cast.Ok(ds, delta)
 	if IsStructType(ds, u) {
 		if allowStupid {
 			return a.u_cast
