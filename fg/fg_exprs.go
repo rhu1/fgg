@@ -318,7 +318,8 @@ func (c Call) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 		writeExprs(&b, c.args)
 		b.WriteString("], params=[")
 		writeParamDecls(&b, g.pDecls)
-		b.WriteString("]")
+		b.WriteString("]\n\t")
+		b.WriteString(c.String())
 		panic(b.String())
 	}
 	for i, a := range c.args {

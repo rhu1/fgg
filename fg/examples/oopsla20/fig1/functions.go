@@ -4,7 +4,7 @@ package main;
 
 import "fmt";
 
-/* Library: Bool, Nat */
+/* Library: Bool, Int */
 
 type Eq interface {
 	Equal(that Any) Bool
@@ -19,49 +19,67 @@ type Branches interface {
 	IfFF() Any
 };
 type TT struct{};
-type FF struct{};
-
 func (this TT) Not() Bool { return FF{} };
-func (this FF) Not() Bool { return TT{} };
 func (this TT) Equal(that Any) Bool { return that.(Bool) };
-func (this FF) Equal(that Any) Bool { return that.(Bool).Not() };
 func (this TT) Cond(br Branches) Any { return br.IfTT() };
+
+type FF struct{};
+func (this FF) Not() Bool { return TT{} };
+func (this FF) Equal(that Any) Bool { return that.(Bool).Not() };
 func (this FF) Cond(br Branches) Any { return br.IfFF() };
 
-type Nat interface {
-	Add(n Nat) Nat;
-	Equal(n Any) Bool;
-	equalZero() Bool;
-	equalSucc(m Nat) Bool;
-	Gt(n Nat) Bool
+type Int interface {
+	Inc() Int;
+	Dec() Int;
+	Eq(x Any) Bool;
+	EqZero() Bool;
+	EqNonZero(x Int) Bool;
+	Add(x Int) Int;
+	Gt(x Int) Bool;
+	IsNeg() Bool
 };
 
 type Zero struct {};
-func (m Zero) Add (n Nat) Nat { return n };
-func (m Zero) Equal(n Any) Bool { return n.(Nat).equalZero() };
-func (m Zero) equalZero() Bool { return TT{} };
-func (m Zero) equalSucc(n Nat) Bool { return FF{} };
-func (m Zero) Gt(b Nat) Bool { return FF{} };
+func (x0 Zero) Inc() Int { return Pos{x0} };
+func (x0 Zero) Dec() Int { return Neg{x0} };
+func (x0 Zero) Eq(x Any) Bool { return x.(Int).EqZero() };
+func (x0 Zero) EqZero() Bool { return TT{} };
+func (x0 Zero) EqNonZero(x Int) Bool { return FF{} };
+func (x0 Zero) Add(x Int) Int { return x };
+func (x0 Zero) Gt(x Int) Bool { return x.IsNeg() };
+func (x0 Zero) IsNeg() Bool { return FF{} };
 
-type Succ struct {pred Nat};
-func (m Succ) Add (n Nat) Nat { return Succ{m.pred.Add(n)} };
-func (m Succ) Equal(n Any) Bool { return n.(Nat).equalSucc(m.pred) };
-func (m Succ) equalZero() Bool { return FF{} };
-func (m Succ) equalSucc(n Nat) Bool { return n.Equal(m.pred) };
-func (m Succ) Gt(n Nat) Bool {
-	return n.equalZero().Cond(SuccGtCond{m, n}).(Bool)
-};
+type Pos struct { dec Int };
+func (x0 Pos) Inc() Int { return Pos{x0} };
+func (x0 Pos) Dec() Int { return x0.dec };
+func (x0 Pos) Eq(x Any) Bool { return x0.EqNonZero(x.(Int)) };
+func (x0 Pos) EqZero() Bool { return FF{} };
+func (x0 Pos) EqNonZero(x Int) Bool { return x.Eq(x0.dec) };
+func (x0 Pos) Add(x Int) Int { return x0.dec.Add(x.Inc()) };
+func (x0 Pos) Gt(x Int) Bool { return x0.dec.Gt(x.Dec()) };
+func (x0 Pos) IsNeg() Bool { return FF{} };
 
-type SuccGtCond struct { m Succ; n Nat };
-func (x0 SuccGtCond) IfTT() Any { return TT{} };
-func (x0 SuccGtCond) IfFF() Any { return x0.m.pred.Gt(x0.n.(Succ).pred) };
+type Neg struct { inc Int };
+func (x0 Neg) Inc() Int { return x0.inc };
+func (x0 Neg) Dec() Int { return Neg{x0} };
+func (x0 Neg) Eq(x Any) Bool { return x0.EqNonZero(x.(Int)) };
+func (x0 Neg) EqZero() Bool { return FF{} };
+func (x0 Neg) EqNonZero(x Int) Bool { return x.Eq(x0.inc) };
+func (x0 Neg) Add(x Int) Int { return x0.inc.Add(x.Dec()) };
+func (x0 Neg) Gt(x Int) Bool { return x0.inc.Gt(x.Inc()) };
+func (x0 Neg) IsNeg() Bool { return TT{} };
 
-type Const struct {};
-func (d Const) _1() Nat { return Succ{Zero{}} };
-func (d Const) _2() Nat { return Const{}._1().Add(Const{}._1()) };
-func (d Const) _3() Nat { return Const{}._2().Add(Const{}._1()) };
-func (d Const) _4() Nat { return Const{}._3().Add(Const{}._1()) };
-func (d Const) _5() Nat { return Const{}._4().Add(Const{}._1()) };
+type Ints struct {};
+func (d Ints) _1() Int { return Pos{Zero{}} };
+func (d Ints) _2() Int { return Ints{}._1().Add(Ints{}._1()) };
+func (d Ints) _3() Int { return Ints{}._2().Add(Ints{}._1()) };
+//func (d Ints) _4() Int { return Ints{}._3().Add(Ints{}._1()) };
+//func (d Ints) _5() Int { return Ints{}._4().Add(Ints{}._1()) };
+func (d Ints) __1() Int { return Neg{Zero{}} };
+func (d Ints) __2() Int { return Ints{}.__1().Add(Ints{}.__1()) };
+func (d Ints) __3() Int { return Ints{}.__2().Add(Ints{}.__1()) };
+func (d Ints) __4() Int { return Ints{}.__3().Add(Ints{}.__1()) };
+func (d Ints) __5() Int { return Ints{}.__4().Add(Ints{}.__1()) };
 
 type List interface {
 	Map(f Function) List;
@@ -90,15 +108,15 @@ type Function interface {
 	Apply(x Any) Any
 };
 //type incr struct { n int };
-type incr struct { n Nat };
+type incr struct { n Int };
 func (this incr) Apply(x Any) Any {
 	//return x.(int) + n
-	return x.(Nat).Add(this.n)
+	return x.(Int).Add(this.n)
 };
 type pos struct {};
 func (this pos) Apply(x Any) Any {
 	//return x.(int) > 0
-	return x.(Nat).Gt(Zero{})
+	return x.(Int).Gt(Zero{})
 };
 
 type compose struct {
@@ -111,7 +129,7 @@ func (this compose) Apply(x Any) Any {
 
 
 func main() {
-	/*var f Functiontion = compose{incr{-5}, pos{}}
+	/*var f Function = compose{incr{-5}, pos{}}
 	var b bool = f.Apply(3).(bool)*/
-	_ = compose{incr{Const{}._5()} , pos{}}.Apply(Const{}._3()).(Bool)
+	_ = compose{incr{Ints{}.__5()} , pos{}}.Apply(Ints{}._3()).(Bool)
 }
