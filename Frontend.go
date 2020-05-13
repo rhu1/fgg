@@ -189,11 +189,11 @@ func (intrp *FGGInterp) Monom(monom bool, compile string) {
 
 	p_mono := fgg.Monomorph(p_fgg)
 	if monom {
-		intrp.vPrintln("\nMonomorphising, formal notation: [Warning] WIP [Warning]")
+		intrp.vPrintln("\nMonomorphising:")
 		fmt.Println(p_mono.String())
 	}
 	if compile != "" {
-		intrp.vPrintln("\nMonomorphising, FG output: [Warning] WIP [Warning]")
+		intrp.vPrintln("\nMonomorphising:")
 		out := monomOutputHack(p_mono.String())
 		if compile == "--" {
 			fmt.Println(out)
