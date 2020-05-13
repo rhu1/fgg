@@ -377,6 +377,7 @@ func (g Sig) String() string {
 
 /* Helpers */
 
+// N.B. returns bool, not implicit panic like other Ok's
 func isTypeOk(ds []Decl, t Type) bool { // Cf. isStructType, etc.
 	if t == STRING_TYPE {
 		return true
