@@ -113,8 +113,8 @@ func (s StructLit) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 		b.WriteString(s.String())
 		panic(b.String())
 	}
-	for i := 0; i < len(s.elems); i++ {
-		t := s.elems[i].Typing(ds, gamma, allowStupid)
+	for i, v := range s.elems {
+		t := v.Typing(ds, gamma, allowStupid)
 		u := fs[i].t
 		if !t.Impls(ds, u) {
 			panic("Arg expr must implement field type: arg=" + t.String() +
@@ -205,13 +205,14 @@ func (s Select) Eval(ds []Decl) (FGExpr, string) {
 			return v.elems[i], "Select"
 		}
 	}
-	panic("Field not found: " + s.field)
+	panic("Field not found: " + s.field + "\n\t" + s.String())
 }
 
 func (s Select) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 	t := s.e_S.Typing(ds, gamma, allowStupid)
 	if !isStructType(ds, t) {
-		panic("Illegal select on non-struct type expr: " + t)
+		panic("Illegal select on expr of non-struct type: " + string(t) +
+			"\n\t" + s.String())
 	}
 	fds := fields(ds, t)
 	for _, v := range fds {
@@ -219,7 +220,8 @@ func (s Select) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 			return v.t
 		}
 	}
-	panic("Field not found: " + s.field + " in " + t.String())
+	panic("Field " + s.field + " not found in type: " + t.String() +
+		"\n\t" + s.String())
 }
 
 // From base.Expr
@@ -319,8 +321,8 @@ func (c Call) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 		b.WriteString("]")
 		panic(b.String())
 	}
-	for i := 0; i < len(c.args); i++ {
-		t := c.args[i].Typing(ds, gamma, allowStupid)
+	for i, a := range c.args {
+		t := a.Typing(ds, gamma, allowStupid)
 		if !t.Impls(ds, g.pDecls[i].t) {
 			panic("Arg expr type must implement param type: arg=" + t.String() +
 				", param=" + g.pDecls[i].t.String() + "\n\t" + c.String())

@@ -224,14 +224,15 @@ func (s Select) Eval(ds []Decl) (FGGExpr, string) {
 			return v.elems[i], "Select"
 		}
 	}
-	panic("Field not found: " + s.field)
+	panic("Field not found: " + s.field + "\n\t" + s.String())
 }
 
 func (s Select) Typing(ds []Decl, delta Delta, gamma Gamma,
 	allowStupid bool) Type {
 	u := s.e_S.Typing(ds, delta, gamma, allowStupid)
 	if !IsStructType(ds, u) {
-		panic("Illegal select on non-struct type expr: " + u.String())
+		panic("Illegal select on expr of non-struct type: " + u.String() +
+			"\n\t" + s.String())
 	}
 	fds := fields(ds, u.(TNamed))
 	for _, v := range fds {
@@ -239,7 +240,8 @@ func (s Select) Typing(ds []Decl, delta Delta, gamma Gamma,
 			return v.u
 		}
 	}
-	panic("Field not found: " + s.field + " in " + u.String())
+	panic("Field " + s.field + " not found in type: " + u.String() +
+		"\n\t" + s.String())
 }
 
 // From base.Expr
@@ -372,7 +374,7 @@ func (c Call) Typing(ds []Decl, delta Delta, gamma Gamma, allowStupid bool) Type
 		u := g.Psi.tFormals[i].u_I.TSubs(subs)
 		if !c.t_args[i].ImplsDelta(ds, delta, u) {
 			panic("Type actual must implement type formal: actual=" +
-				c.t_args[i].String() + ", param=" + u.String())
+				c.t_args[i].String() + ", param=" + u.String() + "\n\t" + c.String())
 		}
 	}
 	for i := 0; i < len(c.args); i++ {
