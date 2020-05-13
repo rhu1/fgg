@@ -143,6 +143,8 @@ Options:
 // - add p-closure replacement DONE -- expose test
 // - test monom on latest examples -- DONE
 // - nomono: fix mutual-poly-rec (should blow up without ismonom) ...fix struct-poly-rec, omega building loops (add recursive struct WF?) -- DONE
+// - factor out FGR better with FG
+// - add result caching maps for optimisation
 // artifact
 // - add nomono tests -- DONE
 // - fg vs. go results, add to makefile -- partial: need to generalise and extend to monom tests -- DONE
