@@ -127,7 +127,6 @@ test-fgg-examples:
 	$(call eval_fgg,fgg/examples/monom/box/box2.fgg,10)
 
 	$(call eval_fgg,fgg/examples/monom/julien/ifacebox.fgg,-1)
-	$(call eval_fgg,fgg/examples/monom/julien/ifacebox-nomethparam.fgg,-1)
 
 	$(call eval_fgg,fgg/examples/monom/julien/mono-ok/iface-embedding-simple.go,-1)
 	$(call eval_fgg,fgg/examples/monom/julien/mono-ok/iface-embedding.go,-1)
@@ -185,7 +184,6 @@ simulate-monom:
 	$(call sim_monom,fgg/examples/monom/box/box2.fgg,10)
 
 	$(call sim_monom,fgg/examples/monom/julien/ifacebox.fgg,-1)
-	$(call sim_monom,fgg/examples/monom/julien/ifacebox-nomethparam.fgg,-1)
 
 	$(call sim_monom,fgg/examples/monom/julien/mono-ok/iface-embedding-simple.go,-1)
 	$(call sim_monom,fgg/examples/monom/julien/mono-ok/iface-embedding.go,-1)
@@ -242,7 +240,6 @@ test-monom-against-go:
 	#$(call eval_monom_fgg,fgg/examples/monom/box/box2.fgg,10,tmp/test/fg/monom/box,box2.go)
 
 	$(call eval_monom_fgg_against_go,fgg/examples/monom/julien/ifacebox.fgg,tmp/test/fg/monom/julien/ifacebox,ifacebox.go)
-	$(call eval_monom_fgg_against_go,fgg/examples/monom/julien/ifacebox-nomethparam.fgg,tmp/test/fg/monom/julien/ifacebox-nomethparam,ifacebox-nomethparam.go)
 
 	$(call eval_monom_fgg_against_go,fgg/examples/monom/julien/mono-ok/iface-embedding-simple.go,tmp/test/fg/monom/julien/mono-ok/iface-embedding-simple,iface-embedding-simple.go)
 	$(call eval_monom_fgg_against_go,fgg/examples/monom/julien/mono-ok/iface-embedding.go,tmp/test/fg/monom/julien/mono-ok/iface-embedding,iface-embedding.go)
@@ -281,7 +278,6 @@ clean-test-monom-against-go:
 	#rm -fd tmp/test/fg/monom/box
 
 	$(call rm_monom,tmp/test/fg/monom/julien/ifacebox,ifacebox.go)
-	$(call rm_monom,tmp/test/fg/monom/julien/ifacebox-nomethparam,ifacebox-nomethparam.go)
 
 	$(call rm_monom,tmp/test/fg/monom/julien/mono-ok/iface-embedding-simple,iface-embedding-simple.go)
 	$(call rm_monom,tmp/test/fg/monom/julien/mono-ok/iface-embedding,iface-embedding.go)
@@ -312,7 +308,6 @@ simulate-oblit:
 	#go run github.com/rhu1/fgg -test-oblit -eval=10 fgg/examples/monom/box/box2.fgg
 
 	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/monom/julien/ifacebox.fgg
-	go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/monom/julien/ifacebox-nomethparam.fgg
 
 	# TODO?
 	#go run github.com/rhu1/fgg -test-oblit -eval=-1 fgg/examples/monom/julien/iface-embedding-simple.go
@@ -351,7 +346,6 @@ test-oblit:
 
 	mkdir -p tmp/test-oblit/fgr/julien
 	go run github.com/rhu1/fgg -fgg -oblitc=tmp/test-oblit/fgr/julien/ifacebox.fgr -oblit-eval=-1 fgg/examples/monom/julien/ifacebox.fgg
-	go run github.com/rhu1/fgg -fgg -oblitc=tmp/test-oblit/fgr/julien/ifacebox-nomethparam.fgr -oblit-eval=-1 fgg/examples/monom/julien/ifacebox-nomethparam.fgg
 	# TODO: i/face embedding?
 	#go run github.com/rhu1/fgg -fgg -oblitc=tmp/test-oblit/fgr/julien/iface-embedding-simple.fgr -oblit-eval=-1 fgg/examples/monom/julien/iface-embedding-simple.go
 	#go run github.com/rhu1/fgg -fgg -oblitc=tmp/test-oblit/fgr/julien/iface-embedding.fgr -oblit-eval=-1 fgg/examples/monom/julien/iface-embedding.go
@@ -396,7 +390,6 @@ clean-test-oblit:
 	rm -fd tmp/test-oblit/fgr/julien/mono-ko
 
 	rm -f tmp/test-oblit/fgr/julien/ifacebox.fgr
-	rm -f tmp/test-oblit/fgr/julien/ifacebox-nomethparam.fgr
 	rm -fd tmp/test-oblit/fgr/julien
 
 
