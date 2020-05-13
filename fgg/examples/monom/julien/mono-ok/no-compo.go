@@ -1,11 +1,13 @@
 package main;
 
-
 type Any(type ) interface {};
 
-type Pair(type ) struct { fst Any(); snd Any()};
+type Pair(type ) struct { 
+	fst Any(); 
+	snd Any()
+	};
 
-type tI(type a Any()) interface {
+type tI(type ) interface {
 	m(type )() Any()
 };
 
@@ -15,7 +17,7 @@ func (x A(type )) m(type )() Any() {
 	return A(){}
 };
 
-type B(type ) struct {};
+type B(type ) struct { };
 func (x B(type )) m(type )() Any() {
 	return B(){}
 };
@@ -27,5 +29,8 @@ func (x C(type )) mtop(type )(y tI()) Any() {
 
 
 func main() { _ =
-	Pair(){ A(){}, B(){}}
+	Pair(){
+		C(){}.mtop()(A(){})
+		, B(){}
+	}
 }
