@@ -144,6 +144,7 @@ Options:
 // - test monom on latest examples -- DONE
 // - nomono: fix mutual-poly-rec (should blow up without ismonom) ...fix struct-poly-rec, omega building loops (add recursive struct WF?) -- DONE
 // - factor out FGR better with FG -- FGR doesn't have latest Ok/Typing changes from FG yet
+// - factor out FG/FGG/FGR aux, helper, etc. (use Type/Expr/... interfaces more)
 // - add result caching maps for optimisation
 // artifact
 // - add nomono tests -- DONE
