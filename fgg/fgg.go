@@ -21,7 +21,7 @@ func IsNamedIfaceType(ds []Decl, u Type) bool { return isNamedIfaceType(ds, u) }
 
 // Hacks
 var STRING_TYPE = TParam("string")
-var PRIMITIVE_TYPES map[TParam]TParam = make(map[TParam]TParam)
+var PRIMITIVE_TYPES = make(map[TParam]TParam)
 var PRIMITIVE_PSI BigPsi // Because prim types parsed as TParams, need to check OK
 
 func init() {
@@ -129,7 +129,7 @@ func (a TParam) Equals(u base.Type) bool {
 			":\n\t" + u.String())
 	}
 	if b, ok := u.(TParam); ok {
-		return a == b // TODO FIXME: need alpha -- pre- index-ify TNamed (and Impls)?  // TODO: add tests
+		return a == b // Handles primitives
 	}
 	return false
 }

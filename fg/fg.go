@@ -13,7 +13,12 @@ type Decl = base.Decl
 
 /* Constants */
 
-var STRING_TYPE Type = Type("string")
+var STRING_TYPE = Type("string")
+var PRIMITIVE_TYPES = make(map[Type]Type)
+
+func init() {
+	PRIMITIVE_TYPES[STRING_TYPE] = STRING_TYPE
+}
 
 /* Name, Context, Type */
 
@@ -29,6 +34,12 @@ var _ Spec = Type("")
 // Pre: t0, t are known types
 // t0 <: t
 func (t0 Type) Impls(ds []Decl, t base.Type) bool {
+	if _, ok := PRIMITIVE_TYPES[t0]; ok {
+		if _, ok := t.(Type); ok {
+			return t0.Equals(t)
+		}
+	}
+
 	if _, ok := t.(Type); !ok {
 		panic("Expected FGR type, not " + reflect.TypeOf(t).String() +
 			":\n\t" + t.String())
@@ -108,9 +119,6 @@ type FGExpr interface {
 /* Helpers */
 
 func isStructType(ds []Decl, t Type) bool {
-	if t == STRING_TYPE { // TODO CHECKME
-		return true
-	}
 	for _, v := range ds {
 		if d, ok := v.(STypeLit); ok && d.t_S == t {
 			return true
