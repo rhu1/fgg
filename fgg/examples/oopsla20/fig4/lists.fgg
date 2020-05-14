@@ -131,7 +131,7 @@ func main() {
 			Cons(int){3, Cons(int){6, Nil(int){}}}
 	var ys List(int) = xs.Map(int)(incr{-5})
 	var zs List(bool) = ys.Map(bool)(pos{})*/
-	_ = Cons(Int()){Ints(){}._3()(), Cons(Int()){Ints(){}._6()(), Nil(Int()){}}}.  
+	fmt.Printf("%#v", Cons(Int()){Ints(){}._3()(), Cons(Int()){Ints(){}._6()(), Nil(Int()){}}}.  
 				Map(Int())(incr(){Ints(){}.__5()()}).  
-				Map(Bool())(pos(){})
+				Map(Bool())(pos(){}))
 }

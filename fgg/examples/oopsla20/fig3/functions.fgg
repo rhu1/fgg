@@ -100,6 +100,6 @@ func main() {
 	/*var f Function(int, bool) =
 				compose(int, int, bool){incr{-5}, pos{}}
 	var b bool = f.Apply(3)*/
-	_ = compose(Int(), Int(), Bool()){incr(){Ints(){}.__5()()} , pos(){}}.  
-			Apply()(Ints(){}._3()())
+	fmt.Printf("%#v", compose(Int(), Int(), Bool()){incr(){Ints(){}.__5()()} , pos(){}}.  
+			Apply()(Ints(){}._3()()))
 }
