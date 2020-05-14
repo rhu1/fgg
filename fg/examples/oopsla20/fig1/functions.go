@@ -104,5 +104,5 @@ func (this compose) Apply(x Any) Any {
 func main() {
 	/*var f Function = compose{incr{-5}, pos{}}
 	var b bool = f.Apply(3).(bool)*/
-	_ = compose{incr{Ints{}.__5()} , pos{}}.Apply(Ints{}._3()).(Bool)
+	fmt.Printf("%#v", compose{incr{Ints{}.__5()} , pos{}}.Apply(Ints{}._3()).(Bool))
 }
