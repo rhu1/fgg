@@ -42,11 +42,11 @@ var empty_I = fg.Type("Top") // !!!
 
 func Monomorph(p FGGProgram) fg.FGProgram {
 	ds_fgg := p.GetDecls()
-	omega := GetOmega1(ds_fgg, p.GetMain().(FGGExpr))
+	omega := GetOmega(ds_fgg, p.GetMain().(FGGExpr))
 	return ApplyOmega1(p, omega)
 }
 
-func ApplyOmega1(p FGGProgram, omega Omega1) fg.FGProgram {
+func ApplyOmega1(p FGGProgram, omega Omega) fg.FGProgram {
 	var ds_monom []Decl
 	for _, v := range p.decls {
 		switch d := v.(type) {
@@ -71,7 +71,7 @@ func ApplyOmega1(p FGGProgram, omega Omega1) fg.FGProgram {
 	return fg.NewFGProgram(ds_monom, e_monom, p.printf)
 }
 
-func monomTDecl1(ds []Decl, omega Omega1, td TypeDecl) []fg.TDecl {
+func monomTDecl1(ds []Decl, omega Omega, td TypeDecl) []fg.TDecl {
 	var res []fg.TDecl
 	for _, u := range omega.us {
 		t := td.GetName()
@@ -158,7 +158,7 @@ func monomSig1(g Sig, m MethInstan, eta Eta) fg.Sig {
 	return fg.NewSig(m_monom, pds_monom, ret_monom)
 }
 
-func monomMDecl1(omega Omega1, md MethDecl) []fg.MethDecl {
+func monomMDecl1(omega Omega, md MethDecl) []fg.MethDecl {
 	var res []fg.MethDecl
 	for _, m := range omega.ms {
 		if !(m.u_recv.t_name == md.t_recv && m.meth == md.name) {

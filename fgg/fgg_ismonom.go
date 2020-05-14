@@ -15,7 +15,7 @@ func IsMonomOK(p FGGProgram) (bool, string) {
 	ds := p.GetDecls()
 	for _, v := range ds {
 		if md, ok := v.(MethDecl); ok {
-			omega1 := Omega2{make(map[string]Type), make(map[string]MethInstan2)}
+			omega1 := Nomega{make(map[string]Type), make(map[string]MethInstan2)}
 			delta := md.Psi_recv.ToDelta()
 			for _, v := range md.Psi_meth.tFormals {
 				delta[v.name] = v.u_I
@@ -42,7 +42,7 @@ func IsMonomOK(p FGGProgram) (bool, string) {
 }
 
 // Return true if nomono
-func nomonoOmega(ds []Decl, delta Delta, md MethDecl, omega1 Omega2) (bool, string) {
+func nomonoOmega(ds []Decl, delta Delta, md MethDecl, omega1 Nomega) (bool, string) {
 	for auxG2(ds, delta, omega1) {
 		for _, v := range omega1.ms {
 			if !isStructType(ds, v.u_recv) {
@@ -90,18 +90,14 @@ func fv(u Type) []TParam {
 	return res
 }
 
-type MethInstan2 struct {
-	u_recv Type
-	meth   Name
-	psi    SmallPsi
-}
+/* Duplication of Omega for non-ground types -- if only Go had generics! */
 
-type Omega2 struct {
+type Nomega struct {
 	us map[string]Type
 	ms map[string]MethInstan2
 }
 
-func (w Omega2) clone() Omega2 {
+func (w Nomega) clone() Nomega {
 	us := make(map[string]Type)
 	ms := make(map[string]MethInstan2)
 	for k, v := range w.us {
@@ -110,10 +106,10 @@ func (w Omega2) clone() Omega2 {
 	for k, v := range w.ms {
 		ms[k] = v
 	}
-	return Omega2{us, ms}
+	return Nomega{us, ms}
 }
 
-func (w Omega2) Println() {
+func (w Nomega) Println() {
 	fmt.Println("=== Type instances:")
 	for _, v := range w.us {
 		fmt.Println(v)
@@ -125,6 +121,13 @@ func (w Omega2) Println() {
 	fmt.Println("===")
 }
 
+// TODO: rename/refactor
+type MethInstan2 struct {
+	u_recv Type
+	meth   Name
+	psi    SmallPsi
+}
+
 func toKey_Wt2(u Type) string {
 	return u.String()
 }
@@ -133,8 +136,8 @@ func toKey_Wm2(x MethInstan2) string {
 	return x.u_recv.String() + "_" + x.meth + "_" + x.psi.String()
 }
 
-// TODO: refactor with above
-func collectExpr2(ds []Decl, delta Delta, gamma Gamma, e FGGExpr, omega Omega2) bool {
+// TODO: rename/refactor (cf. original)
+func collectExpr2(ds []Decl, delta Delta, gamma Gamma, e FGGExpr, omega Nomega) bool {
 	res := false
 	switch e1 := e.(type) {
 	case Variable:
@@ -206,7 +209,7 @@ func collectExpr2(ds []Decl, delta Delta, gamma Gamma, e FGGExpr, omega Omega2) 
 // Return true if omega has changed
 // N.B. no closure over types occurring in bounds, or *interface decl* method sigs
 //func auxG(ds []Decl, omega Omega1) bool {
-func auxG2(ds []Decl, delta Delta, omega Omega2) bool {
+func auxG2(ds []Decl, delta Delta, omega Nomega) bool {
 	res := false
 	res = auxF2(ds, omega) || res
 	res = auxI2(ds, delta, omega) || res
@@ -215,11 +218,10 @@ func auxG2(ds []Decl, delta Delta, omega Omega2) bool {
 	// I/face embeddings
 	res = auxE12(ds, omega) || res
 	res = auxE22(ds, omega) || res
-	//res = auxP(ds, omega) || res
 	return res
 }
 
-func auxF2(ds []Decl, omega Omega2) bool {
+func auxF2(ds []Decl, omega Nomega) bool {
 	//func auxF(ds []Decl, delta Delta, omega Omega1) bool {
 	res := false
 	tmp := make(map[string]Type)
@@ -241,7 +243,7 @@ func auxF2(ds []Decl, omega Omega2) bool {
 	return res
 }
 
-func auxI2(ds []Decl, delta Delta, omega Omega2) bool {
+func auxI2(ds []Decl, delta Delta, omega Nomega) bool {
 	res := false
 	tmp := make(map[string]MethInstan2)
 	for _, m := range omega.ms {
@@ -267,7 +269,7 @@ func auxI2(ds []Decl, delta Delta, omega Omega2) bool {
 	return res
 }
 
-func auxM2(ds []Decl, delta Delta, omega Omega2) bool {
+func auxM2(ds []Decl, delta Delta, omega Nomega) bool {
 	res := false
 	tmp := make(map[string]Type)
 	for _, m := range omega.ms {
@@ -294,7 +296,7 @@ func auxM2(ds []Decl, delta Delta, omega Omega2) bool {
 	return res
 }
 
-func auxS2(ds []Decl, delta Delta, omega Omega2) bool {
+func auxS2(ds []Decl, delta Delta, omega Nomega) bool {
 	res := false
 	tmp := make(map[string]MethInstan2)
 	clone := omega.clone()
@@ -329,7 +331,7 @@ func auxS2(ds []Decl, delta Delta, omega Omega2) bool {
 }
 
 // Add embedded types
-func auxE12(ds []Decl, omega Omega2) bool {
+func auxE12(ds []Decl, omega Nomega) bool {
 	res := false
 	tmp := make(map[string]TNamed)
 	for _, u := range omega.us {
@@ -356,7 +358,7 @@ func auxE12(ds []Decl, omega Omega2) bool {
 }
 
 // Propagate method instances up to embedded supertypes
-func auxE22(ds []Decl, omega Omega2) bool {
+func auxE22(ds []Decl, omega Nomega) bool {
 	res := false
 	tmp := make(map[string]MethInstan2)
 	for _, m := range omega.ms {

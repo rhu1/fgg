@@ -9,6 +9,7 @@ var _ = fmt.Errorf
 
 /* Constants */
 
+// Hack
 var STRING_TYPE_MONOM = TNamed{string(STRING_TYPE), SmallPsi{}} // Because TNamed required
 
 /* GroundEnv */
@@ -23,35 +24,24 @@ type GroundGamma map[Name]TNamed // Pre: forall TName, isGround
  * subtyping (cf. "zigzagging" in fgg_monom).
  */
 
-// Attempt to statically collect all ground types, and method instantiations
-// called on those types, that may arise during execution
-// Pre: isMonomorphisable -- TODO
-/*func GetOmega(ds []Decl, e_main FGGExpr) Omega {
-	omega := make(Omega)
-	var gamma GroundEnv
-	collectGroundTypesFromExpr(ds, gamma, e_main, omega, true)
-	fixOmega(ds, gamma, omega)
+// Pre: IsMonomOK
+func GetOmega(ds []Decl, e_main FGGExpr) Omega {
+	omega := Omega{make(map[string]TNamed), make(map[string]MethInstan)}
+	collectExpr(ds, make(GroundGamma), e_main, omega)
+	fixomega(ds, omega)
+	//omega.Println()
 	return omega
-}*/
-
-// Pre: isMonomorphisable -- TODO
-func GetOmega1(ds []Decl, e_main FGGExpr) Omega1 {
-	omega1 := Omega1{make(map[string]TNamed), make(map[string]MethInstan)}
-	collectExpr(ds, make(GroundGamma), e_main, omega1)
-	fixOmega1(ds, omega1)
-	//omega1.Println()
-	return omega1
 }
 
 /* Omega, MethInstan */
 
-type Omega1 struct {
+type Omega struct {
 	// Keys given by toKey_Wt, toKey_Wm
 	us map[string]TNamed // Pre: all TNamed are isGround
 	ms map[string]MethInstan
 }
 
-func (w Omega1) clone() Omega1 {
+func (w Omega) clone() Omega {
 	us := make(map[string]TNamed)
 	ms := make(map[string]MethInstan)
 	for k, v := range w.us {
@@ -60,10 +50,10 @@ func (w Omega1) clone() Omega1 {
 	for k, v := range w.ms {
 		ms[k] = v
 	}
-	return Omega1{us, ms}
+	return Omega{us, ms}
 }
 
-func (w Omega1) Println() {
+func (w Omega) Println() {
 	fmt.Println("=== Type instances:")
 	for _, v := range w.us {
 		fmt.Println(v)
@@ -93,7 +83,7 @@ func toKey_Wm(x MethInstan) string {
 
 /* fixOmega */
 
-func fixOmega1(ds []Decl, omega Omega1) {
+func fixomega(ds []Decl, omega Omega) {
 	/*fmt.Println("......initial.........", len(omega.us), len(omega.ms))
 	omega.Println()
 	fmt.Println(".............", len(omega.us), len(omega.ms))*/
@@ -106,7 +96,7 @@ func fixOmega1(ds []Decl, omega Omega1) {
 /* Expressions */
 
 // gamma used to type Call receiver
-func collectExpr(ds []Decl, gamma GroundGamma, e FGGExpr, omega Omega1) bool {
+func collectExpr(ds []Decl, gamma GroundGamma, e FGGExpr, omega Omega) bool {
 	res := false
 	switch e1 := e.(type) {
 	case Variable:
@@ -181,8 +171,8 @@ func collectExpr(ds []Decl, gamma GroundGamma, e FGGExpr, omega Omega1) bool {
 // N.B. mutating omega in each sub-step -- can produce many levels of nesting within one G step
 // ^also non-deterministic progress, because mutating maps while ranging; also side-effect results may depend on iteration order over maps
 // N.B. no closure over types occurring in bounds, or *interface decl* method sigs
-//func auxG(ds []Decl, omega Omega1) bool {
-func auxG(ds []Decl, omega Omega1) bool {
+//func auxG(ds []Decl, omega omega) bool {
+func auxG(ds []Decl, omega Omega) bool {
 	res := false
 	res = auxF(ds, omega) || res
 	res = auxI(ds, omega) || res
@@ -195,7 +185,7 @@ func auxG(ds []Decl, omega Omega1) bool {
 	return res
 }
 
-func auxF(ds []Decl, omega Omega1) bool {
+func auxF(ds []Decl, omega Omega) bool {
 	res := false
 	tmp := make(map[string]TNamed)
 	for _, u := range omega.us {
@@ -216,7 +206,7 @@ func auxF(ds []Decl, omega Omega1) bool {
 	return res
 }
 
-func auxI(ds []Decl, omega Omega1) bool {
+func auxI(ds []Decl, omega Omega) bool {
 	res := false
 	tmp := make(map[string]MethInstan)
 	for _, m := range omega.ms {
@@ -242,7 +232,7 @@ func auxI(ds []Decl, omega Omega1) bool {
 	return res
 }
 
-func auxM(ds []Decl, omega Omega1) bool {
+func auxM(ds []Decl, omega Omega) bool {
 	res := false
 	tmp := make(map[string]TNamed)
 	for _, m := range omega.ms {
@@ -269,7 +259,7 @@ func auxM(ds []Decl, omega Omega1) bool {
 	return res
 }
 
-func auxS(ds []Decl, delta Delta, omega Omega1) bool {
+func auxS(ds []Decl, delta Delta, omega Omega) bool {
 	res := false
 	tmp := make(map[string]MethInstan)
 	clone := omega.clone()
@@ -302,7 +292,7 @@ func auxS(ds []Decl, delta Delta, omega Omega1) bool {
 }
 
 // Add embedded types
-func auxE1(ds []Decl, omega Omega1) bool {
+func auxE1(ds []Decl, omega Omega) bool {
 	res := false
 	tmp := make(map[string]TNamed)
 	for _, u := range omega.us {
@@ -328,7 +318,7 @@ func auxE1(ds []Decl, omega Omega1) bool {
 }
 
 // Propagate method instances up to embedded supertypes
-func auxE2(ds []Decl, omega Omega1) bool {
+func auxE2(ds []Decl, omega Omega) bool {
 	res := false
 	tmp := make(map[string]MethInstan)
 	for _, m := range omega.ms {
@@ -358,33 +348,6 @@ func auxE2(ds []Decl, omega Omega1) bool {
 	}
 	return res
 }
-
-/*func auxP(ds []Decl, omega Omega1) bool {
-	res := false
-	tmp := make(map[string]MethInstan)
-	for _, u := range omega.us {
-		if !isNamedIfaceType(ds, u) {
-			continue
-		}
-		gs := methods(ds, u)
-		for _, g := range gs {
-			psi := make(SmallPsi, len(g.psi.tFormals))
-			for i := 0; i < len(psi); i++ {
-				psi[i] = g.psi.tFormals[i].u_I
-			}
-			m := MethInstan{u, g.meth, psi}
-			tmp[toKey_Wm(m)] = m
-			fmt.Println("222:", u, ";", m)
-		}
-	}
-	for k, v := range tmp {
-		if _, ok := omega.ms[k]; !ok {
-			omega.ms[k] = v
-			res = true
-		}
-	}
-	return res
-}*/
 
 /* Helpers */
 
