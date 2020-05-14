@@ -132,7 +132,7 @@ func main() {
 	/*var xs List = Cons{3, Cons{6, Nil{}}}
 	var ys List = xs.Map(incr{-5})
 	var zs List = ys.Map(pos)*/
-	_ = Cons{Ints{}._3(), Cons{Ints{}._6(), Nil{}}}.
+	fmt.Printf("%#v", Cons{Ints{}._3(), Cons{Ints{}._6(), Nil{}}}.
 				Map(incr{Ints{}.__5()}).
-				Map(pos{})  // !!!
+				Map(pos{}))  // !!!
 }

@@ -5,6 +5,7 @@
 //$ go run github.com/rhu1/fgg -eval=-1 -v fg/examples/oopsla20/fig7/monom.go
 
 package main;
+import "fmt";
 type Boolᐸᐳ interface { Not___Bool__() Top; Equal___Bool___Bool__() Top; Cond__a_Any____Branches_α1__α1() Top };
 type TTᐸᐳ struct {};
 type FFᐸᐳ struct {};
@@ -103,4 +104,4 @@ func (xs ConsᐸIntᐸᐳᐳ) MapᐸBoolᐸᐳᐳ(f FunctionᐸIntᐸᐳᐨBool�
 func (xs ConsᐸBoolᐸᐳᐳ) Map__b_Any____Function_Bool___α1__List_α1_() Top { return xs };
 func (xs ConsᐸIntᐸᐳᐳ) Map__b_Any____Function_Int___α1__List_α1_() Top { return xs };
 type Top interface {};
-func main() { _ = ConsᐸIntᐸᐳᐳ{Intsᐸᐳ{}._3ᐸᐳ(), ConsᐸIntᐸᐳᐳ{Intsᐸᐳ{}._6ᐸᐳ(), NilᐸIntᐸᐳᐳ{}}}.MapᐸIntᐸᐳᐳ(incrᐸᐳ{Intsᐸᐳ{}.__5ᐸᐳ()}).MapᐸBoolᐸᐳᐳ(posᐸᐳ{}) }
+func main() { fmt.Printf("%#v", ConsᐸIntᐸᐳᐳ{Intsᐸᐳ{}._3ᐸᐳ(), ConsᐸIntᐸᐳᐳ{Intsᐸᐳ{}._6ᐸᐳ(), NilᐸIntᐸᐳᐳ{}}}.MapᐸIntᐸᐳᐳ(incrᐸᐳ{Intsᐸᐳ{}.__5ᐸᐳ()}).MapᐸBoolᐸᐳᐳ(posᐸᐳ{})) }
