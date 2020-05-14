@@ -53,8 +53,14 @@ test-fg-examples:
 	$(call eval_fg,fg/examples/popl20/incr/incr.go,-1)
 	$(call eval_fg,fg/examples/popl20/map/map.go,-1)
 	$(call eval_fg,fg/examples/popl20/not/not.go,-1)
+
+	$(call eval_fg,fg/examples/oopsla20/fig1/functions.go,-1)
+	$(call eval_fg,fg/examples/oopsla20/fig2/lists.go,-1)
+	$(call eval_fg,fg/examples/oopsla20/fig7/monom.go,-1)
+
+
 # TODO: currently examples testing limited to "good" examples
-#
+
 
 # N.B. semicolons and line esacapes, and double-dollar
 define test_fg_against_go
@@ -79,6 +85,10 @@ test-fg-examples-against-go:
 		$(call test_fg_against_go,fg/examples/popl20/incr/incr.go)
 		$(call test_fg_against_go,fg/examples/popl20/map/map.go)
 		$(call test_fg_against_go,fg/examples/popl20/not/not.go)
+
+		$(call test_fg_against_go,fg/examples/oopsla20/fig1/functions.go)
+		$(call test_fg_against_go,fg/examples/oopsla20/fig2/lists.go)
+		$(call test_fg_against_go,fg/examples/oopsla20/fig7/monom.go)
 
 
 .PHONY: test-fgg
@@ -142,6 +152,11 @@ test-fgg-examples:
 	$(call eval_fgg,fgg/examples/monom/julien/mono-ok/param-meth-cast.go,2)
 	$(call eval_fgg,fgg/examples/monom/julien/mono-ok/poly-rec-iface.go,10)
 
+	$(call eval_fgg,fgg/examples/oopsla20/fig3/functions.fgg,-1)
+	$(call eval_fgg,fgg/examples/oopsla20/fig4/lists.fgg,-1)
+	$(call eval_fgg,fgg/examples/oopsla20/fig5/graph.fgg,-1)
+	$(call eval_fgg,fgg/examples/oopsla20/fig6/expression.fgg,-1)
+
 
 define nomono_bad
 	RES=`go run github.com/rhu1/fgg -fgg -monomc=-- $(1) 2> /dev/null`; \
@@ -201,6 +216,11 @@ simulate-monom:
 	$(call sim_monom,fgg/examples/monom/julien/mono-ok/param-meth-cast.go,2)
 	$(call sim_monom,fgg/examples/monom/julien/mono-ok/poly-rec-iface.go,10)
 
+	$(call sim_monom,fgg/examples/oopsla20/fig3/functions.fgg,-1)
+	$(call sim_monom,fgg/examples/oopsla20/fig4/lists.fgg,-1)
+	$(call sim_monom,fgg/examples/oopsla20/fig5/graph.fgg,-1)
+	#$(call sim_monom,fgg/examples/oopsla20/fig6/expression.fgg,-1)
+
 
 define eval_monom_fgg
 	mkdir -p $(3); \
@@ -259,6 +279,10 @@ test-monom-against-go:
 
 	#mkdir -p tmp/test/fg/monom/julien/mono-ko
 
+	$(call eval_monom_fgg_against_go,fgg/examples/oopsla20/fig3/functions.fgg,tmp/test/fg/oopsla20/functions,functions.go)
+	$(call eval_monom_fgg_against_go,fgg/examples/oopsla20/fig4/lists.fgg,tmp/test/fg/oopsla20/lists,lists.go)
+	$(call eval_monom_fgg_against_go,fgg/examples/oopsla20/fig5/graph.fgg,tmp/test/fg/oopsla20/graph,grahh.go)
+	#$(call eval_monom_fgg_against_go,fgg/examples/oopsla20/fig6/expression.fgg,tmp/test/fg/oopsla20/expression,expression.go)  #go= "({{{}}}+{{}})" 
 
 define rm_monom
 	rm -f $(1)/$(2); \
@@ -293,6 +317,13 @@ clean-test-monom-against-go:
 	rm -fd tmp/test/fg/monom/julien/mono-ko
 	rm -fd tmp/test/fg/monom/julien
 	rm -fd tmp/test/fg/monom
+
+	$(call rm_monom,tmp/test/fg/oopsla20/functions,functions.go)
+	$(call rm_monom,tmp/test/fg/oopsla20/lists,lists.go)
+	$(call rm_monom,tmp/test/fg/oopsla20/graph,graph.go)
+	$(call rm_monom,tmp/test/fg/oopsla20/expression,expression.go)
+
+	rm -fd tmp/test/fg/oopsla20
 
 
 .PHONY: simulate-oblit

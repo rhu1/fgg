@@ -142,6 +142,6 @@ func main() {
 	var v Int = e.Eval() // 3
 	var s string = e.String() //"(1+2)"*/
   //_ = Plus(Expr()){Num(){Ints(){}._1()()}, Num(){Ints(){}._2()()}}.Eval()()
-  _ = Plus(Expr()){Num(){Ints(){}._1()()}, Num(){Ints(){}._2()()}}.String()()
+  fmt.Printf("%#v", Plus(Expr()){Num(){Ints(){}._1()()}, Num(){Ints(){}._2()()}}.String()())
 }
 
