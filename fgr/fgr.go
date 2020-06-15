@@ -7,7 +7,6 @@ import "github.com/rhu1/fgg/base"
 //import "github.com/rhu1/fgg/fgg"
 
 /* Aliases from base */
-// TODO: refactor?
 
 type Name = base.Name
 type FGRNode = base.AstNode

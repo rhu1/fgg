@@ -80,9 +80,9 @@ func init() {
 
 	// Erasure by monomorphisation -- implicitly disabled if not -fgg
 	flag.BoolVar(&monom, "monom", false,
-		"[WIP] monomorphise FGG source using paper notation, i.e., angle bracks (ignored if -fgg not set)")
+		"monomorphise FGG source using paper notation, i.e., angle bracks (ignored if -fgg not set)")
 	flag.StringVar(&monomc, "monomc", "", // Empty string for "false"
-		"[WIP] monomorphise FGG source to (Go-compatible) FG, i.e., no angle bracks (ignored if -fgg not set)\n"+
+		"monomorphise FGG source to (Go-compatible) FG, i.e., no angle bracks (ignored if -fgg not set)\n"+
 			"specify '--' to print to stdout")
 
 	// Erasure(?) by translation based on type reps -- FGG vs. FGR?
@@ -92,8 +92,7 @@ func init() {
 	flag.IntVar(&oblitEvalSteps, "oblit-eval", NO_EVAL,
 		" N ⇒ evaluate N (≥ 0) steps; or\n-1 ⇒ evaluate to value (or panic)")
 
-	// WIP
-	flag.BoolVar(&monomtest, "test-monom", false, `[WIP] Test monom correctness`)
+	flag.BoolVar(&monomtest, "test-monom", false, `Test monom correctness`)
 	flag.BoolVar(&oblittest, "test-oblit", false, `[WIP] Test oblit correctness`)
 
 	// Parsing options
