@@ -342,6 +342,27 @@ func Test016(t *testing.T) {
 	fggParseAndOkBad(t, Any, A, B, Bm, D, e)
 }
 
+func Test017(t *testing.T) {
+	Any := "type Any(type ) interface {}"
+	I := "type I(type ) interface { bar(type )() Any() }"
+	A := "type A(type a Any()) struct { }"
+	Afoo := "func (x0 A(type a I())) foo(type )() Any() { return x0 }"
+	D := "type D(type ) struct { }"
+	e := "A(D()){}.foo()()"
+	fggParseAndOkBad(t, Any, I, A, Afoo, D, e)
+}
+
+func Test017b(t *testing.T) {
+	Any := "type Any(type ) interface {}"
+	I := "type I(type ) interface { bar(type )() Any() }"
+	A := "type A(type a Any()) struct { }"
+	Afoo := "func (x0 A(type a I())) foo(type )() Any() { return x0 }"
+	D := "type D(type ) struct { }"
+	Dbar := "func (x0 D(type )) bar(type )() Any() { return x0 }"
+	e := "A(D()){}.foo()()"
+	fggParseAndOkGood(t, Any, I, A, Afoo, D, Dbar, e)
+}
+
 /* Monom */
 
 // TODO: isMonomorphisable -- should fail that check
