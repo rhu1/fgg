@@ -1,4 +1,4 @@
-# fgg -- README
+# README for [fgg](https://github.com/rhu1/fgg)
 
 ---
 
