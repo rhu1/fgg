@@ -341,7 +341,7 @@ func (c Call) Eval(ds []Decl) (FGGExpr, string) {
 func (c Call) Typing(ds []Decl, delta Delta, gamma Gamma, allowStupid bool) Type {
 	u0 := c.e_recv.Typing(ds, delta, gamma, allowStupid)
 	var g Sig
-	if tmp, ok := methods(ds, bounds(delta, u0))[c.meth]; !ok { // !!! submission version had "methods(m)"
+	if tmp, ok := methodsDelta(ds, delta, bounds(delta, u0))[c.meth]; !ok { // !!! submission version had "methods(m)"
 		panic("Method not found: " + c.meth + " in " + u0.String())
 	} else {
 		g = tmp

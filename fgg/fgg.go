@@ -190,8 +190,8 @@ func (u0 TNamed) ImplsDelta(ds []Decl, delta Delta, u Type) bool {
 			u0.String() + ", expected=" + u.String())
 	}
 
-	gs := methods(ds, u)   // u is a t_I
-	gs0 := methods(ds, u0) // t0 may be any
+	gs := methodsDelta(ds, delta, u)   // u is a t_I
+	gs0 := methodsDelta(ds, delta, u0) // t0 may be any
 	for k, g := range gs {
 		g0, ok := gs0[k]
 		if !ok || !sigAlphaEquals(g0, g) {
@@ -474,13 +474,25 @@ func MakeEta(Psi BigPsi, psi SmallPsi) Eta {
 	return eta
 }
 
-func MakeEta2(Psi BigPsi, psi SmallPsi) EtaOpen {
-	eta2 := make(EtaOpen)
+func MakeEtaDelta(ds []Decl, delta Delta, Psi BigPsi, psi SmallPsi) (bool, EtaOpen) {
+	eta := MakeEtaOpen(Psi, psi)
+	for _, v := range Psi.tFormals {
+		a := v.name.SubsEtaOpen(eta)
+		u_I := v.u_I.SubsEtaOpen(eta)
+		if !a.ImplsDelta(ds, delta, u_I) {
+			return false, eta
+		}
+	}
+	return true, eta
+}
+
+func MakeEtaOpen(Psi BigPsi, psi SmallPsi) EtaOpen {
+	eta := make(EtaOpen)
 	tfs := Psi.tFormals
 	for i := 0; i < len(tfs); i++ {
-		eta2[tfs[i].name] = psi[i]
+		eta[tfs[i].name] = psi[i]
 	}
-	return eta2
+	return eta
 }
 
 /* AST base intefaces: FGGNode, Decl, TypeDecl, Spec, Expr */

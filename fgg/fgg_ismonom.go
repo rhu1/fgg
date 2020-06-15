@@ -275,7 +275,7 @@ func auxMOpen(ds []Decl, delta Delta, omega Nomega) bool {
 			if g.meth != m.meth {
 				continue
 			}
-			eta := MakeEta2(g.Psi, m.psi)
+			eta := MakeEtaOpen(g.Psi, m.psi)
 			for _, pd := range g.pDecls {
 				u_pd := pd.u.SubsEtaOpen(eta) // HERE: need receiver subs also? cf. map.fgg "type b Eq(b)" -- methods should be ok?
 				tmp[tokeyWtOpen(u_pd)] = u_pd
@@ -337,7 +337,7 @@ func auxE1Open(ds []Decl, omega Nomega) bool {
 		}
 		u_I := u.(TNamed)
 		td_I := getTDecl(ds, u_I.t_name).(ITypeLit)
-		eta := MakeEta2(td_I.Psi, u_I.u_args)
+		eta := MakeEtaOpen(td_I.Psi, u_I.u_args)
 		for _, s := range td_I.specs {
 			if u_emb, ok := s.(TNamed); ok {
 				u_sub := u_emb.SubsEtaOpen(eta).(TNamed)
@@ -364,7 +364,7 @@ func auxE2Open(ds []Decl, omega Nomega) bool {
 		}
 		u_I := m.u_recv.(TNamed)
 		td_I := getTDecl(ds, u_I.t_name).(ITypeLit)
-		eta := MakeEta2(td_I.Psi, u_I.u_args)
+		eta := MakeEtaOpen(td_I.Psi, u_I.u_args)
 		for _, s := range td_I.specs {
 			if u_emb, ok := s.(TNamed); ok {
 				u_sub := u_emb.SubsEtaOpen(eta).(TNamed)

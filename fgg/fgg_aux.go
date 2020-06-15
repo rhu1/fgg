@@ -55,14 +55,17 @@ func methodsDelta(ds []Decl, delta Delta, u Type) map[Name]Sig {
 				//sd := md.recv.u.(TName)
 				u_S := u.(TNamed)
 				if md.t_recv == u_S.t_name {
-					subs := make(map[TParam]Type)                    // Cf. MakeEta
+					/*subs := make(map[TParam]Type)                    // Cf. MakeEta
 					for i := 0; i < len(md.Psi_recv.tFormals); i++ { // TODO: md.Psi_recv.ToDelta
 						subs[md.Psi_recv.tFormals[i].name] = u_S.u_args[i]
 					}
-					/*for i := 0; i < len(md.psi.tfs); i++ { // CHECKME: because TParam.TSubs will panic o/w -- refactor?
-						subs[md.psi.tfs[i].a] = md.psi.tfs[i].a
-					}*/
-					res[md.name] = md.ToSig().TSubs(subs)
+					//for i := 0; i < len(md.psi.tfs); i++ { // CHECKME: because TParam.TSubs will panic o/w -- refactor?
+					//	subs[md.psi.tfs[i].a] = md.psi.tfs[i].a
+					//}
+					res[md.name] = md.ToSig().TSubs(subs)*/
+					if ok, eta := MakeEtaDelta(ds, delta, md.Psi_recv, u_S.u_args); ok {
+						res[md.name] = md.ToSig().TSubs(eta)
+					}
 				}
 			}
 		}
