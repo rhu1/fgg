@@ -34,7 +34,6 @@ func init() {
 }
 
 /* Aliases from base */
-// TODO: refactor?
 
 type Name = base.Name
 type FGGNode = base.AstNode

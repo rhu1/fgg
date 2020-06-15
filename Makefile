@@ -29,7 +29,7 @@ install:
 #	which fgg
 #TODO: check ANTLR
 
-# Assumes an appropriate antlr4 command, e.g., java -jar [antlr-4.7.1-complete.jar]
+# Needs an appropriate antlr4 command, e.g., java -jar [antlr-4.7.1-complete.jar]
 .PHONY: install-antlr
 install-antlr:
 	antlr4 -Dlanguage=Go -o parser/fg parser/FG.g4

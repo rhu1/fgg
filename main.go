@@ -54,10 +54,10 @@ var (
 
 	monom  bool   // parse FGG and monomorphise FGG source -- paper notation (angle bracks)
 	monomc string // output filename of monomorphised FGG; "--" for stdout -- Go output (no angle bracks)
-	// TODO refactor naming between "monomc", "compile" and "oblitc"
+	// TODO: fix naming between "monomc", "compile" and "oblitc"
 
 	oblitc         string // output filename of FGR compilation via oblit; "--" for stdout
-	oblitEvalSteps int    // TODO: Need an actual FGR syntax, for oblitc to concrete output
+	oblitEvalSteps int    // TODO: A concrete FGR syntax, for oblitc to output
 
 	monomtest bool
 	oblittest bool
@@ -127,35 +127,6 @@ Options:
 	os.Exit(1)
 }
 
-// TODO
-// - refactor functionality into cmd dir
-// - add type preserv to monom test -- DONE
-// - add tests for interface omega building
-// - fix embedding monom -- DONE
-// - fix monom name mangling -- partial: fix "commas" (test ANTLR unicode)
-// - fix parser nil vs. empty creation
-// - WF check for duplicate decl names
-// - WF recursive structs check
-// - WF types declared, names in scope
-// - sig-equals-alpha and covariant receiver bounds -- expose test -- DONE -- TODO: oblit for map.fgg (memberBr, receiver param alpha)
-// - test and fix Delta in methods (re. covariant receiver bounds) -- expose test
-// - update "polyrec" check -- DONE: nomono
-// - add p-closure replacement DONE -- expose test
-// - test monom on latest examples -- DONE
-// - nomono: fix mutual-poly-rec (should blow up without ismonom) ...fix struct-poly-rec, omega building loops (add recursive struct WF?) -- DONE
-// - factor out FGR better with FG -- FGR doesn't have latest Ok/Typing changes from FG yet
-// - factor out FG/FGG/FGR aux, helper, etc. (use Type/Expr/... interfaces more)
-// - add result caching maps for optimisation
-// artifact
-// - add nomono tests -- DONE
-// - fg vs. go results, add to makefile -- partial: need to generalise and extend to monom tests -- DONE
-// - latest paper examples
-// - reorganise example dirs
-// - bad assert eval, no panic -- -test-monom
-// - generally, exit codes instead of panic
-// design
-// - unification based impls/nomono
-// - assert-driven duck typing dummies -- dummy meths as nominal duck typing (cf. nominal type names)
 func main() {
 	flag.Usage = usage
 	flag.Parse()
@@ -188,7 +159,7 @@ func main() {
 		src = string(b)
 	}
 
-	// WIP
+	// TODO: currently hacked in
 	if monomtest {
 		testMonom(printf, verbose, src, evalSteps)
 		return // FIXME
@@ -200,8 +171,6 @@ func main() {
 
 	switch { // Pre: !(interpFG && interpFGG)
 	case interpFG:
-		//var a fg.FGAdaptor
-		//interp(&a, src, strictParse, evalSteps)
 		intrp_fg := NewFGInterp(verbose, src, strictParse)
 		if evalSteps > NO_EVAL {
 			intrp_fg.Eval(evalSteps)
@@ -209,8 +178,6 @@ func main() {
 		}
 		// monom implicitly disabled
 	case interpFGG:
-		//var a fgg.FGGAdaptor
-		//prog := interp(&a, src, strictParse, evalSteps)
 		intrp_fgg := NewFGGInterp(verbose, src, strictParse)
 
 		if evalSteps > NO_EVAL {
@@ -218,7 +185,7 @@ func main() {
 			printResult(printf, intrp_fgg.GetProgram())
 		}
 
-		// TODO: further refactoring (cf. Frontend, Interp)
+		// TODO: refactor (cf. Frontend, Interp)
 		intrp_fgg.Monom(monom, monomc)
 		intrp_fgg.Oblit(oblitc)
 		////doWrappers(prog, wrapperc)
@@ -340,6 +307,27 @@ func testMonomStep(verbose bool, omega fgg.Omega, p_fgg fgg.FGGProgram,
 
 	return p1_fgg.(fgg.FGGProgram), u1, p1_mono.(fg.FGProgram)
 }
+
+// For convenient quick testing -- via flag "-internal"
+func internalSrc() string {
+	Any := "type Any interface {}"
+	ToAny := "type ToAny struct { any Any }"
+	e := "ToAny{1}"                        // FIXME: `1` skipped by parser?
+	return fg.MakeFgProgram(Any, ToAny, e) // FIXME: hardcoded FG
+}
+
+/* Helpers */
+
+// ECheckErr
+func checkErr(e error) {
+	if e != nil {
+		panic(e)
+	}
+}
+
+/*
+ * TODO -- not currently up to date
+ */
 
 /* oblit "weak" simulation check */
 
@@ -478,37 +466,3 @@ func doWrappers(prog base.Program, compile string) {
 	}
 }
 //*/
-
-// For convenient quick testing -- via flag "-internal"
-func internalSrc() string {
-	Any := "type Any interface {}"
-	ToAny := "type ToAny struct { any Any }"
-	e := "ToAny{1}"                        // FIXME: `1` skipped by parser?
-	return fg.MakeFgProgram(Any, ToAny, e) // FIXME: hardcoded FG
-}
-
-/* Helpers */
-
-// ECheckErr
-func checkErr(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
-
-/**
-TODO:
-- mutual-poly-rec should blow up when ismonom check off -- omega sigs => t.m pairs
-- struct-poly-rec should be monomable -- more aggressive method dropping in omega *building*; need to distinguish actual receiver types from other seen types, for applying omega to mdecls
-- WF: e.g., repeat type decl
-- add monom-eval commutativity check
-- factor out more into base
-
-	//b.WriteString("type B struct { f t };\n")  // TODO: unknown type
-	//b.WriteString("type B struct { b B };\n")  // TODO: recursive struct
-*/
-
-// Alternative Run:
-//$ go install
-//$ $GOPATH/bin/fgg.exe ...
-// N.B. GoInstall installs to $CYGHOME/code/go/bin (not $WINHOME)

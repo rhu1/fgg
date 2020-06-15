@@ -14,8 +14,7 @@ func GetTDecl(ds []Decl, t Name) TypeDecl      { return getTDecl(ds, t) }
 
 /* bounds(delta, u), fields(u_S), methods(u), body(u_S, m) */
 
-// CHECKME: does Bounds ever need to work recursively? i.e., can an upperbound be a TParam?
-// CHECKME: return type TName?
+// return type TName?
 func bounds(delta Delta, u Type) Type {
 	if a, ok := u.(TParam); ok {
 		if res, ok := delta[a]; ok {

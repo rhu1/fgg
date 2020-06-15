@@ -23,8 +23,6 @@ const (
 	NO_EVAL     = -2 // Must be < EVAL_TO_VAL
 )
 
-/* !!! WIP -- refactoring whole main package !!! */
-
 /* -- Interp */
 
 type Interp interface {
