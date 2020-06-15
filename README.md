@@ -59,6 +59,9 @@ Package organisation:
   * `parser/FG.g4` -- FG ANTLR grammar.
   * `parser/FGG.g4` -- FGG ANTLR grammar.
 
+Use the [master](https://github.com/rhu1/fgg/tree/master) branch for the
+latest working version.
+
 **Syntax.**  The best source would be the formal grammars in the paper, or else
 you can see the above ANTLR grammars.
 
@@ -181,10 +184,10 @@ Notes:
 
 ### Example run commands.
 
-Warning:  Type checking and _nomono_ errors raise a panic -- basic error
+*Warning*:  Type checking and _nomono_ errors raise a panic -- basic error
 messages can be found at the top of the stack trace.
 
-The following commands are run from the `github.com/rhu1/fgg` directory.
+The following commands can be run from the `github.com/rhu1/fgg` directory.
 
 * **FG type check and evaluate**, with verbose printing.
 
@@ -221,7 +224,10 @@ The following commands are run from the `github.com/rhu1/fgg` directory.
 
 ### Example `Makefile` tests.
 
-The following commands are run from the `github.com/rhu1/fgg` directory.
+The following commands assume `make install`, and that the resulting `fgg`
+binary is on the `$PATH`.
+
+Running from the `github.com/rhu1/fgg` directory:
 
 * `make test-monom-against-go`
 

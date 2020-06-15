@@ -1,3 +1,7 @@
+/*
+ * TODO: fix many magic numbers and other sloppy hacks
+ */
+
 package fg
 
 import (
@@ -59,12 +63,12 @@ func (a *FGAdaptor) Parse(strictParse bool, input string) base.Program {
 
 func (a *FGAdaptor) ExitProgram(ctx *parser.ProgramContext) {
 	body := a.pop().(FGExpr)
-	var ds []Decl
+	ds := []Decl{}
 	offset := 0 // TODO: refactor
 	printf := false
-	c3 := ctx.GetChild(3)
-	foo := ctx.GetChild(ctx.GetChildCount() - 4).GetPayload()     // Checking for "=" in "_ = ..."
-	if c3_cast, ok := c3.GetPayload().(*antlr.CommonToken); ok && // IMPORT
+	c3 := ctx.GetChild(3)                                     // Check if this child is "import"
+	foo := ctx.GetChild(ctx.GetChildCount() - 4).GetPayload() // Check if this child is the "=" in "_ = ..."
+	if c3_cast, ok := c3.GetPayload().(*antlr.CommonToken); ok &&
 		c3_cast.GetText() == "import" {
 		if pkg := ctx.GetChild(4).GetPayload().(*antlr.CommonToken).GetText(); pkg != "\"fmt\"" { // TODO: refactor
 			panic(testutils.PARSER_PANIC_PREFIX + "The only allowed import is \"fmt\"; found: " + pkg)
@@ -76,9 +80,8 @@ func (a *FGAdaptor) ExitProgram(ctx *parser.ProgramContext) {
 	} else if cast, ok := foo.(*antlr.CommonToken); !ok || cast.GetText() != "=" {
 		panic(testutils.PARSER_PANIC_PREFIX + "Missing \"import fmt;\".")
 	}
-	//if ctx.GetChildCount() > offset+13 {  // well-typed program must have at least one decl?
-	tmp := ctx.GetChild(offset + 3)
-	if _, ok := tmp.GetPayload().(*antlr.BaseParserRuleContext); ok { // If no decls, then *antlr.CommonToken, 'func'
+	bar := ctx.GetChild(offset + 3)                                   // Check if this child is "func", i.e., no decls
+	if _, ok := bar.GetPayload().(*antlr.BaseParserRuleContext); ok { // If "func", then *antlr.CommonToken
 		nds := ctx.GetChild(offset+3).GetChildCount() / 2 // (decl ';')+ -- i.e, includes trailing ';'
 		ds = make([]Decl, nds)
 		for i := nds - 1; i >= 0; i-- {
@@ -109,7 +112,7 @@ func (a *FGAdaptor) ExitTypeDecl(ctx *parser.TypeDeclContext) {
 
 // Children: 2=fieldDecls
 func (a *FGAdaptor) ExitStructTypeLit(ctx *parser.StructTypeLitContext) {
-	var fds []FieldDecl
+	fds := []FieldDecl{}
 	if ctx.GetChildCount() > 3 {
 		nfds := (ctx.GetChild(2).GetChildCount() + 1) / 2 // fieldDecl (';' fieldDecl)*
 		fds = make([]FieldDecl, nfds)
@@ -148,7 +151,7 @@ func (a *FGAdaptor) ExitParamDecl(ctx *parser.ParamDeclContext) {
 
 // Cf. ExitStructTypeLit
 func (a *FGAdaptor) ExitInterfaceTypeLit(ctx *parser.InterfaceTypeLitContext) {
-	var ss []Spec
+	ss := []Spec{}
 	if ctx.GetChildCount() > 3 {
 		nss := (ctx.GetChild(2).GetChildCount() + 1) / 2 // e.g., s ';' s ';' s
 		ss = make([]Spec, nss)
@@ -173,7 +176,7 @@ func (a *FGAdaptor) ExitSig(ctx *parser.SigContext) {
 	m := ctx.GetMeth().GetText()
 	// Reverse order
 	t := Type(ctx.GetRet().GetText())
-	var pds []ParamDecl
+	pds := []ParamDecl{}
 	if ctx.GetChildCount() > 4 {
 		npds := (ctx.GetChild(2).GetChildCount() + 1) / 2 // e.g., pd ',' pd ',' pd
 		pds = make([]ParamDecl, npds)
@@ -195,7 +198,7 @@ func (a *FGAdaptor) ExitVariable(ctx *parser.VariableContext) {
 // N.B. ExprsContext is a "helper" Context, actual exprs are its children
 func (a *FGAdaptor) ExitStructLit(ctx *parser.StructLitContext) {
 	t := Type(ctx.GetChild(0).(*antlr.TerminalNodeImpl).GetText())
-	var es []FGExpr
+	es := []FGExpr{}
 	if ctx.GetChildCount() > 3 {
 		nes := (ctx.GetChild(2).GetChildCount() + 1) / 2 // e.g., 'x' ',' 'y' ',' 'z'
 		es = make([]FGExpr, nes)
@@ -213,7 +216,7 @@ func (a *FGAdaptor) ExitSelect(ctx *parser.SelectContext) {
 }
 
 func (a *FGAdaptor) ExitCall(ctx *parser.CallContext) {
-	var args []FGExpr
+	args := []FGExpr{}
 	if ctx.GetChildCount() > 5 { // TODO: refactor as ctx.GetArgs() != nil -- and child-count-checks elsewhere
 		nargs := (ctx.GetChild(4).GetChildCount() + 1) / 2 // e.g., e ',' e ',' e
 		args = make([]FGExpr, nargs)

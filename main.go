@@ -293,7 +293,7 @@ func testMonomStep(verbose bool, omega fgg.Omega, p_fgg fgg.FGGProgram,
 	e_mono := p1_mono.GetMain()
 	vPrintln(verbose, "Monom of one step'd FGG: "+e_fgg.String())
 
-	// FIXME HACK -- not general enough anyway, e.g., expression.fgg
+	// FIXME: hacked, and not general enough anyway; e.g., expression.fgg
 	_, string_fgg := e_fgg.(fg.StringLit)
 	_, string_mono := e_mono.(fg.StringLit)
 	if !(string_fgg && string_mono) {
