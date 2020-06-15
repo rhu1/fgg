@@ -21,8 +21,8 @@ with the formal definitions.  The tool is also not particularly user-friendly:
 - most type errors are reported as panics, though an error message may be given
   at the top of the stack trace.
 
-We plan to improve some of this in the near future.  Contact **Raymond Hu** for
-any issues about this repository.
+We plan to improve some of this in the near future.  Contact [Raymond
+Hu](https://go.herts.ac.uk/raymond_hu) for any issues about this repository.
 
 See the ...[blog post](https://TODO) by... for more information about the
 ...actual Generic Go..., including links to source code.
