@@ -1,0 +1,24 @@
+//$ go run github.com/rhu1/fgg -fgg -eval=-1 -v fgg/examples/misc/graph/graph.fgg
+
+package main;
+
+import "fmt";
+
+
+type Any(type ) interface {};
+type List(type a Any()) interface { /*snip*/ };
+
+type Edge(type e Edge(e, v), v Vertex(e, v)) interface {
+	Source(type )() v;
+	Target(type )() v
+};
+type Vertex(type e Edge(e, v), v Vertex(e, v)) interface {
+	Edges(type )() List(e)
+};
+type A(type ) struct {};
+func main() {
+	//_ =
+	fmt.Printf("%#v",
+		A(){}
+	)
+}

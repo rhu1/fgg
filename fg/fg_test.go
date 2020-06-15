@@ -1,4 +1,3 @@
-//rhu@HZHL4 MINGW64 ~/code/go/src/github.com/rhu1/fgg
 //$ go test github.com/rhu1/fgg/fg
 //$ go test github.com/rhu1/fgg/fg -run Test001
 

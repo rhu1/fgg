@@ -1,0 +1,56 @@
+//$ go run github.com/rhu1/fgg -fgg -eval=-1 -v fgg/examples/misc/booleans/booleans.fgg
+
+package main;
+
+import "fmt";
+
+/* Base decls: Any, Booleans */
+
+type Any(type ) interface {};
+
+/* Booleans */
+
+type Eq(type a Any()) interface { Equal(type )(that a) Bool() };
+type Bool(type ) interface {
+	Not(type )() Bool();
+	Equal(type )(that Bool()) Bool();
+	Cond(type a Any())(br Branches(a)) a
+};
+type Branches(type a Any()) interface {
+	IfTT(type )() a;
+	IfFF(type )() a
+};
+type TT(type ) struct {};
+type FF(type ) struct {};
+func (this TT(type )) Not(type )() Bool() { return FF(){} };
+func (this FF(type )) Not(type )() Bool() { return TT(){} };
+func (this TT(type )) Equal(type )(that Bool()) Bool() { return that };
+func (this FF(type )) Equal(type )(that Bool()) Bool() { return that.Not()() };
+func (this TT(type )) Cond(type a Any())(br Branches(a)) a { return br.IfTT()() };
+func (this FF(type )) Cond(type a Any())(br Branches(a)) a { return br.IfFF()() };
+
+/* Example code */
+
+type exampleBr(type ) struct {
+	x t();
+	y t()
+};
+func (this exampleBr(type )) IfTT(type )() t() {
+	return this.x.m()(this.y)
+};
+func (this exampleBr(type )) IfFF(type )() t() {
+	return this.x
+};
+
+type t(type ) struct { };
+func (x0 t(type )) m(type )(x1 t()) t() { return x1 };
+
+type Ex(type ) struct {};
+func (d Ex(type )) example(type )(b Bool(), x t(), y t()) t() {
+	return b.Cond(t())(exampleBr(){x, y}) // Main example, no type assertion
+			.m()(t(){}) // Extra
+};
+func main() {
+	//_ = Ex(){}.example()(TT(){}, t(){}, t(){})
+	fmt.Printf("%#v", Ex(){}.example()(TT(){}, t(){}, t(){}))
+}

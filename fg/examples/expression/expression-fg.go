@@ -1,4 +1,3 @@
-//rhu@HZHL4 MINGW64 ~/code/go/src/github.com/rhu1/fgg
 //$ go run github.com/rhu1/fgg -eval=-1 -v fg/examples/expression/expression-fg.go
 
 // An almost-solution to the Expression Problem in FG.
