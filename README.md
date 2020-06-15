@@ -2,6 +2,42 @@
 
 ---
 
+This `fgg` package is a minimal and basic prototype of **Featherweight Go** and
+**Featherweight Generic Go**, as presented in:
+
+> Featherweight Go  
+> *Robert Griesemer, Raymond Hu, Wen Kokke, Julien Lange, Ian Lance Taylor,  
+> Bernardo Toninho, Philip Wadler and Nobuko Yoshida*  
+> https://arxiv.org/abs/2005.11710
+
+Currently, many aspects of the code are very primitive, mainly for the
+convenience of quick experimentation alongside the above paper.  For example,
+many type/method/variable names are quite bad, apart from some correspondence
+with the formal definitions.  The tool is also not particularly user-friendly:
+
+- it offers only the small subset of Go as formalised in the paper;
+- it does not support *any* syntactic sugar -- e.g., any empty parentheses and
+  type lists all need to be written out explicitly;
+- most type errors are reported as panics, though an error message may be given
+  at the top of the stack trace.
+
+We plan to improve some of this in the near future.  Contact **Raymond Hu** for
+any issues about this repository.
+
+See the ...[blog post](https://TODO) by... for more information about the
+...actual Generic Go..., including links to source code.
+
+- The `fgg` prototype currently supports some features (within its small
+  fragment of Go) that the ... does not; e.g., ... 
+
+[Featherweight-go-gen](https://github.com/wenkokke/featherweight-go-gen) is
+tool that enumerates FGG programs and integrates with `fgg` for
+testing.
+
+---
+
+### Summary.
+
 This package includes:
 
 * An **FG** static type checker and interpreter.
@@ -9,7 +45,7 @@ This package includes:
 * An FGG static _nomono_ (i.e., "is/not monomorphisable") checker and FGG-to-FG **monomorphiser**.
 
 Package organisation:
-* `Makefile` -- for running tests and examples.
+* `Makefile` -- install, and for running tests and examples.
 * `main.go` -- main file.
 * `fg` -- FG AST, typing and evaluation.
   * `fg/examples` -- FG examples.
@@ -23,6 +59,9 @@ Package organisation:
   * `parser/FG.g4` -- FG ANTLR grammar.
   * `parser/FGG.g4` -- FGG ANTLR grammar.
 
+**Syntax.**  The best source would be the formal grammars in the paper, or else
+you can see the above ANTLR grammars.
+
 
 ---
 
@@ -34,10 +73,26 @@ We assume a standard Go set up.  That is:
 * a Go workspace, at `$GOPATH`;
 * a `src` directory in the workspace.
 
-Simply extract the contents of the zip (including the ANTLR library) directly into the `src` directory of
-your Go workspace (i.e., `$GOPATH/src`).  
+You will also need the ANTLR v4 runtime for Go; e.g., see "Installing ANLTR v4"
+in this
+[tutorial](https://blog.gopheracademy.com/advent-2017/parsing-with-antlr4-and-go/).
 
-  * Then in the `github.com/rhu1/fgg` directory just extracted, the following command should work:
+Clone the `fgg` repo into the `src` directory of your Go workspace, i.e.,
+`$GOPATH/src` (or use `go get`).  It should end up located at
+`src/github.com/rhu1/fgg`.
+
+Then, either copy over the pre-generated parser files and install by
+
+- `make install-pregen-parser`
+
+or generate the parsers yourself using ANTLR and install by
+
+- `antlr4 -Dlanguage=Go -o parser/fg parser/FG.g4`  
+  `antlr4 -Dlanguage=Go -o parser/fgg parser/FGG.g4`  
+  (assuming some suitable `antlr4` command; e.g., `java -jar [antlr-4.7.1-complete.jar]`)
+- `make install`
+
+To test the install -- inside `github.com/rhu1/fgg` directory, this command should work:
 
     `go run github.com/rhu1/fgg -eval=-1 -v fg/examples/oopsla20/fig1/functions.go`
 
@@ -101,8 +156,8 @@ program has the form:
 
 ```
 package main;
-/*Type and method decls -- semicolon separated*/
-func main () { _ = /*main has this specific form*/ }
+/* Type and method decls -- semicolon separated */
+func main () { _ = /* main has this specific form */ }
 ```
 
 For testing purposes, the package supports this additional form:
@@ -110,8 +165,8 @@ For testing purposes, the package supports this additional form:
 ```
 package main;
 import "fmt";  // Only fmt is allowed
-/*Type and method decls -- semicolon separated*/
-func main () { fmt.Printf("%#v", /* This specific Printf, and only in main*/) }
+/* Type and method decls -- semicolon separated */
+func main () { fmt.Printf("%#v", /* This specific Printf, and only in main */ ) }
 ```
 
 Notes:
