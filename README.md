@@ -63,7 +63,7 @@ Use the [master](https://github.com/rhu1/fgg/tree/master) branch for the
 latest working version.
 
 **Syntax.**  The best source would be the formal grammars in the paper, or else
-you can see the above ANTLR grammars.
+see the above ANTLR grammars.
 
 
 ---
