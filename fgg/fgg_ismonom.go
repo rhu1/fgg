@@ -15,7 +15,7 @@ func IsMonomOK(p FGGProgram) (bool, string) {
 	ds := p.GetDecls()
 	for _, v := range ds {
 		if md, ok := v.(MethDecl); ok {
-			omega1 := Nomega{make(map[string]Type), make(map[string]MethInstan2)}
+			omega1 := Nomega{make(map[string]Type), make(map[string]MethInstanOpen)}
 			delta := md.Psi_recv.ToDelta()
 			for _, v := range md.Psi_meth.tFormals {
 				delta[v.name] = v.u_I
@@ -32,7 +32,7 @@ func IsMonomOK(p FGGProgram) (bool, string) {
 			for _, v := range md.pDecls { // TODO: factor out
 				gamma[v.name] = v.u
 			}
-			collectExpr2(ds, delta, gamma, md.e_body, omega1)
+			collectExprOpen(ds, delta, gamma, md.e_body, omega1)
 			if ok, msg := nomonoOmega(ds, delta, md, omega1); ok {
 				return false, msg
 			}
@@ -43,7 +43,7 @@ func IsMonomOK(p FGGProgram) (bool, string) {
 
 // Return true if nomono
 func nomonoOmega(ds []Decl, delta Delta, md MethDecl, omega1 Nomega) (bool, string) {
-	for auxG2(ds, delta, omega1) {
+	for auxGOpen(ds, delta, omega1) {
 		for _, v := range omega1.ms {
 			if !isStructType(ds, v.u_recv) {
 				continue
@@ -90,16 +90,16 @@ func fv(u Type) []TParam {
 	return res
 }
 
-/* !!! Duplication of Omega for non-ground types -- if only Go had generics! */
+/* !!! Duplication of Omega (etc.) for non-ground types -- if only Go had generics! */
 
 type Nomega struct {
 	us map[string]Type
-	ms map[string]MethInstan2
+	ms map[string]MethInstanOpen
 }
 
 func (w Nomega) clone() Nomega {
 	us := make(map[string]Type)
-	ms := make(map[string]MethInstan2)
+	ms := make(map[string]MethInstanOpen)
 	for k, v := range w.us {
 		us[k] = v
 	}
@@ -121,80 +121,80 @@ func (w Nomega) Println() {
 	fmt.Println("===")
 }
 
-// TODO: rename/refactor
-type MethInstan2 struct {
+// Factor out with MethInstan
+type MethInstanOpen struct {
 	u_recv Type
 	meth   Name
 	psi    SmallPsi
 }
 
-func toKey_Wt2(u Type) string {
+func tokeyWtOpen(u Type) string {
 	return u.String()
 }
 
-func toKey_Wm2(x MethInstan2) string {
+func tokeyWmOpen(x MethInstanOpen) string {
 	return x.u_recv.String() + "_" + x.meth + "_" + x.psi.String()
 }
 
-func collectExpr2(ds []Decl, delta Delta, gamma Gamma, e FGGExpr, omega Nomega) bool {
+func collectExprOpen(ds []Decl, delta Delta, gamma Gamma, e FGGExpr, omega Nomega) bool {
 	res := false
 	switch e1 := e.(type) {
 	case Variable:
 		return res
 	case StructLit:
 		for _, elem := range e1.elems {
-			res = collectExpr2(ds, delta, gamma, elem, omega) || res
+			res = collectExprOpen(ds, delta, gamma, elem, omega) || res
 		}
-		k := toKey_Wt2(e1.u_S)
+		k := tokeyWtOpen(e1.u_S)
 		if _, ok := omega.us[k]; !ok {
 			omega.us[k] = e1.u_S
 			res = true
 		}
 	case Select:
-		return collectExpr2(ds, delta, gamma, e1.e_S, omega)
+		return collectExprOpen(ds, delta, gamma, e1.e_S, omega)
 	case Call:
-		res = collectExpr2(ds, delta, gamma, e1.e_recv, omega) || res
+		res = collectExprOpen(ds, delta, gamma, e1.e_recv, omega) || res
 		for _, e_arg := range e1.args {
-			res = collectExpr2(ds, delta, gamma, e_arg, omega) || res
+			res = collectExprOpen(ds, delta, gamma, e_arg, omega) || res
 		}
 		gamma1 := make(Gamma)
 		for k, v := range gamma {
 			gamma1[k] = v
 		}
 		u_recv := e1.e_recv.Typing(ds, delta, gamma1, false)
-		k_t := toKey_Wt2(u_recv)
+		k_t := tokeyWtOpen(u_recv)
 		if _, ok := omega.us[k_t]; !ok {
 			omega.us[k_t] = u_recv
 			res = true
 		}
-		m := MethInstan2{u_recv, e1.meth, e1.GetTArgs()} // CHECKME: why add u_recv separately?
-		k_m := toKey_Wm2(m)
+		m := MethInstanOpen{u_recv, e1.meth, e1.GetTArgs()} // CHECKME: why add u_recv separately?
+		k_m := tokeyWmOpen(m)
 		if _, ok := omega.ms[k_m]; !ok {
 			omega.ms[k_m] = m
 			res = true
 		}
 	case Assert:
-		res = collectExpr2(ds, delta, gamma, e1.e_I, omega) || res
+		res = collectExprOpen(ds, delta, gamma, e1.e_I, omega) || res
 		u := e1.u_cast
-		k := toKey_Wt2(u)
+		k := tokeyWtOpen(u)
 		if _, ok := omega.us[k]; !ok {
 			omega.us[k] = u
 			res = true
 		}
 	case StringLit: // CHECKME
-		k := toKey_Wt2(STRING_TYPE)
+		k := tokeyWtOpen(STRING_TYPE)
 		if _, ok := omega.us[k]; !ok {
 			omega.us[k] = STRING_TYPE
 			res = true // CHECKME
 		}
 	case Sprintf:
-		k := toKey_Wt2(STRING_TYPE)
+		k := tokeyWtOpen(STRING_TYPE)
 		if _, ok := omega.us[k]; !ok {
 			omega.us[k] = STRING_TYPE
 			res = true
 		}
 		for _, arg := range e1.args {
-			res = collectExpr2(ds, delta, gamma, arg, omega) || res
+			res = collectExprOpen(ds, delta, gamma, arg, omega) || res
 		}
 	default:
 		panic("Unknown Expr kind: " + reflect.TypeOf(e).String() + "\n\t" +
@@ -207,21 +207,19 @@ func collectExpr2(ds []Decl, delta Delta, gamma Gamma, e FGGExpr, omega Nomega) 
 
 // Return true if omega has changed
 // N.B. no closure over types occurring in bounds, or *interface decl* method sigs
-//func auxG(ds []Decl, omega Omega1) bool {
-func auxG2(ds []Decl, delta Delta, omega Nomega) bool {
+func auxGOpen(ds []Decl, delta Delta, omega Nomega) bool {
 	res := false
-	res = auxF2(ds, omega) || res
+	res = auxFOpen(ds, omega) || res
 	res = auxI2(ds, delta, omega) || res
-	res = auxM2(ds, delta, omega) || res
-	res = auxS2(ds, delta, omega) || res
+	res = auxMOpen(ds, delta, omega) || res
+	res = auxSOpen(ds, delta, omega) || res
 	// I/face embeddings
-	res = auxE12(ds, omega) || res
-	res = auxE22(ds, omega) || res
+	res = auxE1Open(ds, omega) || res
+	res = auxE2Open(ds, omega) || res
 	return res
 }
 
-func auxF2(ds []Decl, omega Nomega) bool {
-	//func auxF(ds []Decl, delta Delta, omega Omega1) bool {
+func auxFOpen(ds []Decl, omega Nomega) bool {
 	res := false
 	tmp := make(map[string]Type)
 	for _, u := range omega.us {
@@ -230,7 +228,7 @@ func auxF2(ds []Decl, omega Nomega) bool {
 		}
 		for _, u_f := range Fields(ds, u.(TNamed)) {
 			cast := u_f.u
-			tmp[toKey_Wt2(cast)] = cast
+			tmp[tokeyWtOpen(cast)] = cast
 		}
 	}
 	for k, v := range tmp {
@@ -244,7 +242,7 @@ func auxF2(ds []Decl, omega Nomega) bool {
 
 func auxI2(ds []Decl, delta Delta, omega Nomega) bool {
 	res := false
-	tmp := make(map[string]MethInstan2)
+	tmp := make(map[string]MethInstanOpen)
 	for _, m := range omega.ms {
 		if !IsNamedIfaceType(ds, m.u_recv) {
 			continue
@@ -254,8 +252,8 @@ func auxI2(ds []Decl, delta Delta, omega Nomega) bool {
 				continue
 			}
 			if m1.u_recv.ImplsDelta(ds, delta, m.u_recv) {
-				mm := MethInstan2{m1.u_recv, m.meth, m.psi}
-				tmp[toKey_Wm2(mm)] = mm
+				mm := MethInstanOpen{m1.u_recv, m.meth, m.psi}
+				tmp[tokeyWmOpen(mm)] = mm
 			}
 		}
 	}
@@ -268,7 +266,7 @@ func auxI2(ds []Decl, delta Delta, omega Nomega) bool {
 	return res
 }
 
-func auxM2(ds []Decl, delta Delta, omega Nomega) bool {
+func auxMOpen(ds []Decl, delta Delta, omega Nomega) bool {
 	res := false
 	tmp := make(map[string]Type)
 	for _, m := range omega.ms {
@@ -279,11 +277,11 @@ func auxM2(ds []Decl, delta Delta, omega Nomega) bool {
 			}
 			eta := MakeEta2(g.Psi, m.psi)
 			for _, pd := range g.pDecls {
-				u_pd := pd.u.SubsEta2(eta) // HERE: need receiver subs also? cf. map.fgg "type b Eq(b)" -- methods should be ok?
-				tmp[toKey_Wt2(u_pd)] = u_pd
+				u_pd := pd.u.SubsEtaOpen(eta) // HERE: need receiver subs also? cf. map.fgg "type b Eq(b)" -- methods should be ok?
+				tmp[tokeyWtOpen(u_pd)] = u_pd
 			}
-			u_ret := g.u_ret.SubsEta2(eta)
-			tmp[toKey_Wt2(u_ret)] = u_ret
+			u_ret := g.u_ret.SubsEtaOpen(eta)
+			tmp[tokeyWtOpen(u_ret)] = u_ret
 		}
 	}
 	for k, v := range tmp {
@@ -295,9 +293,9 @@ func auxM2(ds []Decl, delta Delta, omega Nomega) bool {
 	return res
 }
 
-func auxS2(ds []Decl, delta Delta, omega Nomega) bool {
+func auxSOpen(ds []Decl, delta Delta, omega Nomega) bool {
 	res := false
-	tmp := make(map[string]MethInstan2)
+	tmp := make(map[string]MethInstanOpen)
 	clone := omega.clone()
 	for _, m := range clone.ms {
 		for _, u := range clone.us {
@@ -312,11 +310,11 @@ func auxS2(ds []Decl, delta Delta, omega Nomega) bool {
 			for _, pd := range xs {
 				gamma[pd.name] = pd.u
 			}
-			m1 := MethInstan2{u_S, m.meth, m.psi}
-			k := toKey_Wm2(m1)
+			m1 := MethInstanOpen{u_S, m.meth, m.psi}
+			k := tokeyWmOpen(m1)
 			//if _, ok := omega.ms[k]; !ok { // No: initial collectExpr already adds to omega.ms
 			tmp[k] = m1
-			res = collectExpr2(ds, delta, gamma, e, omega) || res
+			res = collectExprOpen(ds, delta, gamma, e, omega) || res
 			//}
 		}
 	}
@@ -330,7 +328,7 @@ func auxS2(ds []Decl, delta Delta, omega Nomega) bool {
 }
 
 // Add embedded types
-func auxE12(ds []Decl, omega Nomega) bool {
+func auxE1Open(ds []Decl, omega Nomega) bool {
 	res := false
 	tmp := make(map[string]TNamed)
 	for _, u := range omega.us {
@@ -342,8 +340,8 @@ func auxE12(ds []Decl, omega Nomega) bool {
 		eta := MakeEta2(td_I.Psi, u_I.u_args)
 		for _, s := range td_I.specs {
 			if u_emb, ok := s.(TNamed); ok {
-				u_sub := u_emb.SubsEta2(eta).(TNamed)
-				tmp[toKey_Wt2(u_sub)] = u_sub
+				u_sub := u_emb.SubsEtaOpen(eta).(TNamed)
+				tmp[tokeyWtOpen(u_sub)] = u_sub
 			}
 		}
 	}
@@ -357,9 +355,9 @@ func auxE12(ds []Decl, omega Nomega) bool {
 }
 
 // Propagate method instances up to embedded supertypes
-func auxE22(ds []Decl, omega Nomega) bool {
+func auxE2Open(ds []Decl, omega Nomega) bool {
 	res := false
-	tmp := make(map[string]MethInstan2)
+	tmp := make(map[string]MethInstanOpen)
 	for _, m := range omega.ms {
 		if !isNamedIfaceType(ds, m.u_recv) { // CHECKME: type param
 			continue
@@ -369,12 +367,12 @@ func auxE22(ds []Decl, omega Nomega) bool {
 		eta := MakeEta2(td_I.Psi, u_I.u_args)
 		for _, s := range td_I.specs {
 			if u_emb, ok := s.(TNamed); ok {
-				u_sub := u_emb.SubsEta2(eta).(TNamed)
+				u_sub := u_emb.SubsEtaOpen(eta).(TNamed)
 				gs := methods(ds, u_sub)
 				for _, g := range gs {
 					if m.meth == g.meth {
-						m_emb := MethInstan2{u_sub, m.meth, m.psi}
-						tmp[toKey_Wm2(m_emb)] = m_emb
+						m_emb := MethInstanOpen{u_sub, m.meth, m.psi}
+						tmp[tokeyWmOpen(m_emb)] = m_emb
 					}
 				}
 			}

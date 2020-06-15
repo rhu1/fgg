@@ -48,7 +48,7 @@ type Type interface {
 	ImplsDelta(ds []Decl, delta Delta, u Type) bool
 	TSubs(subs map[TParam]Type) Type // N.B. map is Delta -- factor out a Subs type?
 	SubsEta(eta Eta) TNamed
-	SubsEta2(eta Eta2) Type
+	SubsEtaOpen(eta EtaOpen) Type
 	Ok(ds []Decl, delta Delta)
 	ToGoString(ds []Decl) string
 }
@@ -78,7 +78,7 @@ func (a TParam) SubsEta(eta Eta) TNamed {
 	return res
 }
 
-func (a TParam) SubsEta2(eta Eta2) Type {
+func (a TParam) SubsEtaOpen(eta EtaOpen) Type {
 	res, ok := eta[a]
 	if !ok {
 		return a
@@ -170,11 +170,11 @@ func (u0 TNamed) SubsEta(eta Eta) TNamed {
 	return TNamed{u0.t_name, us}
 }
 
-func (u0 TNamed) SubsEta2(eta Eta2) Type {
+func (u0 TNamed) SubsEtaOpen(eta EtaOpen) Type {
 	//fmt.Println("555:", u0, eta)
 	us := make([]Type, len(u0.u_args))
 	for i := 0; i < len(us); i++ {
-		us[i] = u0.u_args[i].SubsEta2(eta)
+		us[i] = u0.u_args[i].SubsEtaOpen(eta)
 	}
 	return TNamed{u0.t_name, us}
 }
@@ -443,12 +443,12 @@ func (x0 SmallPsi) Equals(x SmallPsi) bool {
 
 /* Context, Type context, Substitutions */
 
-//type Gamma map[Variable]Type  // CHECKME: refactor?
+//type Gamma map[Variable]Type
 type Gamma map[Name]Type
 type Delta map[TParam]Type // Type intended to be an upper bound
 type Eta map[TParam]TNamed // TNamed intended to be a ground
 
-type Eta2 map[TParam]Type
+type EtaOpen map[TParam]Type // cf. Delta
 
 func (delta Delta) String() string {
 	res := "["
@@ -474,8 +474,8 @@ func MakeEta(Psi BigPsi, psi SmallPsi) Eta {
 	return eta
 }
 
-func MakeEta2(Psi BigPsi, psi SmallPsi) Eta2 {
-	eta2 := make(Eta2)
+func MakeEta2(Psi BigPsi, psi SmallPsi) EtaOpen {
+	eta2 := make(EtaOpen)
 	tfs := Psi.tFormals
 	for i := 0; i < len(tfs); i++ {
 		eta2[tfs[i].name] = psi[i]

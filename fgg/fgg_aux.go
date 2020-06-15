@@ -81,7 +81,7 @@ func methodsDelta(ds []Decl, delta Delta, u Type) map[Name]Sig {
 			case Sig:
 				res[s1.meth] = s1.TSubs(subs)
 			case TNamed: // Embedded u_I
-				for k, v := range methods(ds, s1.TSubs(subs)) { // CHECKME: can this cycle indefinitely? (cf. submission version)
+				for k, v := range methods(ds, s1.TSubs(subs)) { // cycles? (cf. submission version)
 					res[k] = v
 				}
 			default:

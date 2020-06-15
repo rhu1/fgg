@@ -5,7 +5,6 @@ import "reflect"
 import "github.com/rhu1/fgg/base"
 
 /* Aliases from base */
-// TODO: refactor?
 
 type Name = base.Name
 type FGNode = base.AstNode
@@ -24,7 +23,7 @@ func init() {
 
 // Name: see Aliases (at top)
 
-type Gamma map[Name]Type // TODO: should be Variable rather than Name? -- though Variable is an Expr
+type Gamma map[Name]Type // Variable? though is an Expr
 
 type Type Name // Type definition (cf. alias)
 

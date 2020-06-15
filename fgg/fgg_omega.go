@@ -171,7 +171,6 @@ func collectExpr(ds []Decl, gamma GroundGamma, e FGGExpr, omega Omega) bool {
 // N.B. mutating omega in each sub-step -- can produce many levels of nesting within one G step
 // ^also non-deterministic progress, because mutating maps while ranging; also side-effect results may depend on iteration order over maps
 // N.B. no closure over types occurring in bounds, or *interface decl* method sigs
-//func auxG(ds []Decl, omega omega) bool {
 func auxG(ds []Decl, omega Omega) bool {
 	res := false
 	res = auxF(ds, omega) || res
