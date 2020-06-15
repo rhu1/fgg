@@ -164,7 +164,7 @@ func (intrp *FGGInterp) Eval(steps int) base.Type {
 }
 
 // Pre: (monom == true || compile != "") => -fgg is set
-// TODO: rename
+// rename
 func (intrp *FGGInterp) Monom(monom bool, compile string) {
 	if !monom && compile == "" {
 		return
@@ -172,14 +172,6 @@ func (intrp *FGGInterp) Monom(monom bool, compile string) {
 
 	p_fgg := intrp.GetSource().(fgg.FGGProgram)
 
-	/*if e, ok := fgg.IsMonomable(p_fgg); !ok {  // First purely syntactic check
-		panic("\nNot monomorphisable according to \"type param under named type\"" +
-			" restriction.\n\t" + e.String())
-	}*/
-	//fgg.IsMonomOK_naive(intrp.orig.GetDecls())  // Any nested type params within a cycle
-	/*if !fgg.IsMonomOK_CFG(intrp.orig) { // CFG-based occurs check (also old) -- needs method set unification ("open" impls)
-		panic("\nCannot monomorphise (nested type param within call cycle).")
-	}*/
 	if ok, msg := fgg.IsMonomOK(intrp.orig); !ok { // nomonom
 		//fmt.Println("\nCannot monomorphise (nomono detected):\n\t" + msg)
 		panic("\nCannot monomorphise (nomono detected):\n\t" + msg)
@@ -205,6 +197,7 @@ func (intrp *FGGInterp) Monom(monom bool, compile string) {
 	}
 }
 
+// WIP
 func (intrp *FGGInterp) Oblit(compile string) {
 	if compile == "" {
 		return

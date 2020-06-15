@@ -33,7 +33,7 @@ func MonomExpr(e FGGExpr) fg.FGExpr {
 /* */
 
 // All m (MethInstan.meth) belong to the same t (MethInstan.u_recv.t_name)
-type Mu map[string]MethInstan // Cf. Omega1, toKey_Wm
+type Mu map[string]MethInstan // Cf. Omega, toKey_Wm
 
 var empty_I = fg.Type("Top") // !!!
 //var empty_S = fg.Type("Empty")
@@ -43,10 +43,10 @@ var empty_I = fg.Type("Top") // !!!
 func Monomorph(p FGGProgram) fg.FGProgram {
 	ds_fgg := p.GetDecls()
 	omega := GetOmega(ds_fgg, p.GetMain().(FGGExpr))
-	return ApplyOmega1(p, omega)
+	return ApplyOmega(p, omega)
 }
 
-func ApplyOmega1(p FGGProgram, omega Omega) fg.FGProgram {
+func ApplyOmega(p FGGProgram, omega Omega) fg.FGProgram {
 	var ds_monom []Decl
 	for _, v := range p.decls {
 		switch d := v.(type) {

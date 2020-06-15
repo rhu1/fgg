@@ -44,8 +44,8 @@ import (
 	"github.com/rhu1/fgg/fgr"
 )
 
-var _ = reflect.TypeOf
-var _ = strconv.Itoa
+var _ = reflect.Append
+var _ = strconv.AppendBool
 
 // Command line parameters/flags
 var (
@@ -158,7 +158,7 @@ func main() {
 		src = string(b)
 	}
 
-	// TODO: currently hacked in
+	// Currently hacked
 	if monomtest {
 		testMonom(printf, verbose, src, evalSteps)
 		return // FIXME
@@ -218,7 +218,7 @@ func testMonom(printf bool, verbose bool, src string, steps int) {
 	//p_mono := fgg.Monomorph(p_fgg)
 	ds_fgg := p_fgg.GetDecls()
 	omega := fgg.GetOmega(ds_fgg, p_fgg.GetMain().(fgg.FGGExpr))
-	p_mono := fgg.ApplyOmega1(p_fgg, omega) // TODO: can just monom expr (ground main) directly
+	p_mono := fgg.ApplyOmega(p_fgg, omega) // TODO: can just monom expr (ground main) directly
 	vPrintln(verbose, "Monom expr: "+p_mono.GetMain().String())
 	t := p_mono.Ok(false).(fg.Type)
 	ds_mono := p_mono.GetDecls()
@@ -288,7 +288,7 @@ func testMonomStep(verbose bool, omega fgg.Omega, p_fgg fgg.FGGProgram,
 
 	// Right-vertical arrow
 	//res := fgg.Monomorph(p1_fgg.(fgg.FGGProgram))
-	res := fgg.ApplyOmega1(p1_fgg.(fgg.FGGProgram), omega)
+	res := fgg.ApplyOmega(p1_fgg.(fgg.FGGProgram), omega)
 	e_fgg := res.GetMain()
 	e_mono := p1_mono.GetMain()
 	vPrintln(verbose, "Monom of one step'd FGG: "+e_fgg.String())
@@ -311,7 +311,7 @@ func testMonomStep(verbose bool, omega fgg.Omega, p_fgg fgg.FGGProgram,
 func internalSrc() string {
 	Any := "type Any interface {}"
 	ToAny := "type ToAny struct { any Any }"
-	e := "ToAny{1}"                        // FIXME: `1` skipped by parser?
+	e := "ToAny{1}"                        // CHECKME: `1` skipped by parser?
 	return fg.MakeFgProgram(Any, ToAny, e) // FIXME: hardcoded FG
 }
 
@@ -323,6 +323,50 @@ func checkErr(e error) {
 		panic(e)
 	}
 }
+
+/*
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ */
 
 /*
  * TODO -- not currently up to date

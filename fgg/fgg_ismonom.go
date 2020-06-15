@@ -15,7 +15,7 @@ func IsMonomOK(p FGGProgram) (bool, string) {
 	ds := p.GetDecls()
 	for _, v := range ds {
 		if md, ok := v.(MethDecl); ok {
-			omega1 := Nomega{make(map[string]Type), make(map[string]MethInstanOpen)}
+			omega := Nomega{make(map[string]Type), make(map[string]MethInstanOpen)}
 			delta := md.Psi_recv.ToDelta()
 			for _, v := range md.Psi_meth.tFormals {
 				delta[v.name] = v.u_I
@@ -28,12 +28,12 @@ func IsMonomOK(p FGGProgram) (bool, string) {
 			//psi_recv = md.Psi_recv.Hat()
 			u_recv := TNamed{md.t_recv, psi_recv}
 			gamma[md.x_recv] = u_recv
-			omega1.us[toKey_Wt(u_recv)] = u_recv
+			omega.us[toKey_Wt(u_recv)] = u_recv
 			for _, v := range md.pDecls { // TODO: factor out
 				gamma[v.name] = v.u
 			}
-			collectExprOpen(ds, delta, gamma, md.e_body, omega1)
-			if ok, msg := nomonoOmega(ds, delta, md, omega1); ok {
+			collectExprOpen(ds, delta, gamma, md.e_body, omega)
+			if ok, msg := nomonoOmega(ds, delta, md, omega); ok {
 				return false, msg
 			}
 		}
@@ -42,9 +42,9 @@ func IsMonomOK(p FGGProgram) (bool, string) {
 }
 
 // Return true if nomono
-func nomonoOmega(ds []Decl, delta Delta, md MethDecl, omega1 Nomega) (bool, string) {
-	for auxGOpen(ds, delta, omega1) {
-		for _, v := range omega1.ms {
+func nomonoOmega(ds []Decl, delta Delta, md MethDecl, omega Nomega) (bool, string) {
+	for auxGOpen(ds, delta, omega) {
+		for _, v := range omega.ms {
 			if !isStructType(ds, v.u_recv) {
 				continue
 			}
