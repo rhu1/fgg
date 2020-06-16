@@ -1,4 +1,7 @@
-/* See README.md for install and run examples. */
+/* See README.md for install and run examples.
+ *
+ * Copyright 2020 The fgg authors.
+ */
 
 //go:generate antlr4 -Dlanguage=Go -o parser/fg parser/FG.g4
 //go:generate antlr4 -Dlanguage=Go -o parser/fgg parser/FGG.g4
