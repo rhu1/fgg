@@ -12,8 +12,8 @@ This `fgg` package is a minimal and basic prototype of **Featherweight Go** and
 
 Currently, many aspects of the code are quite primitive, mainly for the
 convenience of quick experimentation alongside the above paper.  For example,
-types/functions/variables are not well named, apart from some correspondence with
-the formal definitions.  The tool is also not particularly user-friendly:
+types/functions/variables are not well named, except for some correspondence
+with the formal definitions.  The tool is also not particularly user-friendly:
 
 - it offers only the small (but meaningful) subset of Go as formalised in the
   paper;
@@ -24,6 +24,17 @@ the formal definitions.  The tool is also not particularly user-friendly:
 
 We plan to improve some of this in the near future.  Contact [Raymond
 Hu](https://go.herts.ac.uk/raymond_hu) for issues related to this repository.
+
+See this [Go blog post](https://blog.golang.org/generics-next-step) for
+information about the [generics design
+draft](https://go.googlesource.com/proposal/+/refs/heads/master/design/go2draft-type-parameters.md)
+by the Go team, including links to their translation tool based on that draft.
+
+- Currently, the `fgg` tool supports a few features (within its small fragment
+  of Go) that their translation tool does not.  These include type parameters
+  for methods (for now, the latter has type parameters for types and functions
+  only), _nomono_ (monomorphisability) checking, and covariant method
+  receiver bounds.
 
 [Featherweight-go-gen](https://github.com/wenkokke/featherweight-go-gen) is
 tool that enumerates FGG programs and integrates with `fgg` for
