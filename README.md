@@ -25,6 +25,7 @@ the formal definitions.  The tool is also not particularly user-friendly:
 We plan to improve some of this in the near future.  Contact [Raymond
 Hu](https://go.herts.ac.uk/raymond_hu) for issues related to this repository.
 
+<!---
 See the ...[blog post](https://TODO) by... for more information about the
 ...actual Generic Go..., including links to source code.
 
@@ -32,6 +33,7 @@ See the ...[blog post](https://TODO) by... for more information about the
   fragment of Go) that the ... does not.  These include type parameters for
   methods (for now, the ... has type parameters for types and functions only),
   _nomono_ (monomorphisability) checking, and covariant method receiver bounds.
+-->
 
 [Featherweight-go-gen](https://github.com/wenkokke/featherweight-go-gen) is
 tool that enumerates FGG programs and integrates with `fgg` for
