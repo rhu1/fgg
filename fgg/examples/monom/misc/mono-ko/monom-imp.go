@@ -25,6 +25,15 @@ func (x tSB(type a Any())) m(type b Any())(y tI(a)) A(){
 	return A(){}
 };
 
+
+type tSC(type a Any()) struct {};
+func (x tSC(type a Any())) m(type b Any())(y tI(a)) A(){
+	return y.m(Box(b))(y)
+};
+
+
+func (x Dummy) method() { tSA(A).m(tSA) }
+
 func main() { _ =
 	tSA(A()){}.m(A())(tSA(A()){})
 

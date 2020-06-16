@@ -15,7 +15,6 @@ type A(type ) struct {};
 
 type B(type a Any()) struct {val C(a)};
 //type B(type a Any()) struct {val C(C(a))};
-
 type C(type a Any()) struct {};
 //type C(type a Any()) struct {val B(a)};
 
@@ -27,7 +26,6 @@ func (x A(type )) m(type a Any())() C(B(a)) {
 	return A(){}.m(a)()
 };
 */
-
 /*func (x A(type )) m(type a Any())() C(B(a)) {
 	return A(){}.m(a)()
 };*/
