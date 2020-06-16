@@ -1,32 +1,7 @@
-// Pre(1): ANTLR4 Runtime for Go
-//$ go get github.com/antlr/antlr4/runtime/Go/antlr
-//
-// Optional:
-//$ cd [GOHOME]/src/github.com/antlr/antlr4
-//$ git checkout -b antlr-go-runtime tags/4.7.1  // Match antlr-4.7.1-complete.jar -- but unnecessary
+/* See README.md for install and run examples. */
 
-// Pre(2):
-// [GOHOME]/src/github.com/rhu1/fgg
-// $ mkdir parser/fg
-// $ cp parser/pregren/fg/* parser/fg
-// $ mkdir parser/fgg
-// $ cp parser/pregren/fgg/* parser/fgg
-
-// Run examples:
-//$ go run github.com/rhu1/fgg -v -eval=10 fg/examples/hello/hello.go
-//$ go run github.com/rhu1/fgg -v -inline="package main; type A struct {}; func main() { _ = A{} }"
-
-// Optional alternative to Pre(2): ANTLR4 -- e.g., antlr-4.7.1-complete.jar
-// Assuming "antlr4" alias for (e.g.): java -jar ~/code/java/lib/antlr-4.7.1-complete.jar
-//$ go generate
-// Cf. below:
 //go:generate antlr4 -Dlanguage=Go -o parser/fg parser/FG.g4
 //go:generate antlr4 -Dlanguage=Go -o parser/fgg parser/FGG.g4
-
-// FGG gotchas:
-// type B(type a Any) struct { f a }; // Any parsed as a TParam -- currently not permitted
-// Node(Nat){...} // fgg.FGGNode (Nat) is fgg.TParam, not fgg.TName
-// type IA(type ) interface { m1() };  // m1() parsed as a TName (an invalid Spec) -- N.B. ret missing anyway
 
 package main
 
