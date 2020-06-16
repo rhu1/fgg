@@ -28,7 +28,8 @@ Hu](https://go.herts.ac.uk/raymond_hu) for issues related to this repository.
 See this [Go blog post](https://blog.golang.org/generics-next-step) for
 information about the [generics design
 draft](https://go.googlesource.com/proposal/+/refs/heads/master/design/go2draft-type-parameters.md)
-by the Go team, including links to their translation tool based on that draft.
+by the Go team, and links to their generic-to-ordinary Go translation tool
+(including an online playground) based on that draft.
 
 - Currently, the `fgg` tool supports a few features (within its small fragment
   of Go) that their translation tool does not.  These include type parameters
