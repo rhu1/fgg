@@ -12,28 +12,18 @@ This `fgg` package is a minimal and basic prototype of **Featherweight Go** and
 
 Currently, many aspects of the code are quite primitive, mainly for the
 convenience of quick experimentation alongside the above paper.  For example,
-type/method/variable are not well named, apart from some correspondence with
+types/functions/variables are not well named, apart from some correspondence with
 the formal definitions.  The tool is also not particularly user-friendly:
 
 - it offers only the small (but meaningful) subset of Go as formalised in the
   paper;
-- it does not support *any* syntactic sugar -- e.g., any empty parentheses and
-  type lists all need to be written out explicitly;
+- it does not support *any* syntactic sugar -- e.g., empty parentheses and type
+  lists, and various separators (`;`), all need to be written out explicitly;
 - most type errors are reported as panics, though an error message may be given
   at the top of the stack trace.
 
 We plan to improve some of this in the near future.  Contact [Raymond
 Hu](https://go.herts.ac.uk/raymond_hu) for issues related to this repository.
-
-<!---
-See the ...[blog post](https://TODO) by... for more information about the
-...actual Generic Go..., including links to source code.
-
-- Currently, the `fgg` prototype supports some a few features (within its small
-  fragment of Go) that the ... does not.  These include type parameters for
-  methods (for now, the ... has type parameters for types and functions only),
-  _nomono_ (monomorphisability) checking, and covariant method receiver bounds.
--->
 
 [Featherweight-go-gen](https://github.com/wenkokke/featherweight-go-gen) is
 tool that enumerates FGG programs and integrates with `fgg` for
