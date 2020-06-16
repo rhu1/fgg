@@ -92,7 +92,8 @@ Clone the `fgg` repo into the `src` directory of your Go workspace, i.e.,
 
 Then, either copy over the pre-generated parser files and install by
 
-- `make install-pregen-parser`
+- `make install-pregen-parser`  
+  (generated using ANTLR 4.7.1)
 
 or generate the parsers yourself using ANTLR and install by
 
@@ -104,6 +105,9 @@ or generate the parsers yourself using ANTLR and install by
 To test the install -- inside `github.com/rhu1/fgg` directory, this command should work:
 
     `go run github.com/rhu1/fgg -eval=-1 -v fg/examples/oopsla20/fig1/functions.go`
+
+Afer installing, you can also use the resulting `fgg` binary directly instead
+of `go run`.
 
 This package has been tested using Go version 1.11.5+ on:
 
