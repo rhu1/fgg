@@ -16,6 +16,7 @@ help:
 	@echo "Look inside the Makefile for more specific test targets."
 	@echo "To bypass the ANTLR parser generation, try:"
 	@echo "        make install-pregen-parser"
+	@echo ""
 
 
 # cf. `go run` is like `build`, doesn't use caching (unlike `install`)
@@ -97,16 +98,16 @@ test-fg-examples:
 #     diff output.txt correct.txt
 .PHONY: test-fg-examples-against-go
 test-fg-examples-against-go:
-		@$(call test_fg_against_go,fg/examples/misc/booleans/booleans.go)
-		@$(call test_fg_against_go,fg/examples/misc/compose/compose.go)
-		@$(call test_fg_against_go,fg/examples/misc/equal/equal.go)
-		@$(call test_fg_against_go,fg/examples/misc/incr/incr.go)
-		@$(call test_fg_against_go,fg/examples/misc/map/map.go)
-		@$(call test_fg_against_go,fg/examples/misc/not/not.go)
+	@$(call test_fg_against_go,fg/examples/misc/booleans/booleans.go)
+	@$(call test_fg_against_go,fg/examples/misc/compose/compose.go)
+	@$(call test_fg_against_go,fg/examples/misc/equal/equal.go)
+	@$(call test_fg_against_go,fg/examples/misc/incr/incr.go)
+	@$(call test_fg_against_go,fg/examples/misc/map/map.go)
+	@$(call test_fg_against_go,fg/examples/misc/not/not.go)
 
-		@$(call test_fg_against_go,fg/examples/oopsla20/fig1/functions.go)
-		@$(call test_fg_against_go,fg/examples/oopsla20/fig2/lists.go)
-		@$(call test_fg_against_go,fg/examples/oopsla20/fig7/monom.go)
+	@$(call test_fg_against_go,fg/examples/oopsla20/fig1/functions.go)
+	@$(call test_fg_against_go,fg/examples/oopsla20/fig2/lists.go)
+	@$(call test_fg_against_go,fg/examples/oopsla20/fig7/monom.go)
 
 
 .PHONY: test-fgg
@@ -206,7 +207,7 @@ simulate-monom:
 	$(call sim_monom,fgg/examples/oopsla20/fig3/functions.fgg,-1)
 	$(call sim_monom,fgg/examples/oopsla20/fig4/lists.fgg,-1)
 	$(call sim_monom,fgg/examples/oopsla20/fig5/graph.fgg,-1)
-#$(call sim_monom,fgg/examples/oopsla20/fig6/expression.fgg,-1)
+	$(call sim_monom,fgg/examples/oopsla20/fig6/expression.fgg,-1)
 
 
 # Non-terminating examples tested by simulate-monom
@@ -344,7 +345,7 @@ define eval_monom_fgg
 	echo "fgg="$$RES; \
 	EXP=`fgg -eval=$(2) $(3)/$(4)`; \
 	EXIT=$$?; if [ $$EXIT -ne 0 ]; then exit $$EXIT; fi; \
-	echo "fg= "$$EXP
+	echo "fg ="$$EXP
 endef
 
 
@@ -355,9 +356,9 @@ define eval_monom_fgg_against_go
 	EXIT=$$?; if [ $$EXIT -ne 0 ]; then exit $$EXIT; fi; \
 	echo "fgg="$$RES; \
 	EXP=`go run $(2)/$(3)`; \
-	echo "go= "$$EXP; \
+	echo "go ="$$EXP; \
 	ACT=`fgg -eval=-1 -printf $(2)/$(3)`; \
-	echo "fg= "$$ACT; \
+	echo "fg ="$$ACT; \
 	if [ "$$EXP" != "$$ACT" ]; then \
 		echo "Not equal."; \
 		exit 1; \

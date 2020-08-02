@@ -15,6 +15,7 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/rhu1/fgg/base"
 	"github.com/rhu1/fgg/fg"
@@ -267,22 +268,63 @@ func testMonomStep(verbose bool, omega fgg.Omega, p_fgg fgg.FGGProgram,
 	// Right-vertical arrow
 	//res := fgg.Monomorph(p1_fgg.(fgg.FGGProgram))
 	res := fgg.ApplyOmega(p1_fgg.(fgg.FGGProgram), omega)
-	e_fgg := res.GetMain()
+	e_fgg := res.GetMain() // N.B. the monom'd FGG expr (i.e., an FGExpr)
 	e_mono := p1_mono.GetMain()
 	vPrintln(verbose, "Monom of one step'd FGG: "+e_fgg.String())
 
-	// FIXME: hacked, and not general enough anyway; e.g., expression.fgg
 	_, string_fgg := e_fgg.(fg.StringLit)
 	_, string_mono := e_mono.(fg.StringLit)
 	if !(string_fgg && string_mono) {
-
-		if e_fgg.String() != e_mono.String() {
-			panic("-test-monom failed: exprs do not match\n\tFGG expr=" + e_fgg.String() +
-				"\n\tmono=" + e_mono.String())
+		// Replaced parens by angle bracks -- hack for StringLit (cf. fgg/examples/ooplsa20/fig6/expression.fgg)
+		hacked := testMonomStringHack(e_fgg.(fg.FGExpr)).String()
+		if hacked != e_mono.String() {
+			panic("-test-monom failed: exprs do not match\n\tFGG expr=" + hacked +
+				"\n\tmono    =" + e_mono.String())
 		}
 	}
 
 	return p1_fgg.(fgg.FGGProgram), u1, p1_mono.(fg.FGProgram)
+}
+
+func testMonomStringHack(e1 fg.FGExpr) fg.FGExpr {
+	switch e := e1.(type) {
+	case fg.Variable:
+		return e
+	case fg.StructLit:
+		elems := e.GetElems()
+		es := make([]fg.FGExpr, len(elems))
+		for i, v := range elems {
+			es[i] = testMonomStringHack(v)
+		}
+		return fg.NewStructLit(e.GetType(), es)
+	case fg.Select:
+		return fg.NewSelect(testMonomStringHack(e.GetExpr()), e.GetField())
+	case fg.Call:
+		e_recv := testMonomStringHack(e.GetReceiver())
+		args := e.GetArgs()
+		es := make([]fg.FGExpr, len(args))
+		for i, v := range args {
+			es[i] = testMonomStringHack(v)
+		}
+		return fg.NewCall(e_recv, e.GetMethod(), es)
+	case fg.Assert:
+		return fg.NewAssert(testMonomStringHack(e.GetExpr()), e.GetType())
+	case fg.StringLit:
+		// HACK: currently works because users cannot write string literals, specifically, '(' and ')'
+		msg := e.GetValue()
+		msg = strings.Replace(msg, "(", "<", -1)
+		msg = strings.Replace(msg, ")", ">", -1)
+		return fg.NewString(msg)
+	case fg.Sprintf:
+		args := e.GetArgs()
+		es := make([]fg.FGExpr, len(args))
+		for i, v := range args {
+			es[i] = testMonomStringHack(v)
+		}
+		return fg.NewSprintf(e.GetFormat(), es)
+	default:
+		panic("Unknown FGExpr type: " + reflect.TypeOf(e1).String() + "\n\t" + e1.String())
+	}
 }
 
 // For convenient quick testing -- via flag "-internal"
