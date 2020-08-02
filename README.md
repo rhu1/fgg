@@ -31,15 +31,16 @@ draft](https://go.googlesource.com/proposal/+/refs/heads/master/design/go2draft-
 by the Go team, and links to their generic-to-ordinary Go translation tool
 (including an online playground) based on that draft.
 
-- Currently, the `fgg` tool supports a few features (within its small fragment
-  of Go) that their translation tool does not.  These include type parameters
-  for methods (for now, the latter has type parameters for types and functions
-  only), _nomono_ (monomorphisability) checking, and covariant method
-  receiver bounds.
+- Currently, the `fgg` tool supports a few features (within its fragment of Go)
+  that their translation tool does not.  These include type parameters for
+  methods (for now, the latter has type parameters for types and functions
+  only), _nomono_ (monomorphisability) checking, and covariant method receiver
+  bounds.
 
 [Featherweight-go-gen](https://github.com/wenkokke/featherweight-go-gen) is
 tool that enumerates FGG programs and integrates with `fgg` for
 testing.
+
 
 ---
 
@@ -84,7 +85,7 @@ We assume a standard Go set up.  That is:
 * a Go workspace, at `$GOPATH`;
 * a `src` directory in the workspace.
 
-You will also need the ANTLR v4 runtime for Go; e.g., see "Installing ANLTR v4"
+You will also need the ANTLR v4 runtime for Go; e.g., see "Installing ANTLR v4"
 in this
 [tutorial](https://blog.gopheracademy.com/advent-2017/parsing-with-antlr4-and-go/).
 
@@ -99,14 +100,15 @@ Then, either copy over the pre-generated parser files and install by
 
 or generate the parsers yourself using ANTLR and install by
 
-- `antlr4 -Dlanguage=Go -o parser/fg parser/FG.g4`  
+- (assuming some suitable `antlr4` command; e.g., `java -jar [antlr-4.7.1-complete.jar]`)  
+`antlr4 -Dlanguage=Go -o parser/fg parser/FG.g4`  
   `antlr4 -Dlanguage=Go -o parser/fgg parser/FGG.g4`  
-  (assuming some suitable `antlr4` command; e.g., `java -jar [antlr-4.7.1-complete.jar]`)
-- `make install`
+  `make install`
 
-To test the install -- inside `github.com/rhu1/fgg` directory, this command should work:
+To test the install -- inside the `github.com/rhu1/fgg` directory, this command
+should work:
 
-    `go run github.com/rhu1/fgg -eval=-1 -v fg/examples/oopsla20/fig1/functions.go`
+- `go run github.com/rhu1/fgg -eval=-1 -v fg/examples/oopsla20/fig1/functions.go`
 
 Afer installing, you can also use the resulting `fgg` binary directly instead
 of `go run`.
@@ -142,7 +144,7 @@ Two points:
 
   A rule of thumb is, write all FG/FGG code as if you were writing Go _without_ line breaks.
 
-* FGG does _not_ support any syntactic sugar -- this means empty type
+* FGG does not support any syntactic sugar -- this means empty type
   declarations and type argument lists must always be written out in full.
   E.g., the FGG equivalent to the above is:
 
@@ -191,6 +193,7 @@ Notes:
     `type A(type a Any()) interface { B(a) }  // Any, B are interfaces`
 
   * The `var` declarations used for readability in some of the examples in the paper are not supported.
+
 
 ---
 
