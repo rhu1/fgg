@@ -67,7 +67,7 @@ expr       : NAME                                   # Variable
            | expr '.' NAME                          # Select
            | recv=expr '.' NAME '(' args=exprs? ')' # Call
            | expr '.' '(' NAME ')'                  # Assert
-           | FMT '.' SPRINTF '(' STRING (',' | expr)* ')'  # Sprintf
+           | FMT '.' SPRINTF '(' (STRING | '"%#v"') (',' | expr)* ')'  # Sprintf
            ;
 exprs      : expr (',' expr)* ;
 

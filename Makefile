@@ -216,9 +216,6 @@ simulate-monom:
 # Non-terminating examples tested by simulate-monom
 .PHONY: test-monom-against-go
 test-monom-against-go:
-
-	@$(call eval_monom_fgg_against_go,fgg/examples/oopsla20/fig6/expression.fgg,tmp/test/fg/oopsla20/expression,expression.go)  
-
 	@$(call eval_monom_fgg_against_go,fgg/examples/misc/booleans/booleans.fgg,tmp/test/fg/booleans,booleans.go)
 	@$(call eval_monom_fgg_against_go,fgg/examples/misc/compose/compose.fgg,tmp/test/fg/compose,compose.go)
 	@$(call eval_monom_fgg_against_go,fgg/examples/misc/graph/graph.fgg,tmp/test/fg/graph,graph.go)
@@ -251,7 +248,7 @@ test-monom-against-go:
 	@$(call eval_monom_fgg_against_go,fgg/examples/oopsla20/fig3/functions.fgg,tmp/test/fg/oopsla20/functions,functions.go)
 	@$(call eval_monom_fgg_against_go,fgg/examples/oopsla20/fig4/lists.fgg,tmp/test/fg/oopsla20/lists,lists.go)
 	@$(call eval_monom_fgg_against_go,fgg/examples/oopsla20/fig5/graph.fgg,tmp/test/fg/oopsla20/graph,graph.go)
-#@$(call eval_monom_fgg_against_go,fgg/examples/oopsla20/fig6/expression.fgg,tmp/test/fg/oopsla20/expression,expression.go)  #go= "({{{}}}+{{}})" 
+#@$(call eval_monom_fgg_against_go,fgg/examples/oopsla20/fig6/expression.fgg,tmp/test/fg/oopsla20/expression,expression.go)  #basic Go prints structs "{...}", but F(G)G includes struct names, so string equality doesn't work
 
 .PHONY: clean-test-monom-against-go
 clean-test-monom-against-go:

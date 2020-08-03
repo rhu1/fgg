@@ -83,9 +83,14 @@ func (d Ints(type )) __5(type )() Int() { return d.__4()().Add()(d.__1()()) };
 
 /* Assumption */
 
+// N.B. monomorphises to "String<>", not "String" -- see Num().String below
 func (x0 Zero(type )) String(type )() string { return fmt.Sprintf("%v", x0) };
 func (x0 Pos(type )) String(type )() string { return fmt.Sprintf("%v", x0) };
 func (x0 Neg(type )) String(type )() string { return fmt.Sprintf("%v", x0) };
+  /* N.B. incompatible with test-monom-against-go textual output check,
+  	 because %v in Go just prints "{}", while F(G)G StructLit String()
+  	 prints the type name.  Similarly for "%#v", Go prints the struct name,
+  	 but F(G)G this includes the StructLit struct itself. */
 
 
 /* Prev. example */
@@ -122,12 +127,15 @@ type Stringer(type ) interface {
 };
 
 func (e Num(type )) String(type )() string {
-  //return fmt.Sprintf("%d", e.value)
-  return fmt.Sprintf("%v", e.value)
+  return 
+  	  //fmt.Sprintf("%d", e.value)
+  	  fmt.Sprintf("%v", e.value.String()())  // N.B. Monormorphises to String<>(), not just String() -- cf. above
+  /* N.B. similar issue to above, %#v here prints the StringLit in F(G)G vs.
+   * the actual string in Go */
 };
 
 func (e Plus(type a Stringer())) String(type )() string {
-  return fmt.Sprintf("(%s+%s)",  // CHECKME: omit FGG StringLit quotes? 
+  return fmt.Sprintf("(%s+%s)",
   		e.left.String()(), e.right.String()())
 };
 
