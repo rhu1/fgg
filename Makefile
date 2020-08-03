@@ -162,7 +162,7 @@ test-fgg-examples:
 .PHONY: test-nomono-bad
 test-nomono-bad:
 	@$(call nomono_bad,fgg/examples/monom/box/box.fgg)
-	@$(call nomono_bad,fgg/examples/oopsla20/fig8/expression.fgg,)
+	@$(call nomono_bad,fgg/examples/oopsla20/fig8/expression.fgg)
 
 	@$(call nomono_bad,fgg/examples/monom/box/box.fgg)
 
