@@ -310,7 +310,7 @@ func testMonomStringHack(e1 fg.FGExpr) fg.FGExpr {
 	case fg.Assert:
 		return fg.NewAssert(testMonomStringHack(e.GetExpr()), e.GetType())
 	case fg.StringLit:
-		// HACK: currently works because users cannot write string literals, specifically, '(' and ')'
+		// HACK: currently works because users cannot write string literals, specifically '(' and ')'
 		msg := e.GetValue()
 		msg = strings.Replace(msg, "(", "<", -1)
 		msg = strings.Replace(msg, ")", ">", -1)

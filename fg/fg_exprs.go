@@ -505,13 +505,11 @@ func (s StringLit) CanEval(ds []Decl) bool {
 }
 
 func (s StringLit) String() string {
-	//return "\"" + s.val + "\""
-	return s.val
+	return "\"" + s.val + "\""
 }
 
 func (s StringLit) ToGoString(ds []Decl) string {
-	//return "\"" + s.val + "\""
-	return s.val
+	return "\"" + s.val + "\""
 }
 
 type Sprintf struct {
@@ -551,7 +549,11 @@ func (s Sprintf) Eval(ds []Decl) (FGExpr, string) {
 		for i := range args {
 			cast[i] = args[i]
 		}
-		return StringLit{fmt.Sprintf(s.format, cast...)}, "Sprintf"
+		template := s.format[1 : len(s.format)-1] // Remove surrounding quote chars
+		str := fmt.Sprintf(template, cast...)
+		str = strings.ReplaceAll(str, "\"", "") // HACK because StringLit.String() includes quotes
+		// FIXME: currently user remplates cannot include xplicit quote chars
+		return StringLit{str}, "Sprintf"
 	}
 }
 
