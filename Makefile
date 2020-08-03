@@ -216,6 +216,9 @@ simulate-monom:
 # Non-terminating examples tested by simulate-monom
 .PHONY: test-monom-against-go
 test-monom-against-go:
+
+	@$(call eval_monom_fgg_against_go,fgg/examples/oopsla20/fig6/expression.fgg,tmp/test/fg/oopsla20/expression,expression.go)  
+
 	@$(call eval_monom_fgg_against_go,fgg/examples/misc/booleans/booleans.fgg,tmp/test/fg/booleans,booleans.go)
 	@$(call eval_monom_fgg_against_go,fgg/examples/misc/compose/compose.fgg,tmp/test/fg/compose,compose.go)
 	@$(call eval_monom_fgg_against_go,fgg/examples/misc/graph/graph.fgg,tmp/test/fg/graph,graph.go)
