@@ -111,9 +111,8 @@ test-fg-examples-against-go:
 
 
 .PHONY: test-fgg
-#test-fgg: test-fgg-unit test-fgg-examples
-test-fgg: test-fgg-unit test-nomono-bad simulate-monom simulate-oblit
-# add monom, oblit?
+test-fgg: test-fgg-unit test-fgg-examples test-nomono-bad simulate-monom simulate-oblit
+#test-fgg-examples executes nomono examples (e.g., oopsla20/fig8)
 
 
 .PHONY: test-fgg-unit
@@ -157,10 +156,14 @@ test-fgg-examples:
 	$(call eval_fgg,fgg/examples/oopsla20/fig4/lists.fgg,-1)
 	$(call eval_fgg,fgg/examples/oopsla20/fig5/graph.fgg,-1)
 	$(call eval_fgg,fgg/examples/oopsla20/fig6/expression.fgg,-1)
+	$(call eval_fgg,fgg/examples/oopsla20/fig8/nomono.fgg,-1)
 
 
 .PHONY: test-nomono-bad
 test-nomono-bad:
+	@$(call nomono_bad,fgg/examples/monom/box/box.fgg)
+	@$(call nomono_bad,fgg/examples/oopsla20/fig8/expression.fgg,)
+
 	@$(call nomono_bad,fgg/examples/monom/box/box.fgg)
 
 	@$(call nomono_bad,fgg/examples/monom/misc/mono-ko/incompleteness-subtyping.go)

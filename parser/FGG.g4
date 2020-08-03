@@ -29,7 +29,7 @@ NAME            : (LETTER | '_') (LETTER | '_' | DIGIT)* ;
 WHITESPACE      : [ \r\n\t]+ -> skip ;
 COMMENT         : '/*' .*? '*/' -> channel(HIDDEN) ;
 LINE_COMMENT    : '//' ~[\r\n]* -> channel(HIDDEN) ;
-STRING          : '"' (LETTER | DIGIT | ' ' | '.' | ',' | '_' | '%' | '(' | ')' | '+' | '-')* '"' ;
+STRING          : '"' (LETTER | DIGIT | ' ' | '.' | ',' | '_' | '%' | '#' | '(' | ')' | '+' | '-')* '"' ;
 
 
 /* Rules */
@@ -53,6 +53,7 @@ program     : PACKAGE MAIN ';'
               decls? FUNC MAIN '(' ')' '{'
               ('_' '=' expr  | FMT '.' PRINTF '(' '"%#v"' ',' expr ')')
               '}' EOF
+
             ;
 decls       : ((typeDecl | methDecl) ';')+ ;
 typeDecl    : TYPE NAME typeFormals typeLit ;  // TODO: tag id=NAME, better for adapting (vs., index constants)
