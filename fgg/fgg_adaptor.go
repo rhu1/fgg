@@ -308,7 +308,7 @@ func (a *FGGAdaptor) ExitSprintf(ctx *parser.SprintfContext) {
 	var format string = ctx.GetChild(4).(*antlr.TerminalNodeImpl).GetText()
 	nargs := (ctx.GetChildCount() - 6) / 2 // Because of the comma
 	args := make([]FGGExpr, nargs)
-	for i := 0; i < nargs; i++ {
+	for i := nargs - 1; i >= 0; i-- {
 		tmp := a.pop()
 		args[i] = tmp.(FGGExpr)
 	}
