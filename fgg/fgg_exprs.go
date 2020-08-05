@@ -630,7 +630,7 @@ func (s Sprintf) Eval(ds []Decl) (FGGExpr, string) {
 	} else {
 		cast := make([]interface{}, len(args))
 		for i := range args {
-			cast[i] = args[i]
+			cast[i] = args[i] // N.B. inside fgg this is, e.g., a StructLit (not the struct itself, as in native Go)
 		}
 		template := s.format[1 : len(s.format)-1] // Remove surrounding quote chars
 		str := fmt.Sprintf(template, cast...)
