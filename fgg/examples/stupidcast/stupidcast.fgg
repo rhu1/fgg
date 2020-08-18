@@ -8,5 +8,4 @@ type A(type ) struct {};
 func (x0 A(type )) m1(type a IA())() IA() { return x0 };
 type B(type a IA()) struct {};
 func (x0 B(type a IA())) m2(type )(x1 a) Any() { return x1 };
-type A1(type ) struct {};
-func main() { _ = ToAny(){B(A()){}}.any.(B(A1())) }
+func main() { _ = ToAny(){B(A()){}}.any.(ToAny()) }
