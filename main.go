@@ -229,9 +229,16 @@ func testMonom(printf bool, verbose bool, src string, steps int) {
 				panic("FGG is stuck but monom is not:\n\tfgg = " + main_fgg.String() +
 					"\n\tmonom=" + main_mono.String())
 			}
-		} else if main_mono.CanEval(ds_mono) {
-			panic("Monom is stuck but FGG is not:\n\tfgg = " + main_fgg.String() +
-				"\n\tmonom=" + main_mono.String())
+		} else {
+			if main_mono.CanEval(ds_mono) {
+				panic("Monom is stuck but FGG is not:\n\tfgg = " + main_fgg.String() +
+					"\n\tmonom=" + main_mono.String())
+			}
+			if _, ok := main_fgg.(fgg.Assert); ok {
+				if _, ok1 := main_mono.(fg.Assert); ok1 {
+					break // Both stuck on bad assert
+				}
+			}
 		}
 
 		// Repeat: horizontal arrows and right-vertical arrow
