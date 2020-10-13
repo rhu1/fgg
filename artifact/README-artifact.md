@@ -1,261 +1,621 @@
-# README for [fgg](https://github.com/rhu1/fgg)
+# OOPSLA’20 Artifact #27 – Overview
+## Featherweight Go
+*by Robert Griesemer, Raymond Hu, Wen Kokke, Julien Lange, Ian Lance Taylor, Bernardo Toninho, Philip Wadler, and Nobuko Yoshida*
 
----
+**NB.** *The full suite of property-based tests can take a long time to run, depending on the maximum depth to which you want to test. For a test up to depth 10, count on a minute. For a test up to depth 15, count on a day. For a test up to depth 20, count on a week. For a test up to depth 30, count on a month.*
 
-This `fgg` package is a minimal and basic prototype of **Featherweight Go** and
-**Featherweight Generic Go**, as presented in:
+The artifact submission contains:
 
-> Featherweight Go  
-> *Robert Griesemer, Raymond Hu, Wen Kokke, Julien Lange, Ian Lance Taylor,  
-> Bernardo Toninho, Philip Wadler and Nobuko Yoshida*  
-> https://arxiv.org/abs/2005.11710
+1. The main artifact, a Docker image – `oopsla20-artifact27-fgg.tar`.
+2. The Dockerfile used to build the image.
+3. The source of [fgg][fgg] and [fgg-gen][fgg-gen], as fetched by docker.
+4. Copies of this document as markdown and pdf.
 
-Currently, many aspects of the code are quite primitive, mainly for the
-convenience of quick experimentation alongside the above paper.  For example,
-types/functions/variables are not well named, except for some correspondence
-with the formal definitions.  The tool is also not particularly user-friendly:
+The artifact has two main components:
 
-- it offers only the small (but meaningful) subset of Go as formalised in the
-  paper;
-- it does not support *any* syntactic sugar -- e.g., empty parentheses and type
-  lists, and various separators (`;`), all need to be written out explicitly;
-- most type errors are reported as panics, though an error message may be given
-  at the top of the stack trace.
+- [fgg][fgg] – an implementation of Featherweight Go (FG) and Featherweight Generic Go (FGG), written in Go:
+    * a static type checker and interpreter for FG and FGG programs; and
+    * a static “nomono” checker and monomorphiser from FGG programs to FG programs.
+- [fgg-gen][fgg-gen] – a property-based testing library, based on [lazy-search][lazy-search], which enumerates all well-typed programs from a subset of FGG (up to a certain size).
 
-We plan to improve some of this in the near future.  Contact [Raymond
-Hu](https://go.herts.ac.uk/raymond_hu) for issues related to this repository.
+The overview is structured into two sections. The first, “Getting Started”, is for the kick-the-tires phase of artifact review. It helps you build the artifact, and do a few small tests to see if everything runs. The second section, “Step-by-Step Instructions”, helps you do a full review.
 
-See this [Go blog post](https://blog.golang.org/generics-next-step) for
-information about the [generics design
-draft](https://go.googlesource.com/proposal/+/refs/heads/master/design/go2draft-type-parameters.md)
-by the Go team, and links to their generic-to-ordinary Go translation tool
-(including an online playground) based on that draft.
+1. [Getting Started](#1-getting-started)
 
-- Currently, the `fgg` tool supports a few features (within its fragment of Go)
-  that their translation tool does not.  These include type parameters for
-  methods (for now, the latter has type parameters for types and functions
-  only), _nomono_ (monomorphisability) checking, and covariant method receiver
-  bounds.
+    1. [Building the artifact](#11-building-the-artifact)
+    2. [Try fgg](#12-try-fgg)
+    3. [Try fgg-gen](#13-try-fgg-gen)
+    4. [Licenses](#14-licenses)
 
-[Featherweight-go-gen](https://github.com/wenkokke/featherweight-go-gen) is
-tool that enumerates FGG programs and integrates with `fgg` for
-testing.
+2. [Step-by-Step Instructions](#2-step-by-step-instructions)
+
+    1. [Claims from the Paper demonstrated by this Artifact](#21-claims-from-the-paper-demonstrated-by-this-artifact)
+    2. [Claims: Examples](#22-claims-examples)
+    3. [Claims: Testing](#23-claims-testing)
+
+3. [Reproducing this Artifact](#3-reproducing-this-artifact)
+
+    1. [Building with Docker](#31-building-with-docker)
+    2. [Building from Source](#32-building-from-source)
 
 
----
+# 1. Getting Started
 
-### Summary.
+## 1.1 Set Up the Artifact
 
-This package includes:
+There are three ways to work with the artifact:
 
-* An **FG** static type checker and interpreter.
-* An **FGG** static type checker and interpreter.
-* An FGG static _nomono_ (i.e., "is/not monomorphisable") checker and FGG-to-FG
-  **monomorphiser**.
+1. You can load the provided Docker image with `docker load`.
+   Instructions for this are [below](#111-load-the-docker-image-and-start-a-container).
+2. Build the Docker image from the Dockerfile.
+   Instructions for this are [here](#311-building-with-docker).
+3. Build the artifact from source.
+   Instructions for this are [here](#312-building-from-source).
 
-Package organisation:
-* `Makefile` -- install, and for running tests and examples.
-* `main.go` -- main file.
-* `fg` -- FG AST, typing and evaluation.
-  * `fg/examples` -- FG examples.
-    * `fg/examples/oopsla20` -- The FG examples from the paper (i.e., Figs. 1,
-      2 and 7).
-* `fgg` -- FGG AST, typing, evaluation, nomono check, and monomorphisation.
-  * `fgg/examples` -- FGG examples.
-    * `fgg/examples/oopsla20` -- The FGG examples from the paper (i.e., Figs.
-      3--6).
-* `parser` -- FG/FGG parsers (generated using ANTLR).
-  * `parser/FG.g4` -- FG ANTLR grammar.
-  * `parser/FGG.g4` -- FGG ANTLR grammar.
+## 1.1.1 Load the Docker Image and Start a Container
 
-Use the [master](https://github.com/rhu1/fgg/tree/master) branch for the
-latest working version.
+You’ll need Docker, see [“Orientation and setup”][docker] in the Docker documentation.
 
-**Syntax.**  The best source would be the formal grammars in the paper, or else
-see the above ANTLR grammars.
+0. Check you have Docker running.
+1. Copy `oopsla20-artifact27.tgz` to a new directory.
+2. In that directory, do:
+   ```bash
+   tar zxvf oopsla20-artifact27.tgz
+   docker load < oopsla20-artifact27-fgg.tar
+   ```
+3.  Start a container with an interactive terminal session with:
+   ```bash
+   docker run -it oopsla20-artifact27-fgg:submission bash
+   ```
+   The [fgg][fgg] build is located at `/go/src/github.com/rhu1/fgg`, and the [fgg-gen][fgg-gen] build is located at `/fgg-gen`.
 
 
----
+## 1.2 Try fgg
 
-### Install.
+**NB.** *The [fgg][fgg] implementation does not support the syntactic sugar used for examples in the paper. This means that FG and FGG programs require empty parentheses `()`, empty type lists `(type )`, and the separators between field, method, and type declarations `;` to be written explicitly.*
 
-We assume a standard Go set up.  That is:
+**NB.** *Type checking errors and runtime panics, e.g., bad type assertions, are reported with a full stack trace. You may find a relevant error message at the top of the trace.*
 
-* Go (version 1.11+);
-* a Go workspace, at `$GOPATH`;
-* a `src` directory in the workspace.
+0. The paths in the following commands are relative to `$FGG_HOME`,
+   which is `/go/src/github.com/rhu1/fgg` on the Docker image. If you want to
+   be able to copy them, first do:
+   ```bash
+   cd $FGG_HOME
+   ```
+   The `fgg` binary is available on the `$PATH`.
+1. To test if the installation was successful, you can run the FG and FGG versions of *"Hello, World!"*:
+   ```bash
+   fgg -eval=10 -v fg/examples/hello/hello.go
+   fgg -fgg -eval=10 -v fgg/examples/hello/hello.fgg
+   ```
+   - This performs static type checking and evaluates the program according to the systems presented in the paper.
+   - The `-eval` flag determines the number of reduction steps to attempt.
+   - By default, [fgg][fgg] expects FG programs. For FGG programs, you must pass the`-fgg` flag.
+   - Calling `fgg` runs the compiled program, but `go run github.com/rhu1/fgg` should have the same result.
 
-You will also need the ANTLR v4 runtime for Go; e.g., see "Installing ANTLR v4"
-in this
-[tutorial](https://blog.gopheracademy.com/advent-2017/parsing-with-antlr4-and-go/).
+2. Inspect the FG output generated by *monomorphisation*:
+   ```bash
+   fgg -fgg -monomc=-- -v fgg/examples/hello/hello.fgg
+   ```
+   - This includes static *nomono* checking, i.e., whether or not the program is monomorphisable, and builds and applies the monomorphisation map ω, following the systems presented in the paper.
+   - The `--` value tells `fgg` to write the output to stdout.
 
-Clone the `fgg` repo into the `src` directory of your Go workspace, i.e.,
-`$GOPATH/src` (or use `go get`).  It should end up located at
-`src/github.com/rhu1/fgg`.
+3. Write the FG output generated by monomorphisation to a file, and run it:
+   ```bash
+   mkdir -p tmp/hello
+   fgg -fgg -monomc=tmp/hello/hello.go fgg/examples/hello/hello.fgg
+   fgg -eval=10 -v tmp/hello/hello.go
+   ```
 
-Then, either copy over the pre-generated parser files and install by
+4. Try other examples (see `fg/examples` and `fgg/examples`). To run the FGG example from Fig. 3 in the paper:
+   ```bash
+   fgg -fgg -eval=-1 -v fgg/examples/oopsla20/fig3/functions.fgg
+   ```
+   - The `-eval=-1` specifies to run until termination.
+   - The FG examples are located at `fg/examples/`, with those from the paper in `fg/examples/oopsla20`.
+   - The FGG examples are located at `fgg/examples/`, with those from the paper in `fgg/examples/oopsla20`.
 
-- `make install-pregen-parser`  
-  (generated using ANTLR 4.7.1)
-
-or generate the parsers yourself using ANTLR and install by
-
-- (assuming some suitable `antlr4` command; e.g., `java -jar [antlr-4.7.1-complete.jar]`)  
-`antlr4 -Dlanguage=Go -o parser/fg parser/FG.g4`  
-  `antlr4 -Dlanguage=Go -o parser/fgg parser/FGG.g4`  
-  `make install`
-
-To test the install -- inside the `github.com/rhu1/fgg` directory, this command
-should work:
-
-- `go run github.com/rhu1/fgg -eval=-1 -v fg/examples/oopsla20/fig1/functions.go`
-
-Afer installing, you can also use the resulting `fgg` binary directly instead
-of `go run`.
-
-This package has been tested using Go version 1.11.5+ on:
-
-* MacOS Catalina
-* Cygwin/Windows 10
-
----
-
-### A note on syntax.
-
-Two points:
-
-* FG and FGG _always_ need explicit `;` separators between type/method
-  decls, field decls, etc., even across new lines.  E.g., in FG
-
-  ```
-  package main;
-  type A struct {};
-  type B struct {
-    f1 A;
-    f2 A
-  };
-  type IA interface {
-    m1() B;
-    m2() B
-  };
-  func (x0 B) foo() B { return x0 };
-  func main() { _ = B{A{}, A{}}.foo() }
-  ```
-
-  A rule of thumb is, write all FG/FGG code as if you were writing Go _without_ line breaks.
-
-* FGG does not support any syntactic sugar -- this means empty type
-  declarations and type argument lists must always be written out in full.
-  E.g., the FGG equivalent to the above is:
-
-  ```
-  package main;
-  type A(type ) struct {};
-  type B(type ) struct {
-    f1 A();
-    f2 A()
-  };
-  type IA(type ) interface {
-    m1(type )() B();
-    m2(type )() B()
-  };
-  func (x0 B(type )) foo(type )() B() { return x0 };
-  func main() { _ = B(){A(){}, A(){}}.foo()() }
-  ```
-
-
----
+5. Run all the tests in the [fgg][fgg] repository:
+   ```bash
+   make test-all
+   ```
+   This includes:
+   - Type checking, evaluation, and monomorphisation of all the examples from the paper.
+   - Comparison of FG evaluation results, for both FG programs and monomorphisations of FGG programs, against the official Go compiler installed in the artifact image.  See [Testing](#23-claims-testing) for details.
 
 ### FG/FGG program syntax.
 
-This package implements the grammars defined in the paper.  E.g., a basic FGG
-program has the form:
+FG and FGG _always_ need explicit `;` separators between type/method decls, field decls, etc., even across new lines. For instance, in FG:
+```go
+package main;
+type A struct {};
+type B struct {
+  f1 A;
+  f2 A
+};
+type IA interface {
+  m1() B;
+  m2() B
+};
+func (x0 B) foo() B { return x0 };
+func main() { _ = B{A{}, A{}}.foo() }
+```
+A rule of thumb is, write all FG/FGG code as if you were writing Go _without_ line breaks.
 
+FGG does not support any syntactic sugar -- this means empty type declarations and type argument lists must always be written out in full. For instance, the FGG equivalent to the above is:
 ```
 package main;
-/* Type and method decls -- semicolon separated */
-func main () { _ = /* main has this specific form */ }
+type A(type ) struct {};
+type B(type ) struct {
+  f1 A();
+  f2 A()
+};
+type IA(type ) interface {
+  m1(type )() B();
+  m2(type )() B()
+};
+func (x0 B(type )) foo(type )() B() { return x0 };
+func main() { _ = B(){A(){}, A(){}}.foo()() }
 ```
-
+The prototype implements the grammars defined in the paper, *e.g.*, a basic FGG program has the form:
+```go
+package main;
+/* … type and method declarations … */
+func main () { _ = /* main has this exact form */ }
+```
 For testing purposes, the package supports this additional form:
-
-```
+```go
 package main;
 import "fmt";  // Only fmt is allowed
-/* Type and method decls -- semicolon separated */
-func main () { fmt.Printf("%#v", /* This specific Printf, and only in main */ ) }
+/* … type and method declarations … */
+func main () { fmt.Printf("%#v", /* fmt.Printf is only available in this exact form */ ) }
+```
+Finally, the package supports interface embedding for both FG and FGG, *e.g.*, 
+```go
+type A(type a Any()) interface { B(a) }  // Any, B are interfaces
+```
+The `var` declarations used for readability in some of the examples in the paper are not supported.
+
+## 1.3 Try fgg-gen
+
+**NB.** *The full suite of property-based tests can take a long time to run, depending on the maximum depth to which you want to test. For a test up to depth 10, count on a minute. For a test up to depth 15, count on a day. For a test up to depth 20, count on a week. For a test up to depth 30, count on a month.*
+
+To test if the installation was successful, you can run, e.g., the following command:
+```bash
+cd $FGG_GEN_HOME && stack run -- --max-depth 10 --batch-size=100 --num-processes=1
+```
+This should take only a couple of seconds to complete, and runs the monomorphisation tests for every program up to size 10, measured in the number of language constructs. It should display a progress bar, counting to 100%:
+```
+Using 1 processes
+Batch 001: 4 programs, with sizes between 10 and 10
+[=>..........................................]   4%
+```
+Don’t worry about the fact that the progress never makes it to 100%! That just means the last batch wasn’t a full batch, because we ran out of programs to test. Batch size is *per process*, so reaching 100% means that `batch-size` × `num-processes` tests were performed, which would be exactly 100 in this case. However, we need at least 10 constructs to write a valid program, so there’s very few programs of size 10.
+
+Testing up to depth 10 should only haven taken a few seconds to complete. If you’d like to run something a little more substantial, you can try testing up to depth 12, which should take a few minutes. It takes ~7 minutes on computer with a 8GB RAM and a quad-core 3.1 GHz processor:
+```bash
+cd $FGG_GEN_HOME && stack run -- --max-depth 12 --batch-size=100 --num-processes=1
+```
+Unfortunately, we can’t predict *how many* well-typed programs there are for any size, so we can’t give you the overall progress. Instead, we’ll give you some information on the current batch, and give you progress *per batch*:
+```
+Using 1 processes
+Batch 001: 100 programs, with sizes between 11 and 12
+[==============================================] 100%
+Batch 002: 100 programs, with sizes between 12 and 12
+[==============================================] 100%
+Batch 003: 100 programs, with sizes between 12 and 12
+[==============================================] 100%
+Batch 004: 100 programs, with sizes between 11 and 12
+[==============================================] 100%
+Batch 005: 100 programs, with sizes between 10 and 12
+[==============================================] 100%
+Batch 006: 100 programs, with sizes between 11 and 12
+[==============================================] 100%
+Batch 007: 100 programs, with sizes between 12 and 12
+[==============================================] 100%
+Batch 008: 100 programs, with sizes between 11 and 12
+[==============================================] 100%
+Batch 009: 90 programs, with sizes between 11 and 12
+[=================================>............]  90%
+```
+For each batch, we print the number of programs in that batch, which should always be `batch-size`, with the exception of the last batch. We also print the size of the smallest and the largest programs in this batch. These sizes fluctuate, e.g., it’s not until batch 5 that we see the programs of size 10. This is because the tree traversal is *depth-first*, to keep the memory-usage as low as possible.
+
+Unfortunately, this means we can’t neatly divide batches into size-ranges, e.g., “batch 1 contains all programs of size 10 and 11, batches 2-9 contain all programs of size 12”, and we cannot conclude from a partial run with, e.g., `--max-depth=30` that *at least* the tested property holds for all programs of, e.g., size 20 and smaller.
+
+## 1.4 Licenses
+
+The entire artifact, as available on Zenodo, is licensed under [CC BY-NC-SA 4.0][CC-BY-NC-SA-4.0], which is permissive enough to replicate the results. However, [fgg][fgg] and [fgg-gen][fgg-gen] are available separately under more permissive licenses: [fgg][fgg] is available under [CC BY 4.0][CC-BY-4.0], and [fgg-gen][fgg-gen] is available under [PPL][PPL].
+
+
+# 2. Step-by-Step Instructions
+
+## 2.1 Claims From the Paper Demonstrated by this Artifact
+
+Examples in the paper:
+
+- **(A)** *Versions of all the examples in the paper have been tested.*
+
+Testing the FGG implementation:
+
+- **(B)** *We test compatibility with the official Go compiler by comparing the evaluation results for all examples.*
+- **(C)** *We test type preservation by checking it dynamically during reduction for all FG and FGG examples.*
+- **(D)** *We test monomorphisation by the bisimulation in Fig. 6 of the paper for all FGG examples.*
+- **(E)** *We repeat **(C)** and **(D)** for all programs in a subset of FGG up to size 20.*
+
+Further details for each claim follow.
+
+
+## 2.2 Claims: Examples
+
+## (A) Versions of all the examples in the paper have been tested
+
+Versions of all examples from the paper, i.e., Figs. 1–8, are in the [fgg][fgg] repository:
+
+- The FG examples are under `fg/examples/oopsla20`.
+- The FGG examples are under `fgg/examples/oopsla20`.
+- The file`fg/examples/oopsla20/fig7/monom.go` is generated from `fgg/examples/oopsla20/fig6/expression.fgg` by monomorphisation.
+
+The phrase *"versions of"* refers to the fact that [fgg][fgg] does not support the various syntactic sugars used for clarity in the paper.  The above versions are otherwise faithful to the paper versions. The specific differences are:
+
+- Empty parentheses `()` and empty type lists `(type )` must be written explicitly.
+- Separators `;` between, e.g., field, method and type declarations must be written explicitly.
+- Primitive types `int` and `bool` and operators on these types are not supported. The versions included use typical encodings where needed.
+- FGG has minimal support for `string`, for the convenience of `fgg/examples/oopsla20/fig6/expression.go`.
+- The `var` statement is not supported. The expressions can simply be inlined.
+
+The phrase *"have been tested"* refers to static type checking and reduction
+according to systems presented in the paper.
+Note: the following commands assume `$FGG_HOME` as the present directory.
+
+- For the FG examples, the specific `make` target is:
+  ```bash
+  make test-fg-examples
+  ```
+
+- For the FGG examples, *"tested"* further includes monorphisation to FG programs, with type checking and reduction of monorphised program in simulation with the original program.  The specific `make` target is:
+  ```bash
+  make simulate-monom
+  ```
+  One example from the paper, `fgg/examples/oopsla20/fig8`, is excluded from this target, as it is not monomorphisable. Instead, this example is included in the target:
+  ```bash
+  make test-nomono-bad
+  ```
+  Alternatively, you can try this example by hand:
+  ```bash
+  fgg -fgg -monomc=-- fgg/examples/oopsla20/fig8/nomono.fgg
+  > panic:
+  > Cannot monomorphise (nomono detected):
+  > nestBr(type a Any()) ->* nestBr(Box(a))
+  ```
+  (Note that this example can still be evaluated, just not monomorphised.)
+
+
+## 2.3 Claims: Testing
+
+## (B) Compatibility with the official Go compiler
+
+We test compatibility with the official Go compiler by comparing the evaluation results for all examples. For each FG example, we evaluate the program with both [fgg][fgg] and the official Go compiler, and compare the outputs. For each FGG example, we evaluate the program with [fgg][fgg], evaluate the *monomorphised* program with the official Go compiler, and compare the outputs. These make targets do so for all of the examples:
+```bash
+cd $FGG_HOME
+
+# Test FG examples:
+make test-fg-examples-against-go
+
+# Test monomorphised FGG examples:
+make test-monom-against-go
 ```
 
-Notes:
+Details:
 
-  * This package additionally supports interface embedding for both FG and
-    FGG.  E.g.,  
-    `type A(type a Any()) interface { B(a) }  // Any, B are interfaces`
+- We compare the outputs using string equality. To enable this, the FG programs are slightly modified from the formal grammar in the paper by moving the main expression into a `printf` with a specific template (instead of an assignment to the blank indentifier `_ = ...`). For instance, instead of the following `main` body in Fig. 1…
+  ```go
+  var f Function = compose{incr{-5}, pos{}}
+  var b bool = f.Apply(3).(bool)
+  ```
+  …we have in `fg/examples/oopsla20/fig/functions.go`…
+  ```go
+  fmt.Printf("%#v", compose{incr{Ints{}.__5()} , pos{}}.Apply(Ints{}._3()).(Bool))
+  ```
+  The reduction rules are essentially unchanged.
 
-  * The `var` declarations used for readability in some of the examples in the paper are not supported.
+- For an FGG example, the output of the above make target looks like:
+  ```bash
+  …
+  Testing monom of fgg/examples/oopsla20/fig3/functions.fgg against Go:
+  fgg=FF(){}
+  go =main.FF<>{}
+  fg =main.FF<>{}
+  …
+  ```
+  This shows the FGG evaluation result of the program, the `printf` output given by the official Go compiler for the monomorphised program, and the FG evaluation result for the monomorphised program.
 
-
----
-
-### Example run commands.
-
-*Warning*:  Type checking and _nomono_ errors raise a panic -- basic error
-messages can be found at the top of the stack trace.
-
-The following commands can be run from the `github.com/rhu1/fgg` directory.
-
-* **FG type check and evaluate**, with verbose printing.
-
-  `go run github.com/rhu1/fgg -eval=-1 -v fg/examples/oopsla20/fig1/functions.go`
-
-    * The argument to `-eval` is the number of steps to execute. `-1` means
-      run to termination (either a value, or a panic due to a failed type
-      assertion.)
-    * `-eval` includes a dynamic type preservation check (an error raises a panic).
-
-* **FGG type check and evaluate**, with verbose printing.  (Note the `-fgg`
-  flag.)
-
-  `go run github.com/rhu1/fgg -fgg -eval=-1 -v fgg/examples/oopsla20/fig3/functions.fgg`
-
-* **FGG type check, nonomo check and monomorphisation**, with verbose printing.
-
-  `go run github.com/rhu1/fgg -fgg -monomc=-- -v fgg/examples/oopsla20/fig3/functions.fgg`
-
-    * The argument to `-monomc` is a file location for the FG output.  `--`
-      means print the output.
-
-* **Simulate FGG against its FG monomorphisation**, with verbose printing.
-
-  `go run github.com/rhu1/fgg -test-monom -v
-  fgg/examples/oopsla20/fig3/functions.fgg`
-
-    * This includes dynamic checking of type preservation checking at both
-      levels, and of the monomorphisation correspondence at every evaluation
-      step.
+- We exclude one example, `fgg/examples/oopsla20/fig6/expression.fgg`, from the above make targets. This is because this example features `Sprintf` expressions. In Go, structs are printed as `{...}`, i.e., without the type name. However, [fgg][fgg] *does* print the type names, following the formal notation of the paper. Therefore, string comparison does not suffice. For this example, one may observe the correspondence manually, e.g.,
+  ```bash
+  mkdir -p tmp/fg/oopsla20/fig6
+  fgg -fgg -monomc=tmp/fg/oopsla20/fig6/expression.go fgg/examples/oopsla20/fig6/expression.fgg
+  go run github.com/rhu1/fgg -eval=-1 tmp/fg/oopsla20/fig6/expression.go
+  > "(Pos<>{Zero<>{}}+Pos<>{Pos<>{Zero<>{}}})"
+  go run github.com/rhu1/fgg/tmp/fg/oopsla20/fig6
+  > "({{}}+{{{}}})"
+  ```
 
 
----
+## (C) and (D) Type preservation, progress, and bisimulation via monomorphisation
 
-### Example `Makefile` tests.
+The [fgg][fgg] interpreter can monomorphise an FGG program, and reduce both the FGG and monomorphised programs in tandem. After each reduction step, the interpreter checks that the reduced FGG step, when monomorphised, yields the reduced monomorphised program.
+Note: the following commands assume `$FGG_HOME` as the present directory.
 
-The following commands assume `make install`, and that the resulting `fgg`
-binary is on the `$PATH`.
+- The [fgg][fgg] arguments for this feature look like:
+  ```bash
+  fgg -test-monom -eval=-1 -v fgg/examples/oopsla20/fig3/functions.fgg
+  ```
+  Without `-v`, the `-test-monom` command is silent, and simply returns on success.
 
-Running from the `github.com/rhu1/fgg` directory:
+- The make target below uses a similar command to the above on all examples:
+  ```bash
+  make simulate-monom
+  ```
 
-* `make test-monom-against-go`
+Details:
 
-  * Type checks and evaluates a series of FGG programs;
-  * _nomono_ checks and monomorphises each to an FG program;
-  * type checks and evaluates the FG program using `fgg`;
-  * compiles and executes the FG program using `go`;
-  * compares the results from `fgg` and `go`.
+- Type preservation (up to subtyping, as per Theorems 3.3 and 4.3) is checked at each step for both FGG and FG programs.
+- Progress (Theorems 3.4 and 4.5) is checked by ensuring both programs reduce in tandem, and that the final results are values.
+- The `-eval=-1` flag instructs [fgg][fgg] to reduce until termination. For non-terminating examples, `-eval` is manually set to some value that exercises a few rounds.
 
-* `make simulate-monom`
 
-  * Simulates a series of FGG programs against their FG monomorphisations.
+## (E) We repeat (C) and (D) for all FGG programs up to size 20[*](#subset-of-fgg)
 
-* `make test-all`
+In our benchmark, we enumerated all FGG programs up to size 20, using an *outdated* version of [fgg-gen][fgg-gen], and tested bisimulation, type preservation, and progress for the first 100 reduction steps. The version we ran returned some errors, which we manually verified were all erroneously generated programs, which were correctly rejected by the [fgg][fgg] prototype. We are currently rerunning our test suite with the version we’ve made available to you, in which we have fixed these problems in [fgg-gen][fgg-gen]. We suggest you try to replicate our results up to size 15, which should be doable within a reasonable amount of time:
+```bash
+cd $FGG_GEN_HOME && stack run -- --max-depth 15 --batch-size=100
+```
+This should not result in any errors. Note that if the `--num-processes` flag is not specified, [fgg-gen][fgg-gen] will create one process for each available CPU core.
 
-  * Run all tests.
+We ran the full benchmark up to size 20 on a (shared) Dell PowerEdge R815 with four 16 core Opteron CPUs, 256GB memory and 4TB of disk space. Therefore, we do not believe it is reasonable to expect the reviewers to be able to replicate this within the review period.
+
+Furthermore, we suggest you experiment with the verbosity flags, `-v` and `-V`. The first causes [fgg-gen][fgg-gen] to print the program source, the output, and the errors for *all* generated programs (not just those which cause errors). The second *additionally* passes the `-v` flag to [fgg][fgg], causing it to print out the step-by-step reduction trace.
+
+The [fgg-gen][fgg-gen] binary has a few more options, which you can play around with. For instance, you can set the maximum number of reduction steps, which is passed to [fgg][fgg]’s `-eval` flag, or you can change the way in which the program source is passed to [fgg][fgg], either inline, as part of the command, or via a temporary file.
+
+    Usage: fgg-gen [OPTION...]
+
+      -d NUM  --max-depth=NUM            Search depth (default is 15).
+      -n NUM  --max-steps=NUM            Maximum number of reduction steps (default is 100).
+      -b NUM  --batch-size=NUM           Number of tasks allocated to each thread (default is 100).
+      -J NUM  --num-processes=NUM        Number of processes to use (default is number of CPU cores).
+              --go-cmd=PATH              Path to go executable.
+              --go-args=ARGS             Arguments for go executable.
+              --no-inline                Don't pass programs inline.
+      -v                                 Show source, output, and error for all programs.
+      -V                                 As above, but also pass '-v' to go-cmd.
+              --min-method=NUM           Minimum number of methods in each program.
+              --min-field=NUM            Minimum number of fields in each program.
+              --max-empty-struct=NUM     Maximum number of empty struct declarations.
+              --max-empty-interface=NUM  Maximum number of empty interface declarations.
+      -h      --help                     Show this help.
+
+
+## Details of the Implementation
+
+We use [lazy-search][lazy-search] to enumerate all FGG programs up to a certain size. The [lazy-search][lazy-search] library lazily traverses the tree of untyped FGG programs, where branching nodes contains *partial* programs, represented as Haskell functions, and leaf nodes contain complete programs. When it finds that a partial program is cannot possibly be completed to a well-typed program, the entire branch of completions of that particular partial program is pruned.
+
+To use [lazy-search][lazy-search], we provide:
+
+- a datatype which represents well-scoped FGG programs, using deBruijn indices, in `Language.FGG.DeBruijn.Base`;
+- a type checker which rejects programs *eagerly*, i.e., evaluating as little of the program as possible, in`Language.FGG.DeBruijn.Typing`.
+
+To integrate our code with [fgg][fgg], we provide:
+
+- a datatype which represents nominal FGG programs, in `Language.FGG.Named`;
+- a conversion from well-scoped FGG to nominal FGG, in `Language.FGG.DeBruijn.ToNamed`.
+
+The module `Language.FGG.Common` provides some common definitions, such as type-level naturals, finite types, propositional equality, length-indexed vectors, and type constructors.
+
+To illustrate the principle, we briefly discuss a datatype representing the well-scoped lambda calculus:
+```haskell
+-- The datatype with *no* inhabitants.
+data Z
+
+-- The datatype with *one more* inhabitant than n.
+data S n = FZ | FS n
+
+-- Example: The number 2 as an inhabitant of the finite type with 4 inhabitants.
+f2of4 :: S (S (S (S Z)))
+f2of4 = FS (FS (FZ))
+
+-- Simple types.
+data Type
+  = I             -- Base type.
+  | Type :-> Type -- Function type.
+  deriving (Eq)
+
+-- The datatype of λ-terms with n free variables.
+data Term n
+  = Var n                      -- Variables choose one of the n variables.
+  | App (Term n) (Term n) Type -- The argument type is stored on applications.
+  | Lam (Term (S n))           -- Abstraction binds a new name, so (S n).
+
+-- The datatype of closed λ-terms.
+type ClosedTerm = Term Z
+
+-- Eager type checker:
+-- • Checks function and argument in parallel.
+-- • Only checks, doesn't infer types.
+checkType :: (n -> Type) -> Type -> Term n -> Bool
+checkType env ty (Var x) = env x == ty
+checkType env ty' (App f e ty) = checkType env (ty :-> ty') f && checkType env ty e
+checkType env (ty :-> ty') (Lam e) = checkType (ext ty1 env) ty2 e
+checkType env I (Lam _) = False
+
+-- Extends type environments.
+ext :: Type -> (n -> Type) -> (S n -> Type)
+ext ty env FZ = ty
+ext ty env (FS n) = env n
+```
+The well-scoped FGG implementation is, in essence, a much more complicated version of the code above.
+There are several differences between the well-scoped FGG implementation and the formal grammars in the paper. Below, we show a simplified version of the abstract syntax tree (AST) for well-scoped FGG, in pseudo-Haskell. The most notable differences are:
+- The well-scoped FGG implementation uses deBruijn indices, which means that the binding structure has to be explicit. Method and field names are bound at the top of the program. Type names are bound *after* their declaration. Type parameters and variables are bound locally. Binding sites have been labelled with `{*}` in the AST.
+- Recall that for λ-terms, we store the argument type on application nodes, to facilitate eager type checking. Analogously, we store any information that would normally be *inferred* in the AST. Type information is labelled with `[*]` in the AST.
+```haskell
+Prog    = FDecls
+
+
+FDecls  = NewF FDecls          -- {*} Binds a new field name.
+        | MDecls
+
+
+MDecls  = NewM MDecls          -- {*} Binds a new method name.
+        | TyDecls
+
+
+TyDecls = LetStruct            -- {*} Binds a new struct name, and defines a struct.
+          [Type]               -- {*} Binds type parameters, gives their bounds (in order).
+          [(FieldName, Type)]  -- Field names and types (does not bind new field names).
+          TyDecls
+
+        | LetInterface         -- {*} Binds a new interface name, and defines an interface.
+          [Type]               -- {*} Binds type parameters, gives their bounds (in order).
+          [Type]               -- Parent interfaces.
+          [(MethodName, MSig)] -- Method names and signatures.
+
+        | TmDecls
+
+
+MSig    = MSig
+          [Type]               -- {*} Binds a new interface name, and defines an interface.
+          Type                 -- [*] Type for which the method is defined.
+          [Type]               -- Argument types (in order).
+          Type                 -- Return type.
+
+
+TmDecls = LetMethod            -- Defines a method, does not bind a new method name.
+          [Type]               -- {*} Binds struct type parameters, gives their bounds.
+          StructName           -- Struct for which the method is defined.
+          MethodName           -- Method name.
+          [Type]               -- {*} Binds method type parameters, gives their bounds (in order).
+          [Type]               -- {*} Binds variables, gives their types (in order).
+          Type                 -- Return type.
+          Expr                 -- Method body.
+
+        | Main                 -- Defines main function.
+          Type                 -- [*] Type of the discarded value.
+          Expr                 -- Method body.
+
+
+Expr    = Var                  -- Variable.
+          VarName              -- Variable name.
+
+        | Struct               -- Structs.
+          StructName           -- Struct name.
+          [Type]               -- Struct type paramethers.
+          [(Expr, Type)]       -- Expression and [*] type for each field (in order).
+
+        | Select               -- Field selection.
+          Expr                 -- Struct expression.
+          Type                 -- [*] Expression type.
+          FieldName            -- Field name.
+
+        | Call                 -- Method calls.
+          Expr                 -- Expression.
+          Type                 -- [*] Expression type.
+          MethodName           -- Method name.
+          [Type]               -- Method type parameters.
+          [(Expr, Type)]       -- Expression and [*] type for each argument (in order).
+
+        | Assert               -- Type assertion.
+          Expr                 -- Expression.
+          Type                 -- [*] Expression type.
+          Type                 -- Asserted type.
+```
+The Haskell definition can be found in `Language.FGG.DeBruijn.Base`, including scope-checking, which is a good place to start if you wish to review the code.
+
+
+## Subset of FGG
+
+We target a *subset* of FGG programs, namely those programs where:
+
+- the program has *at least* one method and one field *somewhere* in it;
+- the program has *at most* one empty interface and *at most* two empty structs;
+- each method has *at most* two arguments;
+- each struct has *at most* two fields;
+- each interface has *at most* two members and two parents; and
+- each method or type constructor has *at most* to type parameters.
+
+Moreover, we disallow mutually recursive type definitions.
+These measures are taken in an effort to truncate the space of possible programs.
+
+# 3 Reproducing this Artifact
+
+## 3.1 Building with Docker
+
+You’ll need Docker, see [“Orientation and setup”][docker] in the Docker documentation.
+
+Copy the supplied Dockerfile to a new directory, and build the image with:
+```bash
+docker build --tag oopsla20-artifact27-fgg .
+```
+This builds both [fgg][fgg] and [fgg-gen][fgg-gen], and a few minor tests to check that everything is working.
+
+You can start a container with an interactive terminal session with:
+```bash
+docker run -it oopsla20-artifact27-fgg bash
+```
+The [fgg][fgg] build is located at `/go/src/github.com/rhu1/fgg`, and the [fgg-gen][fgg-gen] build is located at `/fgg-gen`.
+
+## 3.2 Building from Source
+
+## Building fgg
+
+To build [fgg][fgg], you’ll need a standard Go setup. That is [Go][golang] (version 1.11+), a Go workspace at `$GOPATH`, and a `src` directory in the workspace. You will also need the ANTLR v4 runtime for Go, see [“Installing ANTLRv4”][antlr-v4-tutorial]. The commands below assume the [fgg][fgg] source is located at `$FGG_HOME`, which should be `$GOPATH/src/github.com/rhu1/fgg`. The version installed in the artifact is this [commit][fgg]. You can either copy the source included with the artifact here, or clone from GitHub:
+```bash
+git clone https://github.com/rhu1/fgg $FGG_HOME
+cd $FGG_HOME
+git checkout 7b198a882fd6ff926a5a862868e0261ee40212e6
+```
+With the source in the right location, you need to copy over the pre-generated parsers (generated with ANTLR 4.7.1), and install the Go package:
+```bash
+cd $FGG_HOME && cp -r parser/pregen/fg parser/pregen/fgg parser
+go get -d $FGG_HOME
+go install $FGG_HOME
+go install $FGG_HOME/cmd/fg2fgg
+```
+Optionally, you can generate the parsers yourself, using some suitable `antlr4` command:
+```
+antlr4 -Dlanguage=Go -o parser/fg parser/FG.g4
+antlr4 -Dlanguage=Go -o parser/fgg parser/FGG.g4
+make install
+```
+This package has been tested using Go version 1.11.5+ on macOS Mojave and Catalina, and with Cygwin on Windows 10.
+
+See the fgg [README][fgg-readme] for more information about the implementation.  It is a minimal, “as expected” Go implementation of the systems presented in the paper. [ANTLR v4][antlr-v4] is used to generate parsers from the [FG][fgg-fg] and [FGG][fgg-fgg] grammars.
+
+
+## Building fgg-gen
+
+To build [fgg-gen][fgg-gen], you’ll need the [Haskell Tool Stack][stack]. The commands below assume the [fgg-gen][fgg-gen] source is located at `$FGG_GEN_HOME`, which you’re free to choose.
+You can either copy the source included with the artifact here, or clone from GitHub:
+```bash
+git clone https://github.com/wenkokke/fgg-gen $FGG_GEN_HOME
+cd $FGG_GEN_HOME
+git checkout 2beadebaf7d46b947c1deb7b6e4b2c0084251343
+```
+With the source in the right location, you need to install the Haskell dependencies, and build:
+```bash
+cd $FGG_GEN_HOME && stack build
+```
+
+[fgg]: https://github.com/rhu1/fgg/tree/7b198a882fd6ff926a5a862868e0261ee40212e6
+[fgg-fg]: https://github.com/rhu1/fgg/blob/7b198a882fd6ff926a5a862868e0261ee40212e6/parser/FG.g4
+[fgg-fgg]: https://github.com/rhu1/fgg/blob/7b198a882fd6ff926a5a862868e0261ee40212e6/parser/FGG.g4
+[fgg-readme]: https://github.com/rhu1/fgg/blob/7b198a882fd6ff926a5a862868e0261ee40212e6/README.md
+[antlr-v4]: https://github.com/antlr/antlr4
+[antlr-v4-tutorial]: https://blog.gopheracademy.com/advent-2017/parsing-with-antlr4-and-go/
+[fgg-gen]: https://github.com/wenkokke/fgg-gen/tree/2beadebaf7d46b947c1deb7b6e4b2c0084251343
+[smallcheck]: https://hackage.haskell.org/package/smallcheck
+[lazy-search]: https://hackage.haskell.org/package/lazy-search
+[docker]: https://docs.docker.com/get-started/
+[stack]: https://docs.haskellstack.org/en/stable/README/
+[golang]: https://golang.org/
+[CC-BY-NC-SA-4.0]: https://creativecommons.org/licenses/by-nc-sa/4.0/
+[CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/
+[PPL]: https://wiki.p2pfoundation.net/Peer_Production_License
