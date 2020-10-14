@@ -1,0 +1,109 @@
+//$ go run github.com/rhu1/fgg -fgg -eval=-1 -v fgg/examples/oopsla20/fig5/equality.fgg
+
+package main;
+
+import "fmt";
+
+/* Library: Bool, Int */
+
+type Bool(type ) interface {
+	Not(type )() Bool();
+	Equal(type )(that Bool()) Bool();
+	Cond(type a Any())(br Branches(a)) a;
+	And(type )(x Bool()) Bool()
+};
+type Branches(type a Any()) interface {
+	IfTT(type )() a;
+	IfFF(type )() a
+};
+type TT(type ) struct {};
+type FF(type ) struct {};
+func (this TT(type )) Not(type )() Bool() { return FF(){} };
+func (this FF(type )) Not(type )() Bool() { return TT(){} };
+func (this TT(type )) Equal(type )(that Bool()) Bool() { return that };
+func (this FF(type )) Equal(type )(that Bool()) Bool() { return that.Not()() };
+func (this TT(type )) Cond(type a Any())(br Branches(a)) a { return br.IfTT()() };
+func (this FF(type )) Cond(type a Any())(br Branches(a)) a { return br.IfFF()() };
+func (this TT(type )) And(type )(x Bool()) Bool() { return x };
+//func (this FF(type )) And(type )(x Bool) Bool() { return this };  // FIXME Bool
+func (this FF(type )) And(type )(x Bool()) Bool() { return this };
+
+type Int(type ) interface {
+	Inc(type )() Int();
+	Dec(type )() Int();
+	Add(type )(x Int()) Int();
+	Gt(type )(x Int()) Bool();
+	IsNeg(type )() Bool();
+	IsZero(type )() Bool();
+	Eq(type )(x Int()) Bool();
+	//Equal(type )(that Int) Bool()  // FIXME: panic: Type param Int unknown in context: string:string]
+	Equal(type )(that Int()) Bool()
+};
+
+type Zero(type ) struct {};
+func (x0 Zero(type )) Inc(type )() Int() { return Pos(){x0} };
+func (x0 Zero(type )) Dec(type )() Int() { return Neg(){x0} };
+func (x0 Zero(type )) Add(type )(x Int()) Int() { return x };
+func (x0 Zero(type )) Gt(type )(x Int()) Bool() { return x.IsNeg()() };
+func (x0 Zero(type )) IsNeg(type )() Bool() { return FF(){} };
+func (x0 Zero(type )) IsZero(type )() Bool() { return TT(){} };
+func (x0 Zero(type )) Eq(type )(x Int()) Bool() { return x.IsZero()() };
+
+type Pos(type ) struct { dec Int() };
+func (x0 Pos(type )) Inc(type )() Int() { return Pos(){x0} };
+func (x0 Pos(type )) Dec(type )() Int() { return x0.dec };
+func (x0 Pos(type )) Add(type )(x Int()) Int() { return x0.dec.Add()(x.Inc()()) };
+func (x0 Pos(type )) Gt(type )(x Int()) Bool() { return x0.dec.Gt()(x.Dec()()) };
+func (x0 Pos(type )) IsNeg(type )() Bool() { return FF(){} };
+func (x0 Pos(type )) IsZero(type )() Bool() { return FF(){} };
+func (x0 Pos(type )) Eq(type )(x Int()) Bool() { return x0.dec.Eq()(x) };
+
+type Neg(type ) struct { inc Int() };
+func (x0 Neg(type )) Inc(type )() Int() { return x0.inc };
+func (x0 Neg(type )) Dec(type )() Int() { return Neg(){x0} };
+func (x0 Neg(type )) Add(type )(x Int()) Int() { return x0.inc.Add()(x.Dec()()) };
+func (x0 Neg(type )) Gt(type )(x Int()) Bool() { return x0.inc.Gt()(x.Inc()()) };
+func (x0 Neg(type )) IsNeg(type )() Bool() { return TT(){} };
+func (x0 Neg(type )) IsZero(type )() Bool() { return FF(){} };
+func (x0 Neg(type )) Eq(type )(x Int()) Bool() { return x0.inc.Eq()(x) };
+
+type Ints(type ) struct {};
+func (d Ints(type )) _1(type )() Int() { return Pos(){Zero(){}} };
+func (d Ints(type )) _2(type )() Int() { return d._1()().Add()(d._1()()) };
+func (d Ints(type )) _3(type )() Int() { return d._2()().Add()(d._1()()) };
+func (d Ints(type )) __1(type )() Int() { return Neg(){Zero(){}} };
+func (d Ints(type )) __2(type )() Int() { return d.__1()().Add()(d.__1()()) };
+func (d Ints(type )) __3(type )() Int() { return d.__2()().Add()(d.__1()()) };
+func (d Ints(type )) __4(type )() Int() { return d.__3()().Add()(d.__1()()) };
+func (d Ints(type )) __5(type )() Int() { return d.__4()().Add()(d.__1()()) };
+
+
+/* Example code */
+
+type Any(type ) interface {};
+type Eq(type a Eq(a)) interface {
+	Equal(type )(that a) Bool()
+};
+func (this Zero(type )) Equal(type )(that Int()) Bool() {
+	return this.Eq()(that)
+};
+func (this Pos(type )) Equal(type )(that Int()) Bool() {
+	return this.Eq()(that)
+};
+func (this Neg(type )) Equal(type )(that Int()) Bool() {
+	return this.Eq()(that)
+};
+type Pair(type a Any(), b Any()) struct {
+	left a;
+	right b
+};
+func (this Pair(type a Eq(a), b Eq(b))) Equal(type )(that Pair(a,b)) Bool() {
+	return this.left.Equal()(that.left).And()(this.right.Equal()(that.right))
+};
+func main() {
+	/*var i, j Int = 1, 2
+	var p Pair(Int, Int) = Pair(Int, Int){i, j}
+	var _ bool = p.Equal(p) // true*/
+	fmt.Printf("%#v", Pair(Int(), Int()){Ints(){}._1()(), Ints(){}._2()()}.
+			Equal()(Pair(Int(), Int()){Ints(){}._1()(), Ints(){}._2()()}))
+}
