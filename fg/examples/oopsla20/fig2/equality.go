@@ -35,7 +35,8 @@ type Int interface {
 	Gt(x Int) Bool;
 	IsNeg() Bool;
 	IsZero() Bool;
-	Eq(x Int) Bool
+	Eq(x Int) Bool;  // ==
+	Equal(that Eq) Bool
 };
 
 type Zero struct {};
@@ -104,6 +105,6 @@ func main() {
 	/*var i, j Int = 1, 2
 	var p Pair = Pair{i, j}
 	var _ bool = p.Equal(p) // true*/
-	fmt.Printf("%#v", Pair{Ints{}._1().(Pos), Ints{}._2().(Pos)}.
-			Equal(Pair{Ints{}._1().(Pos), Ints{}._2().(Pos)}))
+	fmt.Printf("%#v", Pair{Ints{}._1(), Ints{}._2()}.
+			Equal(Pair{Ints{}._1(), Ints{}._2()}))
 }
