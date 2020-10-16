@@ -25,20 +25,8 @@ func (this FF(type )) Equal(type )(that Bool()) Bool() { return that.Not()() };
 func (this TT(type )) Cond(type a Any())(br Branches(a)) a { return br.IfTT()() };
 func (this FF(type )) Cond(type a Any())(br Branches(a)) a { return br.IfFF()() };
 func (this TT(type )) And(type )(x Bool()) Bool() { return x };
-//func (this FF(type )) And(type )(x Bool) Bool() { return this };  // FIXME Bool
+//func (this FF(type )) And(type )(x Bool) Bool() { return this };  // FIXME: Bool
 func (this FF(type )) And(type )(x Bool()) Bool() { return this };
-
-type Int(type ) interface {
-	Inc(type )() Int();
-	Dec(type )() Int();
-	Add(type )(x Int()) Int();
-	Gt(type )(x Int()) Bool();
-	IsNeg(type )() Bool();
-	IsZero(type )() Bool();
-	Eq(type )(x Int()) Bool();
-	//Equal(type )(that Int) Bool()  // FIXME: panic: Type param Int unknown in context: string:string]
-	Equal(type )(that Int()) Bool()
-};
 
 type Zero(type ) struct {};
 func (x0 Zero(type )) Inc(type )() Int() { return Pos(){x0} };
@@ -47,7 +35,7 @@ func (x0 Zero(type )) Add(type )(x Int()) Int() { return x };
 func (x0 Zero(type )) Gt(type )(x Int()) Bool() { return x.IsNeg()() };
 func (x0 Zero(type )) IsNeg(type )() Bool() { return FF(){} };
 func (x0 Zero(type )) IsZero(type )() Bool() { return TT(){} };
-func (x0 Zero(type )) Eq(type )(x Int()) Bool() { return x.IsZero()() };
+func (x0 Zero(type )) Ieq(type )(x Int()) Bool() { return x.IsZero()() };
 
 type Pos(type ) struct { dec Int() };
 func (x0 Pos(type )) Inc(type )() Int() { return Pos(){x0} };
@@ -56,7 +44,7 @@ func (x0 Pos(type )) Add(type )(x Int()) Int() { return x0.dec.Add()(x.Inc()()) 
 func (x0 Pos(type )) Gt(type )(x Int()) Bool() { return x0.dec.Gt()(x.Dec()()) };
 func (x0 Pos(type )) IsNeg(type )() Bool() { return FF(){} };
 func (x0 Pos(type )) IsZero(type )() Bool() { return FF(){} };
-func (x0 Pos(type )) Eq(type )(x Int()) Bool() { return x0.dec.Eq()(x) };
+func (x0 Pos(type )) Ieq(type )(x Int()) Bool() { return x0.dec.Ieq()(x.Dec()()) };
 
 type Neg(type ) struct { inc Int() };
 func (x0 Neg(type )) Inc(type )() Int() { return x0.inc };
@@ -65,7 +53,7 @@ func (x0 Neg(type )) Add(type )(x Int()) Int() { return x0.inc.Add()(x.Dec()()) 
 func (x0 Neg(type )) Gt(type )(x Int()) Bool() { return x0.inc.Gt()(x.Inc()()) };
 func (x0 Neg(type )) IsNeg(type )() Bool() { return TT(){} };
 func (x0 Neg(type )) IsZero(type )() Bool() { return FF(){} };
-func (x0 Neg(type )) Eq(type )(x Int()) Bool() { return x0.inc.Eq()(x) };
+func (x0 Neg(type )) Ieq(type )(x Int()) Bool() { return x0.inc.Ieq()(x.Inc()()) };
 
 type Ints(type ) struct {};
 func (d Ints(type )) _1(type )() Int() { return Pos(){Zero(){}} };
@@ -84,14 +72,25 @@ type Any(type ) interface {};
 type Eq(type a Eq(a)) interface {
 	Equal(type )(that a) Bool()
 };
+type Int(type ) interface {
+	Inc(type )() Int();
+	Dec(type )() Int();
+	Add(type )(x Int()) Int();
+	Gt(type )(x Int()) Bool();
+	IsNeg(type )() Bool();
+	IsZero(type )() Bool();
+	Ieq(type )(x Int()) Bool();
+	//Equal(type )(that Int) Bool()  // FIXME: panic: Type param Int unknown in context: string:string]
+	Equal(type )(that Int()) Bool()
+};
 func (this Zero(type )) Equal(type )(that Int()) Bool() {
-	return this.Eq()(that)
+	return this.Ieq()(that)
 };
 func (this Pos(type )) Equal(type )(that Int()) Bool() {
-	return this.Eq()(that)
+	return this.Ieq()(that)
 };
 func (this Neg(type )) Equal(type )(that Int()) Bool() {
-	return this.Eq()(that)
+	return this.Ieq()(that)
 };
 type Pair(type a Any(), b Any()) struct {
 	left a;

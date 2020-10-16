@@ -1,5 +1,5 @@
-//$ go run github.com/rhu1/fgg -fgg -monomc=tmp/fg/oopsla20/fig8/nomono.go -v fgg/examples/oopsla20/fig8/nomono.fgg
-//$ go run github.com/rhu1/fgg -eval=-1 -v tmp/fg/oopsla20/fig8/nomono.go
+//$ go run github.com/rhu1/fgg -fgg -monomc=tmp/fg/oopsla20/fig10/nomono.go -v fgg/examples/oopsla20/fig10/nomono.fgg
+//$ go run github.com/rhu1/fgg -eval=-1 -v tmp/fg/oopsla20/fig10/nomono.go
 
 package main;
 

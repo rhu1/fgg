@@ -28,17 +28,6 @@ func (this FF) Equal(that Eq) Bool { return that.(Bool).Not() };
 func (this FF) Cond(br Branches) Any { return br.IfFF() };
 func (this FF) And(x Bool) Bool { return this };
 
-type Int interface {
-	Inc() Int;
-	Dec() Int;
-	Add(x Int) Int;
-	Gt(x Int) Bool;
-	IsNeg() Bool;
-	IsZero() Bool;
-	Eq(x Int) Bool;  // ==
-	Equal(that Eq) Bool
-};
-
 type Zero struct {};
 func (x0 Zero) Inc() Int { return Pos{x0} };
 func (x0 Zero) Dec() Int { return Neg{x0} };
@@ -46,7 +35,7 @@ func (x0 Zero) Add(x Int) Int { return x };
 func (x0 Zero) Gt(x Int) Bool { return x.IsNeg() };
 func (x0 Zero) IsNeg() Bool { return FF{} };
 func (x0 Zero) IsZero() Bool { return TT{} };
-func (x0 Zero) Eq(x Int) Bool { return x.IsZero() };
+func (x0 Zero) Ieq(x Int) Bool { return x.IsZero() };
 
 type Pos struct { dec Int };
 func (x0 Pos) Inc() Int { return Pos{x0} };
@@ -55,7 +44,7 @@ func (x0 Pos) Add(x Int) Int { return x0.dec.Add(x.Inc()) };
 func (x0 Pos) Gt(x Int) Bool { return x0.dec.Gt(x.Dec()) };
 func (x0 Pos) IsNeg() Bool { return FF{} };
 func (x0 Pos) IsZero() Bool { return FF{} };
-func (x0 Pos) Eq(x Int) Bool { return x0.dec.Eq(x) };
+func (x0 Pos) Ieq(x Int) Bool { return x0.dec.Ieq(x.Dec()) };
 
 type Neg struct { inc Int };
 func (x0 Neg) Inc() Int { return x0.inc };
@@ -64,7 +53,7 @@ func (x0 Neg) Add(x Int) Int { return x0.inc.Add(x.Dec()) };
 func (x0 Neg) Gt(x Int) Bool { return x0.inc.Gt(x.Inc()) };
 func (x0 Neg) IsNeg() Bool { return TT{} };
 func (x0 Neg) IsZero() Bool { return FF{} };
-func (x0 Neg) Eq(x Int) Bool { return x0.inc.Eq(x) };
+func (x0 Neg) Ieq(x Int) Bool { return x0.inc.Ieq(x.Inc()) };
 
 type Ints struct {};
 func (d Ints) _1() Int { return Pos{Zero{}} };
@@ -85,14 +74,24 @@ type Any interface {};
 type Eq interface {
 	Equal(that Eq) Bool
 };
+type Int interface {
+	Inc() Int;
+	Dec() Int;
+	Add(x Int) Int;
+	Gt(x Int) Bool;
+	IsNeg() Bool;
+	IsZero() Bool;
+	Ieq(x Int) Bool;  // ==
+	Equal(that Eq) Bool
+};
 func (this Zero) Equal(that Eq) Bool {
-	return this.Eq(that.(Int))
+	return this.Ieq(that.(Int))
 };
 func (this Pos) Equal(that Eq) Bool {
-	return this.Eq(that.(Int))
+	return this.Ieq(that.(Int))
 };
 func (this Neg) Equal(that Eq) Bool {
-	return this.Eq(that.(Int))
+	return this.Ieq(that.(Int))
 };
 type Pair struct {
 	left Eq;
