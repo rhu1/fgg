@@ -17,6 +17,13 @@ var _ = strings.Compare
 
 func NewVariable(id Name) Variable { return Variable{id} }
 
+/*func NewStructLit(u_S TNamed, es []FGGExpr) StructLit         { return StructLit{u_S, es} }
+func NewSelect(e FGGExpr, f Name) Select                      { return Select{e, f} }
+func NewCall(e FGGExpr, m Name, us []Type, es []FGGExpr) Call { return Call{e, m, us, es} }
+func NewAssert(e FGGExpr, t Type) Assert                      { return Assert{e, t} }
+func NewString(v string) StringLit                            { return StringLit{v} }
+func NewSprintf(format string, args []FGGExpr) Sprintf        { return Sprintf{format, args} }*/
+
 /* Variable */
 
 type Variable struct {
@@ -282,7 +289,7 @@ type Call struct {
 
 var _ FGGExpr = Call{}
 
-func (c Call) GetRecv() FGGExpr   { return c.e_recv }
+func (c Call) GetRecv() FGGExpr   { return c.e_recv } // Called GetReceiver in fg
 func (c Call) GetMethod() Name    { return c.meth }
 func (c Call) GetTArgs() []Type   { return c.t_args }
 func (c Call) GetArgs() []FGGExpr { return c.args }
@@ -577,13 +584,11 @@ func (s StringLit) CanEval(ds []Decl) bool {
 }
 
 func (s StringLit) String() string {
-	//return "\"" + s.val + "\""
-	return s.val
+	return "\"" + s.val + "\""
 }
 
 func (s StringLit) ToGoString(ds []Decl) string {
-	//return "\"" + s.val + "\""
-	return s.val
+	return "\"" + s.val + "\""
 }
 
 type Sprintf struct {
@@ -625,9 +630,13 @@ func (s Sprintf) Eval(ds []Decl) (FGGExpr, string) {
 	} else {
 		cast := make([]interface{}, len(args))
 		for i := range args {
-			cast[i] = args[i]
+			cast[i] = args[i] // N.B. inside fgg this is, e.g., a StructLit (not the struct itself, as in native Go)
 		}
-		return StringLit{fmt.Sprintf(s.format, cast...)}, "Sprintf"
+		template := s.format[1 : len(s.format)-1] // Remove surrounding quote chars
+		str := fmt.Sprintf(template, cast...)
+		str = strings.ReplaceAll(str, "\"", "") // HACK because StringLit.String() includes quotes
+		// FIXME: currently user remplates cannot include xplicit quote chars
+		return StringLit{str}, "Sprintf"
 	}
 }
 

@@ -16,6 +16,7 @@ help:
 	@echo "Look inside the Makefile for more specific test targets."
 	@echo "To bypass the ANTLR parser generation, try:"
 	@echo "        make install-pregen-parser"
+	@echo ""
 
 
 # cf. `go run` is like `build`, doesn't use caching (unlike `install`)
@@ -44,8 +45,10 @@ install-pregen-parser:
 
 .PHONY: clean-install
 clean-install: 
-	rm -f ../../../../bin/fgg
-	rm -f ../../../../bin/fg2fgg
+	curr=`pwd` && \
+	cd $$(dirname $$(which fgg)) && \
+	rm -f fgg && \
+	rm -f fg2fgg
 	rm -f parser/fg/*
 	rm -f parser/fgg/*
 
@@ -89,30 +92,31 @@ test-fg-examples:
 	$(call eval_fg,fg/examples/misc/not/not.go,-1)
 
 	$(call eval_fg,fg/examples/oopsla20/fig1/functions.go,-1)
-	$(call eval_fg,fg/examples/oopsla20/fig2/lists.go,-1)
-	$(call eval_fg,fg/examples/oopsla20/fig7/monom.go,-1)
+	$(call eval_fg,fg/examples/oopsla20/fig2/equality.go,-1)
+	$(call eval_fg,fg/examples/oopsla20/fig3/lists.go,-1)
+	$(call eval_fg,fg/examples/oopsla20/fig9/monom.go,-1)
 
 
 # cf. [cmd] > output.txt
 #     diff output.txt correct.txt
 .PHONY: test-fg-examples-against-go
 test-fg-examples-against-go:
-		@$(call test_fg_against_go,fg/examples/misc/booleans/booleans.go)
-		@$(call test_fg_against_go,fg/examples/misc/compose/compose.go)
-		@$(call test_fg_against_go,fg/examples/misc/equal/equal.go)
-		@$(call test_fg_against_go,fg/examples/misc/incr/incr.go)
-		@$(call test_fg_against_go,fg/examples/misc/map/map.go)
-		@$(call test_fg_against_go,fg/examples/misc/not/not.go)
+	@$(call test_fg_against_go,fg/examples/misc/booleans/booleans.go)
+	@$(call test_fg_against_go,fg/examples/misc/compose/compose.go)
+	@$(call test_fg_against_go,fg/examples/misc/equal/equal.go)
+	@$(call test_fg_against_go,fg/examples/misc/incr/incr.go)
+	@$(call test_fg_against_go,fg/examples/misc/map/map.go)
+	@$(call test_fg_against_go,fg/examples/misc/not/not.go)
 
-		@$(call test_fg_against_go,fg/examples/oopsla20/fig1/functions.go)
-		@$(call test_fg_against_go,fg/examples/oopsla20/fig2/lists.go)
-		@$(call test_fg_against_go,fg/examples/oopsla20/fig7/monom.go)
+	@$(call test_fg_against_go,fg/examples/oopsla20/fig1/functions.go)
+	@$(call test_fg_against_go,fg/examples/oopsla20/fig2/equality.go)
+	@$(call test_fg_against_go,fg/examples/oopsla20/fig3/lists.go)
+	@$(call test_fg_against_go,fg/examples/oopsla20/fig9/monom.go)
 
 
 .PHONY: test-fgg
-#test-fgg: test-fgg-unit test-fgg-examples
-test-fgg: test-fgg-unit test-nomono-bad simulate-monom simulate-oblit
-# add monom, oblit?
+test-fgg: test-fgg-unit test-fgg-examples test-nomono-bad simulate-monom simulate-oblit
+#test-fgg-examples executes nomono examples (e.g., oopsla20/fig10/nomono.fgg)
 
 
 .PHONY: test-fgg-unit
@@ -152,15 +156,18 @@ test-fgg-examples:
 	$(call eval_fgg,fgg/examples/monom/misc/mono-ok/param-meth-cast.go,2)
 	$(call eval_fgg,fgg/examples/monom/misc/mono-ok/poly-rec-iface.go,10)
 
-	$(call eval_fgg,fgg/examples/oopsla20/fig3/functions.fgg,-1)
-	$(call eval_fgg,fgg/examples/oopsla20/fig4/lists.fgg,-1)
-	$(call eval_fgg,fgg/examples/oopsla20/fig5/graph.fgg,-1)
-	$(call eval_fgg,fgg/examples/oopsla20/fig6/expression.fgg,-1)
+	$(call eval_fgg,fgg/examples/oopsla20/fig4/functions.fgg,-1)
+	$(call eval_fgg,fgg/examples/oopsla20/fig5/equality.fgg,-1)
+	$(call eval_fgg,fgg/examples/oopsla20/fig6/lists.fgg,-1)
+	$(call eval_fgg,fgg/examples/oopsla20/fig7/graph.fgg,-1)
+	$(call eval_fgg,fgg/examples/oopsla20/fig8/expression.fgg,-1)
+	$(call eval_fgg,fgg/examples/oopsla20/fig10/nomono.fgg,-1)
 
 
 .PHONY: test-nomono-bad
 test-nomono-bad:
 	@$(call nomono_bad,fgg/examples/monom/box/box.fgg)
+	@$(call nomono_bad,fgg/examples/oopsla20/fig10/nomono.fgg)
 
 	@$(call nomono_bad,fgg/examples/monom/misc/mono-ko/incompleteness-subtyping.go)
 	@$(call nomono_bad,fgg/examples/monom/misc/mono-ko/monom-imp.go)
@@ -203,10 +210,11 @@ simulate-monom:
 	$(call sim_monom,fgg/examples/monom/misc/mono-ok/param-meth-cast.go,2)
 	$(call sim_monom,fgg/examples/monom/misc/mono-ok/poly-rec-iface.go,10)
 
-	$(call sim_monom,fgg/examples/oopsla20/fig3/functions.fgg,-1)
-	$(call sim_monom,fgg/examples/oopsla20/fig4/lists.fgg,-1)
-	$(call sim_monom,fgg/examples/oopsla20/fig5/graph.fgg,-1)
-#$(call sim_monom,fgg/examples/oopsla20/fig6/expression.fgg,-1)
+	$(call sim_monom,fgg/examples/oopsla20/fig4/functions.fgg,-1)
+	$(call sim_monom,fgg/examples/oopsla20/fig5/equality.fgg,-1)
+	$(call sim_monom,fgg/examples/oopsla20/fig6/lists.fgg,-1)
+	$(call sim_monom,fgg/examples/oopsla20/fig7/graph.fgg,-1)
+	$(call sim_monom,fgg/examples/oopsla20/fig8/expression.fgg,-1)
 
 
 # Non-terminating examples tested by simulate-monom
@@ -241,10 +249,11 @@ test-monom-against-go:
 
 	#mkdir -p tmp/test/fg/monom/misc/mono-ko
 
-	@$(call eval_monom_fgg_against_go,fgg/examples/oopsla20/fig3/functions.fgg,tmp/test/fg/oopsla20/functions,functions.go)
-	@$(call eval_monom_fgg_against_go,fgg/examples/oopsla20/fig4/lists.fgg,tmp/test/fg/oopsla20/lists,lists.go)
-	@$(call eval_monom_fgg_against_go,fgg/examples/oopsla20/fig5/graph.fgg,tmp/test/fg/oopsla20/graph,graph.go)
-#@$(call eval_monom_fgg_against_go,fgg/examples/oopsla20/fig6/expression.fgg,tmp/test/fg/oopsla20/expression,expression.go)  #go= "({{{}}}+{{}})" 
+	@$(call eval_monom_fgg_against_go,fgg/examples/oopsla20/fig4/functions.fgg,tmp/test/fg/oopsla20/functions,functions.go)
+	@$(call eval_monom_fgg_against_go,fgg/examples/oopsla20/fig5/equality.fgg,tmp/test/fg/oopsla20/functions,functions.go)
+	@$(call eval_monom_fgg_against_go,fgg/examples/oopsla20/fig6/lists.fgg,tmp/test/fg/oopsla20/lists,lists.go)
+	@$(call eval_monom_fgg_against_go,fgg/examples/oopsla20/fig7/graph.fgg,tmp/test/fg/oopsla20/graph,graph.go)
+#@$(call eval_monom_fgg_against_go,fgg/examples/oopsla20/fig8/expression.fgg,tmp/test/fg/oopsla20/expression,expression.go)  #basic Go prints structs "{...}", but F(G)G includes struct names, so string equality doesn't work
 
 .PHONY: clean-test-monom-against-go
 clean-test-monom-against-go:
@@ -344,7 +353,7 @@ define eval_monom_fgg
 	echo "fgg="$$RES; \
 	EXP=`fgg -eval=$(2) $(3)/$(4)`; \
 	EXIT=$$?; if [ $$EXIT -ne 0 ]; then exit $$EXIT; fi; \
-	echo "fg= "$$EXP
+	echo "fg ="$$EXP
 endef
 
 
@@ -355,9 +364,9 @@ define eval_monom_fgg_against_go
 	EXIT=$$?; if [ $$EXIT -ne 0 ]; then exit $$EXIT; fi; \
 	echo "fgg="$$RES; \
 	EXP=`go run $(2)/$(3)`; \
-	echo "go= "$$EXP; \
+	echo "go ="$$EXP; \
 	ACT=`fgg -eval=-1 -printf $(2)/$(3)`; \
-	echo "fg= "$$ACT; \
+	echo "fg ="$$ACT; \
 	if [ "$$EXP" != "$$ACT" ]; then \
 		echo "Not equal."; \
 		exit 1; \

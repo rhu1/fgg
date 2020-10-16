@@ -1,8 +1,9 @@
-//$ go run github.com/rhu1/fgg -fgg -eval=-1 -v fgg/examples/oopsla20/fig4/lists.fgg
+//$ go run github.com/rhu1/fgg -fgg -eval=-1 -v fgg/examples/oopsla20/fig8/expression.fgg
 
 package main;
 
 import "fmt";
+
 
 /* Library: Bool, Int */
 
@@ -27,18 +28,21 @@ func (this FF(type )) Cond(type a Any())(br Branches(a)) a { return br.IfFF()() 
 type Int(type ) interface {
 	Inc(type )() Int();
 	Dec(type )() Int();
+	Equal(type )(x Int()) Bool();
+	EqualZero(type )() Bool();
+	EqualNonZero(type )(x Int()) Bool();
 	Add(type )(x Int()) Int();
 	Gt(type )(x Int()) Bool();
 	IsNeg(type )() Bool();
-
-	Equal(type )(x Int()) Bool();
-	EqualZero(type )() Bool();
-	EqualNonZero(type )(x Int()) Bool()
+	String(type )() string  // !!!
 };
 
 type Zero(type ) struct {};
 func (x0 Zero(type )) Inc(type )() Int() { return Pos(){x0} };
 func (x0 Zero(type )) Dec(type )() Int() { return Neg(){x0} };
+func (x0 Zero(type )) Equal(type )(x Int()) Bool() { return x.EqualZero()() };
+func (x0 Zero(type )) EqualZero(type )() Bool() { return TT(){} };
+func (x0 Zero(type )) EqualNonZero(type )(x Int()) Bool() { return FF(){} };
 func (x0 Zero(type )) Add(type )(x Int()) Int() { return x };
 func (x0 Zero(type )) Gt(type )(x Int()) Bool() { return x.IsNeg()() };
 func (x0 Zero(type )) IsNeg(type )() Bool() { return FF(){} };
@@ -46,6 +50,9 @@ func (x0 Zero(type )) IsNeg(type )() Bool() { return FF(){} };
 type Pos(type ) struct { dec Int() };
 func (x0 Pos(type )) Inc(type )() Int() { return Pos(){x0} };
 func (x0 Pos(type )) Dec(type )() Int() { return x0.dec };
+func (x0 Pos(type )) Equal(type )(x Int()) Bool() { return x0.EqualNonZero()(x) };
+func (x0 Pos(type )) EqualZero(type )() Bool() { return FF(){} };
+func (x0 Pos(type )) EqualNonZero(type )(x Int()) Bool() { return x.Equal()(x0.dec) };
 func (x0 Pos(type )) Add(type )(x Int()) Int() { return x0.dec.Add()(x.Inc()()) };
 func (x0 Pos(type )) Gt(type )(x Int()) Bool() { return x0.dec.Gt()(x.Dec()()) };
 func (x0 Pos(type )) IsNeg(type )() Bool() { return FF(){} };
@@ -53,6 +60,9 @@ func (x0 Pos(type )) IsNeg(type )() Bool() { return FF(){} };
 type Neg(type ) struct { inc Int() };
 func (x0 Neg(type )) Inc(type )() Int() { return x0.inc };
 func (x0 Neg(type )) Dec(type )() Int() { return Neg(){x0} };
+func (x0 Neg(type )) Equal(type )(x Int()) Bool() { return x0.EqualNonZero()(x) };
+func (x0 Neg(type )) EqualZero(type )() Bool() { return FF(){} };
+func (x0 Neg(type )) EqualNonZero(type )(x Int()) Bool() { return x.Equal()(x0.inc) };
 func (x0 Neg(type )) Add(type )(x Int()) Int() { return x0.inc.Add()(x.Dec()()) };
 func (x0 Neg(type )) Gt(type )(x Int()) Bool() { return x0.inc.Gt()(x.Inc()()) };
 func (x0 Neg(type )) IsNeg(type )() Bool() { return TT(){} };
@@ -71,67 +81,75 @@ func (d Ints(type )) __4(type )() Int() { return d.__3()().Add()(d.__1()()) };
 func (d Ints(type )) __5(type )() Int() { return d.__4()().Add()(d.__1()()) };
 
 
+/* Assumption */
+
+// N.B. monomorphises to "String<>", not "String" -- see Num().String below
+func (x0 Zero(type )) String(type )() string { return fmt.Sprintf("%v", x0) };
+func (x0 Pos(type )) String(type )() string { return fmt.Sprintf("%v", x0) };
+func (x0 Neg(type )) String(type )() string { return fmt.Sprintf("%v", x0) };
+  /* N.B. incompatible with test-monom-against-go textual output check,
+  	 because %v in Go just prints "{}", while F(G)G StructLit String()
+  	 prints the type name.  Similarly for "%#v", Go prints the struct name,
+  	 but F(G)G this includes the StructLit struct itself. */
+
+
 /* Prev. example */
 
 type Any(type ) interface {};
-type Function(type a Any(), b Any()) interface {
-	Apply(type )(x a) b
-};
-type incr(type ) struct { n Int() };
-func (this incr(type )) Apply(type )(x Int()) Int() {
-	return x.Add()(this.n)
-};
-type pos(type ) struct {};
-func (this pos(type )) Apply(type )(x Int()) Bool() {
-	return x.Gt()(Zero(){})
-};
 
 
 /* Example code */
 
-type Eq(type a Eq(a)) interface {
-	Equal(type )(that a) Bool()
+type Evaler(type ) interface {
+  Eval(type )() Int()
 };
-/*func (this int) Equal(that int) bool {
-	return this == that
-};
-func (this bool) Equal(that bool) bool {
-	return this == that
-};*/
-func (x0 Zero(type )) Equal(type )(x Int()) Bool() { return x.EqualZero()() };
-func (x0 Zero(type )) EqualZero(type )() Bool() { return TT(){} };
-func (x0 Zero(type )) EqualNonZero(type )(x Int()) Bool() { return FF(){} };
-func (x0 Pos(type )) Equal(type )(x Int()) Bool() { return x0.EqualNonZero()(x) };
-func (x0 Pos(type )) EqualZero(type )() Bool() { return FF(){} };
-func (x0 Pos(type )) EqualNonZero(type )(x Int()) Bool() { return x.Equal()(x0.dec) };
-func (x0 Neg(type )) Equal(type )(x Int()) Bool() { return x0.EqualNonZero()(x) };
-func (x0 Neg(type )) EqualZero(type )() Bool() { return FF(){} };
-func (x0 Neg(type )) EqualNonZero(type )(x Int()) Bool() { return x.Equal()(x0.inc) };
 
-type List(type a Any()) interface {
-	Map(type b Any())(f Function(a, b)) List(b)
+type Num(type ) struct {
+  value Int()
 };
-type Nil(type a Any()) struct {};
-type Cons(type a Any()) struct {
-	head a;
-	tail List(a)
+
+func (e Num(type )) Eval(type )() Int() {
+  return e.value
 };
-func (xs Nil(type a Any())) 
-			Map(type b Any())(f Function(a, b)) List(b) {
-	return Nil(b){}
+
+type Plus(type a Any()) struct {
+  left a;
+  right a
 };
-func (xs Cons(type a Any())) 
-			Map(type b Any())(f Function(a, b)) List(b) {
-	return Cons(b){f.Apply()(xs.head), xs.tail.Map(b)(f)}
+
+func (e Plus(type a Evaler())) Eval(type )() Int() {
+  return e.left.Eval()().Add()(e.right.Eval()())
+};
+
+
+type Stringer(type ) interface {
+  String(type )() string
+};
+
+func (e Num(type )) String(type )() string {
+  return 
+  	  //fmt.Sprintf("%d", e.value)
+  	  fmt.Sprintf("%v", e.value.String()())  // N.B. Monormorphises to String<>(), not just String() -- cf. above
+  /* N.B. similar issue to above, %#v here prints the StringLit in F(G)G vs.
+   * the actual string in Go */
+};
+
+func (e Plus(type a Stringer())) String(type )() string {
+  return fmt.Sprintf("(%s+%s)",
+  		e.left.String()(), e.right.String()())
+};
+
+type Expr(type ) interface {
+  Evaler();
+  Stringer()
 };
 
 
 func main() {
-	/*var xs List(int) =
-			Cons(int){3, Cons(int){6, Nil(int){}}}
-	var ys List(int) = xs.Map(int)(incr{-5})
-	var zs List(bool) = ys.Map(bool)(pos{})*/
-	fmt.Printf("%#v", Cons(Int()){Ints(){}._3()(), Cons(Int()){Ints(){}._6()(), Nil(Int()){}}}.  
-				Map(Int())(incr(){Ints(){}.__5()()}).  
-				Map(Bool())(pos(){}))
+  /*var e Expr = Plus(Expr){Num{1}, {Num{2}}
+	var v Int = e.Eval() // 3
+	var s string = e.String() //"(1+2)"*/
+  //_ = Plus(Expr()){Num(){Ints(){}._1()()}, Num(){Ints(){}._2()()}}.Eval()()
+  fmt.Printf("%#v", Plus(Expr()){Num(){Ints(){}._1()()}, Num(){Ints(){}._2()()}}.String()())
 }
+

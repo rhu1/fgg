@@ -1,4 +1,5 @@
-//$ go run github.com/rhu1/fgg -fgg -eval=-1 -v fgg/examples/oopsla20/fig6/expression.fgg
+//$ go run github.com/rhu1/fgg -fgg -monomc=tmp/fg/oopsla20/fig10/nomono.go -v fgg/examples/oopsla20/fig10/nomono.fgg
+//$ go run github.com/rhu1/fgg -eval=-1 -v tmp/fg/oopsla20/fig10/nomono.go
 
 package main;
 
@@ -33,8 +34,7 @@ type Int(type ) interface {
 	EqualNonZero(type )(x Int()) Bool();
 	Add(type )(x Int()) Int();
 	Gt(type )(x Int()) Bool();
-	IsNeg(type )() Bool();
-	String(type )() string  // !!!
+	IsNeg(type )() Bool()
 };
 
 type Zero(type ) struct {};
@@ -81,67 +81,32 @@ func (d Ints(type )) __4(type )() Int() { return d.__3()().Add()(d.__1()()) };
 func (d Ints(type )) __5(type )() Int() { return d.__4()().Add()(d.__1()()) };
 
 
-/* Assumption */
-
-func (x0 Zero(type )) String(type )() string { return fmt.Sprintf("%v", x0) };
-func (x0 Pos(type )) String(type )() string { return fmt.Sprintf("%v", x0) };
-func (x0 Neg(type )) String(type )() string { return fmt.Sprintf("%v", x0) };
-
-
-/* Prev. example */
+/* Example code */
 
 type Any(type ) interface {};
 
-
-/* Example code */
-
-type Evaler(type ) interface {
-  Eval(type )() Int()
+type Box(type a Any()) struct {
+	value a
 };
 
-type Num(type ) struct {
-  value Int()
+type nestBr(type a Any()) struct {
+	box Box(a);
+	n Int()
+};
+func (this nestBr(type a Any())) IfTT(type )() Any() { return this.box };
+func (this nestBr(type a Any())) IfFF(type )() Any() {
+	return Box(Box(a)){this.box}.Nest()(this.n.Add()(Ints(){}.__1()()))  // Cf. below
+	//return Box(Any()){this.box}.Nest()(this.n.Add()(Ints(){}._1()()))
 };
 
-func (e Num(type )) Eval(type )() Int() {
-  return e.value
-};
-
-type Plus(type a Any()) struct {
-  left a;
-  right a
-};
-
-func (e Plus(type a Evaler())) Eval(type )() Int() {
-  return e.left.Eval()().Add()(e.right.Eval()())
+func (this Box(type a Any())) Nest(type )(n Int()) Any() {
+	return n.EqualZero()().Cond(Any())(nestBr(a){this, n})
 };
 
 
-type Stringer(type ) interface {
-  String(type )() string
-};
-
-func (e Num(type )) String(type )() string {
-  //return fmt.Sprintf("%d", e.value)
-  return fmt.Sprintf("%v", e.value)
-};
-
-func (e Plus(type a Stringer())) String(type )() string {
-  return fmt.Sprintf("(%s+%s)",  // CHECKME: omit FGG StringLit quotes? 
-  		e.left.String()(), e.right.String()())
-};
-
-type Expr(type ) interface {
-  Evaler();
-  Stringer()
-};
-
+type D(type ) struct { };
 
 func main() {
-  /*var e Expr = Plus(Expr){Num{1}, {Num{2}}
-	var v Int = e.Eval() // 3
-	var s string = e.String() //"(1+2)"*/
-  //_ = Plus(Expr()){Num(){Ints(){}._1()()}, Num(){Ints(){}._2()()}}.Eval()()
-  fmt.Printf("%#v", Plus(Expr()){Num(){Ints(){}._1()()}, Num(){Ints(){}._2()()}}.String()())
+	fmt.Printf("%#v", Box(D()){D(){}}.Nest()(Ints(){}._3()()))
 }
 

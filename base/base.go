@@ -29,7 +29,7 @@ type Expr interface {
 	AstNode
 	IsValue() bool
 	CanEval(ds []Decl) bool      // More like, canReduce -- basically, bad assert returns false, cf. IsValue()
-	ToGoString(ds []Decl) string // Basically, type T printed as main.T  // TODO (cf. %#v	Go-syntax value representation)
+	ToGoString(ds []Decl) string // Basically, type T printed as main.T  // TODO (cf. %#v, Go-syntax value representation)
 }
 
 /* Types */
