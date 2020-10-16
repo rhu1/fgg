@@ -9,7 +9,7 @@
 help:
 	@echo "Example targets:"
 	@echo "        make install         Install fgg to bin dir of Go workspace"
-	@echo "                             (Assumes parsers generated)"
+	@echo "                             (Assumes parsers already generated)"
 	@echo "        make test-all        Run all tests (assumes install)"
 	@echo "        make clean-test-all  Clean up temp test files"
 	@echo ""
@@ -31,10 +31,16 @@ install:
 #TODO: check ANTLR
 
 # Needs an appropriate antlr4 command, e.g., java -jar [antlr-4.7.1-complete.jar]
-.PHONY: install-antlr
-install-antlr:
+.PHONY: generate-parser
+generate-parser:
 	antlr4 -Dlanguage=Go -o parser/fg parser/FG.g4
+	if [ -f parser/fg/parser/fg_parser.go ]; then \
+		mv parser/fg/parser/* parser/fg; \
+	fi
 	antlr4 -Dlanguage=Go -o parser/fgg parser/FGG.g4
+	if [ -f parser/fgg/parser/fgg_parser.go ]; then \
+		mv parser/fgg/parser/* parser/fgg; \
+	fi
 
 .PHONY: install-pregen-parser
 install-pregen-parser:
@@ -45,11 +51,10 @@ install-pregen-parser:
 
 .PHONY: clean-install
 clean-install: 
-	curr=`pwd` && \
-	cd $$(dirname $$(which fgg)) && \
-	rm -f fgg && \
-	rm -f fg2fgg
+	cd $$(dirname $$(which fgg)) && rm -f fgg && rm -f fg2fgg
+	rm -rf parser/fg/parser
 	rm -f parser/fg/*
+	rm -rf parser/fgg/parser
 	rm -f parser/fgg/*
 
 
