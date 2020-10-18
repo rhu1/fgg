@@ -86,37 +86,37 @@ test-fg-unit:
 
 .PHONY: test-fg-examples
 test-fg-examples:
-	$(call eval_fg,fg/examples/hello/hello.go,10)
-	$(call eval_fg,fg/examples/hello/fmtprintf.go,10)
+	$(call eval_fg,examples/fg/hello/hello.go,10)
+	$(call eval_fg,examples/fg/hello/fmtprintf.go,10)
 
-	$(call eval_fg,fg/examples/misc/booleans/booleans.go,-1)
-	$(call eval_fg,fg/examples/misc/compose/compose.go,-1)
-	$(call eval_fg,fg/examples/misc/equal/equal.go,-1)
-	$(call eval_fg,fg/examples/misc/incr/incr.go,-1)
-	$(call eval_fg,fg/examples/misc/map/map.go,-1)
-	$(call eval_fg,fg/examples/misc/not/not.go,-1)
+	$(call eval_fg,examples/fg/misc/booleans/booleans.go,-1)
+	$(call eval_fg,examples/fg/misc/compose/compose.go,-1)
+	$(call eval_fg,examples/fg/misc/equal/equal.go,-1)
+	$(call eval_fg,examples/fg/misc/incr/incr.go,-1)
+	$(call eval_fg,examples/fg/misc/map/map.go,-1)
+	$(call eval_fg,examples/fg/misc/not/not.go,-1)
 
-	$(call eval_fg,fg/examples/oopsla20/fig1/functions.go,-1)
-	$(call eval_fg,fg/examples/oopsla20/fig2/equality.go,-1)
-	$(call eval_fg,fg/examples/oopsla20/fig3/lists.go,-1)
-	$(call eval_fg,fg/examples/oopsla20/fig9/monom.go,-1)
+	$(call eval_fg,examples/fg/oopsla20/fig1/functions.go,-1)
+	$(call eval_fg,examples/fg/oopsla20/fig2/equality.go,-1)
+	$(call eval_fg,examples/fg/oopsla20/fig3/lists.go,-1)
+	$(call eval_fg,examples/fg/oopsla20/fig9/monom.go,-1)
 
 
 # cf. [cmd] > output.txt
 #     diff output.txt correct.txt
 .PHONY: test-fg-examples-against-go
 test-fg-examples-against-go:
-	@$(call test_fg_against_go,fg/examples/misc/booleans/booleans.go)
-	@$(call test_fg_against_go,fg/examples/misc/compose/compose.go)
-	@$(call test_fg_against_go,fg/examples/misc/equal/equal.go)
-	@$(call test_fg_against_go,fg/examples/misc/incr/incr.go)
-	@$(call test_fg_against_go,fg/examples/misc/map/map.go)
-	@$(call test_fg_against_go,fg/examples/misc/not/not.go)
+	@$(call test_fg_against_go,examples/fg/misc/booleans/booleans.go)
+	@$(call test_fg_against_go,examples/fg/misc/compose/compose.go)
+	@$(call test_fg_against_go,examples/fg/misc/equal/equal.go)
+	@$(call test_fg_against_go,examples/fg/misc/incr/incr.go)
+	@$(call test_fg_against_go,examples/fg/misc/map/map.go)
+	@$(call test_fg_against_go,examples/fg/misc/not/not.go)
 
-	@$(call test_fg_against_go,fg/examples/oopsla20/fig1/functions.go)
-	@$(call test_fg_against_go,fg/examples/oopsla20/fig2/equality.go)
-	@$(call test_fg_against_go,fg/examples/oopsla20/fig3/lists.go)
-	@$(call test_fg_against_go,fg/examples/oopsla20/fig9/monom.go)
+	@$(call test_fg_against_go,examples/fg/oopsla20/fig1/functions.go)
+	@$(call test_fg_against_go,examples/fg/oopsla20/fig2/equality.go)
+	@$(call test_fg_against_go,examples/fg/oopsla20/fig3/lists.go)
+	@$(call test_fg_against_go,examples/fg/oopsla20/fig9/monom.go)
 
 
 .PHONY: test-fgg
@@ -132,133 +132,133 @@ test-fgg-unit:
 # Subsumed by, e.g., simulate-monom
 .PHONY: test-fgg-examples
 test-fgg-examples:
-	$(call eval_fgg,fgg/examples/hello/hello.fgg,10)
-	$(call eval_fgg,fgg/examples/hello/fmtprintf.fgg,10)
+	$(call eval_fgg,examples/fgg/hello/hello.fgg,10)
+	$(call eval_fgg,examples/fgg/hello/fmtprintf.fgg,10)
 
-	$(call eval_fgg,fgg/examples/misc/booleans/booleans.fgg,-1)
-	$(call eval_fgg,fgg/examples/misc/compose/compose.fgg,-1)
-	$(call eval_fgg,fgg/examples/misc/graph/graph.fgg,-1)
-	$(call eval_fgg,fgg/examples/misc/irregular/irregular.fgg,-1)
-	$(call eval_fgg,fgg/examples/misc/map/map.fgg,-1)
-	$(call eval_fgg,fgg/examples/misc/monomorph/monomorph.fgg,-1)
+	$(call eval_fgg,examples/fgg/misc/booleans/booleans.fgg,-1)
+	$(call eval_fgg,examples/fgg/misc/compose/compose.fgg,-1)
+	$(call eval_fgg,examples/fgg/misc/graph/graph.fgg,-1)
+	$(call eval_fgg,examples/fgg/misc/irregular/irregular.fgg,-1)
+	$(call eval_fgg,examples/fgg/misc/map/map.fgg,-1)
+	$(call eval_fgg,examples/fgg/misc/monomorph/monomorph.fgg,-1)
 
-	$(call eval_fgg,fgg/examples/monom/box/box.fgg,10)
-	$(call eval_fgg,fgg/examples/monom/box/box2.fgg,10)
+	$(call eval_fgg,examples/fgg/monom/box/box.fgg,10)
+	$(call eval_fgg,examples/fgg/monom/box/box2.fgg,10)
 
-	$(call eval_fgg,fgg/examples/monom/misc/ifacebox.fgg,-1)
+	$(call eval_fgg,examples/fgg/monom/misc/ifacebox.fgg,-1)
 
-	$(call eval_fgg,fgg/examples/monom/misc/mono-ok/iface-embedding-simple.go,-1)
-	$(call eval_fgg,fgg/examples/monom/misc/mono-ok/iface-embedding.go,-1)
-	$(call eval_fgg,fgg/examples/monom/misc/mono-ok/rcver-iface.go,-1)
-	$(call eval_fgg,fgg/examples/monom/misc/mono-ok/one-pass-prob.go,-1)
-	$(call eval_fgg,fgg/examples/monom/misc/mono-ok/contamination.go,-1)
-	$(call eval_fgg,fgg/examples/monom/misc/mono-ok/struct-poly-rec.go,-1)
-	$(call eval_fgg,fgg/examples/monom/misc/mono-ok/Parameterised-Map.go,-1)
-	$(call eval_fgg,fgg/examples/monom/misc/mono-ok/alternate.go,10)
-	$(call eval_fgg,fgg/examples/monom/misc/mono-ok/i-closure.go,-1)
-	$(call eval_fgg,fgg/examples/monom/misc/mono-ok/i-closure-bad.go,-1)
-	$(call eval_fgg,fgg/examples/monom/misc/mono-ok/meth-clash.go,7)
-	$(call eval_fgg,fgg/examples/monom/misc/mono-ok/param-meth-cast.go,2)
-	$(call eval_fgg,fgg/examples/monom/misc/mono-ok/poly-rec-iface.go,10)
+	$(call eval_fgg,examples/fgg/monom/misc/mono-ok/iface-embedding-simple.go,-1)
+	$(call eval_fgg,examples/fgg/monom/misc/mono-ok/iface-embedding.go,-1)
+	$(call eval_fgg,examples/fgg/monom/misc/mono-ok/rcver-iface.go,-1)
+	$(call eval_fgg,examples/fgg/monom/misc/mono-ok/one-pass-prob.go,-1)
+	$(call eval_fgg,examples/fgg/monom/misc/mono-ok/contamination.go,-1)
+	$(call eval_fgg,examples/fgg/monom/misc/mono-ok/struct-poly-rec.go,-1)
+	$(call eval_fgg,examples/fgg/monom/misc/mono-ok/Parameterised-Map.go,-1)
+	$(call eval_fgg,examples/fgg/monom/misc/mono-ok/alternate.go,10)
+	$(call eval_fgg,examples/fgg/monom/misc/mono-ok/i-closure.go,-1)
+	$(call eval_fgg,examples/fgg/monom/misc/mono-ok/i-closure-bad.go,-1)
+	$(call eval_fgg,examples/fgg/monom/misc/mono-ok/meth-clash.go,7)
+	$(call eval_fgg,examples/fgg/monom/misc/mono-ok/param-meth-cast.go,2)
+	$(call eval_fgg,examples/fgg/monom/misc/mono-ok/poly-rec-iface.go,10)
 
-	$(call eval_fgg,fgg/examples/oopsla20/fig4/functions.fgg,-1)
-	$(call eval_fgg,fgg/examples/oopsla20/fig5/equality.fgg,-1)
-	$(call eval_fgg,fgg/examples/oopsla20/fig6/lists.fgg,-1)
-	$(call eval_fgg,fgg/examples/oopsla20/fig7/graph.fgg,-1)
-	$(call eval_fgg,fgg/examples/oopsla20/fig8/expression.fgg,-1)
-	$(call eval_fgg,fgg/examples/oopsla20/fig10/nomono.fgg,-1)
+	$(call eval_fgg,examples/fgg/oopsla20/fig4/functions.fgg,-1)
+	$(call eval_fgg,examples/fgg/oopsla20/fig5/equality.fgg,-1)
+	$(call eval_fgg,examples/fgg/oopsla20/fig6/lists.fgg,-1)
+	$(call eval_fgg,examples/fgg/oopsla20/fig7/graph.fgg,-1)
+	$(call eval_fgg,examples/fgg/oopsla20/fig8/expression.fgg,-1)
+	$(call eval_fgg,examples/fgg/oopsla20/fig10/nomono.fgg,-1)
 
 
 .PHONY: test-nomono-bad
 test-nomono-bad:
-	@$(call nomono_bad,fgg/examples/monom/box/box.fgg)
-	@$(call nomono_bad,fgg/examples/oopsla20/fig10/nomono.fgg)
+	@$(call nomono_bad,examples/fgg/monom/box/box.fgg)
+	@$(call nomono_bad,examples/fgg/oopsla20/fig10/nomono.fgg)
 
-	@$(call nomono_bad,fgg/examples/monom/misc/mono-ko/incompleteness-subtyping.go)
-	@$(call nomono_bad,fgg/examples/monom/misc/mono-ko/monom-imp.go)
-	@$(call nomono_bad,fgg/examples/monom/misc/mono-ko/mutual-poly-rec.go)
-	@$(call nomono_bad,fgg/examples/monom/misc/mono-ko/mutual-rec-iface.go)
-	@$(call nomono_bad,fgg/examples/monom/misc/mono-ko/nested-fix.go)
-	@$(call nomono_bad,fgg/examples/monom/misc/mono-ko/two-type-param.go)
+	@$(call nomono_bad,examples/fgg/monom/misc/mono-ko/incompleteness-subtyping.go)
+	@$(call nomono_bad,examples/fgg/monom/misc/mono-ko/monom-imp.go)
+	@$(call nomono_bad,examples/fgg/monom/misc/mono-ko/mutual-poly-rec.go)
+	@$(call nomono_bad,examples/fgg/monom/misc/mono-ko/mutual-rec-iface.go)
+	@$(call nomono_bad,examples/fgg/monom/misc/mono-ko/nested-fix.go)
+	@$(call nomono_bad,examples/fgg/monom/misc/mono-ko/two-type-param.go)
 
 
 .PHONY: simulate-monom
 simulate-monom:
-	$(call sim_monom,fgg/examples/hello/hello.fgg,10)
-	$(call sim_monom,fgg/examples/hello/fmtprintf.fgg,10)
+	$(call sim_monom,examples/fgg/hello/hello.fgg,10)
+	$(call sim_monom,examples/fgg/hello/fmtprintf.fgg,10)
 
-	$(call sim_monom,fgg/examples/misc/booleans/booleans.fgg,-1)
-	$(call sim_monom,fgg/examples/misc/compose/compose.fgg,-1)
-	$(call sim_monom,fgg/examples/misc/graph/graph.fgg,-1)
-	$(call sim_monom,fgg/examples/misc/irregular/irregular.fgg,-1)
-	$(call sim_monom,fgg/examples/misc/map/map.fgg,-1)
-	$(call sim_monom,fgg/examples/misc/monomorph/monomorph.fgg,-1)
+	$(call sim_monom,examples/fgg/misc/booleans/booleans.fgg,-1)
+	$(call sim_monom,examples/fgg/misc/compose/compose.fgg,-1)
+	$(call sim_monom,examples/fgg/misc/graph/graph.fgg,-1)
+	$(call sim_monom,examples/fgg/misc/irregular/irregular.fgg,-1)
+	$(call sim_monom,examples/fgg/misc/map/map.fgg,-1)
+	$(call sim_monom,examples/fgg/misc/monomorph/monomorph.fgg,-1)
 
-	$(call sim_monom,fgg/examples/monom/box/box.fgg,10)
-	$(call sim_monom,fgg/examples/monom/box/box2.fgg,10)
+	$(call sim_monom,examples/fgg/monom/box/box.fgg,10)
+	$(call sim_monom,examples/fgg/monom/box/box2.fgg,10)
 
-	$(call sim_monom,fgg/examples/monom/misc/ifacebox.fgg,-1)
+	$(call sim_monom,examples/fgg/monom/misc/ifacebox.fgg,-1)
 
-	$(call sim_monom,fgg/examples/monom/misc/mono-ok/iface-embedding-simple.go,-1)
-	$(call sim_monom,fgg/examples/monom/misc/mono-ok/iface-embedding.go,-1)
-	$(call sim_monom,fgg/examples/monom/misc/mono-ok/rcver-iface.go,-1)
-	$(call sim_monom,fgg/examples/monom/misc/mono-ok/one-pass-prob.go,-1)
-	$(call sim_monom,fgg/examples/monom/misc/mono-ok/contamination.go,-1)
+	$(call sim_monom,examples/fgg/monom/misc/mono-ok/iface-embedding-simple.go,-1)
+	$(call sim_monom,examples/fgg/monom/misc/mono-ok/iface-embedding.go,-1)
+	$(call sim_monom,examples/fgg/monom/misc/mono-ok/rcver-iface.go,-1)
+	$(call sim_monom,examples/fgg/monom/misc/mono-ok/one-pass-prob.go,-1)
+	$(call sim_monom,examples/fgg/monom/misc/mono-ok/contamination.go,-1)
 
 # TODO: add to oblit
-	$(call sim_monom,fgg/examples/monom/misc/mono-ok/struct-poly-rec.go,-1)
-	$(call sim_monom,fgg/examples/monom/misc/mono-ok/Parameterised-Map.go,-1)
-	$(call sim_monom,fgg/examples/monom/misc/mono-ok/alternate.go,10)
-	$(call sim_monom,fgg/examples/monom/misc/mono-ok/i-closure.go,-1)
-	$(call sim_monom,fgg/examples/monom/misc/mono-ok/i-closure-bad.go,-1)
-	$(call sim_monom,fgg/examples/monom/misc/mono-ok/meth-clash.go,7)
-	$(call sim_monom,fgg/examples/monom/misc/mono-ok/param-meth-cast.go,2)
-	$(call sim_monom,fgg/examples/monom/misc/mono-ok/poly-rec-iface.go,10)
+	$(call sim_monom,examples/fgg/monom/misc/mono-ok/struct-poly-rec.go,-1)
+	$(call sim_monom,examples/fgg/monom/misc/mono-ok/Parameterised-Map.go,-1)
+	$(call sim_monom,examples/fgg/monom/misc/mono-ok/alternate.go,10)
+	$(call sim_monom,examples/fgg/monom/misc/mono-ok/i-closure.go,-1)
+	$(call sim_monom,examples/fgg/monom/misc/mono-ok/i-closure-bad.go,-1)
+	$(call sim_monom,examples/fgg/monom/misc/mono-ok/meth-clash.go,7)
+	$(call sim_monom,examples/fgg/monom/misc/mono-ok/param-meth-cast.go,2)
+	$(call sim_monom,examples/fgg/monom/misc/mono-ok/poly-rec-iface.go,10)
 
-	$(call sim_monom,fgg/examples/oopsla20/fig4/functions.fgg,-1)
-	$(call sim_monom,fgg/examples/oopsla20/fig5/equality.fgg,-1)
-	$(call sim_monom,fgg/examples/oopsla20/fig6/lists.fgg,-1)
-	$(call sim_monom,fgg/examples/oopsla20/fig7/graph.fgg,-1)
-	$(call sim_monom,fgg/examples/oopsla20/fig8/expression.fgg,-1)
+	$(call sim_monom,examples/fgg/oopsla20/fig4/functions.fgg,-1)
+	$(call sim_monom,examples/fgg/oopsla20/fig5/equality.fgg,-1)
+	$(call sim_monom,examples/fgg/oopsla20/fig6/lists.fgg,-1)
+	$(call sim_monom,examples/fgg/oopsla20/fig7/graph.fgg,-1)
+	$(call sim_monom,examples/fgg/oopsla20/fig8/expression.fgg,-1)
 
 
 # Non-terminating examples tested by simulate-monom
 .PHONY: test-monom-against-go
 test-monom-against-go:
-	@$(call eval_monom_fgg_against_go,fgg/examples/misc/booleans/booleans.fgg,tmp/test/fg/booleans,booleans.go)
-	@$(call eval_monom_fgg_against_go,fgg/examples/misc/compose/compose.fgg,tmp/test/fg/compose,compose.go)
-	@$(call eval_monom_fgg_against_go,fgg/examples/misc/graph/graph.fgg,tmp/test/fg/graph,graph.go)
-	@$(call eval_monom_fgg_against_go,fgg/examples/misc/irregular/irregular.fgg,tmp/test/fg/irregular,irregular.go)
-	@$(call eval_monom_fgg_against_go,fgg/examples/misc/map/map.fgg,tmp/test/fg/map,map.go)
-	@$(call eval_monom_fgg_against_go,fgg/examples/misc/monomorph/monomorph.fgg,tmp/test/fg/monomorph,monomorph.go)
+	@$(call eval_monom_fgg_against_go,examples/fgg/misc/booleans/booleans.fgg,tmp/test/fg/booleans,booleans.go)
+	@$(call eval_monom_fgg_against_go,examples/fgg/misc/compose/compose.fgg,tmp/test/fg/compose,compose.go)
+	@$(call eval_monom_fgg_against_go,examples/fgg/misc/graph/graph.fgg,tmp/test/fg/graph,graph.go)
+	@$(call eval_monom_fgg_against_go,examples/fgg/misc/irregular/irregular.fgg,tmp/test/fg/irregular,irregular.go)
+	@$(call eval_monom_fgg_against_go,examples/fgg/misc/map/map.fgg,tmp/test/fg/map,map.go)
+	@$(call eval_monom_fgg_against_go,examples/fgg/misc/monomorph/monomorph.fgg,tmp/test/fg/monomorph,monomorph.go)
 
-#@$(call eval_monom_fgg,fgg/examples/monom/box/box2.fgg,10,tmp/test/fg/monom/box,box2.go)
+#@$(call eval_monom_fgg,examples/fgg/monom/box/box2.fgg,10,tmp/test/fg/monom/box,box2.go)
 
-	@$(call eval_monom_fgg_against_go,fgg/examples/monom/misc/ifacebox.fgg,tmp/test/fg/monom/misc/ifacebox,ifacebox.go)
+	@$(call eval_monom_fgg_against_go,examples/fgg/monom/misc/ifacebox.fgg,tmp/test/fg/monom/misc/ifacebox,ifacebox.go)
 
-	@$(call eval_monom_fgg_against_go,fgg/examples/monom/misc/mono-ok/iface-embedding-simple.go,tmp/test/fg/monom/misc/mono-ok/iface-embedding-simple,iface-embedding-simple.go)
-	@$(call eval_monom_fgg_against_go,fgg/examples/monom/misc/mono-ok/iface-embedding.go,tmp/test/fg/monom/misc/mono-ok/iface-embedding,iface-embedding.go)
-	@$(call eval_monom_fgg_against_go,fgg/examples/monom/misc/mono-ok/rcver-iface.go,tmp/test/fg/monom/misc/mono-ok/rcver-iface,rcver-iface.go)
-	@$(call eval_monom_fgg_against_go,fgg/examples/monom/misc/mono-ok/one-pass-prob.go,tmp/test/fg/monom/misc/mono-ok/one-pass-prob,one-pass-prob.go)
-	@$(call eval_monom_fgg_against_go,fgg/examples/monom/misc/mono-ok/contamination.go,tmp/test/fg/monom/misc/mono-ok/contamination,contamination.go)
+	@$(call eval_monom_fgg_against_go,examples/fgg/monom/misc/mono-ok/iface-embedding-simple.go,tmp/test/fg/monom/misc/mono-ok/iface-embedding-simple,iface-embedding-simple.go)
+	@$(call eval_monom_fgg_against_go,examples/fgg/monom/misc/mono-ok/iface-embedding.go,tmp/test/fg/monom/misc/mono-ok/iface-embedding,iface-embedding.go)
+	@$(call eval_monom_fgg_against_go,examples/fgg/monom/misc/mono-ok/rcver-iface.go,tmp/test/fg/monom/misc/mono-ok/rcver-iface,rcver-iface.go)
+	@$(call eval_monom_fgg_against_go,examples/fgg/monom/misc/mono-ok/one-pass-prob.go,tmp/test/fg/monom/misc/mono-ok/one-pass-prob,one-pass-prob.go)
+	@$(call eval_monom_fgg_against_go,examples/fgg/monom/misc/mono-ok/contamination.go,tmp/test/fg/monom/misc/mono-ok/contamination,contamination.go)
 
 # TODO: add to oblit
-	@$(call eval_monom_fgg_against_go,fgg/examples/monom/misc/mono-ok/struct-poly-rec.go,tmp/test/fg/monom/misc/mono-ok/struct-poly-rec,struct-poly-rec.go)
-	@$(call eval_monom_fgg_against_go,fgg/examples/monom/misc/mono-ok/Parameterised-Map.go,tmp/test/fg/monom/misc/mono-ok/Parameterised-Map,Parameterised-Map.go)
-#@$(call eval_monom_fgg,fgg/examples/monom/misc/mono-ok/alternate.go,10,tmp/test/fg/monom/misc/mono-ok/alternate,alternate.go)
-	@$(call eval_monom_fgg_against_go,fgg/examples/monom/misc/mono-ok/i-closure.go,tmp/test/fg/monom/misc/mono-ok/i-closure,i-closure.go)
-	@$(call eval_monom_fgg_against_go,fgg/examples/monom/misc/mono-ok/i-closure-bad.go,tmp/test/fg/monom/misc/mono-ok/i-closure-bad,i-closure-bad.go)
-#@$(call eval_monom_fgg,fgg/examples/monom/misc/mono-ok/meth-clash.go,7,tmp/test/fg/monom/misc/mono-ok/meth-clash,meth-clash.go)
-#@$(call eval_monom_fgg,fgg/examples/monom/misc/mono-ok/param-meth-cast.go,2,tmp/test/fg/monom/misc/mono-ok/param-meth-cast,param-meth-cast.go)
-#@$(call eval_monom_fgg,fgg/examples/monom/misc/mono-ok/poly-rec-iface.go,10,tmp/test/fg/monom/misc/mono-ok/poly-rec-iface,poly-rec-iface.go)
+	@$(call eval_monom_fgg_against_go,examples/fgg/monom/misc/mono-ok/struct-poly-rec.go,tmp/test/fg/monom/misc/mono-ok/struct-poly-rec,struct-poly-rec.go)
+	@$(call eval_monom_fgg_against_go,examples/fgg/monom/misc/mono-ok/Parameterised-Map.go,tmp/test/fg/monom/misc/mono-ok/Parameterised-Map,Parameterised-Map.go)
+#@$(call eval_monom_fgg,examples/fgg/monom/misc/mono-ok/alternate.go,10,tmp/test/fg/monom/misc/mono-ok/alternate,alternate.go)
+	@$(call eval_monom_fgg_against_go,examples/fgg/monom/misc/mono-ok/i-closure.go,tmp/test/fg/monom/misc/mono-ok/i-closure,i-closure.go)
+	@$(call eval_monom_fgg_against_go,examples/fgg/monom/misc/mono-ok/i-closure-bad.go,tmp/test/fg/monom/misc/mono-ok/i-closure-bad,i-closure-bad.go)
+#@$(call eval_monom_fgg,examples/fgg/monom/misc/mono-ok/meth-clash.go,7,tmp/test/fg/monom/misc/mono-ok/meth-clash,meth-clash.go)
+#@$(call eval_monom_fgg,examples/fgg/monom/misc/mono-ok/param-meth-cast.go,2,tmp/test/fg/monom/misc/mono-ok/param-meth-cast,param-meth-cast.go)
+#@$(call eval_monom_fgg,examples/fgg/monom/misc/mono-ok/poly-rec-iface.go,10,tmp/test/fg/monom/misc/mono-ok/poly-rec-iface,poly-rec-iface.go)
 
 	#mkdir -p tmp/test/fg/monom/misc/mono-ko
 
-	@$(call eval_monom_fgg_against_go,fgg/examples/oopsla20/fig4/functions.fgg,tmp/test/fg/oopsla20/functions,functions.go)
-	@$(call eval_monom_fgg_against_go,fgg/examples/oopsla20/fig5/equality.fgg,tmp/test/fg/oopsla20/functions,functions.go)
-	@$(call eval_monom_fgg_against_go,fgg/examples/oopsla20/fig6/lists.fgg,tmp/test/fg/oopsla20/lists,lists.go)
-	@$(call eval_monom_fgg_against_go,fgg/examples/oopsla20/fig7/graph.fgg,tmp/test/fg/oopsla20/graph,graph.go)
-#@$(call eval_monom_fgg_against_go,fgg/examples/oopsla20/fig8/expression.fgg,tmp/test/fg/oopsla20/expression,expression.go)  #basic Go prints structs "{...}", but F(G)G includes struct names, so string equality doesn't work
+	@$(call eval_monom_fgg_against_go,examples/fgg/oopsla20/fig4/functions.fgg,tmp/test/fg/oopsla20/functions,functions.go)
+	@$(call eval_monom_fgg_against_go,examples/fgg/oopsla20/fig5/equality.fgg,tmp/test/fg/oopsla20/functions,functions.go)
+	@$(call eval_monom_fgg_against_go,examples/fgg/oopsla20/fig6/lists.fgg,tmp/test/fg/oopsla20/lists,lists.go)
+	@$(call eval_monom_fgg_against_go,examples/fgg/oopsla20/fig7/graph.fgg,tmp/test/fg/oopsla20/graph,graph.go)
+#@$(call eval_monom_fgg_against_go,examples/fgg/oopsla20/fig8/expression.fgg,tmp/test/fg/oopsla20/expression,expression.go)  #basic Go prints structs "{...}", but F(G)G includes struct names, so string equality doesn't work
 
 .PHONY: clean-test-monom-against-go
 clean-test-monom-against-go:
@@ -404,62 +404,62 @@ endef
 
 .PHONY: simulate-oblit
 simulate-oblit:
-	fgg -test-oblit -eval=-1 fgg/examples/misc/booleans/booleans.fgg
-	fgg -test-oblit -eval=-1 fgg/examples/misc/compose/compose.fgg
-	fgg -test-oblit -eval=-1 fgg/examples/misc/graph/graph.fgg
-	fgg -test-oblit -eval=-1 fgg/examples/misc/irregular/irregular.fgg
-	fgg -test-oblit -eval=-1 fgg/examples/misc/map/map.fgg
-	fgg -test-oblit -eval=-1 fgg/examples/misc/monomorph/monomorph.fgg
+	fgg -test-oblit -eval=-1 examples/fgg/misc/booleans/booleans.fgg
+	fgg -test-oblit -eval=-1 examples/fgg/misc/compose/compose.fgg
+	fgg -test-oblit -eval=-1 examples/fgg/misc/graph/graph.fgg
+	fgg -test-oblit -eval=-1 examples/fgg/misc/irregular/irregular.fgg
+	fgg -test-oblit -eval=-1 examples/fgg/misc/map/map.fgg
+	fgg -test-oblit -eval=-1 examples/fgg/misc/monomorph/monomorph.fgg
 # TODO: currently trying to run to termination
-#fgg -test-oblit -eval=10 fgg/examples/monom/box/box.fgg
-#fgg -test-oblit -eval=10 fgg/examples/monom/box/box2.fgg
+#fgg -test-oblit -eval=10 examples/fgg/monom/box/box.fgg
+#fgg -test-oblit -eval=10 examples/fgg/monom/box/box2.fgg
 
-	fgg -test-oblit -eval=-1 fgg/examples/monom/misc/ifacebox.fgg
+	fgg -test-oblit -eval=-1 examples/fgg/monom/misc/ifacebox.fgg
 
 # TODO?
-#fgg -test-oblit -eval=-1 fgg/examples/monom/misc/iface-embedding-simple.go
-#fgg -test-oblit -eval=-1 fgg/examples/monom/misc/iface-embedding.go
+#fgg -test-oblit -eval=-1 examples/fgg/monom/misc/iface-embedding-simple.go
+#fgg -test-oblit -eval=-1 examples/fgg/monom/misc/iface-embedding.go
 
-	fgg -test-oblit -eval=-1 fgg/examples/monom/misc/mono-ok/rcver-iface.go
-	fgg -test-oblit -eval=-1 fgg/examples/monom/misc/mono-ok/one-pass-prob.go
-	fgg -test-oblit -eval=-1 fgg/examples/monom/misc/mono-ok/contamination.go
+	fgg -test-oblit -eval=-1 examples/fgg/monom/misc/mono-ok/rcver-iface.go
+	fgg -test-oblit -eval=-1 examples/fgg/monom/misc/mono-ok/one-pass-prob.go
+	fgg -test-oblit -eval=-1 examples/fgg/monom/misc/mono-ok/contamination.go
 
 
 .PHONY: test-oblit
 test-oblit:
 	mkdir -p tmp/test-oblit/fgr/booleans
-	fgg -fgg -oblitc=tmp/test-oblit/fgr/booleans/booleans.fgr -oblit-eval=-1 fgg/examples/misc/booleans/booleans.fgg
+	fgg -fgg -oblitc=tmp/test-oblit/fgr/booleans/booleans.fgr -oblit-eval=-1 examples/fgg/misc/booleans/booleans.fgg
 # TODO: standalone FGR execution (.fgr output currently unused)
 # 
 	mkdir -p tmp/test-oblit/fgr/compose
-	fgg -fgg -oblitc=tmp/test-oblit/fgr/compose/compose.fgr -oblit-eval=-1 fgg/examples/misc/compose/compose.fgg
+	fgg -fgg -oblitc=tmp/test-oblit/fgr/compose/compose.fgr -oblit-eval=-1 examples/fgg/misc/compose/compose.fgg
 
 	mkdir -p tmp/test-oblit/fgr/graph
-	fgg -fgg -oblitc=tmp/test-oblit/fgr/graph/graph.fgr -oblit-eval=-1 fgg/examples/misc/graph/graph.fgg
+	fgg -fgg -oblitc=tmp/test-oblit/fgr/graph/graph.fgr -oblit-eval=-1 examples/fgg/misc/graph/graph.fgg
 
 	mkdir -p tmp/test-oblit/fgr/irregular
-	fgg -fgg -oblitc=tmp/test-oblit/fgr/irregular/irregular.fgr -oblit-eval=-1 fgg/examples/misc/irregular/irregular.fgg
+	fgg -fgg -oblitc=tmp/test-oblit/fgr/irregular/irregular.fgr -oblit-eval=-1 examples/fgg/misc/irregular/irregular.fgg
 
 	mkdir -p tmp/test-oblit/fgr/map
-	fgg -fgg -oblitc=tmp/test-oblit/fgr/map/map.fgr -oblit-eval=-1 fgg/examples/misc/map/map.fgg
+	fgg -fgg -oblitc=tmp/test-oblit/fgr/map/map.fgr -oblit-eval=-1 examples/fgg/misc/map/map.fgg
 
 	mkdir -p tmp/test-oblit/fgr/monomorph
-	fgg -fgg -oblitc=tmp/test-oblit/fgr/monomorph/monomorph.fgr -oblit-eval=-1 fgg/examples/misc/monomorph/monomorph.fgg
+	fgg -fgg -oblitc=tmp/test-oblit/fgr/monomorph/monomorph.fgr -oblit-eval=-1 examples/fgg/misc/monomorph/monomorph.fgg
 
 	mkdir -p tmp/test-oblit/fgr/box
-	fgg -fgg -oblitc=tmp/test-oblit/fgr/box/box.fgr -oblit-eval=10 fgg/examples/monom/box/box.fgg
-	fgg -fgg -oblitc=tmp/test-oblit/fgr/box/box2.fgr -oblit-eval=10 fgg/examples/monom/box/box2.fgg
+	fgg -fgg -oblitc=tmp/test-oblit/fgr/box/box.fgr -oblit-eval=10 examples/fgg/monom/box/box.fgg
+	fgg -fgg -oblitc=tmp/test-oblit/fgr/box/box2.fgr -oblit-eval=10 examples/fgg/monom/box/box2.fgg
 
 	mkdir -p tmp/test-oblit/fgr/misc
-	fgg -fgg -oblitc=tmp/test-oblit/fgr/misc/ifacebox.fgr -oblit-eval=-1 fgg/examples/monom/misc/ifacebox.fgg
+	fgg -fgg -oblitc=tmp/test-oblit/fgr/misc/ifacebox.fgr -oblit-eval=-1 examples/fgg/monom/misc/ifacebox.fgg
 # TODO: i/face embedding?
-#fgg -fgg -oblitc=tmp/test-oblit/fgr/misc/iface-embedding-simple.fgr -oblit-eval=-1 fgg/examples/monom/misc/iface-embedding-simple.go
-#fgg -fgg -oblitc=tmp/test-oblit/fgr/misc/iface-embedding.fgr -oblit-eval=-1 fgg/examples/monom/misc/iface-embedding.go
+#fgg -fgg -oblitc=tmp/test-oblit/fgr/misc/iface-embedding-simple.fgr -oblit-eval=-1 examples/fgg/monom/misc/iface-embedding-simple.go
+#fgg -fgg -oblitc=tmp/test-oblit/fgr/misc/iface-embedding.fgr -oblit-eval=-1 examples/fgg/monom/misc/iface-embedding.go
 
 	mkdir -p tmp/test-oblit/fgr/misc/mono-ok
-	fgg -fgg -oblitc=tmp/test-oblit/fgr/misc/mono-ok/rcver-iface.fgr -oblit-eval=-1 fgg/examples/monom/misc/mono-ok/rcver-iface.go
-	fgg -fgg -oblitc=tmp/test-oblit/fgr/misc/mono-ok/one-pass-prob.fgr -oblit-eval=-1 fgg/examples/monom/misc/mono-ok/one-pass-prob.go
-	fgg -fgg -oblitc=tmp/test-oblit/fgr/misc/mono-ok/contamination.fgr -oblit-eval=-1 fgg/examples/monom/misc/mono-ok/contamination.go
+	fgg -fgg -oblitc=tmp/test-oblit/fgr/misc/mono-ok/rcver-iface.fgr -oblit-eval=-1 examples/fgg/monom/misc/mono-ok/rcver-iface.go
+	fgg -fgg -oblitc=tmp/test-oblit/fgr/misc/mono-ok/one-pass-prob.fgr -oblit-eval=-1 examples/fgg/monom/misc/mono-ok/one-pass-prob.go
+	fgg -fgg -oblitc=tmp/test-oblit/fgr/misc/mono-ok/contamination.fgr -oblit-eval=-1 examples/fgg/monom/misc/mono-ok/contamination.go
 
 	mkdir -p tmp/test-oblit/fgr/misc/mono-ko
 
@@ -501,27 +501,27 @@ clean-test-oblit:
 .PHONY: test-fg2fgg
 test-fg2fgg:
 	mkdir -p tmp/test/fgg/booleans
-	fg2fgg fg/examples/misc/booleans/booleans.go > tmp/test/fgg/booleans/booleans.fgg
+	fg2fgg examples/fg/misc/booleans/booleans.go > tmp/test/fgg/booleans/booleans.fgg
 	fgg -fgg -eval=-1 tmp/test/fgg/booleans/booleans.fgg
 
 	mkdir -p tmp/test/fgg/compose
-	fg2fgg fg/examples/misc/compose/compose.go > tmp/test/fgg/compose/compose.fgg
+	fg2fgg examples/fg/misc/compose/compose.go > tmp/test/fgg/compose/compose.fgg
 	fgg -fgg -eval=-1 tmp/test/fgg/compose/compose.fgg
 
 	mkdir -p tmp/test/fgg/equal
-	fg2fgg fg/examples/misc/equal/equal.go > tmp/test/fgg/equal/equal.fgg
+	fg2fgg examples/fg/misc/equal/equal.go > tmp/test/fgg/equal/equal.fgg
 	fgg -fgg -eval=-1 tmp/test/fgg/equal/equal.fgg
 
 	mkdir -p tmp/test/fgg/incr
-	fg2fgg fg/examples/misc/incr/incr.go > tmp/test/fgg/incr/incr.fgg
+	fg2fgg examples/fg/misc/incr/incr.go > tmp/test/fgg/incr/incr.fgg
 	fgg -fgg -eval=-1 tmp/test/fgg/incr/incr.fgg
 
 	mkdir -p tmp/test/fgg/map
-	fg2fgg fg/examples/misc/map/map.go > tmp/test/fgg/map/map.fgg
+	fg2fgg examples/fg/misc/map/map.go > tmp/test/fgg/map/map.fgg
 	fgg -fgg -eval=-1 tmp/test/fgg/map/map.fgg
 
 	mkdir -p tmp/test/fgg/not
-	fg2fgg fg/examples/misc/not/not.go > tmp/test/fgg/not/not.fgg
+	fg2fgg examples/fg/misc/not/not.go > tmp/test/fgg/not/not.fgg
 	fgg -fgg -eval=-1 tmp/test/fgg/not/not.fgg
 
 # TODO: run fg_test.go unit tests through fg2fgg
