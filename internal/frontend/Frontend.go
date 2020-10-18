@@ -278,3 +278,20 @@ func CheckErr(e error) {
 		panic(e)
 	}
 }
+
+func PrintResult(printf bool, p base.Program) {
+	res := p.GetMain()
+	if printf {
+		fmt.Println(res.ToGoString(p.GetDecls()))
+	} else {
+		fmt.Println(res)
+	}
+}
+
+func ReadSourceFile(arg0 string) string {
+	b, err := ioutil.ReadFile(arg0)
+	if err != nil {
+		CheckErr(err)
+	}
+	return string(b)
+}

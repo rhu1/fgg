@@ -5,8 +5,10 @@
 
 package fg
 
-import "fmt"
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 /* "Exported" constructors for fgg (monomorph) */
 
