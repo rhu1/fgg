@@ -1,11 +1,13 @@
 package fgg
 
-import "fmt"
-import "reflect"
-import "strconv"
-import "strings"
+import (
+	"fmt"
+	"reflect"
+	"strconv"
+	"strings"
 
-import "github.com/rhu1/fgg/internal/base"
+	"github.com/rhu1/fgg/internal/base"
+)
 
 var _ = fmt.Errorf
 var _ = reflect.Append
@@ -13,7 +15,10 @@ var _ = strconv.AppendBool
 
 /* Export */
 
-func NewTName(t Name, us []Type) TNamed       { return TNamed{t, us} }
+func NewTName(t Name, us []Type) TNamed        { return TNamed{t, us} }
+func NewBigPsi(tFormals []TFormal) BigPsi      { return BigPsi{tFormals} }
+func NewTFormal(name TParam, u_I Type) TFormal { return TFormal{name, u_I} }
+
 func IsStructType(ds []Decl, u Type) bool     { return isStructType(ds, u) }
 func IsNamedIfaceType(ds []Decl, u Type) bool { return isNamedIfaceType(ds, u) }
 

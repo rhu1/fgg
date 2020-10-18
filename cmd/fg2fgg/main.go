@@ -9,6 +9,7 @@ import (
 
 	"github.com/rhu1/fgg/internal/fg"
 	"github.com/rhu1/fgg/internal/fgg"
+	"github.com/rhu1/fgg/internal/parser"
 )
 
 func main() {
@@ -21,7 +22,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fgAdaptor := new(fg.FGAdaptor)
+	fgAdaptor := new(parser.FGAdaptor)
 	fgProg := fgAdaptor.Parse(false, string(b))
 	fggProg, err := fgg.FromFG(fgProg.(fg.FGProgram))
 	if err != nil {

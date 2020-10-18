@@ -12,6 +12,7 @@ import (
 	"github.com/rhu1/fgg/internal/fg"
 	"github.com/rhu1/fgg/internal/fgg"
 	"github.com/rhu1/fgg/internal/fgr"
+	"github.com/rhu1/fgg/internal/parser"
 )
 
 var _ = os.Args
@@ -107,7 +108,7 @@ type FGInterp struct {
 var _ Interp = &FGInterp{}
 
 func NewFGInterp(verbose bool, src string, strict bool) *FGInterp {
-	var a fg.FGAdaptor
+	var a parser.FGAdaptor
 	orig := parse(verbose, &a, src, strict).(fg.FGProgram)
 	prog := fg.NewFGProgram(orig.GetDecls(), orig.GetMain().(fg.FGExpr), orig.IsPrintf())
 	return &FGInterp{verboseHelper{verbose}, orig, prog}
@@ -154,7 +155,7 @@ type FGGInterp struct {
 var _ Interp = &FGGInterp{}
 
 func NewFGGInterp(verbose bool, src string, strict bool) *FGGInterp {
-	var a fgg.FGGAdaptor
+	var a parser.FGGAdaptor
 	orig := parse(verbose, &a, src, strict).(fgg.FGGProgram)
 	prog := fgg.NewProgram(orig.GetDecls(), orig.GetMain().(fgg.FGGExpr), orig.IsPrintf())
 	return &FGGInterp{verboseHelper{verbose}, orig, prog}

@@ -2,16 +2,18 @@
  * TODO: fix many magic numbers and other sloppy hacks
  */
 
-package fg
+package parser
 
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 
 	"github.com/antlr/antlr4/runtime/Go/antlr"
 
 	"github.com/rhu1/fgg/internal/base"
 	"github.com/rhu1/fgg/internal/base/testutils"
+	"github.com/rhu1/fgg/internal/fg"
 	"github.com/rhu1/fgg/internal/parser/util"
 	"github.com/rhu1/fgg/parser/fg/parser"
 )
@@ -19,19 +21,19 @@ import (
 var _ = fmt.Errorf
 var _ = reflect.Append
 
-// Convert ANTLR generated CST to an FGNode AST
+// Convert ANTLR generated CST to an fg.FGNode AST
 type FGAdaptor struct {
 	*parser.BaseFGListener
-	stack []FGNode // Because Listener methods don't return...
+	stack []fg.FGNode // Because Listener methods don't return...
 }
 
 var _ base.Adaptor = &FGAdaptor{}
 
-func (a *FGAdaptor) push(n FGNode) {
+func (a *FGAdaptor) push(n fg.FGNode) {
 	a.stack = append(a.stack, n)
 }
 
-func (a *FGAdaptor) pop() FGNode {
+func (a *FGAdaptor) pop() fg.FGNode {
 	if len(a.stack) < 1 {
 		panic(testutils.PARSER_PANIC_PREFIX + "Stack is empty")
 	}
@@ -56,14 +58,14 @@ func (a *FGAdaptor) Parse(strictParse bool, input string) base.Program {
 		p.SetErrorHandler(&util.StrictErrorStrategy{})
 	}
 	antlr.ParseTreeWalkerDefault.Walk(a, p.Program())
-	return a.pop().(FGProgram)
+	return a.pop().(fg.FGProgram)
 }
 
 /* "program" */
 
 func (a *FGAdaptor) ExitProgram(ctx *parser.ProgramContext) {
-	body := a.pop().(FGExpr)
-	ds := []Decl{}
+	body := a.pop().(fg.FGExpr)
+	ds := []fg.Decl{}
 	offset := 0 // TODO: refactor
 	printf := false
 	c3 := ctx.GetChild(3)                                     // Check if this child is "import"
@@ -83,26 +85,28 @@ func (a *FGAdaptor) ExitProgram(ctx *parser.ProgramContext) {
 	bar := ctx.GetChild(offset + 3)                                   // Check if this child is "func", i.e., no decls
 	if _, ok := bar.GetPayload().(*antlr.BaseParserRuleContext); ok { // If "func", then *antlr.CommonToken
 		nds := ctx.GetChild(offset+3).GetChildCount() / 2 // (decl ';')+ -- i.e, includes trailing ';'
-		ds = make([]Decl, nds)
+		ds = make([]fg.Decl, nds)
 		for i := nds - 1; i >= 0; i-- {
-			ds[i] = a.pop().(Decl) // Adding backwards
+			ds[i] = a.pop().(fg.Decl) // Adding backwards
 		}
 	}
-	a.push(FGProgram{ds, body, printf})
+	a.push(fg.NewFGProgram(ds, body, printf))
 }
 
 /* "typeDecl" */
 
 // Children: 1=NAME, 2=typeLit
 func (a *FGAdaptor) ExitTypeDecl(ctx *parser.TypeDeclContext) {
-	t := Type(ctx.GetChild(1).(*antlr.TerminalNodeImpl).GetText())
-	td := a.pop().(TDecl)
-	if s, ok := td.(STypeLit); ok { // N.B. s is a *copy* of td
-		s.t_S = t
-		a.push(s)
-	} else if c, ok := td.(ITypeLit); ok {
-		c.t_I = t
-		a.push(c)
+	t := fg.Type(ctx.GetChild(1).(*antlr.TerminalNodeImpl).GetText())
+	td := a.pop().(fg.TDecl)
+	if s, ok := td.(fg.STypeLit); ok { // N.B. s is a *copy* of td
+		/*s.t_S = t
+		a.push()*/
+		a.push(fg.NewSTypeLit(t, s.GetFieldDecls()))
+	} else if c, ok := td.(fg.ITypeLit); ok {
+		/*c.t_I = t
+		a.push(c)*/
+		a.push(fg.NewITypeLit(t, c.GetSpecs()))
 	} else {
 		panic(testutils.PARSER_PANIC_PREFIX + "Unknown type decl: " + reflect.TypeOf(td).String())
 	}
@@ -112,55 +116,55 @@ func (a *FGAdaptor) ExitTypeDecl(ctx *parser.TypeDeclContext) {
 
 // Children: 2=fieldDecls
 func (a *FGAdaptor) ExitStructTypeLit(ctx *parser.StructTypeLitContext) {
-	fds := []FieldDecl{}
+	fds := []fg.FieldDecl{}
 	if ctx.GetChildCount() > 3 {
 		nfds := (ctx.GetChild(2).GetChildCount() + 1) / 2 // fieldDecl (';' fieldDecl)*
-		fds = make([]FieldDecl, nfds)
+		fds = make([]fg.FieldDecl, nfds)
 		for i := nfds - 1; i >= 0; i-- {
-			fd := a.pop().(FieldDecl)
+			fd := a.pop().(fg.FieldDecl)
 			fds[i] = fd // Adding backwards
 		}
 	}
-	a.push(STypeLit{"^", fds}) // "^" to be overwritten in ExitTypeDecl
+	a.push(fg.NewSTypeLit("^", fds)) // "^" to be overwritten in ExitTypeDecl
 }
 
 func (a *FGAdaptor) ExitFieldDecl(ctx *parser.FieldDeclContext) {
-	f := Name(ctx.GetField().GetText())
-	t := Type(ctx.GetTyp().GetText())
-	a.push(FieldDecl{f, t})
+	f := fg.Name(ctx.GetField().GetText())
+	t := fg.Type(ctx.GetTyp().GetText())
+	a.push(fg.NewFieldDecl(f, t))
 }
 
 /* "methDecl", "paramDecl" */
 
 func (a *FGAdaptor) ExitMethDecl(ctx *parser.MethDeclContext) {
 	// Reverse order
-	e := a.pop().(FGExpr)
-	g := a.pop().(Sig)
-	recv := a.pop().(ParamDecl)
-	a.push(MethDecl{recv, g.meth, g.pDecls, g.t_ret, e})
+	e := a.pop().(fg.FGExpr)
+	g := a.pop().(fg.Sig)
+	recv := a.pop().(fg.ParamDecl)
+	a.push(fg.NewMDecl(recv, g.GetMethod(), g.GetParamDecls(), g.GetReturn(), e))
 }
 
 // Cf. ExitFieldDecl
 func (a *FGAdaptor) ExitParamDecl(ctx *parser.ParamDeclContext) {
 	x := ctx.GetVari().GetText()
-	t := Type(ctx.GetTyp().GetText())
-	a.push(ParamDecl{x, t})
+	t := fg.Type(ctx.GetTyp().GetText())
+	a.push(fg.NewParamDecl(x, t))
 }
 
 /* #InterfaceTypeLit ("typeLit"), "specs", #SigSpec ("spec"), #InterfaceSpec ("spec"), "sig" */
 
 // Cf. ExitStructTypeLit
 func (a *FGAdaptor) ExitInterfaceTypeLit(ctx *parser.InterfaceTypeLitContext) {
-	ss := []Spec{}
+	ss := []fg.Spec{}
 	if ctx.GetChildCount() > 3 {
 		nss := (ctx.GetChild(2).GetChildCount() + 1) / 2 // e.g., s ';' s ';' s
-		ss = make([]Spec, nss)
+		ss = make([]fg.Spec, nss)
 		for i := nss - 1; i >= 0; i-- {
-			s := a.pop().(Spec)
+			s := a.pop().(fg.Spec)
 			ss[i] = s // Adding backwards
 		}
 	}
-	a.push(ITypeLit{"^", ss}) // "^" to be overwritten in ExitTypeDecl
+	a.push(fg.NewITypeLit("^", ss)) // "^" to be overwritten in ExitTypeDecl
 }
 
 func (a *FGAdaptor) ExitSigSpec(ctx *parser.SigSpecContext) {
@@ -168,81 +172,105 @@ func (a *FGAdaptor) ExitSigSpec(ctx *parser.SigSpecContext) {
 }
 
 func (a *FGAdaptor) ExitInterfaceSpec(ctx *parser.InterfaceSpecContext) {
-	t := Type(ctx.GetChild(0).(*antlr.TerminalNodeImpl).GetText())
+	t := fg.Type(ctx.GetChild(0).(*antlr.TerminalNodeImpl).GetText())
 	a.push(t)
 }
 
 func (a *FGAdaptor) ExitSig(ctx *parser.SigContext) {
 	m := ctx.GetMeth().GetText()
 	// Reverse order
-	t := Type(ctx.GetRet().GetText())
-	pds := []ParamDecl{}
+	t := fg.Type(ctx.GetRet().GetText())
+	pds := []fg.ParamDecl{}
 	if ctx.GetChildCount() > 4 {
 		npds := (ctx.GetChild(2).GetChildCount() + 1) / 2 // e.g., pd ',' pd ',' pd
-		pds = make([]ParamDecl, npds)
+		pds = make([]fg.ParamDecl, npds)
 		for i := npds - 1; i >= 0; i-- {
-			pds[i] = a.pop().(ParamDecl) // Adding backwards
+			pds[i] = a.pop().(fg.ParamDecl) // Adding backwards
 		}
 	}
-	a.push(Sig{m, pds, t})
+	a.push(fg.NewSig(m, pds, t))
 }
 
 /* "expr": #Variable, #StructLit, #Select, #Call, #Assert, #Sprintf */
 
 func (a *FGAdaptor) ExitVariable(ctx *parser.VariableContext) {
-	id := Name(ctx.GetChild(0).(*antlr.TerminalNodeImpl).GetText())
-	a.push(Variable{id})
+	id := fg.Name(ctx.GetChild(0).(*antlr.TerminalNodeImpl).GetText())
+	a.push(fg.NewVariable(id))
 }
 
 // Children: 0=typ (*antlr.TerminalNodeImpl), 1='{', 2=exprs (*parser.ExprsContext), 3='}'
 // N.B. ExprsContext is a "helper" Context, actual exprs are its children
 func (a *FGAdaptor) ExitStructLit(ctx *parser.StructLitContext) {
-	t := Type(ctx.GetChild(0).(*antlr.TerminalNodeImpl).GetText())
-	es := []FGExpr{}
+	t := fg.Type(ctx.GetChild(0).(*antlr.TerminalNodeImpl).GetText())
+	es := []fg.FGExpr{}
 	if ctx.GetChildCount() > 3 {
 		nes := (ctx.GetChild(2).GetChildCount() + 1) / 2 // e.g., 'x' ',' 'y' ',' 'z'
-		es = make([]FGExpr, nes)
+		es = make([]fg.FGExpr, nes)
 		for i := nes - 1; i >= 0; i-- {
-			es[i] = a.pop().(FGExpr) // Adding backwards
+			es[i] = a.pop().(fg.FGExpr) // Adding backwards
 		}
 	}
-	a.push(StructLit{t, es})
+	a.push(fg.NewStructLit(t, es))
 }
 
 func (a *FGAdaptor) ExitSelect(ctx *parser.SelectContext) {
-	e := a.pop().(FGExpr)
-	f := Name(ctx.GetChild(2).(*antlr.TerminalNodeImpl).GetText())
-	a.push(Select{e, f})
+	e := a.pop().(fg.FGExpr)
+	f := fg.Name(ctx.GetChild(2).(*antlr.TerminalNodeImpl).GetText())
+	a.push(fg.NewSelect(e, f))
 }
 
 func (a *FGAdaptor) ExitCall(ctx *parser.CallContext) {
-	args := []FGExpr{}
+	args := []fg.FGExpr{}
 	if ctx.GetChildCount() > 5 { // TODO: refactor as ctx.GetArgs() != nil -- and child-count-checks elsewhere
 		nargs := (ctx.GetChild(4).GetChildCount() + 1) / 2 // e.g., e ',' e ',' e
-		args = make([]FGExpr, nargs)
+		args = make([]fg.FGExpr, nargs)
 		for i := nargs - 1; i >= 0; i-- {
-			args[i] = a.pop().(FGExpr) // Adding backwards
+			args[i] = a.pop().(fg.FGExpr) // Adding backwards
 		}
 	}
-	m := Name(ctx.GetChild(2).(*antlr.TerminalNodeImpl).GetText())
-	e := a.pop().(FGExpr)
-	a.push(Call{e, m, args})
+	m := fg.Name(ctx.GetChild(2).(*antlr.TerminalNodeImpl).GetText())
+	e := a.pop().(fg.FGExpr)
+	a.push(fg.NewCall(e, m, args))
 }
 
 func (a *FGAdaptor) ExitAssert(ctx *parser.AssertContext) {
-	t := Type(ctx.GetChild(3).(*antlr.TerminalNodeImpl).GetText())
-	e := a.pop().(FGExpr)
-	a.push(Assert{e, t})
+	t := fg.Type(ctx.GetChild(3).(*antlr.TerminalNodeImpl).GetText())
+	e := a.pop().(fg.FGExpr)
+	a.push(fg.NewAssert(e, t))
 }
 
 // TODO: check for import "fmt"
 func (a *FGAdaptor) ExitSprintf(ctx *parser.SprintfContext) {
 	var format string = ctx.GetChild(4).(*antlr.TerminalNodeImpl).GetText()
 	nargs := (ctx.GetChildCount() - 6) / 2 // Because of the comma
-	args := make([]FGExpr, nargs)
+	args := make([]fg.FGExpr, nargs)
 	for i := nargs - 1; i >= 0; i-- {
 		tmp := a.pop()
-		args[i] = tmp.(FGExpr)
+		args[i] = tmp.(fg.FGExpr)
 	}
-	a.push(Sprintf{format, args})
+	a.push(fg.NewSprintf(format, args))
 }
+
+/* For "strict" parsing, *lexer* errors */
+
+type FGBailLexer struct {
+	*parser.FGLexer
+}
+
+// FIXME: not working -- e.g., incr{1}, bad token
+// Want to "override" *BaseLexer.Recover -- XXX that's not how Go works (because BaseLexer is a struct, not interface)
+func (b *FGBailLexer) Recover(re antlr.RecognitionException) {
+	message := "lex error after token " + re.GetOffendingToken().GetText() +
+		" at position " + strconv.Itoa(re.GetOffendingToken().GetStart())
+	panic(message)
+}
+
+/*public FGBailLexer(ICharStream input) : base(input) { }
+
+public override void Recover(LexerNoViableAltException e)
+{
+	string message = string.Format("lex error after token {0} at position {1}", _lasttoken.Text, e.StartIndex);
+	BasicEnvironment.SyntaxError = message;
+	BasicEnvironment.ErrorStartIndex = e.StartIndex;
+	throw new ParseCanceledException(BasicEnvironment.SyntaxError);
+}*/

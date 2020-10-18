@@ -5,11 +5,13 @@
 
 package fg
 
-import "fmt"
-import "reflect"
-import "strings"
+import (
+	"fmt"
+	"reflect"
+	"strings"
 
-import "github.com/rhu1/fgg/internal/base"
+	"github.com/rhu1/fgg/internal/base"
+)
 
 var _ = fmt.Errorf
 
@@ -21,6 +23,8 @@ func NewFGProgram(ds []Decl, e FGExpr, printf bool) FGProgram {
 
 func NewSTypeLit(t Type, fds []FieldDecl) STypeLit { return STypeLit{t, fds} }
 func NewITypeLit(t Type, ss []Spec) ITypeLit       { return ITypeLit{t, ss} }
+
+// TODO: NewMethDecl
 func NewMDecl(recv ParamDecl, m Name, pds []ParamDecl, t Type, e FGExpr) MethDecl {
 	return MethDecl{recv, m, pds, t, e}
 }

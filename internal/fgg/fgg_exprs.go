@@ -5,9 +5,11 @@
 
 package fgg
 
-import "fmt"
-import "reflect"
-import "strings"
+import (
+	"fmt"
+	"reflect"
+	"strings"
+)
 
 var _ = fmt.Errorf
 var _ = reflect.Append
@@ -15,14 +17,13 @@ var _ = strings.Compare
 
 /* Public constructors */
 
-func NewVariable(id Name) Variable { return Variable{id} }
-
-/*func NewStructLit(u_S TNamed, es []FGGExpr) StructLit         { return StructLit{u_S, es} }
+func NewVariable(id Name) Variable                            { return Variable{id} }
+func NewStructLit(u_S TNamed, es []FGGExpr) StructLit         { return StructLit{u_S, es} }
 func NewSelect(e FGGExpr, f Name) Select                      { return Select{e, f} }
 func NewCall(e FGGExpr, m Name, us []Type, es []FGGExpr) Call { return Call{e, m, us, es} }
 func NewAssert(e FGGExpr, t Type) Assert                      { return Assert{e, t} }
 func NewString(v string) StringLit                            { return StringLit{v} }
-func NewSprintf(format string, args []FGGExpr) Sprintf        { return Sprintf{format, args} }*/
+func NewSprintf(format string, args []FGGExpr) Sprintf        { return Sprintf{format, args} }
 
 /* Variable */
 

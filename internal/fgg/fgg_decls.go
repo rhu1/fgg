@@ -5,20 +5,41 @@
 
 package fgg
 
-import "fmt"
-import "reflect"
-import "strings"
+import (
+	"fmt"
+	"reflect"
+	"strings"
 
-import "github.com/rhu1/fgg/internal/base"
+	"github.com/rhu1/fgg/internal/base"
+)
 
 var _ = fmt.Errorf
 var _ = reflect.Append
 
 /* Public constructors */
 
+// TODO: rename NewFGGProgram
 func NewProgram(ds []Decl, e FGGExpr, printf bool) FGGProgram {
 	return FGGProgram{ds, e, printf}
 }
+
+func NewSTypeLit(t Name, Psi BigPsi, fds []FieldDecl) STypeLit { return STypeLit{t, Psi, fds} }
+func NewITypeLit(t Name, Psi BigPsi, ss []Spec) ITypeLit       { return ITypeLit{t, Psi, ss} }
+
+// TODO: rename NewMethDecl
+func NewMDecl(x_recv Name,
+	t_recv Name,
+	Psi_recv BigPsi,
+	name Name,
+	Psi_meth BigPsi,
+	pDecls []ParamDecl,
+	u_ret Type,
+	e_body FGGExpr) MethDecl {
+	return MethDecl{x_recv, t_recv, Psi_recv, name, Psi_meth, pDecls, u_ret, e_body}
+}
+func NewFieldDecl(f Name, t Type) FieldDecl                  { return FieldDecl{f, t} }
+func NewParamDecl(x Name, t Type) ParamDecl                  { return ParamDecl{x, t} }     // For fgg_monom.MakeWMap
+func NewSig(m Name, Psi BigPsi, pds []ParamDecl, t Type) Sig { return Sig{m, Psi, pds, t} } // For fgg_monom.MakeWMap
 
 /* Program */
 

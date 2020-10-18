@@ -10,18 +10,19 @@ import (
 	"github.com/rhu1/fgg/internal/base"
 	"github.com/rhu1/fgg/internal/base/testutils"
 	"github.com/rhu1/fgg/internal/fg"
+	"github.com/rhu1/fgg/internal/parser"
 )
 
 /* Harness funcs */
 
 func fgParseAndOkGood(t *testing.T, elems ...string) base.Program {
-	var adptr fg.FGAdaptor
+	var adptr parser.FGAdaptor
 	return testutils.ParseAndOkGood(t, &adptr, fg.MakeFgProgram(elems...))
 }
 
 // N.B. do not use to check for bad *syntax* -- see the PARSER_PANIC_PREFIX panic check in base.ParseAndOkBad
 func fgParseAndOkBad(t *testing.T, msg string, elems ...string) base.Program {
-	var adptr fg.FGAdaptor
+	var adptr parser.FGAdaptor
 	return testutils.ParseAndOkBad(t, msg, &adptr, fg.MakeFgProgram(elems...))
 }
 

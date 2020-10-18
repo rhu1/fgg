@@ -5,10 +5,13 @@
 
 package fgr
 
-import "fmt"
-import "strings"
+import (
+	"fmt"
+	"strings"
 
-import "github.com/rhu1/fgg/internal/fgg"
+	"github.com/rhu1/fgg/internal/fgg"
+	"github.com/rhu1/fgg/internal/parser"
+)
 
 var _ = fmt.Errorf
 
@@ -551,7 +554,7 @@ func (c IfThenElse) Eval(ds []Decl) (FGRExpr, string) {
 	}
 
 	// TODO: refactor
-	var a fgg.FGGAdaptor
+	var a parser.FGGAdaptor
 	p_fgg := a.Parse(true, c.src).(fgg.FGGProgram)
 	ds_fgg := p_fgg.GetDecls()
 

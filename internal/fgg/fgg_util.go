@@ -2,12 +2,7 @@ package fgg
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
-
-	"github.com/antlr/antlr4/runtime/Go/antlr"
-
-	"github.com/rhu1/fgg/parser/fgg/parser"
 )
 
 var _ = fmt.Errorf
@@ -26,18 +21,4 @@ func MakeFggProgram(elems ...string) string {
 	}
 	b.WriteString("func main() { _ = " + elems[len(elems)-1] + " }")
 	return b.String()
-}
-
-/* For "strict" parsing, *lexer* errors */
-
-type FGGBailLexer struct {
-	*parser.FGGLexer
-}
-
-// FIXME: not working -- e.g., incr{1}, bad token
-// Want to "override" *BaseLexer.Recover -- XXX that's not how Go works (because BaseLexer is a struct, not interface)
-func (b *FGGBailLexer) Recover(re antlr.RecognitionException) {
-	message := "lex error after token " + re.GetOffendingToken().GetText() +
-		" at position " + strconv.Itoa(re.GetOffendingToken().GetStart())
-	panic(message)
 }

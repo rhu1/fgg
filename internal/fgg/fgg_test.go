@@ -10,12 +10,13 @@ import (
 	"github.com/rhu1/fgg/internal/base"
 	"github.com/rhu1/fgg/internal/base/testutils"
 	"github.com/rhu1/fgg/internal/fgg"
+	"github.com/rhu1/fgg/internal/parser"
 )
 
 /* Harness funcs */
 
 func fggParseAndOkGood(t *testing.T, elems ...string) base.Program {
-	var adptr fgg.FGGAdaptor
+	var adptr parser.FGGAdaptor
 	p := testutils.ParseAndOkGood(t, &adptr,
 		fgg.MakeFggProgram(elems...))
 	return p
@@ -32,7 +33,7 @@ func fggParseAndOkMonomGood(t *testing.T, elems ...string) base.Program {
 
 // N.B. do not use to check for bad *syntax* -- see the PARSER_PANIC_PREFIX panic check in base.ParseAndOkBad
 func fggParseAndOkBad(t *testing.T, msg string, elems ...string) base.Program {
-	var adptr fgg.FGGAdaptor
+	var adptr parser.FGGAdaptor
 	return testutils.ParseAndOkBad(t, msg, &adptr, fgg.MakeFggProgram(elems...))
 }
 
