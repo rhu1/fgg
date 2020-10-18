@@ -23,6 +23,9 @@ help:
 .PHONY: install
 install:
 	go install github.com/rhu1/fgg
+	go install github.com/rhu1/fgg/cmd/fgi
+	go install github.com/rhu1/fgg/cmd/fggi
+	go install github.com/rhu1/fgg/cmd/fggsim
 	go install github.com/rhu1/fgg/cmd/fg2fgg
 
 #.PHONY: check-install
@@ -56,7 +59,14 @@ install-pregen-parser:
 
 .PHONY: clean-install
 clean-install: 
-	cd $$(dirname $$(which fgg)) && rm -f fgg && rm -f fg2fgg
+	if command -v fgg;  then \
+		cd $$(dirname $$(which fgg)) && \
+			rm -f fgg && \
+			rm -f fgi && \
+			rm -f fggi && \
+			rm -f fggsim && \
+			rm -f fg2fgg; \
+	fi
 	rm -rf parser/fg/parser
 	rm -f parser/fg/*
 	rm -rf parser/fgg/parser
