@@ -12,8 +12,8 @@ import (
 
 	"github.com/rhu1/fgg/internal/base"
 	"github.com/rhu1/fgg/internal/base/testutils"
-	"github.com/rhu1/fgg/parser/fgg"
-	"github.com/rhu1/fgg/parser/util"
+	"github.com/rhu1/fgg/internal/parser/util"
+	"github.com/rhu1/fgg/parser/fgg/parser"
 )
 
 var _ = fmt.Errorf

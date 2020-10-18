@@ -31,15 +31,20 @@ install:
 #TODO: check ANTLR
 
 # Needs an appropriate antlr4 command, e.g., java -jar [antlr-4.7.1-complete.jar]
+# Cf. go generate main.go
 .PHONY: generate-parser
 generate-parser:
 	antlr4 -Dlanguage=Go -o parser/fg parser/FG.g4
-	if [ -f parser/fg/parser/fg_parser.go ]; then \
-		mv parser/fg/parser/* parser/fg; \
-	fi
 	antlr4 -Dlanguage=Go -o parser/fgg parser/FGG.g4
-	if [ -f parser/fgg/parser/fgg_parser.go ]; then \
-		mv parser/fgg/parser/* parser/fgg; \
+	if [ -f parser/fg/fg_parser.go ]; then \
+		mv parser/fg/*.go parser/fg/parser && \
+		mv parser/fg/*.tokens parser/fg/parser && \
+		mv parser/fg/*.interp parser/fg/parser; \
+	fi
+	if [ -f parser/fgg/fgg_parser.go ]; then \
+		mv parser/fgg/*.go parser/fgg/parser && \
+		mv parser/fgg/*.tokens parser/fgg/parser && \
+		mv parser/fgg/*.interp parser/fgg/parser; \
 	fi
 
 .PHONY: install-pregen-parser
@@ -292,6 +297,7 @@ clean-test-monom-against-go:
 	$(call rm_monom,tmp/test/fg/oopsla20/functions,functions.go)
 	$(call rm_monom,tmp/test/fg/oopsla20/lists,lists.go)
 	$(call rm_monom,tmp/test/fg/oopsla20/graph,graph.go)
+	$(call rm_monom,tmp/test/fg/oopsla20/expression,expression.go)
 	$(call rm_monom,tmp/test/fg/oopsla20/expression,expression.go)
 
 	rm -fd tmp/test/fg/oopsla20

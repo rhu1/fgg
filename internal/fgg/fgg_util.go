@@ -7,7 +7,7 @@ import (
 
 	"github.com/antlr/antlr4/runtime/Go/antlr"
 
-	"github.com/rhu1/fgg/parser/fgg"
+	"github.com/rhu1/fgg/parser/fgg/parser"
 )
 
 var _ = fmt.Errorf
