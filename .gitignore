@@ -1,4 +1,7 @@
 parser/fg
 parser/fgg
 *.swp
-sess.vim
+_sess.vim
+_scratch.vim
+.vscode
+bin/
