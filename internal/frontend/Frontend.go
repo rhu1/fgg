@@ -1,4 +1,4 @@
-package main
+package frontend
 
 import (
 	"fmt"
@@ -23,6 +23,11 @@ const (
 	NO_EVAL     = -2 // Must be < EVAL_TO_VAL
 )
 
+var (
+	OblitEvalSteps int
+	Verbose        bool
+)
+
 /* -- Interp */
 
 type Interp interface {
@@ -30,16 +35,16 @@ type Interp interface {
 	GetProgram() base.Program
 	SetProgram(p base.Program)
 	Eval(steps int) base.Type
-	vPrint(x string)
-	vPrintln(x string)
+	VPrint(x string)
+	VPrintln(x string)
 }
 
 func parse(verbose bool, a base.Adaptor, src string, strict bool) base.Program {
-	vPrintln(verbose, "\nParsing AST:")
+	VPrintln(verbose, "\nParsing AST:")
 	prog := a.Parse(strict, src) // AST (Program root)
-	vPrintln(verbose, prog.String())
+	VPrintln(verbose, prog.String())
 
-	vPrintln(verbose, "\nChecking source program OK:")
+	VPrintln(verbose, "\nChecking source program OK:")
 	allowStupid := false
 	prog.Ok(allowStupid)
 
@@ -48,23 +53,23 @@ func parse(verbose bool, a base.Adaptor, src string, strict bool) base.Program {
 
 // N.B. currently FG panic comes out implicitly as an underlying run-time panic
 // CHECKME: add explicit FG panics?
-// If steps == EVAL_TO_VAL, then eval to value
-// Post: intrp.GetProgram() contains the eval result; result type is returned
-func eval(intrp Interp, steps int) base.Type {
+// If steps == EVAL_TO_VAL, then Eval to value
+// Post: intrp.GetProgram() contains the Eval result; result type is returned
+func Eval(intrp Interp, steps int) base.Type {
 	if steps < NO_EVAL {
 		panic("Invalid number of steps: " + strconv.Itoa(steps))
 	}
 	p_init := intrp.GetProgram()
 	allowStupid := true
 	t_init := p_init.Ok(allowStupid)
-	intrp.vPrintln("\nEntering Eval loop:")
-	intrp.vPrintln("Decls:")
+	intrp.VPrintln("\nEntering Eval loop:")
+	intrp.VPrintln("Decls:")
 	ds := p_init.GetDecls()
 	for _, v := range ds {
-		intrp.vPrintln("\t" + v.String() + ";")
+		intrp.VPrintln("\t" + v.String() + ";")
 	}
-	intrp.vPrintln("Eval steps:")
-	intrp.vPrintln(fmt.Sprintf("%6d: %8s %v", 0, "", p_init.GetMain())) // Initial prog OK already checked
+	intrp.VPrintln("Eval steps:")
+	intrp.VPrintln(fmt.Sprintf("%6d: %8s %v", 0, "", p_init.GetMain())) // Initial prog OK already checked
 
 	done := steps > EVAL_TO_VAL || // Ignore 'done' if num steps fixed (set true, for `||!done` below)
 		p_init.GetMain().IsValue() // O/w evaluate until a val -- here, check if init expr is already a val
@@ -75,10 +80,10 @@ func eval(intrp Interp, steps int) base.Type {
 	for i := 1; i <= steps || !done; i++ {
 		p, rule = p.Eval()
 		intrp.SetProgram(p)
-		intrp.vPrintln(fmt.Sprintf("%6d: %8s %v", i, "["+rule+"]", p.GetMain()))
-		intrp.vPrint("Checking OK:") // TODO: maybe disable by default, enable by flag
+		intrp.VPrintln(fmt.Sprintf("%6d: %8s %v", i, "["+rule+"]", p.GetMain()))
+		intrp.VPrint("Checking OK:") // TODO: maybe disable by default, enable by flag
 		t = p.Ok(allowStupid)
-		intrp.vPrintln(" " + t.String())
+		intrp.VPrintln(" " + t.String())
 		if !t.Impls(ds, t_init) { // Check type preservation
 			panic("Type not preserved by evaluation.")
 		}
@@ -86,7 +91,7 @@ func eval(intrp Interp, steps int) base.Type {
 			done = true
 		}
 	}
-	intrp.vPrintln(p.GetMain().String()) // Final result  // CHECKME: check prog.printf, for ToGoString?
+	intrp.VPrintln(p.GetMain().String()) // Final result  // CHECKME: check prog.printf, for ToGoString?
 	//return p_res
 	return t
 }
@@ -113,7 +118,7 @@ func (intrp *FGInterp) GetProgram() base.Program  { return intrp.prog }
 func (intrp *FGInterp) SetProgram(p base.Program) { intrp.prog = p.(fg.FGProgram) }
 
 func (intrp *FGInterp) Eval(steps int) base.Type {
-	return eval(intrp, steps)
+	return Eval(intrp, steps)
 }
 
 /* FGR */
@@ -135,7 +140,7 @@ func (intrp *FGRInterp) GetProgram() base.Program  { return intrp.prog }
 func (intrp *FGRInterp) SetProgram(p base.Program) { intrp.prog = p.(fgr.FGRProgram) }
 
 func (intrp *FGRInterp) Eval(steps int) base.Type {
-	return eval(intrp, steps)
+	return Eval(intrp, steps)
 }
 
 /* FGG */
@@ -160,7 +165,7 @@ func (intrp *FGGInterp) GetProgram() base.Program  { return intrp.prog }
 func (intrp *FGGInterp) SetProgram(p base.Program) { intrp.prog = p.(fgg.FGGProgram) }
 
 func (intrp *FGGInterp) Eval(steps int) base.Type {
-	return eval(intrp, steps)
+	return Eval(intrp, steps)
 }
 
 // Pre: (monom == true || compile != "") => -fgg is set
@@ -179,20 +184,20 @@ func (intrp *FGGInterp) Monom(monom bool, compile string) {
 
 	p_mono := fgg.Monomorph(p_fgg)
 	if monom {
-		intrp.vPrintln("\nMonomorphising:")
+		intrp.VPrintln("\nMonomorphising:")
 		fmt.Println(p_mono.String())
 	}
 	if compile != "" {
-		intrp.vPrintln("\nMonomorphising:")
+		intrp.VPrintln("\nMonomorphising:")
 		out := monomOutputHack(p_mono.String())
 		if compile == "--" {
 			fmt.Println(out)
 		} else {
-			intrp.vPrintln(out)
-			intrp.vPrintln("Writing output to: " + compile)
+			intrp.VPrintln(out)
+			intrp.VPrintln("Writing output to: " + compile)
 			bs := []byte(out)
 			err := ioutil.WriteFile(compile, bs, 0644)
-			checkErr(err)
+			CheckErr(err)
 		}
 	}
 }
@@ -202,26 +207,26 @@ func (intrp *FGGInterp) Oblit(compile string) {
 	if compile == "" {
 		return
 	}
-	intrp.vPrintln("\nTranslating FGG to FG(R) using Obliteration: [Warning] WIP [Warning]")
+	intrp.VPrintln("\nTranslating FGG to FG(R) using Obliteration: [Warning] WIP [Warning]")
 	p_fgr := fgr.Obliterate(intrp.GetSource().(fgg.FGGProgram))
 	out := p_fgr.String()
 	// TODO: factor out with -monomc
 	if compile == "--" {
 		fmt.Println(out)
 	} else {
-		intrp.vPrintln(out)
-		intrp.vPrintln("Writing output to: " + compile)
+		intrp.VPrintln(out)
+		intrp.VPrintln("Writing output to: " + compile)
 		bs := []byte(out)
 		err := ioutil.WriteFile(compile, bs, 0644)
-		checkErr(err)
+		CheckErr(err)
 	}
 
 	// cf. interp -- TODO: factor out with others
 	p_fgr.Ok(false)
-	if oblitEvalSteps > NO_EVAL {
-		intrp.vPrint("\nEvaluating FGR:") // eval prints a leading "\n"
-		intrp_fgr := NewFGRInterp(verbose, p_fgr)
-		intrp_fgr.Eval(oblitEvalSteps)
+	if OblitEvalSteps > NO_EVAL {
+		intrp.VPrint("\nEvaluating FGR:") // eval prints a leading "\n"
+		intrp_fgr := NewFGRInterp(Verbose, p_fgr)
+		intrp_fgr.Eval(OblitEvalSteps)
 		fmt.Println(intrp_fgr.GetProgram().GetMain())
 	}
 }
@@ -247,22 +252,29 @@ func (vh verboseHelper) GetVerbose() bool {
 	return vh.verbose
 }
 
-func (vh verboseHelper) vPrint(x string) {
-	vPrint(vh.verbose, x)
+func (vh verboseHelper) VPrint(x string) {
+	VPrint(vh.verbose, x)
 }
 
-func (vh verboseHelper) vPrintln(x string) {
-	vPrintln(vh.verbose, x)
+func (vh verboseHelper) VPrintln(x string) {
+	VPrintln(vh.verbose, x)
 }
 
-func vPrint(verbose bool, x string) {
+func VPrint(verbose bool, x string) {
 	if verbose {
 		fmt.Print(x)
 	}
 }
 
-func vPrintln(verbose bool, x string) {
+func VPrintln(verbose bool, x string) {
 	if verbose {
 		fmt.Println(x)
+	}
+}
+
+// ECheckErr
+func CheckErr(e error) {
+	if e != nil {
+		panic(e)
 	}
 }
