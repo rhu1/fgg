@@ -102,7 +102,7 @@ test-fg-unit:
 .PHONY: test-fg-examples
 test-fg-examples:
 	$(call eval_fg,examples/fg/hello/hello.go,10)
-	$(call eval_fg,examples/fg/hello/fmtprintf.go,10)
+	$(call eval_fg,examples/fg/hello/fmtprintf/fmtprintf.go,10)
 
 	$(call eval_fg,examples/fg/misc/booleans/booleans.go,-1)
 	$(call eval_fg,examples/fg/misc/compose/compose.go,-1)
@@ -148,7 +148,7 @@ test-fgg-unit:
 .PHONY: test-fgg-examples
 test-fgg-examples:
 	$(call eval_fgg,examples/fgg/hello/hello.fgg,10)
-	$(call eval_fgg,examples/fgg/hello/fmtprintf.fgg,10)
+	$(call eval_fgg,examples/fgg/hello/fmtprintf/fmtprintf.fgg,10)
 
 	$(call eval_fgg,examples/fgg/misc/booleans/booleans.fgg,-1)
 	$(call eval_fgg,examples/fgg/misc/compose/compose.fgg,-1)
@@ -200,7 +200,7 @@ test-nomono-bad:
 .PHONY: simulate-monom
 simulate-monom:
 	$(call sim_monom,examples/fgg/hello/hello.fgg,10)
-	$(call sim_monom,examples/fgg/hello/fmtprintf.fgg,10)
+	$(call sim_monom,examples/fgg/hello/fmtprintf/fmtprintf.fgg,10)
 
 	$(call sim_monom,examples/fgg/misc/booleans/booleans.fgg,-1)
 	$(call sim_monom,examples/fgg/misc/compose/compose.fgg,-1)
