@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/rhu1/fgg/base"
+	"github.com/rhu1/fgg/internal/base"
 )
 
 const PARSER_PANIC_PREFIX = "[Parser] "

@@ -2,7 +2,7 @@ package fgr
 
 import "reflect"
 
-import "github.com/rhu1/fgg/base"
+import "github.com/rhu1/fgg/internal/base"
 
 //import "github.com/rhu1/fgg/fgg"
 

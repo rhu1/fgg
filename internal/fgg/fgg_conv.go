@@ -3,8 +3,8 @@ package fgg
 import (
 	"fmt"
 
-	"github.com/rhu1/fgg/base"
-	"github.com/rhu1/fgg/fg"
+	"github.com/rhu1/fgg/internal/base"
+	"github.com/rhu1/fgg/internal/fg"
 )
 
 type fg2fgg struct {

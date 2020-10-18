@@ -5,7 +5,7 @@ import (
 	"reflect"
 	//"strings"
 
-	"github.com/rhu1/fgg/fgg"
+	"github.com/rhu1/fgg/internal/fgg"
 )
 
 var _ = fmt.Errorf

@@ -5,7 +5,7 @@ import (
 	"reflect"
 	//"strings"
 
-	"github.com/rhu1/fgg/fgg"
+	"github.com/rhu1/fgg/internal/fgg"
 )
 
 var _ = fmt.Errorf
@@ -14,6 +14,7 @@ var _ = fmt.Errorf
 
 /* FGGProgram */
 
+// Translate an fgr.FGRProgram to and fgg.FGGProgram
 func Translate(p fgg.FGGProgram) FGRProgram { // TODO: FGR -- also subsume existing FGG-FG trans?
 	var ds_fgr []Decl
 

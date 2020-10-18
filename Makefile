@@ -81,7 +81,7 @@ test-fg: test-fg-unit test-fg-examples
 
 .PHONY: test-fg-unit
 test-fg-unit:
-	go test github.com/rhu1/fgg/fg
+	go test github.com/rhu1/fgg/internal/fg
 
 
 .PHONY: test-fg-examples
@@ -126,7 +126,7 @@ test-fgg: test-fgg-unit test-fgg-examples test-nomono-bad simulate-monom simulat
 
 .PHONY: test-fgg-unit
 test-fgg-unit:
-	go test github.com/rhu1/fgg/fgg
+	go test github.com/rhu1/fgg/internal/fgg
 
 
 # Subsumed by, e.g., simulate-monom

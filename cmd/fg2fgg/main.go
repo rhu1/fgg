@@ -7,8 +7,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/rhu1/fgg/fg"
-	"github.com/rhu1/fgg/fgg"
+	"github.com/rhu1/fgg/internal/fg"
+	"github.com/rhu1/fgg/internal/fgg"
 )
 
 func main() {

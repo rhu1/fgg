@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/rhu1/fgg/base"
-	"github.com/rhu1/fgg/base/testutils"
-	"github.com/rhu1/fgg/fgg"
+	"github.com/rhu1/fgg/internal/base"
+	"github.com/rhu1/fgg/internal/base/testutils"
+	"github.com/rhu1/fgg/internal/fgg"
 )
 
 /* Harness funcs */

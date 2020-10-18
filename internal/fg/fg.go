@@ -2,7 +2,7 @@ package fg
 
 import "reflect"
 
-import "github.com/rhu1/fgg/base"
+import "github.com/rhu1/fgg/internal/base"
 
 /* Aliases from base */
 

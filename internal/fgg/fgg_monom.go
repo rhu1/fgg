@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/rhu1/fgg/fg"
+	"github.com/rhu1/fgg/internal/fg"
 )
 
 var _ = fmt.Errorf

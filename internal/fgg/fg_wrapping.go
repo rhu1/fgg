@@ -5,7 +5,7 @@ import (
 	"reflect"
 	//"strings"
 
-	"github.com/rhu1/fgg/fg"
+	"github.com/rhu1/fgg/internal/fg"
 	//"github.com/rhu1/fgg/fgg"
 )
 
