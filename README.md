@@ -57,12 +57,13 @@ Package organisation:
 * `Makefile` -- install, and for running tests and examples.
 * `main.go` -- main file.
 * `fg` -- FG AST, typing and evaluation.
-  * `fg/examples` -- FG examples.
-    * `fg/examples/oopsla20` -- The FG examples from the paper (i.e., Figs. 1,
-      2 and 7).
 * `fgg` -- FGG AST, typing, evaluation, nomono check, and monomorphisation.
-  * `fgg/examples` -- FGG examples.
-    * `fgg/examples/oopsla20` -- The FGG examples from the paper (i.e., Figs.
+* `examples`
+  * `examples/fg` -- FG examples.
+    * `examples/fg/oopsla20` -- The FG examples from the paper (i.e., Figs. 1,
+      2 and 7).
+  * `examples/fgg` -- FGG examples.
+    * `examples/fgg/oopsla20` -- The FGG examples from the paper (i.e., Figs.
       3--6).
 * `parser` -- FG/FGG parsers (generated using ANTLR).
   * `parser/FG.g4` -- FG ANTLR grammar.
@@ -108,7 +109,7 @@ or generate the parsers yourself using ANTLR and install by
 To test the install -- inside the `github.com/rhu1/fgg` directory, this command
 should work:
 
-- `go run github.com/rhu1/fgg -eval=-1 -v fg/examples/oopsla20/fig1/functions.go`
+- `go run github.com/rhu1/fgg -eval=-1 -v examples/fg/oopsla20/fig1/functions.go`
 
 Afer installing, you can also use the resulting `fgg` binary directly instead
 of `go run`.
@@ -206,7 +207,7 @@ The following commands can be run from the `github.com/rhu1/fgg` directory.
 
 * **FG type check and evaluate**, with verbose printing.
 
-  `go run github.com/rhu1/fgg -eval=-1 -v fg/examples/oopsla20/fig1/functions.go`
+  `go run github.com/rhu1/fgg -eval=-1 -v examples/fg/oopsla20/fig1/functions.go`
 
     * The argument to `-eval` is the number of steps to execute. `-1` means
       run to termination (either a value, or a panic due to a failed type
@@ -216,19 +217,18 @@ The following commands can be run from the `github.com/rhu1/fgg` directory.
 * **FGG type check and evaluate**, with verbose printing.  (Note the `-fgg`
   flag.)
 
-  `go run github.com/rhu1/fgg -fgg -eval=-1 -v fgg/examples/oopsla20/fig3/functions.fgg`
+  `go run github.com/rhu1/fgg -fgg -eval=-1 -v examples/fgg/oopsla20/fig4/functions.fgg`
 
 * **FGG type check, nonomo check and monomorphisation**, with verbose printing.
 
-  `go run github.com/rhu1/fgg -fgg -monomc=-- -v fgg/examples/oopsla20/fig3/functions.fgg`
+  `go run github.com/rhu1/fgg -fgg -monomc=-- -v examples/fgg/oopsla20/fig4/functions.fgg`
 
     * The argument to `-monomc` is a file location for the FG output.  `--`
       means print the output.
 
 * **Simulate FGG against its FG monomorphisation**, with verbose printing.
 
-  `go run github.com/rhu1/fgg -test-monom -v
-  fgg/examples/oopsla20/fig3/functions.fgg`
+  `go run github.com/rhu1/fgg -test-monom -v examples/fgg/oopsla20/fig4/functions.fgg`
 
     * This includes dynamic checking of type preservation checking at both
       levels, and of the monomorphisation correspondence at every evaluation
