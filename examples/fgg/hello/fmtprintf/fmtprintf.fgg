@@ -1,0 +1,13 @@
+//$ go run github.com/rhu1/fgg -fgg -v -eval=10 fgg/examples/hello/fmtprintf.fgg
+
+// N.B. FGG (or at least this implementation) is intended to be white-space *insensitive*.
+// (E.g., this program could be written all on one line.)
+// So the ';' are mandatory -- cannot replace by newlines (as in actual Go).
+// (Newlines and other whitespace may be freely added, though.)
+package main;
+import "fmt";
+type World(type ) struct {};
+func (x0 World(type )) hello(type )() World() { return x0.hello()() };
+func main() {
+	fmt.Printf("%#v", World(){}.hello()())
+}
