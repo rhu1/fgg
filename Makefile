@@ -318,7 +318,7 @@ clean-test-monom-against-go:
 ##
 
 define eval_fg
-	fgg -eval=$(2) $(1)
+	fgi -eval=$(2) $(1)
 endef
 	#RES=`fgg -eval=$(2) $(1)`; \
 	#EXIT=$$?; if [ $$EXIT -ne 0 ]; then exit $$EXIT; fi; \
@@ -331,7 +331,7 @@ define test_fg_against_go
 	EXP=`go run $(1)`; \
 	EXIT=$$?; if [ $$EXIT -ne 0 ]; then exit $$EXIT; fi; \
 	echo "go="$$EXP; \
-	ACT=`fgg -eval=-1 -printf $(1)`; \
+	ACT=`fgi -eval=-1 -printf $(1)`; \
 	EXIT=$$?; if [ $$EXIT -ne 0 ]; then exit $$EXIT; fi; \
 	echo "fg="$$ACT; \
 	if [ "$$EXP" != "$$ACT" ]; then \
@@ -342,7 +342,7 @@ endef
 
 
 define eval_fgg
-	fgg -fgg -eval=$(2) $(1)
+	fggi -eval=$(2) $(1)
 endef
 	#RES=`fgg -fgg -eval=$(2) $(1)`; \
 	#EXIT=$$?; if [ $$EXIT -ne 0 ]; then exit $$EXIT; fi; \
@@ -352,7 +352,7 @@ endef
 # TODO: make error check more specific
 define nomono_bad
 	echo "Testing bad nomono in "$(1)":"
-	RES=`fgg -fgg -monomc=-- $(1) 2> /dev/null`; \
+	RES=`fggi -monomc=-- $(1) 2> /dev/null`; \
 	EXIT=$$?; if [ $$EXIT -eq 0 ]; then \
 		echo "Expected nomono violation, but none occurred."; \
 		exit 1; \
@@ -361,7 +361,7 @@ endef
 
 
 define sim_monom
-	fgg -test-monom -eval=$(2) $(1)
+	fggsim -monom -eval=$(2) $(1)
 endef
 	#`fgg -test-monom -eval=$(2) $(1)`; \
 	#EXIT=$$?; if [ $$EXIT -ne 0 ]; then exit $$EXIT; fi
@@ -369,10 +369,10 @@ endef
 
 define eval_monom_fgg
 	mkdir -p $(3); \
-	RES=`fgg -fgg -eval=$(2) -monomc=$(3)/$(4) $(1)`; \
+	RES=`fggi -eval=$(2) -monomc=$(3)/$(4) $(1)`; \
 	EXIT=$$?; if [ $$EXIT -ne 0 ]; then exit $$EXIT; fi; \
 	echo "fgg="$$RES; \
-	EXP=`fgg -eval=$(2) $(3)/$(4)`; \
+	EXP=`fggi -eval=$(2) $(3)/$(4)`; \
 	EXIT=$$?; if [ $$EXIT -ne 0 ]; then exit $$EXIT; fi; \
 	echo "fg ="$$EXP
 endef
@@ -381,12 +381,12 @@ endef
 define eval_monom_fgg_against_go
 	echo "Testing monom of "$(1)" against Go:"; \
 	mkdir -p $(2); \
-	RES=`fgg -fgg -eval=-1 -monomc=$(2)/$(3) $(1)`; \
+	RES=`fggi -eval=-1 -monomc=$(2)/$(3) $(1)`; \
 	EXIT=$$?; if [ $$EXIT -ne 0 ]; then exit $$EXIT; fi; \
 	echo "fgg="$$RES; \
 	EXP=`go run $(2)/$(3)`; \
 	echo "go ="$$EXP; \
-	ACT=`fgg -eval=-1 -printf $(2)/$(3)`; \
+	ACT=`fgi -eval=-1 -printf $(2)/$(3)`; \
 	echo "fg ="$$ACT; \
 	if [ "$$EXP" != "$$ACT" ]; then \
 		echo "Not equal."; \
@@ -420,12 +420,12 @@ endef
 
 .PHONY: simulate-oblit
 simulate-oblit:
-	fgg -test-oblit -eval=-1 examples/fgg/misc/booleans/booleans.fgg
-	fgg -test-oblit -eval=-1 examples/fgg/misc/compose/compose.fgg
-	fgg -test-oblit -eval=-1 examples/fgg/misc/graph/graph.fgg
-	fgg -test-oblit -eval=-1 examples/fgg/misc/irregular/irregular.fgg
-	fgg -test-oblit -eval=-1 examples/fgg/misc/map/map.fgg
-	fgg -test-oblit -eval=-1 examples/fgg/misc/monomorph/monomorph.fgg
+	fggsim -oblit -eval=-1 examples/fgg/misc/booleans/booleans.fgg
+	fggsim -oblit -eval=-1 examples/fgg/misc/compose/compose.fgg
+	fggsim -oblit -eval=-1 examples/fgg/misc/graph/graph.fgg
+	fggsim -oblit -eval=-1 examples/fgg/misc/irregular/irregular.fgg
+	fggsim -oblit -eval=-1 examples/fgg/misc/map/map.fgg
+	fggsim -oblit -eval=-1 examples/fgg/misc/monomorph/monomorph.fgg
 # TODO: currently trying to run to termination
 #fgg -test-oblit -eval=10 examples/fgg/monom/box/box.fgg
 #fgg -test-oblit -eval=10 examples/fgg/monom/box/box2.fgg
@@ -444,38 +444,38 @@ simulate-oblit:
 .PHONY: test-oblit
 test-oblit:
 	mkdir -p tmp/test-oblit/fgr/booleans
-	fgg -fgg -oblitc=tmp/test-oblit/fgr/booleans/booleans.fgr -oblit-eval=-1 examples/fgg/misc/booleans/booleans.fgg
+	fggi -oblitc=tmp/test-oblit/fgr/booleans/booleans.fgr -oblit-eval=-1 examples/fgg/misc/booleans/booleans.fgg
 # TODO: standalone FGR execution (.fgr output currently unused)
 # 
 	mkdir -p tmp/test-oblit/fgr/compose
-	fgg -fgg -oblitc=tmp/test-oblit/fgr/compose/compose.fgr -oblit-eval=-1 examples/fgg/misc/compose/compose.fgg
+	fggi -oblitc=tmp/test-oblit/fgr/compose/compose.fgr -oblit-eval=-1 examples/fgg/misc/compose/compose.fgg
 
 	mkdir -p tmp/test-oblit/fgr/graph
-	fgg -fgg -oblitc=tmp/test-oblit/fgr/graph/graph.fgr -oblit-eval=-1 examples/fgg/misc/graph/graph.fgg
+	fggi -oblitc=tmp/test-oblit/fgr/graph/graph.fgr -oblit-eval=-1 examples/fgg/misc/graph/graph.fgg
 
 	mkdir -p tmp/test-oblit/fgr/irregular
-	fgg -fgg -oblitc=tmp/test-oblit/fgr/irregular/irregular.fgr -oblit-eval=-1 examples/fgg/misc/irregular/irregular.fgg
+	fggi -oblitc=tmp/test-oblit/fgr/irregular/irregular.fgr -oblit-eval=-1 examples/fgg/misc/irregular/irregular.fgg
 
 	mkdir -p tmp/test-oblit/fgr/map
-	fgg -fgg -oblitc=tmp/test-oblit/fgr/map/map.fgr -oblit-eval=-1 examples/fgg/misc/map/map.fgg
+	fggi -oblitc=tmp/test-oblit/fgr/map/map.fgr -oblit-eval=-1 examples/fgg/misc/map/map.fgg
 
 	mkdir -p tmp/test-oblit/fgr/monomorph
-	fgg -fgg -oblitc=tmp/test-oblit/fgr/monomorph/monomorph.fgr -oblit-eval=-1 examples/fgg/misc/monomorph/monomorph.fgg
+	fggi -oblitc=tmp/test-oblit/fgr/monomorph/monomorph.fgr -oblit-eval=-1 examples/fgg/misc/monomorph/monomorph.fgg
 
 	mkdir -p tmp/test-oblit/fgr/box
-	fgg -fgg -oblitc=tmp/test-oblit/fgr/box/box.fgr -oblit-eval=10 examples/fgg/monom/box/box.fgg
-	fgg -fgg -oblitc=tmp/test-oblit/fgr/box/box2.fgr -oblit-eval=10 examples/fgg/monom/box/box2.fgg
+	fggi -oblitc=tmp/test-oblit/fgr/box/box.fgr -oblit-eval=10 examples/fgg/monom/box/box.fgg
+	fggi -oblitc=tmp/test-oblit/fgr/box/box2.fgr -oblit-eval=10 examples/fgg/monom/box/box2.fgg
 
 	mkdir -p tmp/test-oblit/fgr/misc
-	fgg -fgg -oblitc=tmp/test-oblit/fgr/misc/ifacebox.fgr -oblit-eval=-1 examples/fgg/monom/misc/ifacebox.fgg
+	fggi -oblitc=tmp/test-oblit/fgr/misc/ifacebox.fgr -oblit-eval=-1 examples/fgg/monom/misc/ifacebox.fgg
 # TODO: i/face embedding?
-#fgg -fgg -oblitc=tmp/test-oblit/fgr/misc/iface-embedding-simple.fgr -oblit-eval=-1 examples/fgg/monom/misc/iface-embedding-simple.go
-#fgg -fgg -oblitc=tmp/test-oblit/fgr/misc/iface-embedding.fgr -oblit-eval=-1 examples/fgg/monom/misc/iface-embedding.go
+#fggi -oblitc=tmp/test-oblit/fgr/misc/iface-embedding-simple.fgr -oblit-eval=-1 examples/fgg/monom/misc/iface-embedding-simple.go
+#fggi -oblitc=tmp/test-oblit/fgr/misc/iface-embedding.fgr -oblit-eval=-1 examples/fgg/monom/misc/iface-embedding.go
 
 	mkdir -p tmp/test-oblit/fgr/misc/mono-ok
-	fgg -fgg -oblitc=tmp/test-oblit/fgr/misc/mono-ok/rcver-iface.fgr -oblit-eval=-1 examples/fgg/monom/misc/mono-ok/rcver-iface.go
-	fgg -fgg -oblitc=tmp/test-oblit/fgr/misc/mono-ok/one-pass-prob.fgr -oblit-eval=-1 examples/fgg/monom/misc/mono-ok/one-pass-prob.go
-	fgg -fgg -oblitc=tmp/test-oblit/fgr/misc/mono-ok/contamination.fgr -oblit-eval=-1 examples/fgg/monom/misc/mono-ok/contamination.go
+	fggi -oblitc=tmp/test-oblit/fgr/misc/mono-ok/rcver-iface.fgr -oblit-eval=-1 examples/fgg/monom/misc/mono-ok/rcver-iface.go
+	fggi -oblitc=tmp/test-oblit/fgr/misc/mono-ok/one-pass-prob.fgr -oblit-eval=-1 examples/fgg/monom/misc/mono-ok/one-pass-prob.go
+	fggi -oblitc=tmp/test-oblit/fgr/misc/mono-ok/contamination.fgr -oblit-eval=-1 examples/fgg/monom/misc/mono-ok/contamination.go
 
 	mkdir -p tmp/test-oblit/fgr/misc/mono-ko
 

@@ -36,7 +36,7 @@ func init() {
 	flag.StringVar(&oblitc, "oblitc", "", // Empty string for "false"
 		"[WIP] compile FGG source to FGR (ignored if -fgg not set)\n"+
 			"specify '--' to print to stdout")
-	flag.IntVar(&oblitEvalSteps, "obliteval", -2,
+	flag.IntVar(&oblitEvalSteps, "oblit-eval", -2,
 		" N ⇒ evaluate N (≥ 0) steps; or\n-1 ⇒ evaluate to value (or panic)")
 
 	// Parsing options
