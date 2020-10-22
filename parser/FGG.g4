@@ -81,7 +81,7 @@ expr:
 	NAME																# Variable
 	| typ '{' exprs? '}' /* typ is #TypeName, \tau_S */					# StructLit
 	| expr '.' NAME														# Select
-	| recv = expr '.' NAME '(' targs = typs? ')' '(' args = exprs? ')'	# Call
+	| recv = expr '.' NAME '[' targs = typs? ']' '(' args = exprs? ')'	# Call
 	| expr '.' '(' typ ')'												# Assert
 	| FMT '.' SPRINTF '(' (STRING | '"%#v"') (',' | expr)* ')'			# Sprintf;
 exprs: expr (',' expr)*;
