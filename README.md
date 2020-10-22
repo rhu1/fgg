@@ -61,10 +61,10 @@ Package organisation:
 * `examples`
   * `examples/fg` -- FG examples.
     * `examples/fg/oopsla20` -- The FG examples from the paper (i.e., Figs. 1,
-      2 and 7).
+      2, 3 and 9).
   * `examples/fgg` -- FGG examples.
     * `examples/fgg/oopsla20` -- The FGG examples from the paper (i.e., Figs.
-      3--6).
+      4--8, 10 and 19).
 * `parser` -- FG/FGG parsers (generated using ANTLR).
   * `parser/FG.g4` -- FG ANTLR grammar.
   * `parser/FGG.g4` -- FGG ANTLR grammar.

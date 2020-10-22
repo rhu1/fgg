@@ -82,10 +82,17 @@ func (a *FGGAdaptor) ExitTypeName(ctx *parser.TypeNameContext) {
 	a.push(fgg.NewTName(t, us))
 }
 
+// ExitAny is called when production Any is exited.
+func (a *FGGAdaptor) ExitAny(ctx *parser.AnyContext) {
+	a.push(fgg.NewTName("Any", []fgg.Type{})) // TODO: factor out constant
+}
+
+// TODO: factor out constants, e.g., ctx.GetChildCount() > 2, ctx.GetChild(1)
 func (a *FGGAdaptor) ExitTypeFormals(ctx *parser.TypeFormalsContext) {
 	tfs := []fgg.TFormal{}
-	if ctx.GetChildCount() > 3 {
-		ntfs := (ctx.GetChild(2).GetChildCount() + 1) / 2 // e.g., tf ',' tf ',' tf
+	//if ctx.GetChildCount() > 3 {  // CHECKME: 3? [, ..., ]
+	if ctx.GetChildCount() > 2 {
+		ntfs := (ctx.GetChild(1).GetChildCount() + 1) / 2 // e.g., tf ',' tf ',' tf
 		tfs = make([]fgg.TFormal, ntfs)
 		for i := ntfs - 1; i >= 0; i-- {
 			tfs[i] = a.pop().(fgg.TFormal) // Adding backwards
