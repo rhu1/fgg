@@ -117,8 +117,8 @@ type Cons(type a Any()) struct {
 	tail List(a)
 };
 func (xs Nil(type a Any())) 
-			Map(type b Any())(f Function(a, b)) List(b) {
-	return Nil(b){}
+			Map(type c Any())(f Function(a, c)) List(c) {
+	return Nil(c){}
 };
 func (xs Cons(type a Any())) 
 			Map(type b Any())(f Function(a, b)) List(b) {
