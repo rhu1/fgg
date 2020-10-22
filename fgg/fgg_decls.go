@@ -5,11 +5,13 @@
 
 package fgg
 
-import "fmt"
-import "reflect"
-import "strings"
+import (
+	"fmt"
+	"reflect"
+	"strings"
 
-import "github.com/rhu1/fgg/base"
+	"github.com/rhu1/fgg/base"
+)
 
 var _ = fmt.Errorf
 var _ = reflect.Append
@@ -232,6 +234,11 @@ func (md MethDecl) Ok(ds []Decl) {
 	md.u_ret.Ok(ds, delta)
 	allowStupid := false
 	u := md.e_body.Typing(ds, delta, gamma, allowStupid)
+
+	/*fmt.Println("a:", u)
+	fmt.Println("b:", md.u_ret)
+	fmt.Println("c:", u.ImplsDelta(ds, delta, md.u_ret))*/
+
 	if !u.ImplsDelta(ds, delta, md.u_ret) {
 		panic("Method body type must implement declared return type: found=" +
 			u.String() + ", expected=" + md.u_ret.String() + "\n\t" + md.String())
@@ -363,7 +370,7 @@ func (g Sig) TSubs(subs map[TParam]Type) Sig {
 	tfs := make([]TFormal, len(g.Psi.tFormals))
 	for i := 0; i < len(g.Psi.tFormals); i++ {
 		tf := g.Psi.tFormals[i]
-		tfs[i] = TFormal{tf.name, tf.u_I.TSubs(subs)}
+		tfs[i] = TFormal{tf.name.TSubs(subs).(TParam), tf.u_I.TSubs(subs)}
 	}
 	ps := make([]ParamDecl, len(g.pDecls))
 	for i := 0; i < len(ps); i++ {

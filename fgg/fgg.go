@@ -1,11 +1,13 @@
 package fgg
 
-import "fmt"
-import "reflect"
-import "strconv"
-import "strings"
+import (
+	"fmt"
+	"reflect"
+	"strconv"
+	"strings"
 
-import "github.com/rhu1/fgg/base"
+	"github.com/rhu1/fgg/base"
+)
 
 var _ = fmt.Errorf
 var _ = reflect.Append
@@ -211,15 +213,23 @@ func sigAlphaEquals(g0 Sig, g Sig) bool {
 	for i := 0; i < len(g0.Psi.tFormals); i++ {
 		if !g0.Psi.tFormals[i].u_I.TSubs(subs0).
 			Equals(g.Psi.tFormals[i].u_I.TSubs(subs)) {
+			//fmt.Println("z:")
 			return false
 		}
 	}
 	for i := 0; i < len(g0.pDecls); i++ {
 		if !g0.pDecls[i].u.TSubs(subs0).Equals(g.pDecls[i].u.TSubs(subs)) {
+			/*fmt.Println("w1: ", g0.pDecls[i].u, g0.pDecls[i].u.TSubs(subs0))
+			fmt.Println("w2: ", g.pDecls[i].u, g.pDecls[i].u.TSubs(subs))
+			fmt.Println("y:")*/
 			return false
 		}
 	}
-	return g0.meth == g.meth && g0.u_ret.Equals(g.u_ret)
+	/*fmt.Println("1:", g0)
+	fmt.Println("2:", g)
+	fmt.Println("3:", g0.meth == g.meth, g0.u_ret.Equals(g.u_ret))
+	fmt.Println("4:", g0.u_ret.TSubs(subs0).Equals(g.u_ret.TSubs(subs)))*/
+	return g0.meth == g.meth && g0.u_ret.TSubs(subs0).Equals(g.u_ret.TSubs(subs))
 }
 
 // CHECKME: Used by sigAlphaEquals, and MDecl.OK (for covariant receiver bounds)
