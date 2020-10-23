@@ -3,7 +3,6 @@ package fgg
 import (
 	"fmt"
 	"reflect"
-	"strconv"
 	"strings"
 
 	"github.com/rhu1/fgg/fg"
@@ -289,11 +288,12 @@ type IB interface { foo() Any2 };
 type toAny1 struct { any Any1 };
 func main() { _ = toAny1{A{}}.any.(IB) } // assertion failure */
 func toHashSig(g Sig) string {
-	subs := make(Delta)
+	/*subs := make(Delta)
 	for i := 0; i < len(g.Psi.tFormals); i++ {
 		subs[g.Psi.tFormals[i].name] = TParam("α" + strconv.Itoa(i+1))
 	}
-	g1 := g.TSubs(subs)
+	g1 := g.TSubs(subs)*/
+	g1 := g
 	var b strings.Builder
 	b.WriteString(g.meth)
 	b.WriteString("_")

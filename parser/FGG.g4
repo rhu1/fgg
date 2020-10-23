@@ -1,6 +1,4 @@
 
-
-// FGG.g4
 grammar FGG;
 
 /* Keywords */
@@ -20,7 +18,10 @@ SPRINTF: 'Sprintf';
 
 /* Tokens */
 
-fragment LETTER: ('a' .. 'z') | ('A' .. 'Z') | 'β';
+fragment LETTER: ('a' .. 'z')
+	| ('A' .. 'Z')
+	| 'α' // For FGR deserialization
+	| 'β';
 fragment DIGIT: ('0' .. '9');
 NAME: (LETTER | '_') (LETTER | '_' | DIGIT)*;
 WHITESPACE: [ \r\n\t]+ -> skip;
@@ -73,7 +74,7 @@ fieldDecl: field = NAME typ;
 specs: spec (';' spec)*;
 spec:
 	sig		# SigSpec
-	| typ	# InterfaceSpec ; // Must be a #TypeName, \tau_I -- refactor?
+	| typ	# InterfaceSpec; // Must be a #TypeName, \tau_I -- refactor?
 sig: meth = NAME typeFormals '(' params? ')' typ;
 params: paramDecl (',' paramDecl)*;
 paramDecl: vari = NAME typ;
