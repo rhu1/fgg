@@ -15,9 +15,11 @@ var _ = strconv.AppendBool
 
 /* Export */
 
-func NewTName(t Name, us []Type) TNamed       { return TNamed{t, us} }
-func IsStructType(ds []Decl, u Type) bool     { return isStructType(ds, u) }
-func IsNamedIfaceType(ds []Decl, u Type) bool { return isNamedIfaceType(ds, u) }
+func NewTName(t Name, us []Type) TNamed        { return TNamed{t, us} }
+func IsStructType(ds []Decl, u Type) bool      { return isStructType(ds, u) }
+func IsNamedIfaceType(ds []Decl, u Type) bool  { return isNamedIfaceType(ds, u) }
+func NewTFormal(name TParam, u_I Type) TFormal { return TFormal{name, u_I} }
+func NewBigPsi(tFormals []TFormal) BigPsi      { return BigPsi{tFormals} }
 
 /* Constants */
 
@@ -98,7 +100,8 @@ func (a TParam) ImplsDelta(ds []Decl, delta Delta, u Type) bool {
 		gs := methodsDelta(ds, delta, u)
 		for k, g := range gs {
 			g0, ok := gs0[k]
-			if !ok || !sigAlphaEquals(g0, g) {
+			//if !ok || !sigAlphaEquals(g0, g) {
+			if !ok || g0.String() != g.String() {
 				return false
 			}
 		}

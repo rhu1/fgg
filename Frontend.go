@@ -38,11 +38,6 @@ func parse(verbose bool, a base.Adaptor, src string, strict bool) base.Program {
 	vPrintln(verbose, "\nParsing AST:")
 	prog := a.Parse(strict, src) // AST (Program root)
 	vPrintln(verbose, prog.String())
-
-	vPrintln(verbose, "\nChecking source program OK:")
-	allowStupid := false
-	prog.Ok(allowStupid)
-
 	return prog
 }
 
@@ -104,6 +99,11 @@ var _ Interp = &FGInterp{}
 func NewFGInterp(verbose bool, src string, strict bool) *FGInterp {
 	var a fg.FGAdaptor
 	orig := parse(verbose, &a, src, strict).(fg.FGProgram)
+
+	vPrintln(verbose, "\nChecking source program OK:")
+	allowStupid := false
+	orig.Ok(allowStupid)
+
 	prog := fg.NewFGProgram(orig.GetDecls(), orig.GetMain().(fg.FGExpr), orig.IsPrintf())
 	return &FGInterp{verboseHelper{verbose}, orig, prog}
 }
@@ -148,9 +148,81 @@ type FGGInterp struct {
 
 var _ Interp = &FGGInterp{}
 
+func foo(p fgg.FGGProgram) fgg.FGGProgram {
+	ds := make([]base.Decl, len(p.GetDecls()))
+	for i, v := range p.GetDecls() {
+		ds[i] = foo1(v.(fgg.Decl))
+	}
+	return fgg.NewProgram(ds, p.GetMain().(fgg.FGGExpr), p.IsPrintf())
+}
+
+func foo1(p fgg.Decl) fgg.Decl {
+	switch v := p.(type) {
+	case fgg.STypeLit:
+		return v
+	case fgg.ITypeLit:
+		return foo2(v)
+	case fgg.MethDecl:
+		return foo3(v)
+	default:
+		panic("TODO")
+	}
+}
+
+func foo2(c fgg.ITypeLit) fgg.ITypeLit {
+	orig := c.GetSpecs()
+	ss := make([]fgg.Spec, len(orig))
+	for i, s1 := range orig {
+		switch s := s1.(type) {
+		case fgg.TNamed:
+			ss[i] = s
+		case fgg.Sig:
+			subs := makeParamIndexSubs(s.Psi)
+			ss[i] = s.TSubs(subs)
+		default:
+			panic("TODO")
+		}
+	}
+	return fgg.NewITypeLit(c.GetName(), c.Psi, ss)
+}
+
+func foo3(m fgg.MethDecl) fgg.MethDecl {
+	subs := makeParamIndexSubs(m.Psi_meth)
+	tfs_orig := m.Psi_meth.GetTFormals()
+	tfs := make([]fgg.TFormal, len(tfs_orig))
+	for i, v := range tfs_orig {
+		tfs[i] = fgg.NewTFormal(v.GetTParam().TSubs(subs).(fgg.TParam), v.GetUpperBound().TSubs(subs))
+	}
+	Psi_meth := fgg.NewBigPsi(tfs)
+	pds_orig := m.GetParamDecls()
+	pds := make([]fgg.ParamDecl, len(pds_orig))
+	for i, v := range pds_orig {
+		pds[i] = fgg.NewParamDecl(v.GetName(), v.GetType().TSubs(subs))
+	}
+	return fgg.NewMethDecl(m.GetRecvName(), m.GetRecvTypeName(), m.Psi_recv, m.GetName(), Psi_meth, pds, m.GetReturn().TSubs(subs), m.GetBody().TSubs(subs))
+}
+
+func makeParamIndexSubs(Psi fgg.BigPsi) fgg.Delta {
+	subs := make(fgg.Delta)
+	tfs := Psi.GetTFormals()
+	for j := 0; j < len(tfs); j++ {
+		//subs[Psi.tFormals[j].name] = Psi.tFormals[j].name
+		subs[tfs[j].GetTParam()] = fgg.TParam("β" + strconv.Itoa(j+1))
+	}
+	return subs
+}
+
 func NewFGGInterp(verbose bool, src string, strict bool) *FGGInterp {
 	var a fgg.FGGAdaptor
 	orig := parse(verbose, &a, src, strict).(fgg.FGGProgram)
+
+	//fmt.Println("\n----\n", foo(orig), "\n---\n")
+	orig = foo(orig)
+
+	vPrintln(verbose, "\nChecking source program OK:")
+	allowStupid := false
+	orig.Ok(allowStupid)
+
 	prog := fgg.NewProgram(orig.GetDecls(), orig.GetMain().(fgg.FGGExpr), orig.IsPrintf())
 	return &FGGInterp{verboseHelper{verbose}, orig, prog}
 }

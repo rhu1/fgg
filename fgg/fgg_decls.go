@@ -21,6 +21,21 @@ var _ = reflect.Append
 func NewProgram(ds []Decl, e FGGExpr, printf bool) FGGProgram {
 	return FGGProgram{ds, e, printf}
 }
+func NewITypeLit(t_I Name, Psi BigPsi, specs []Spec) ITypeLit {
+	return ITypeLit{t_I, Psi, specs}
+}
+func NewMethDecl(
+	x_recv Name,
+	t_recv Name,
+	Psi_recv BigPsi,
+	name Name,
+	Psi_meth BigPsi,
+	pDecls []ParamDecl,
+	u_ret Type,
+	e_body FGGExpr) MethDecl {
+	return MethDecl{x_recv, t_recv, Psi_recv, name, Psi_meth, pDecls, u_ret, e_body}
+}
+func NewParamDecl(name Name, u Type) ParamDecl { return ParamDecl{name, u} }
 
 /* Program */
 
