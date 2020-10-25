@@ -69,7 +69,7 @@ Package organisation:
   * `parser/FG.g4` -- FG ANTLR grammar.
   * `parser/FGG.g4` -- FGG ANTLR grammar.
 
-Use the [master](https://github.com/rhu1/fgg/tree/master) branch for the
+Use the [main](https://github.com/rhu1/fgg/tree/main) branch for the
 latest working version.
 
 **Syntax.**  The best source would be the formal grammars in the paper, or else
