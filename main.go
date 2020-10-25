@@ -48,6 +48,8 @@ var (
 	evalSteps int  // number of steps to evaluate
 	verbose   bool // verbose mode
 	printf    bool // use ToGoString for output (e.g., "main." type prefix)
+
+	noDummyMeth bool
 )
 
 func init() {
@@ -88,6 +90,9 @@ func init() {
 		"enable verbose printing")
 	flag.BoolVar(&printf, "printf", false,
 		"use Go style output type name prefixes")
+
+	flag.BoolVar(&noDummyMeth, "nodummy", false,
+		"Exclude dummy methods from monom output")
 }
 
 var usage = func() {
@@ -164,7 +169,7 @@ func main() {
 		}
 
 		// TODO: refactor (cf. Frontend, Interp)
-		intrp_fgg.Monom(monom, monomc)
+		intrp_fgg.Monom(monom, monomc, noDummyMeth)
 		intrp_fgg.Oblit(oblitc)
 		////doWrappers(prog, wrapperc)
 	}
@@ -186,7 +191,7 @@ func testMonom(printf bool, verbose bool, src string, steps int) {
 	intrp_fgg := NewFGGInterp(verbose, src, true)
 	p_fgg := intrp_fgg.GetProgram().(fgg.FGGProgram)
 	u := p_fgg.Ok(false).(fgg.Type) // TNamed, except TParam for primitives (string)
-	vPrintln(verbose, "\nFGG expr: "+p_fgg.GetMain().String())
+	vPrintln(verbose, "\nFGG expr:   "+p_fgg.GetMain().String())
 
 	if ok, msg := fgg.IsMonomOK(p_fgg); !ok {
 		vPrintln(verbose, "\nAborting simulation: Cannot monomorphise (nomono detected):\n\t"+msg)
@@ -197,7 +202,7 @@ func testMonom(printf bool, verbose bool, src string, steps int) {
 	//p_mono := fgg.Monomorph(p_fgg)
 	ds_fgg := p_fgg.GetDecls()
 	omega := fgg.GetOmega(ds_fgg, p_fgg.GetMain().(fgg.FGGExpr))
-	p_mono := fgg.ApplyOmega(p_fgg, omega) // TODO: can just monom expr (ground main) directly
+	p_mono := fgg.ApplyOmega(p_fgg, omega, noDummyMeth) // TODO: can just monom expr (ground main) directly
 	vPrintln(verbose, "Monom expr: "+p_mono.GetMain().String())
 	t := p_mono.Ok(false).(fg.Type)
 	ds_mono := p_mono.GetDecls()
@@ -226,12 +231,12 @@ func testMonom(printf bool, verbose bool, src string, steps int) {
 		// Both non-values, check for stuck (e.g., bad asserts -- though panic is technically not stuck)
 		if main_fgg.CanEval(ds_fgg) {
 			if !main_mono.CanEval(ds_mono) {
-				panic("FGG is stuck but monom is not:\n\tfgg = " + main_fgg.String() +
+				panic("Monom is stuck but FGG is not:\n\tfgg=  " + main_fgg.String() +
 					"\n\tmonom=" + main_mono.String())
 			}
 		} else {
 			if main_mono.CanEval(ds_mono) {
-				panic("Monom is stuck but FGG is not:\n\tfgg = " + main_fgg.String() +
+				panic("FGG is stuck but monom is not:\n\tfgg=  " + main_fgg.String() +
 					"\n\tmonom=" + main_mono.String())
 			}
 			if _, ok := main_fgg.(fgg.Assert); ok {
@@ -244,7 +249,7 @@ func testMonom(printf bool, verbose bool, src string, steps int) {
 		// Repeat: horizontal arrows and right-vertical arrow
 		p_fgg, u, p_mono = testMonomStep(verbose, omega, p_fgg, u, p_mono)
 	}
-	vPrintln(verbose, "\nFinished:\n\tfgg="+p_fgg.GetMain().String()+
+	vPrintln(verbose, "\nFinished:\n\tfgg= "+p_fgg.GetMain().String()+
 		"\n\tmono="+p_mono.GetMain().String())
 }
 
@@ -255,7 +260,7 @@ func testMonomStep(verbose bool, omega fgg.Omega, p_fgg fgg.FGGProgram,
 
 	// Upper-horizontal arrow
 	p1_fgg, _ := p_fgg.Eval()
-	vPrintln(verbose, "\nEval FGG one step: "+p1_fgg.GetMain().String())
+	vPrintln(verbose, "\nEval FGG one step:       "+p1_fgg.GetMain().String())
 	u1 := p1_fgg.Ok(true).(fgg.Type)    // TNamed, except TParam for primitives (string)
 	if !u1.Impls(p_fgg.GetDecls(), u) { // TODO: factor out with Frontend.eval
 		panic("-test-monom failed: type not preserved\n\tprev=" + u.String() +
@@ -264,7 +269,7 @@ func testMonomStep(verbose bool, omega fgg.Omega, p_fgg fgg.FGGProgram,
 
 	// Lower-horizontal arrow
 	p1_mono, _ := p_mono.Eval()
-	vPrintln(verbose, "Eval monom one step: "+p1_mono.GetMain().String())
+	vPrintln(verbose, "Eval monom one step:     "+p1_mono.GetMain().String())
 	t1 := p1_mono.Ok(true).(fg.Type)
 	u1_fg := fgg.ToMonomId(u1)
 	if !t1.Equals(u1_fg) { // CHECKME: needed? or just do monom-level type preservation?
@@ -274,7 +279,7 @@ func testMonomStep(verbose bool, omega fgg.Omega, p_fgg fgg.FGGProgram,
 
 	// Right-vertical arrow
 	//res := fgg.Monomorph(p1_fgg.(fgg.FGGProgram))
-	res := fgg.ApplyOmega(p1_fgg.(fgg.FGGProgram), omega)
+	res := fgg.ApplyOmega(p1_fgg.(fgg.FGGProgram), omega, noDummyMeth)
 	e_fgg := res.GetMain() // N.B. the monom'd FGG expr (i.e., an FGExpr)
 	e_mono := p1_mono.GetMain()
 	vPrintln(verbose, "Monom of one step'd FGG: "+e_fgg.String())

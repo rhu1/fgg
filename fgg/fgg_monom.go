@@ -39,13 +39,16 @@ var empty_I = fg.Type("Top") // !!!
 
 /* Monomorph: FGGProgram -> FGProgram */
 
-func Monomorph(p FGGProgram) fg.FGProgram {
+var skipDummies = false
+
+func Monomorph(p FGGProgram, noDummyMeth bool) fg.FGProgram {
 	ds_fgg := p.GetDecls()
 	omega := GetOmega(ds_fgg, p.GetMain().(FGGExpr))
-	return ApplyOmega(p, omega)
+	return ApplyOmega(p, omega, noDummyMeth)
 }
 
-func ApplyOmega(p FGGProgram, omega Omega) fg.FGProgram {
+func ApplyOmega(p FGGProgram, omega Omega, noDummyMeth bool) fg.FGProgram {
+	skipDummies = noDummyMeth
 	var ds_monom []Decl
 	for _, v := range p.decls {
 		switch d := v.(type) {
@@ -130,8 +133,10 @@ func monomITypeLit1(t_monom fg.Type, c ITypeLit, eta Eta, mu Mu) fg.ITypeLit {
 				g_monom := monomSig1(s, m, theta) // !!! small psi
 				ss = append(ss, g_monom)
 			}
-			hash := fg.NewSig(toHashSig(s.TSubs(subs)), pds_empty, empty_I)
-			ss = append(ss, hash)
+			if !skipDummies {
+				hash := fg.NewSig(toHashSig(s.TSubs(subs)), pds_empty, empty_I)
+				ss = append(ss, hash)
+			}
 		case TNamed: // Embedded
 			u_I := s.SubsEta(eta)
 			emb_monom := toMonomId(u_I)
@@ -187,8 +192,10 @@ func monomMDecl1(omega Omega, md MethDecl) []fg.MethDecl {
 			subs[k] = v
 		}
 		g := md.ToSig().TSubs(subs)
-		hash := fg.NewMDecl(recv_monom, toHashSig(g), pds_empty, empty_I, e_empty)
-		res = append(res, hash)
+		if !skipDummies {
+			hash := fg.NewMDecl(recv_monom, toHashSig(g), pds_empty, empty_I, e_empty)
+			res = append(res, hash)
+		}
 	}
 	return res
 }

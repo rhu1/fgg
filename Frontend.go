@@ -174,7 +174,7 @@ func (intrp *FGGInterp) Eval(steps int) base.Type {
 
 // Pre: (monom == true || compile != "") => -fgg is set
 // rename
-func (intrp *FGGInterp) Monom(monom bool, compile string) {
+func (intrp *FGGInterp) Monom(monom bool, compile string, noDummyMeth bool) {
 	if !monom && compile == "" {
 		return
 	}
@@ -186,7 +186,7 @@ func (intrp *FGGInterp) Monom(monom bool, compile string) {
 		panic("\nCannot monomorphise (nomono detected):\n\t" + msg)
 	}
 
-	p_mono := fgg.Monomorph(p_fgg)
+	p_mono := fgg.Monomorph(p_fgg, noDummyMeth)
 	if monom {
 		intrp.vPrintln("\nMonomorphising:")
 		fmt.Println(p_mono.String())
