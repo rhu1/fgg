@@ -1,19 +1,13 @@
-/* See README.md for install and run examples.
- * See copyright.txt for copyright.
+/* See copyright.txt for copyright.
  */
-
-//go:generate antlr4 -Dlanguage=Go -o parser/fg parser/FG.g4
-//go:generate antlr4 -Dlanguage=Go -o parser/fgg parser/FGG.g4
 
 package main
 
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"reflect"
-	"strconv"
 	"strings"
 
 	"github.com/rhu1/fgg/internal/base"
@@ -23,27 +17,13 @@ import (
 	"github.com/rhu1/fgg/internal/frontend"
 )
 
-var _ = reflect.Append
-var _ = strconv.AppendBool
-
 // Command line parameters/flags
 var (
-	interpFG  bool // parse FG
-	interpFGG bool // parse FGG
-
-	monom  bool   // parse FGG and monomorphise FGG source -- paper notation (angle bracks)
-	monomc string // output filename of monomorphised FGG; "--" for stdout -- Go output (no angle bracks)
-	// TODO: fix naming between "monomc", "compile" and "oblitc"
-
-	oblitc         string // output filename of FGR compilation via oblit; "--" for stdout
-	oblitEvalSteps int    // TODO: A concrete FGR syntax, for oblitc to output
-
 	monomtest bool
 	oblittest bool
 
-	useInternalSrc bool   // use internal source
-	inlineSrc      string // use content of this as source
-	strictParse    bool   // use strict parsing mode
+	inlineSrc   string // use content of this as source
+	strictParse bool   // use strict parsing mode
 
 	evalSteps int  // number of steps to evaluate
 	verbose   bool // verbose mode
@@ -51,32 +31,10 @@ var (
 )
 
 func init() {
-	// FG or FGG
-	flag.BoolVar(&interpFG, "fg", false,
-		"interpret input as FG (defaults to true if neither -fg/-fgg set)")
-	flag.BoolVar(&interpFGG, "fgg", false,
-		"interpret input as FGG")
-
-	// Erasure by monomorphisation -- implicitly disabled if not -fgg
-	flag.BoolVar(&monom, "monom", false,
-		"monomorphise FGG source using paper notation, i.e., angle bracks (ignored if -fgg not set)")
-	flag.StringVar(&monomc, "monomc", "", // Empty string for "false"
-		"monomorphise FGG source to (Go-compatible) FG, i.e., no angle bracks (ignored if -fgg not set)\n"+
-			"specify '--' to print to stdout")
-
-	// Erasure(?) by translation based on type reps -- FGG vs. FGR?
-	flag.StringVar(&oblitc, "oblitc", "", // Empty string for "false"
-		"[WIP] compile FGG source to FGR (ignored if -fgg not set)\n"+
-			"specify '--' to print to stdout")
-	flag.IntVar(&oblitEvalSteps, "oblit-eval", frontend.NO_EVAL,
-		" N ⇒ evaluate N (≥ 0) steps; or\n-1 ⇒ evaluate to value (or panic)")
-
-	flag.BoolVar(&monomtest, "test-monom", false, `Test monom correctness`)
-	flag.BoolVar(&oblittest, "test-oblit", false, `[WIP] Test oblit correctness`)
+	flag.BoolVar(&monomtest, "monom", false, `Test monom correctness`)
+	flag.BoolVar(&oblittest, "oblit", false, `[WIP] Test oblit correctness`)
 
 	// Parsing options
-	flag.BoolVar(&useInternalSrc, "internal", false,
-		`use "internal" input as source`)
 	flag.StringVar(&inlineSrc, "inline", "",
 		`-inline="[FG/FGG src]", use inline input as source`)
 	flag.BoolVar(&strictParse, "strict", true,
@@ -94,10 +52,8 @@ func init() {
 var usage = func() {
 	fmt.Fprintf(os.Stderr, `Usage:
 
-	fgg [options] -fg  path/to/file.fg
-	fgg [options] -fgg path/to/file.fgg
-	fgg [options] -internal
-	fgg [options] -inline "package main; type ...; func main() { ... }"
+	fggsim [options] path/to/file.fg
+	fggsim [options] -inline "package main; type ...; func main() { ... }"
 
 Options:
 
@@ -109,75 +65,27 @@ Options:
 func main() {
 	flag.Usage = usage
 	flag.Parse()
-	frontend.OblitEvalSteps = oblitEvalSteps
-
-	// Determine (default) mode
-	if interpFG {
-		if interpFGG { // -fg "overrules" -fgg
-			interpFGG = false
-		}
-	} else if !interpFGG {
-		interpFG = true // -fg default
-	}
 
 	// Determine source
 	var src string
 	switch {
-	case useInternalSrc: // First priority
-		src = internalSrc() // FIXME: hardcoded to FG
-	case inlineSrc != "": // Second priority, i.e., -inline overrules src file
+	case inlineSrc != "": // -inline overrules src file
 		src = inlineSrc
 	default:
 		if flag.NArg() < 1 {
 			fmt.Fprintln(os.Stderr, "Input error: need a source .go file (or an -inline program)")
 			flag.Usage()
 		}
-		b, err := ioutil.ReadFile(flag.Arg(0))
-		if err != nil {
-			frontend.CheckErr(err)
-		}
-		src = string(b)
+		src = frontend.ReadSourceFile(flag.Arg(0))
 	}
 
 	// Currently hacked
 	if monomtest {
 		testMonom(printf, verbose, src, evalSteps)
-		return // FIXME
-	} else if oblittest {
+	}
+	if oblittest {
 		testOblit(verbose, src)
 		//testOblit(verbose, src, evalSteps)  // TODO: "weak" oblit simulation
-		return
-	}
-
-	switch { // Pre: !(interpFG && interpFGG)
-	case interpFG:
-		intrp_fg := frontend.NewFGInterp(verbose, src, strictParse)
-		if evalSteps > frontend.NO_EVAL {
-			intrp_fg.Eval(evalSteps)
-			printResult(printf, intrp_fg.GetProgram())
-		}
-		// monom implicitly disabled
-	case interpFGG:
-		intrp_fgg := frontend.NewFGGInterp(verbose, src, strictParse)
-
-		if evalSteps > frontend.NO_EVAL {
-			intrp_fgg.Eval(evalSteps)
-			printResult(printf, intrp_fgg.GetProgram())
-		}
-
-		// TODO: refactor (cf. Frontend, Interp)
-		intrp_fgg.Monom(monom, monomc)
-		intrp_fgg.Oblit(oblitc)
-		////doWrappers(prog, wrapperc)
-	}
-}
-
-func printResult(printf bool, p base.Program) {
-	res := p.GetMain()
-	if printf {
-		fmt.Println(res.ToGoString(p.GetDecls()))
-	} else {
-		fmt.Println(res)
 	}
 }
 
@@ -359,33 +267,6 @@ func internalSrc() string {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
  */
 
 /*
@@ -436,96 +317,3 @@ func testOblit(verbose bool, src string) {
 	frontend.VPrintln(verbose, "\nFinished:\n\tfgg="+e1_fgg.String()+
 		"\n\toblit="+e1_oblit.String())
 }
-
-//*/
-
-/*
-func testOblit(verbose bool, src string, steps int) {
-	intrp_fgg := NewFGGInterp(verbose, src, true)
-	p_fgg := intrp_fgg.GetProgram().(fgg.FGGProgram)
-	u := p_fgg.Ok(false).(fgg.TNamed) // Ground
-	frontend.VPrintln(verbose, "\nFGG expr: "+p_fgg.GetMain().String())
-
-	// (Initial) left-vertical arrow
-	p_oblit := fgr.Obliterate(intrp_fgg.GetSource().(fgg.FGGProgram))
-	frontend.VPrintln(verbose, "Oblit expr: "+p_oblit.GetMain().String())
-	t := p_oblit.Ok(false).(fgr.Type)
-	if !t.Equals(fgr.ToFgrTypeFromBounds(make(fgg.Delta), u)) {
-		panic("-test-oblit failed: types do not match\n\tFGG type=" + u.String() +
-			" -> " + fgg.ToMonomId(u).String() + "\n\toblit=" + t.String())
-	}
-
-	done := steps > EVAL_TO_VAL
-	for i := 0; i < steps || !done; i++ {
-		if p_fgg.GetMain().IsValue() {
-			break
-		}
-		// Repeat: horizontal arrows and right-vertical arrow
-		p_fgg, u, p_oblit = testOblitStep(verbose, p_fgg, u, p_oblit)
-	}
-	frontend.VPrintln(verbose, "\nFinished:\n\tfgg="+p_fgg.GetMain().String()+
-		"\n\toblit="+p_oblit.GetMain().String())
-}
-
-// Pre: u = p_fgg.Ok(), t = p_fgr.Ok()
-func testOblitStep(verbose bool, p_fgg fgg.FGGProgram, u fgg.TNamed,
-	p_oblit fgr.FGRProgram) (fgg.FGGProgram, fgg.TNamed, fgr.FGRProgram) {
-
-	// Upper-horizontal arrow
-	p1_fgg, _ := p_fgg.Eval()
-	frontend.VPrintln(verbose, "\nEval FGG one step: "+p1_fgg.GetMain().String())
-	u1 := p1_fgg.Ok(true).(fgg.TNamed)  // Ground
-	if !u1.Impls(p_fgg.GetDecls(), u) { // TODO: factor out with Frontend.eval
-		panic("-test-oblit failed: type not preserved\n\tprev=" + u.String() +
-			"\n\tnext=" + u1.String())
-	}
-
-	// Lower-horizontal arrow -- FIXME: need to greedily do "weak" inserted asserts
-	p1_oblit, _ := p_oblit.Eval()
-	frontend.VPrintln(verbose, "Eval oblit one step: "+p1_oblit.GetMain().String())
-	t1 := p1_oblit.Ok(true).(fgr.Type)
-	if !t1.Equals(fgr.ToFgrTypeFromBounds(make(fgg.Delta), u1)) { // CHECKME: needed? or just do monom-level type preservation?
-		panic("-test-oblit failed: types do not match\n\tFGG type=" + u1.String() +
-			" -> " + fgg.ToMonomId(u1).String() + "\n\toblit=" + t1.String())
-	}
-
-	// Right-vertical arrow
-	res := fgr.Obliterate(p1_fgg.(fgg.FGGProgram))
-	e_fgg := res.GetMain()
-	e_fgr := p1_oblit.GetMain()
-	if e_fgg.IsValue() { // FIXME failed hack, number of eval steps don't correspond
-		frontend.VPrintln(verbose, "Oblit of one step'd FGG: "+e_fgg.String())
-		if e_fgg.String() != e_fgr.String() {
-			panic("-test-oblit failed: exprs do not match\n\tFGG expr=" + e_fgg.String() +
-				"\n\toblit=" + e_fgr.String())
-		}
-	} else if e_fgr.IsValue() {
-		panic("-test-oblit failed: exprs do not match\n\tFGG expr=" + e_fgg.String() +
-			"\n\toblit=" + e_fgr.String())
-	}
-
-	return p1_fgg.(fgg.FGGProgram), u1, p1_oblit.(fgr.FGRProgram)
-}
-//*/
-
-/* [WIP] TODO -- not functional yet
-func doWrappers(prog base.Program, compile string) {
-	if compile == "" {
-		return
-	}
-	frontend.VPrintln("\nTranslating FGG to FG(R) using Wrappers: [Warning] WIP [Warning]")
-	//p_fgr := fgg.FgAdptrTranslate(prog.(fgg.FGGProgram))
-	//p_fgr := fgg.FgrTranslate(prog.(fgg.FGGProgram))
-	p_fgr := fgr.Translate(prog.(fgg.FGGProgram))
-	out := p_fgr.String()
-	// TODO: factor out with -monomc
-	if compile == "--" {
-		fmt.Println(out)
-	} else {
-		frontend.VPrintln("Writing output to: " + compile)
-		bs := []byte(out)
-		err := ioutil.WriteFile(compile, bs, 0644)
-		CheckErr(err)
-	}
-}
-//*/
