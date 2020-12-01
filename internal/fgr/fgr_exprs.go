@@ -514,9 +514,10 @@ func (p Panic) ToGoString(ds []Decl) string {
 
 /* IfThenElse */
 
+// IfThenElse represents type rep comparaisons
 type IfThenElse struct {
 	e1 FGRExpr // Cannot hardcode as Call, needs to be a general eval context
-	e2 FGRExpr // TmpTParam (Variable) or TypeTree
+	e2 FGRExpr // TRep (or TmpTParam (Variable) for "wrappers")
 	e3 FGRExpr
 	//rho Map[fgg.Type]([]fgg.Sig)  // !!!
 	src string // Original FGG source  // TODO store as a top-level comment or so?
@@ -614,7 +615,7 @@ func (c IfThenElse) ToGoString(ds []Decl) string {
 
 type TRep struct {
 	t_name Name
-	args   []FGRExpr // TRep or TmpTParam -- CHECKME: TmpTParam still needed? (wrappers only?)
+	args   []FGRExpr // TRep or TmpTParam -- CHECKME: TmpTParam still needed? ("wrappers" only?)
 	// CHECKME: factor out TArg?
 }
 
@@ -622,7 +623,7 @@ var _ FGRExpr = TRep{}
 
 func (r TRep) Reify() fgg.TNamed {
 	if !r.IsValue() {
-		panic("Cannot refiy non-ground TypeTree: " + r.String())
+		panic("Cannot refiy non-ground TRep: " + r.String())
 	}
 	us := make([]fgg.Type, len(r.args)) // All TName
 	for i := 0; i < len(us); i++ {
@@ -704,7 +705,7 @@ func (r TRep) ToGoString(ds []Decl) string {
 	return b.String()
 }
 
-/* Intermediate TParam -- for WIP wrappers (fgr_translation), not oblit */
+/* Intermediate TParam -- for WIP "wrappers" (fgr_translation), not oblit */
 
 // Cf. Variable
 type TmpTParam struct {

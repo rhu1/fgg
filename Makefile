@@ -447,6 +447,7 @@ simulate-oblit:
 	fgg -test-oblit -eval=-1 examples/fgg/monom/misc/mono-ok/contamination.fgg
 
 
+# !!! currently unused (no monom equiv, closest is test-monom-against-go)
 .PHONY: test-oblit
 test-oblit:
 	mkdir -p tmp/test-oblit/fgr/booleans
