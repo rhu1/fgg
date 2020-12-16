@@ -3,6 +3,7 @@ package fgr
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 
 	//"strings"
 
@@ -246,15 +247,24 @@ func oblitExpr(ds_fgg []Decl, delta fgg.Delta, gamma fgg.Gamma, e_fgg fgg.FGGExp
 		res = NewSynthAssert(res, t_ret)
 		return res
 	case fgg.Assert:
-		x := oblitExpr(ds_fgg, delta, gamma, e.GetExpr())
+		x := Variable{"_x" + strconv.Itoa(nextLetIndex())}
+		eX := oblitExpr(ds_fgg, delta, gamma, e.GetExpr())
 		e1 := NewCall(x, GET_REP, []FGRExpr{})
 		u := e.GetType()
 		e3 := NewAssert(x, toFgrTypeFromBounds(delta, u)) // Not synth
-		p_fgg := fgg.NewProgram(ds_fgg, fgg.NewVariable(fgg.Name("dummy")), false)
-		return IfThenElse{e1, mkRep_oblit(u), e3, p_fgg.String()} // TODO: New constructor
+		pFgg := fgg.NewProgram(ds_fgg, fgg.NewVariable(fgg.Name("dummy")), false)
+		cond := IfThenElse{e1, mkRep_oblit(u), e3, pFgg.String()} // TODO: New constructor
+		return Let{x, eX, cond}
 	default:
 		panic("Unknown FGG Expr type: " + e_fgg.String())
 	}
+}
+
+var letCounter = 0
+
+func nextLetIndex() int {
+	letCounter++
+	return letCounter
 }
 
 /* Aux */
