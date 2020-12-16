@@ -396,7 +396,7 @@ func internalSrc() string {
 
 //*
 // TODO: update following latest -test-monom -- currently just runs to termination
-func testOblit(verbose bool, src string) {
+func testOblit(verbose bool, src string, sSteps int) {
 	intrp_fgg := frontend.NewFGGInterp(verbose, src, true)
 	p_fgg := intrp_fgg.GetProgram().(fgg.FGGProgram)
 	u := p_fgg.Ok(false).(fgg.TNamed) // Ground

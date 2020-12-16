@@ -491,10 +491,12 @@ var _ FGRExpr = SynthAssert{}
 func (a SynthAssert) GetExpr() FGRExpr { return a.e_I }
 func (a SynthAssert) GetType() Type    { return a.t_cast }
 
+// Subs from fgr.FGRExpr
 func (a SynthAssert) Subs(subs map[Variable]FGRExpr) FGRExpr {
 	return SynthAssert{a.e_I.Subs(subs), a.t_cast}
 }
 
+// Eval from base.Expr
 func (a SynthAssert) Eval(ds []Decl) (FGRExpr, string) {
 	if !a.e_I.IsValue() {
 		e, rule := a.e_I.Eval(ds)
@@ -510,6 +512,7 @@ func (a SynthAssert) Eval(ds []Decl) (FGRExpr, string) {
 	panic("Cannot reduce: " + a.String())
 }
 
+// Typing from fgr.FGRExpr
 func (a SynthAssert) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 	t := a.e_I.Typing(ds, gamma, allowStupid)
 	if isStructType(ds, t) {
@@ -532,11 +535,12 @@ func (a SynthAssert) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 		a.t_cast.String() + ", expr=" + t.String())
 }
 
-// From base.Expr
+// IsValue from base.Expr
 func (a SynthAssert) IsValue() bool {
 	return false
 }
 
+// CanEval from base.Expr
 func (a SynthAssert) CanEval(ds []Decl) bool {
 	if a.e_I.CanEval(ds) {
 		return true
@@ -555,6 +559,7 @@ func (a SynthAssert) String() string {
 	return b.String()
 }
 
+// ToGoString from base.Expr
 func (a SynthAssert) ToGoString(ds []Decl) string {
 	var b strings.Builder
 	b.WriteString(a.e_I.ToGoString(ds))
@@ -695,6 +700,83 @@ func (c IfThenElse) ToGoString(ds []Decl) string {
 	b.WriteString(" then ")
 	b.WriteString(c.e3.ToGoString(ds))
 	b.WriteString(" else panic)") // !!! hardcoded else-panic
+	return b.String()
+}
+
+/* Let */
+
+// Let represents: let x = e1 in e2
+type Let struct {
+	x  Variable
+	e1 FGRExpr
+	e2 FGRExpr
+}
+
+var _ FGRExpr = Let{}
+
+// Subs from fgr.FGRExpr
+func (e Let) Subs(subs map[Variable]FGRExpr) FGRExpr {
+	return Let{e.x, e.e1.Subs(subs), e.e2.Subs(subs)}
+}
+
+// Typing from fgr.FGRExpr
+func (e Let) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
+	t1 := e.e1.Typing(ds, gamma, allowStupid)
+	gamma1 := make(Gamma)
+	for k, v := range gamma {
+		gamma1[k] = v
+	}
+	gamma1[e.x.name] = t1
+	return e.e2.Typing(ds, gamma1, allowStupid)
+}
+
+// Eval from base.Expr
+func (e Let) Eval(ds []Decl) (FGRExpr, string) {
+	if !e.e1.IsValue() {
+		e11, rule := e.e1.Eval(ds)
+		return Let{e.x, e11, e.e2}, rule
+	}
+	subs := make(map[Variable]FGRExpr)
+	subs[e.x] = e.e1
+	return e.e2.Subs(subs), "Let"
+}
+
+// IsValue from base.Expr
+func (e Let) IsValue() bool {
+	return false
+}
+
+// CanEval from base.Expr
+func (e Let) CanEval(ds []Decl) bool {
+	if e.e1.CanEval(ds) {
+		return true
+	} else if !e.e1.IsValue() {
+		return false
+	}
+	// Here: e.e1.IsValue()
+	return true
+}
+
+func (e Let) String() string {
+	var b strings.Builder
+	b.WriteString("let ")
+	b.WriteString(e.x.String())
+	b.WriteString("=")
+	b.WriteString(e.e1.String())
+	b.WriteString(" in ")
+	b.WriteString(e.e2.String())
+	return b.String()
+}
+
+// ToGoString from base.Expr
+func (e Let) ToGoString(ds []Decl) string {
+	var b strings.Builder
+	b.WriteString("let ")
+	b.WriteString(e.x.ToGoString(ds))
+	b.WriteString("=")
+	b.WriteString(e.e1.ToGoString(ds))
+	b.WriteString(" in ")
+	b.WriteString(e.e2.ToGoString(ds))
 	return b.String()
 }
 
