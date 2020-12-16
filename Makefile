@@ -141,7 +141,8 @@ test-fg-examples-against-go:
 
 
 .PHONY: test-fgg
-test-fgg: test-fgg-unit test-fgg-examples test-nomono-bad simulate-monom simulate-oblit
+test-fgg: test-fgg-unit test-fgg-examples test-nomono-bad simulate-monom 
+		#simulate-oblit
 #test-fgg-examples executes nomono examples (e.g., oopsla20/fig10/nomono.fgg)
 
 
@@ -436,15 +437,15 @@ simulate-oblit:
 #fgg -test-oblit -eval=10 examples/fgg/monom/box/box.fgg
 #fgg -test-oblit -eval=10 examples/fgg/monom/box/box2.fgg
 
-	fgg -test-oblit -eval=-1 examples/fgg/monom/misc/ifacebox.fgg
+	fggsim -oblit -eval=-1 examples/fgg/monom/misc/ifacebox.fgg
 
 # TODO?
 #fgg -test-oblit -eval=-1 examples/fgg/monom/misc/iface-embedding-simple.fgg
 #fgg -test-oblit -eval=-1 examples/fgg/monom/misc/iface-embedding.fgg
 
-	fgg -test-oblit -eval=-1 examples/fgg/monom/misc/mono-ok/rcver-iface.fgg
-	fgg -test-oblit -eval=-1 examples/fgg/monom/misc/mono-ok/one-pass-prob.fgg
-	fgg -test-oblit -eval=-1 examples/fgg/monom/misc/mono-ok/contamination.fgg
+	fggsim -oblit -eval=-1 examples/fgg/monom/misc/mono-ok/rcver-iface.fgg
+	fggsim -oblit -eval=-1 examples/fgg/monom/misc/mono-ok/one-pass-prob.fgg
+	fggsim -oblit -eval=-1 examples/fgg/monom/misc/mono-ok/contamination.fgg
 
 
 # !!! currently unused (no monom equiv, closest is test-monom-against-go)

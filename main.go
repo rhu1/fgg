@@ -394,7 +394,7 @@ func internalSrc() string {
 
 /* oblit "weak" simulation check */
 
-/*
+//*
 // TODO: update following latest -test-monom -- currently just runs to termination
 func testOblit(verbose bool, src string) {
 	intrp_fgg := frontend.NewFGGInterp(verbose, src, true)
@@ -437,9 +437,10 @@ func testOblit(verbose bool, src string) {
 	frontend.VPrintln(verbose, "\nFinished:\n\tfgg="+e1_fgg.String()+
 		"\n\toblit="+e1_oblit.String())
 }
-*/
 
-// TODO: refactor to cmd dir
+//*/
+
+/*// TODO: refactor to cmd dir  HERE -- deprecate above
 func testOblit(verbose bool, src string, steps int) {
 	intrpFgg := frontend.NewFGGInterp(verbose, src, true)
 	pFgg := intrpFgg.GetProgram().(fgg.FGGProgram)
@@ -455,11 +456,11 @@ func testOblit(verbose bool, src string, steps int) {
 	dsOblit := pOblit.GetDecls()
 	frontend.VPrintln(verbose, "FGG type="+u.String()+", FGR type="+
 		t.String())
-	/*u_fg := fgg.ToMonomId(u)
-	if !t.Equals(u_fg) {  // TODO for oblit
-		panic("-test-monom failed: types do not match\n\tFGG type=" + u.String() +
-			" -> " + u_fg.String() + "\n\tmono=" + t.String())
-	}*/
+	//u_fg := fgg.ToMonomId(u)
+	// if !t.Equals(u_fg) {  // TODO for oblit
+	// 	panic("-test-monom failed: types do not match\n\tFGG type=" + u.String() +
+	// 		" -> " + u_fg.String() + "\n\tmono=" + t.String())
+	// }
 
 	isIfOrTRep := func(e base.Expr) bool {
 		switch e.(type) {
@@ -560,12 +561,12 @@ func testOblitStep(verbose bool, pFgg fgg.FGGProgram,
 	t1 := pOblit1.Ok(true).(fgr.Type)
 	frontend.VPrintln(verbose, "FGG type="+u1.String()+", FGR type="+
 		t1.String())
-	/*uFg1 := fgg.ToMonomId(u1) // TODO: oblit version
-	if !t1.Equals(u1_fg) { // CHECKME: needed?
-		panic("-test-monom failed: types do not match\n\tFGG type=" +
-			u1.String() + " -> " + u1_fg.String() + "\n\tmono=" +
-			t1.String())
-	}*/
+	// uFg1 := fgg.ToMonomId(u1) // TODO: oblit version
+	// if !t1.Equals(u1_fg) { // CHECKME: needed?
+		// panic("-test-monom failed: types do not match\n\tFGG type=" +
+			// u1.String() + " -> " + u1_fg.String() + "\n\tmono=" +
+			// t1.String())
+	// }
 
 	// Right-vertical arrow
 	pFggOblit := fgr.Obliterate(pFgg1.(fgg.FGGProgram))
@@ -587,10 +588,21 @@ func testOblitStep(verbose bool, pFgg fgg.FGGProgram,
 
 	return pFgg1.(fgg.FGGProgram), u1, pOblit1
 }
-
 //*/
 
 /*
+
+
+
+
+
+
+
+
+
+
+
+
 func testOblit(verbose bool, src string, steps int) {
 	intrp_fgg := NewFGGInterp(verbose, src, true)
 	p_fgg := intrp_fgg.GetProgram().(fgg.FGGProgram)

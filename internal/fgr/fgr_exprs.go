@@ -22,6 +22,7 @@ func NewStructLit(t Type, es []FGRExpr) StructLit  { return StructLit{t, es} }
 func NewSelect(e FGRExpr, f Name) Select           { return Select{e, f} }
 func NewCall(e FGRExpr, m Name, es []FGRExpr) Call { return Call{e, m, es} }
 func NewAssert(e FGRExpr, t Type) Assert           { return Assert{e, t} }
+func NewSynthAssert(e FGRExpr, t Type) SynthAssert { return SynthAssert{e, t} }
 
 /* Variable */
 
@@ -77,7 +78,7 @@ type StructLit struct {
 
 var _ FGRExpr = StructLit{}
 
-func (s StructLit) Gerype() Type        { return s.t_S }
+func (s StructLit) GetType() Type       { return s.t_S }
 func (s StructLit) GetElems() []FGRExpr { return s.elems }
 
 func (s StructLit) Subs(subs map[Variable]FGRExpr) FGRExpr {
@@ -402,7 +403,7 @@ type Assert struct {
 var _ FGRExpr = Assert{}
 
 func (a Assert) GetExpr() FGRExpr { return a.e_I }
-func (a Assert) Gerype() Type     { return a.t_cast }
+func (a Assert) GetType() Type    { return a.t_cast }
 
 func (a Assert) Subs(subs map[Variable]FGRExpr) FGRExpr {
 	return Assert{a.e_I.Subs(subs), a.t_cast}
@@ -423,6 +424,7 @@ func (a Assert) Eval(ds []Decl) (FGRExpr, string) {
 	panic("Cannot reduce: " + a.String())
 }
 
+// Typing ...
 func (a Assert) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 	t := a.e_I.Typing(ds, gamma, allowStupid)
 	if isStructType(ds, t) {
@@ -474,6 +476,91 @@ func (a Assert) ToGoString(ds []Decl) string {
 	b.WriteString(".(main.")
 	b.WriteString(a.t_cast.String())
 	b.WriteString(")")
+	return b.String()
+}
+
+/* Synth assert -- duplicated from Assert */
+
+type SynthAssert struct {
+	e_I    FGRExpr
+	t_cast Type
+}
+
+var _ FGRExpr = SynthAssert{}
+
+func (a SynthAssert) GetExpr() FGRExpr { return a.e_I }
+func (a SynthAssert) GetType() Type    { return a.t_cast }
+
+func (a SynthAssert) Subs(subs map[Variable]FGRExpr) FGRExpr {
+	return SynthAssert{a.e_I.Subs(subs), a.t_cast}
+}
+
+func (a SynthAssert) Eval(ds []Decl) (FGRExpr, string) {
+	if !a.e_I.IsValue() {
+		e, rule := a.e_I.Eval(ds)
+		return SynthAssert{e.(FGRExpr), a.t_cast}, rule
+	}
+	t_S := a.e_I.(StructLit).t_S
+	if !isStructType(ds, t_S) {
+		panic("Non struct type found in struct lit: " + t_S.String())
+	}
+	if t_S.Impls(ds, a.t_cast) {
+		return a.e_I, "SynthAssert"
+	}
+	panic("Cannot reduce: " + a.String())
+}
+
+func (a SynthAssert) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
+	t := a.e_I.Typing(ds, gamma, allowStupid)
+	if isStructType(ds, t) {
+		if allowStupid {
+			return a.t_cast
+		} else {
+			panic("Expr must be an interface type (in a non-stupid context): found " +
+				t.String() + " for\n\t" + a.String())
+		}
+	}
+	// t is an interface type
+	if isInterfaceType(ds, a.t_cast) {
+		return a.t_cast // No further checks -- N.B., Robert said they are looking to refine this
+	}
+	// a.t is a struct type
+	if a.t_cast.Impls(ds, t) {
+		return a.t_cast
+	}
+	panic("Struct type assertion must implement expr type: asserted=" +
+		a.t_cast.String() + ", expr=" + t.String())
+}
+
+// From base.Expr
+func (a SynthAssert) IsValue() bool {
+	return false
+}
+
+func (a SynthAssert) CanEval(ds []Decl) bool {
+	if a.e_I.CanEval(ds) {
+		return true
+	} else if !a.e_I.IsValue() {
+		return false
+	}
+	return a.e_I.(StructLit).t_S.Impls(ds, a.t_cast)
+}
+
+func (a SynthAssert) String() string {
+	var b strings.Builder
+	b.WriteString(a.e_I.String())
+	b.WriteString(".((")
+	b.WriteString(a.t_cast.String())
+	b.WriteString("))")
+	return b.String()
+}
+
+func (a SynthAssert) ToGoString(ds []Decl) string {
+	var b strings.Builder
+	b.WriteString(a.e_I.ToGoString(ds))
+	b.WriteString(".((main.")
+	b.WriteString(a.t_cast.String())
+	b.WriteString("))")
 	return b.String()
 }
 
