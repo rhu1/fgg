@@ -517,21 +517,46 @@ func ffSilent(p fgr.FGRProgram) fgr.FGRProgram {
 	return foo.(fgr.FGRProgram)
 }
 
+// FIXME: mismatch between isFFSilent predicate and actual next eval step
+// (e.g., if silent is in second struct arg expr, but first arg expr can eval)
 func isFFSilent(e base.Expr) bool {
 	switch e1 := e.(type) {
+	case fgr.StructLit:
+		for _, v := range e1.GetElems() {
+			if isFFSilent(v) {
+				return true
+			}
+		}
+		return false
+	case fgr.Select:
+		return isFFSilent(e1.GetExpr())
+	case fgr.Call:
+		if isFFSilent(e1.GetReceiver()) {
+			return true
+		}
+		for _, v := range e1.GetArgs() {
+			if isFFSilent(v) {
+				return true
+			}
+		}
+		return false
+	case fgr.Assert:
+		return isFFSilent(e1.GetExpr())
+	case fgr.SynthAssert:
+		e2 := e1.GetExpr()
+		if e2.IsValue() {
+			return true
+		}
+		return isFFSilent(e2)
 	case fgr.IfThenElse:
 		return true
-	/*case fgr.TRep:
-	return true*/
-	case fgr.SynthAssert:
-		return e1.GetExpr().IsValue() // !!!
 	case fgr.Let:
 		eX := e1.GetDef()
 		if eX.IsValue() {
 			return true
 		}
 		return isFFSilent(eX)
-	default:
+	default: // Variable, TRep
 		return false
 	}
 }
@@ -580,7 +605,7 @@ func testOblitStep(verbose bool, pFgg fgg.FGGProgram,
 	eOblit1 := pOblit1.GetMain()
 	if eFgg1Oblit.String() != eOblit1.String() {
 		panic("-test-oblit failed: exprs do not correspond\n\tFGG->oblit   =" +
-			eFgg1Oblit.String() + "\n\tstepped oblit=" + eOblit1.String())
+			eFgg1Oblit.String() + "\n\tStepped oblit=" + eOblit1.String())
 	}
 	//}
 
