@@ -84,7 +84,7 @@ func main() {
 		testMonom(printf, verbose, src, evalSteps)
 	}
 	if oblittest {
-		testOblit(verbose, src)
+		testOblit(verbose, src, evalSteps)
 		//testOblit(verbose, src, evalSteps)  // TODO: "weak" oblit simulation
 	}
 }
@@ -275,45 +275,162 @@ func internalSrc() string {
 
 /* oblit "weak" simulation check */
 
-// TODO: update following latest -test-monom
-func testOblit(verbose bool, src string) {
-	intrp_fgg := frontend.NewFGGInterp(verbose, src, true)
-	p_fgg := intrp_fgg.GetProgram().(fgg.FGGProgram)
-	u := p_fgg.Ok(false).(fgg.TNamed) // Ground
-	frontend.VPrintln(verbose, "\nFGG expr: "+p_fgg.GetMain().String())
+func testOblit(verbose bool, src string, steps int) {
+	intrpFgg := frontend.NewFGGInterp(verbose, src, true)
+	pFgg := intrpFgg.GetProgram().(fgg.FGGProgram)
+	u := pFgg.Ok(false).(fgg.Type) // TNamed, except TParam for primitives (string)
+	frontend.VPrintln(verbose, "\nFGG expr: "+pFgg.GetMain().String())
 
 	// (Initial) left-vertical arrow
-	p_oblit := fgr.Obliterate(intrp_fgg.GetSource().(fgg.FGGProgram))
-	frontend.VPrintln(verbose, "Oblit expr: "+p_oblit.GetMain().String())
-	t := p_oblit.Ok(false).(fgr.Type)
-	t_fgr := fgr.ToFgrTypeFromBounds(make(fgg.Delta), u)
-	if !t.Equals(t_fgr) {
-		panic("-test-oblit failed: types do not match\n\tFGG type=" + u.String() +
-			" -> " + t_fgr.String() + "\n\toblit=" + t.String())
+	//p_mono := fgg.Monomorph(p_fgg)
+	dsFgg := pFgg.GetDecls()
+	pOblit := fgr.Obliterate(pFgg)
+	frontend.VPrintln(verbose, "Oblit expr: "+pOblit.GetMain().String())
+	t := pOblit.Ok(false).(fgr.Type)
+	dsOblit := pOblit.GetDecls()
+	frontend.VPrintln(verbose, "FGG type="+u.String()+", FGR type="+
+		t.String())
+	//u_fg := fgg.ToMonomId(u)
+	// if !t.Equals(u_fg) {  // TODO for oblit
+	// 	panic("-test-monom failed: types do not match\n\tFGG type=" + u.String() +
+	// 		" -> " + u_fg.String() + "\n\tmono=" + t.String())
+	// }
+
+	// TODO: factor out with below
+	ffSilent := func(e base.Expr) bool {
+		switch e1 := e.(type) {
+		case fgr.IfThenElse:
+			return true
+		/*case fgr.TRep:
+		return true*/
+		case fgr.SynthAssert:
+			return e1.IsValue() // !!!
+		case fgr.Let:
+			return true
+		default:
+			return false
+		}
+	}
+	var tmp base.Program = pOblit
+	for ; ffSilent(tmp.GetMain()); tmp, _ = tmp.Eval() {
+		frontend.VPrintln(verbose, "Fast forward oblit one step: "+
+			tmp.GetMain().String())
+	}
+	frontend.VPrintln(verbose, "Initial oblit: "+
+		tmp.GetMain().String())
+	pOblit = tmp.(fgr.FGRProgram)
+
+	done := steps > frontend.EVAL_TO_VAL
+	var mainFgg base.Expr
+	var mainOblit base.Expr
+	for i := 0; i < steps || !done; i++ {
+		mainFgg = pFgg.GetMain()
+		mainOblit = pOblit.GetMain()
+		if mainFgg.IsValue() { // N.B. IsValue -- not CanEval (checked below)
+			if !mainOblit.IsValue() { // TODO: add to -test-oblit
+				panic("FGG is value but monom is not:\n\tfgg = " +
+					mainFgg.String() + "\n\toblit=" + mainOblit.String())
+			}
+			break // Both are values
+		} else if mainOblit.IsValue() {
+			panic("Oblit is value but FGG is not:\n\tfgg = " +
+				mainFgg.String() + "\n\toblit=" + mainOblit.String())
+		}
+		// Both non-values, check for stuck (e.g., bad asserts -- though panic is technically not stuck)
+		if mainFgg.CanEval(dsFgg) {
+			if !mainOblit.CanEval(dsOblit) {
+				panic("FGG is stuck but monom is not:\n\tfgg = " +
+					mainFgg.String() + "\n\toblit=" + mainOblit.String())
+			}
+		} else {
+			if mainOblit.CanEval(dsOblit) {
+				panic("Oblit is stuck but FGG is not:\n\tfgg = " +
+					mainFgg.String() + "\n\toblit=" + mainOblit.String())
+			}
+			if _, ok := mainFgg.(fgg.Assert); ok {
+				if _, ok1 := mainOblit.(fg.Assert); ok1 {
+					break // Both stuck on bad assert
+				}
+			}
+		}
+
+		// Repeat: horizontal arrows and right-vertical arrow
+		pFgg, u, pOblit = testOblitStep(verbose, pFgg, u, pOblit)
+	}
+	frontend.VPrintln(verbose, "\nFinished:\n\tfgg="+pFgg.GetMain().String()+
+		"\n\toblit="+pOblit.GetMain().String())
+}
+
+// TODO: factor out with testMonomStep
+// Pre: u = p_fgg.Ok(), t = p_mono.Ok(), both CanEval
+func testOblitStep(verbose bool, pFgg fgg.FGGProgram,
+	u fgg.Type, pOblit fgr.FGRProgram) (fgg.FGGProgram, fgg.Type,
+	fgr.FGRProgram) {
+
+	// Upper-horizontal arrow
+	pFgg1, _ := pFgg.Eval()
+	frontend.VPrintln(verbose, "\nEval FGG one step: "+
+		pFgg1.GetMain().String())
+	u1 := pFgg1.Ok(true).(fgg.Type)    // TNamed, except TParam for primitives (string)
+	if !u1.Impls(pFgg.GetDecls(), u) { // TODO: factor out with Frontend.eval
+		panic("-test-monom failed: type not preserved\n\tprev=" + u.String() +
+			"\n\tnext=" + u1.String())
 	}
 
-	// Horizontal+ arrows
-	t1 := frontend.Eval(intrp_fgg, frontend.EVAL_TO_VAL).(fgg.Type)
-	t1_fgr := fgr.ToFgrTypeFromBounds(make(fgg.Delta), t1)
-	intrp_oblit := frontend.NewFGRInterp(verbose, p_oblit)
-	t1_oblit := frontend.Eval(intrp_oblit, frontend.EVAL_TO_VAL)
-	if !t1_oblit.Equals(t1_fgr) {
-		panic("-test-oblit failed: types do not match\n\tFGG type=" + u.String() +
-			" -> " + t1_fgr.String() + "\n\toblit=" + t.String())
+	// Lower-horizontal arrow(s), "silent" steps
+	ffSilent := func(e base.Expr) bool { // TODO: factor out with above
+		switch e1 := e.(type) {
+		case fgr.IfThenElse:
+			return true
+		/*case fgr.TRep:
+		return true*/
+		case fgr.SynthAssert:
+			return e1.IsValue() // !!!
+		case fgr.Let:
+			return true
+		default:
+			return false
+		}
 	}
-
-	// (Final) right-vertical arrow
-	p1_fgg := intrp_fgg.GetProgram().(fgg.FGGProgram)
-	e1_fgg := p1_fgg.GetMain()
-	p1_oblit := intrp_oblit.GetProgram().(fgr.FGRProgram)
-	e1_oblit := p1_oblit.GetMain()
-	p1_fgr := fgr.Obliterate(p1_fgg)
-	e1_fgr := p1_fgr.GetMain()
-	if e1_fgr.String() != e1_oblit.String() {
-		panic("-test-oblit failed: exprs do not correspond\n\tFGG expr=" + e1_fgg.String() +
-			"\n\toblit=" + e1_oblit.String())
+	foo, _ := pOblit.Eval()
+	frontend.VPrintln(verbose, "Eval oblit one step: "+
+		foo.GetMain().String())
+	for ; ffSilent(foo.GetMain()); foo, _ = foo.Eval() { // Fast forward "silent" steps
+		frontend.VPrintln(verbose, "Fast forward oblit one step: "+
+			foo.GetMain().String())
 	}
+	pOblit1 := foo.(fgr.FGRProgram)
+	////t1 := pOblit1.Ok(true).(fgr.Type)
+	////frontend.VPrintln(verbose, "FGG type="+u1.String()+", FGR type="+ t1.String())
+	// uFg1 := fgg.ToMonomId(u1) // TODO: oblit version
+	// if !t1.Equals(u1_fg) { // CHECKME: needed?
+	// panic("-test-monom failed: types do not match\n\tFGG type=" +
+	// u1.String() + " -> " + u1_fg.String() + "\n\tmono=" +
+	// t1.String())
+	// }
 
-	frontend.VPrintln(verbose, "\nFinished:\n\tfgg="+e1_fgg.String()+
-		"\n\toblit="+e1_oblit.String())
+	// Right-vertical arrow
+	var bar base.Program = fgr.Obliterate(pFgg1.(fgg.FGGProgram))
+	for ; ffSilent(bar.GetMain()); bar, _ = bar.Eval() { // Fast forward "silent" steps
+		frontend.VPrintln(verbose, "Fast forward fgg->oblit one step: "+
+			bar.GetMain().String())
+	}
+	pFgg1Oblit := bar.(fgr.FGRProgram)
+	eFgg1Oblit := pFgg1Oblit.GetMain() // N.B. the monom'd FGG expr (i.e., an FGExpr)
+	frontend.VPrintln(verbose, "Obliterated one step'd FGG: "+
+		eFgg1Oblit.String())
+
+	//_, string_fgg := eFgg.(fg.StringLit)
+	//_, string_mono := eFgr.(fg.StringLit)
+	//if !(string_fgg && string_mono) {
+	// Replaced parens by angle bracks -- hack for StringLit (cf. examples/fgg/ooplsa20/fig6/expression.fgg)
+	//hacked := testMonomStringHack(eFgg.(fg.FGExpr)).String()
+	eOblit1 := pOblit1.GetMain()
+	if eFgg1Oblit.String() != eOblit1.String() {
+		panic("-test-oblit failed: exprs do not correspond\n\tFGG->oblit   =" +
+			eFgg1Oblit.String() + "\n\tstepped oblit=" + eOblit1.String())
+	}
+	//}
+
+	return pFgg1.(fgg.FGGProgram), u1, pOblit1
 }

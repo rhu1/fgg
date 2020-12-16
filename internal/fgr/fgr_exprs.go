@@ -714,6 +714,12 @@ type Let struct {
 
 var _ FGRExpr = Let{}
 
+// GetDef public getter
+func (e Let) GetDef() FGRExpr { return e.e1 }
+
+// GetBody public getter
+func (e Let) GetBody() FGRExpr { return e.e2 }
+
 // Subs from fgr.FGRExpr
 func (e Let) Subs(subs map[Variable]FGRExpr) FGRExpr {
 	return Let{e.x, e.e1.Subs(subs), e.e2.Subs(subs)}

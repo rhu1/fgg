@@ -427,15 +427,21 @@ endef
 
 .PHONY: simulate-oblit
 simulate-oblit:
+
+# FIXME: "expansion"
+#fggsim -oblit -eval=10 examples/fgg/hello/hello.fgg
+#fggsim -oblit -eval=10 examples/fgg/hello/fmtprintf/fmtprintf.fgg
+
 	fggsim -oblit -eval=-1 examples/fgg/misc/booleans/booleans.fgg
 	fggsim -oblit -eval=-1 examples/fgg/misc/compose/compose.fgg
 	fggsim -oblit -eval=-1 examples/fgg/misc/graph/graph.fgg
 	fggsim -oblit -eval=-1 examples/fgg/misc/irregular/irregular.fgg
 	fggsim -oblit -eval=-1 examples/fgg/misc/map/map.fgg
 	fggsim -oblit -eval=-1 examples/fgg/misc/monomorph/monomorph.fgg
-# TODO: currently trying to run to termination
-#fgg -test-oblit -eval=10 examples/fgg/monom/box/box.fgg
-#fgg -test-oblit -eval=10 examples/fgg/monom/box/box2.fgg
+
+# FIXME: "expansion"
+#fggsim -oblit -eval=10 examples/fgg/monom/box/box.fgg
+#fggsim -oblit -eval=10 examples/fgg/monom/box/box2.fgg
 
 	fggsim -oblit -eval=-1 examples/fgg/monom/misc/ifacebox.fgg
 
@@ -446,6 +452,24 @@ simulate-oblit:
 	fggsim -oblit -eval=-1 examples/fgg/monom/misc/mono-ok/rcver-iface.fgg
 	fggsim -oblit -eval=-1 examples/fgg/monom/misc/mono-ok/one-pass-prob.fgg
 	fggsim -oblit -eval=-1 examples/fgg/monom/misc/mono-ok/contamination.fgg
+
+	fggsim -oblit -eval=-1 examples/fgg/monom/misc/mono-ok/struct-poly-rec.fgg
+	fggsim -oblit -eval=-1 examples/fgg/monom/misc/mono-ok/Parameterised-Map.fgg
+	fggsim -oblit -eval=10 examples/fgg/monom/misc/mono-ok/alternate.fgg
+	fggsim -oblit -eval=-1 examples/fgg/monom/misc/mono-ok/i-closure.fgg
+	fggsim -oblit -eval=-1 examples/fgg/monom/misc/mono-ok/i-closure-bad.fgg
+	fggsim -oblit -eval=7 examples/fgg/monom/misc/mono-ok/meth-clash.fgg
+	fggsim -oblit -eval=2 examples/fgg/monom/misc/mono-ok/param-meth-cast.fgg
+	fggsim -oblit -eval=10 examples/fgg/monom/misc/mono-ok/poly-rec-iface.fgg
+
+# TODO: mono KO
+
+	fggsim -oblit -eval=-1 examples/fgg/oopsla20/fig4/functions.fgg
+	fggsim -oblit -eval=-1 examples/fgg/oopsla20/fig5/equality.fgg
+	fggsim -oblit -eval=-1 examples/fgg/oopsla20/fig6/lists.fgg
+	fggsim -oblit -eval=-1 examples/fgg/oopsla20/fig7/graph.fgg
+	fggsim -oblit -eval=-1 examples/fgg/oopsla20/fig8/expression.fgg
+	fggsim -oblit -eval=-1 examples/fgg/oopsla20/fig10/nomono.fgg
 
 
 # !!! currently unused (no monom equiv, closest is test-monom-against-go)

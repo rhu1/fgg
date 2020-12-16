@@ -97,4 +97,10 @@ func main() {
 	intrpFgg.Monom(false, monomc)
 	intrpFgg.Oblit(oblitc)
 	////doWrappers(prog, wrapperc)
+
+	/*if evalSteps > frontend.NO_EVAL {
+		intrpFgg.Eval(evalSteps)
+		frontend.PrintResult(printf, intrpFgg.GetProgram())
+	}
+	frontend.PrintResult(printf, intrpFgg.GetProgram())*/
 }
