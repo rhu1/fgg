@@ -260,13 +260,6 @@ func oblitExpr(ds_fgg []Decl, delta fgg.Delta, gamma fgg.Gamma, e_fgg fgg.FGGExp
 	}
 }
 
-var letCounter = 0
-
-func nextLetIndex() int {
-	letCounter++
-	return letCounter
-}
-
 /* Aux */
 
 // i.e., "erase" -- cf. oblit
@@ -326,4 +319,11 @@ func mkRep_oblit(u fgg.Type) FGRExpr { // Duplicated from fgr_translation
 		panic("Unknown fgg.Type kind " + reflect.TypeOf(u).String() +
 			": " + u.String())
 	}
+}
+
+var letCounter = 0
+
+func nextLetIndex() int {
+	letCounter++
+	return letCounter
 }
