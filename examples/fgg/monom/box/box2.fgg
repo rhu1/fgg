@@ -1,4 +1,4 @@
-//$ go run github.com/rhu1/fgg -fgg -eval=10 -monomc=tmp/test/fg/monom/box/box2.go fgg/examples/monom/box/box2.fgg
+//$ go run github.com/rhu1/fgg -fgg -eval=10 -monomc=tmp/test/fg/monom/box/box2.go examples/fgg/monom/box/box2.fgg
 
 package main;
 
