@@ -127,6 +127,7 @@ func (xs Cons(type a Any()))
 	return Cons(b){f.Apply()(xs.head), xs.tail.Map(b)(f)}
 };
 
+//type D(type a List(Any())) struct {};
 type D(type a List(b), b Any()) struct {};
 /*func (x0 D(type a List(b), b Any())) ok(type )(x1 a, x2 b)) Any() {
 	//return D(a, b){}.ok()(Cons(b){x2, x1}, x2)  // CHECKME?
@@ -134,15 +135,19 @@ type D(type a List(b), b Any()) struct {};
 	//return D(List(b), b){}.ok()(Cons(List(b)){x1, Nil(List(b)){}}, x2)  // Cons(List(b)) <:/ List(b)
 };*/
 
-//func (x0 D(type a List(b), b Any())) ok(type )(x1 a, x2 b)) Any() {   // FIXME extra b)) not detected
+////func (x0 D(type a List(b), b Any())) ok(type )(x1 a, x2 b)) Any() {   // FIXME extra b)) not detected
+//func (x0 D(type a List(Any()))) ok(type )(x1 a) Any() {
 func (x0 D(type a List(b), b Any())) ok(type )(x1 a, x2 b) Any() {
-	//return x0.ok()(Cons(Any()){x1, Nil(Any()){}}, Nil(b){})  // CHECKME
+	////return x0.ok()(Cons(Any()){x1, Nil(Any()){}}, Nil(b){})  // CHECKME
+	//return D(List(Any())){}.ok()(Cons(Any()){x1, Nil(Any()){}})  // OK
 	return D(List(Any()), Any()){}.ok()(Cons(Any()){x1, Nil(Any()){}}, Nil(b){})  // OK
 };
 
-//*
+/*
 // CHECKME: why nomono even when not used?
-func (x0 D(type a List(b), b Any())) ko(type )(x1 a, x2 b)) Any() {
+//func (x0 D(type a List(Any()))) ko(type )(x1 a) Any() {
+func (x0 D(type a List(b), b Any())) ko(type )(x1 a, x2 b) Any() {
+	//return D(List(List(b))){}.ko()(Cons(List(b)){x1, Nil(List(b)){}})
 	return D(List(List(b)), List(b)){}.ko()(Cons(List(b)){x1, Nil(List(b)){}}, Nil(b){})  // KO
 	// FIXME formatting: D(type a List(b), b Any()) ->* D(Cons(List(b))List(b))
 };
@@ -161,6 +166,7 @@ func main() {
 	////fmt.Printf("%#v", D(List(Int()), Int()){}.ok()(Nil(Int()){}, Ints(){}._1()()))
 	////fmt.Printf("%#v", D(List(Int()), Int()){}.ko()(Nil(Int()){}, Ints(){}._1()()))
 	////fmt.Printf("%#v", E(List(Any())){}.ok2()(Nil(Any()){}))
+	//fmt.Printf("%#v", D(List(Any())){}.ok()(Nil(Any()){}))
 	fmt.Printf("%#v", D(List(Any()), Any()){}.ok()(Nil(Any()){}, Ints(){}._1()()))
 	//fmt.Printf("%#v", D(List(Any()), Any()){}.ko()(Nil(Any()){}, Ints(){}._1()()))
 	/*
