@@ -143,7 +143,7 @@ func (x0 D(type a List(b), b Any())) ok(type )(x1 a, x2 b) Any() {
 	return D(List(Any()), Any()){}.ok()(Cons(Any()){x1, Nil(Any()){}}, Nil(b){})  // OK
 };
 
-/*
+//*
 // CHECKME: why nomono even when not used?
 //func (x0 D(type a List(Any()))) ko(type )(x1 a) Any() {
 func (x0 D(type a List(b), b Any())) ko(type )(x1 a, x2 b) Any() {
@@ -177,36 +177,26 @@ func main() {
 }
 
 /*
+type Any interface {}
+type List[a Any] interface { mapp() List[a] }  // Dummy version of map method
+type Nil[a Any] struct {}
+func (x0 Nil[a]) mapp() List[a] { return x0 }
+type Cons[a Any] struct { head a; tail List[a] }
+func (x0 Cons[a]) mapp() List[a] { return x0 }
 
-type List[a any] interface {
-	//Map(type b Any())(f Function(a, b)) List(b)
-	foo() List[a]
-};
-type Nil[a any] struct {};
-type Cons[a any] struct {
-	head a;
-	tail List[a]
-};
-func (x0 Nil[a]) foo() List[a] {
-	return x0
-};
-func (x0 Cons[a]) foo() List[a] {
-	return x0
-};
-
-
-type D[a List[b], b any] struct {};
-
-func (x0 D[a, b]) ok(x1 a, x2 b) interface{} {
-	return D[List[interface{}], interface{}]{}.ok(Cons[interface{}]{x1, Nil[interface{}]{}}, Nil[b]{})  // OK
-};
+type D[a List[b], b Any] struct {};
+func (x0 D[a, b]) ok(x1 a, x2 b) Any {
+    fmt.Print(".")
+    return D[List[Any], Any]{}.ok(
+            Cons[Any]{x1, Nil[Any]{}}, Nil[b]{})
+}
 
 // CHECKME: why nomono even when not used?
-func (x0 D[a, b]) ko(x1 a, x2 b) interface{} {
-	return D[List[List[b]], List[b]]{}.ko(Cons[List[b]]{x1, Nil[List[b]]{}}, Nil[b]{})  // KO
-};
+func (x0 D[a, b]) ko(x1 a, x2 b) Any {
+    return D[List[List[b]], List[b]]{}.ko(Cons[List[b]]{x1, Nil[List[b]]{}}, Nil[b]{})
+}
 
 func main() {
-	//fmt.Printf("%#v", D[List[int], int]{}.ok(Nil[int]{}, 1))
-	fmt.Printf("%#v", D[List[int], int]{}.ko(Nil[int]{}, 1))
-*/
+    fmt.Printf("%#v", D[List[Any], Any]{}.ok(Nil[Any]{}, 0))
+}
+//*/

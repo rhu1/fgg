@@ -436,8 +436,12 @@ func (x0 SmallPsi) TSubs(subs map[TParam]Type) SmallPsi {
 
 func (x0 SmallPsi) String() string {
 	var b strings.Builder
-	for _, v := range x0 {
-		b.WriteString(v.String())
+	if len(x0) > 0 {
+		b.WriteString(x0[0].String())
+		for _, v := range x0[1:] {
+			b.WriteString(", ")
+			b.WriteString(v.String())
+		}
 	}
 	return b.String()
 }
