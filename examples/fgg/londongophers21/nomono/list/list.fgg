@@ -202,19 +202,3 @@ func main() {
 }
 //*/
 
-type Any interface {}
-type List[a Any] interface { mapp() List[a] }  // Dummy version of map method
-type Nil[a Any] struct {}
-func (x0 Nil[a]) mapp() List[a] { return x0 }
-type Cons[a Any] struct { head a; tail List[a] }
-func (x0 Cons[a]) mapp() List[a] { return x0 }
-
-type D[a List[b], b Any] struct {};
-func (x0 D[a, b]) ok(x1 a) Any {
-    return D[List[Any], Any]{}.ok(
-            Cons[Any]{x1, Nil[Any]{}})
-}
-
-func main() {
-    _ = "%#v", D[List[Any], Any]{}.ok(Nil[Any]{})
-}
