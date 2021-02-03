@@ -510,7 +510,8 @@ func testOblit(verbose bool, src string, steps int) {
 // Fast forward "silent" steps
 func ffSilent(p fgr.FGRProgram) fgr.FGRProgram {
 	var foo base.Program = p
-	for ; isFFSilent(foo.GetMain()); foo, _ = foo.Eval() {
+	for isFFSilent(foo.GetMain()) {
+		foo, _ = foo.Eval()
 		frontend.VPrintln(verbose, "Fast forward one step: "+
 			foo.GetMain().String())
 	}
