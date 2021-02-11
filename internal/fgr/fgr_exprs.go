@@ -764,7 +764,12 @@ func (e Let) GetBody() FGRExpr { return e.e2 }
 
 // Subs from fgr.FGRExpr
 func (e Let) Subs(subs map[Variable]FGRExpr) FGRExpr {
-	return Let{e.x, e.e1.Subs(subs), e.e2.Subs(subs)}
+	subs1 := make(map[Variable]FGRExpr)
+	for k, v := range subs {
+		subs1[k] = v
+	}
+	subs1[e.x] = e.x
+	return Let{e.x, e.e1.Subs(subs1), e.e2.Subs(subs1)}
 }
 
 // Typing from fgr.FGRExpr
@@ -841,6 +846,9 @@ type TRep struct {
 }
 
 var _ FGRExpr = TRep{}
+
+// GetArgs public getter
+func (r TRep) GetArgs() []FGRExpr { return r.args }
 
 func (r TRep) Reify() fgg.TNamed {
 	if !r.IsValue() {

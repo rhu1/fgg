@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -565,6 +566,13 @@ func isFFSilent(ds []base.Decl, e base.Expr) bool {
 			return true
 		}
 		return isFFSilent(ds, eX)
+	case fgr.TRep:
+		for _, v := range e1.GetArgs() {
+			if v.CanEval(ds) {
+				return true
+			}
+		}
+		return false
 	default: // Variable, TRep
 		return false
 	}
@@ -615,12 +623,17 @@ func testOblitStep(verbose bool, pFgg fgg.FGGProgram,
 	//if eFgg1Oblit.String() != eOblit1.String() {
 	fggDrop := eFgg1Oblit.DropSynthAsserts()
 	oblitDrop := eOblit1.DropSynthAsserts()
-	if fggDrop.String() != oblitDrop.String() {
+	re := regexp.MustCompile("_x[0-9]*")
+	tmpA := re.ReplaceAllString(fggDrop.String(), "_xxx") // TODO FIXME
+	tmpB := re.ReplaceAllString(oblitDrop.String(), "_xxx")
+	//if fggDrop.String() != oblitDrop.String() {
+	if tmpA != tmpB {
 		fmt.Println("aaa:", eOblit1)
 		fmt.Println("bbb:", pTmp.GetMain())
 		fmt.Println("ccc:", oblitDrop)
 		panic("-test-oblit failed: exprs do not correspond\n\tFGG->oblit   =" +
-			fggDrop.String() + "\n\tStepped oblit=" + oblitDrop.String())
+			//fggDrop.String() + "\n\tStepped oblit=" + oblitDrop.String())
+			tmpA + "\n\tStepped oblit=" + tmpB)
 	}
 	//}
 
