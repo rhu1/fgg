@@ -24,7 +24,7 @@ func NewBigPsi(tFormals []TFormal) BigPsi      { return BigPsi{tFormals} }
 /* Constants */
 
 // Hacks
-var STRING_TYPE = TParam("string")
+var STRING_TYPE = TParam("string") // !!! TParam
 var PRIMITIVE_TYPES = make(map[TParam]TParam)
 var PRIMITIVE_PSI BigPsi // Because prim types parsed as TParams, need to check OK
 

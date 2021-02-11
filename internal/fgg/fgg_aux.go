@@ -1,7 +1,9 @@
 package fgg
 
-import "fmt"
-import "reflect"
+import (
+	"fmt"
+	"reflect"
+)
 
 var _ = fmt.Errorf
 
@@ -42,8 +44,13 @@ func fields(ds []Decl, u_S TNamed) []FieldDecl {
 }
 
 // Go has no overloading, meth names are a unique key
-func methods(ds []Decl, u Type) map[Name]Sig {
+func methods(ds []Decl, u Type) map[Name]Sig { // CHECKME: deprecate?
 	return methodsDelta(ds, make(Delta), u)
+}
+
+// TODO FIXME refactor
+func MethodsDelta1(ds []Decl, delta Delta, u Type) map[Name]Sig {
+	return methodsDelta(ds, delta, u)
 }
 
 func methodsDelta(ds []Decl, delta Delta, u Type) map[Name]Sig {

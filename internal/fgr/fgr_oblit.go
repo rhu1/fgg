@@ -234,7 +234,9 @@ func oblitExpr(ds_fgg []Decl, delta fgg.Delta, gamma fgg.Gamma, e_fgg fgg.FGGExp
 		}
 
 		u_recv := e_fgg.Typing(ds_fgg, delta, gamma, true)
-		g := fgg.Methods(ds_fgg, fgg.Bounds(delta, u_recv))[m]
+
+		//g := fgg.Methods(ds_fgg, fgg.Bounds(delta, u_recv))[m]
+		g := fgg.MethodsDelta1(ds_fgg, delta, fgg.Bounds(delta, u_recv))[m]
 		tsubs := make(map[fgg.TParam]fgg.Type)
 		tfs := g.GetPsi().GetTFormals()
 		for i := 0; i < len(targs); i++ {
@@ -264,7 +266,7 @@ func oblitExpr(ds_fgg []Decl, delta fgg.Delta, gamma fgg.Gamma, e_fgg fgg.FGGExp
 
 // i.e., "erase" -- cf. oblit
 func toFgrTypeFromBounds(delta fgg.Delta, u fgg.Type) Type {
-	return Type(fgg.Bounds(delta, u).(fgg.TNamed).GetName())
+	return Type(fgg.Bounds(delta, u).(fgg.TNamed).GetName()) // !!! cf. STRING_TYPE hack, TParam
 }
 
 // TODO: check where dtype should be used in wrapper translation -- and add unit tests (when return type is type param, don't want the FGG type arg, which may be struct; want the FGR target decl type as the wrapper target)
