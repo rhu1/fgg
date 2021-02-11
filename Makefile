@@ -464,12 +464,12 @@ simulate-oblit:
 
 # TODO: mono KO
 
-	fggsim -oblit -eval=-1 examples/fgg/oopsla20/fig4/functions.fgg
-	fggsim -oblit -eval=-1 examples/fgg/oopsla20/fig5/equality.fgg
-	fggsim -oblit -eval=-1 examples/fgg/oopsla20/fig6/lists.fgg
-	fggsim -oblit -eval=-1 examples/fgg/oopsla20/fig7/graph.fgg
-	fggsim -oblit -eval=-1 examples/fgg/oopsla20/fig8/expression.fgg
-	fggsim -oblit -eval=-1 examples/fgg/oopsla20/fig10/nomono.fgg
+	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/oopsla20/fig4/functions.fgg
+	go run github.com/rhu1/fgg -fgg -test-oblit fggsim -oblit -eval=-1 examples/fgg/oopsla20/fig5/equality.fgg
+	go run github.com/rhu1/fgg -fgg -test-oblit fggsim -oblit -eval=-1 examples/fgg/oopsla20/fig6/lists.fgg
+	go run github.com/rhu1/fgg -fgg -test-oblit fggsim -oblit -eval=-1 examples/fgg/oopsla20/fig7/graph.fgg
+	go run github.com/rhu1/fgg -fgg -test-oblit fggsim -oblit -eval=-1 examples/fgg/oopsla20/fig8/expression.fgg
+	go run github.com/rhu1/fgg -fgg -test-oblit fggsim -oblit -eval=-1 examples/fgg/oopsla20/fig10/nomono.fgg
 
 
 # !!! currently unused (no monom equiv, closest is test-monom-against-go)
