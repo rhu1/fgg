@@ -578,6 +578,8 @@ func isFFSilent(ds []base.Decl, e base.Expr) bool {
 	}
 }
 
+// HERE: irregular and nomono
+
 // TODO: factor out with testMonomStep
 // Pre: u = p_fgg.Ok(), t = p_mono.Ok(), both CanEval
 func testOblitStep(verbose bool, pFgg fgg.FGGProgram,
