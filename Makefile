@@ -432,35 +432,35 @@ simulate-oblit:
 #fggsim -oblit -eval=10 examples/fgg/hello/hello.fgg
 #fggsim -oblit -eval=10 examples/fgg/hello/fmtprintf/fmtprintf.fgg
 
-	fggsim -oblit -eval=-1 examples/fgg/misc/booleans/booleans.fgg
-	fggsim -oblit -eval=-1 examples/fgg/misc/compose/compose.fgg
-	fggsim -oblit -eval=-1 examples/fgg/misc/graph/graph.fgg
-	fggsim -oblit -eval=-1 examples/fgg/misc/irregular/irregular.fgg
-	fggsim -oblit -eval=-1 examples/fgg/misc/map/map.fgg
-	fggsim -oblit -eval=-1 examples/fgg/misc/monomorph/monomorph.fgg
+	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/misc/booleans/booleans.fgg
+	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/misc/compose/compose.fgg
+	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/misc/graph/graph.fgg
+	#go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/misc/irregular/irregular.fgg
+	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/misc/map/map.fgg
+	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/misc/monomorph/monomorph.fgg
 
 # FIXME: "expansion"
 #fggsim -oblit -eval=10 examples/fgg/monom/box/box.fgg
 #fggsim -oblit -eval=10 examples/fgg/monom/box/box2.fgg
 
-	fggsim -oblit -eval=-1 examples/fgg/monom/misc/ifacebox.fgg
+	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/monom/misc/ifacebox.fgg
 
 # TODO?
 #fgg -test-oblit -eval=-1 examples/fgg/monom/misc/iface-embedding-simple.fgg
 #fgg -test-oblit -eval=-1 examples/fgg/monom/misc/iface-embedding.fgg
 
-	fggsim -oblit -eval=-1 examples/fgg/monom/misc/mono-ok/rcver-iface.fgg
-	fggsim -oblit -eval=-1 examples/fgg/monom/misc/mono-ok/one-pass-prob.fgg
-	fggsim -oblit -eval=-1 examples/fgg/monom/misc/mono-ok/contamination.fgg
+	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/monom/misc/mono-ok/rcver-iface.fgg
+	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/monom/misc/mono-ok/one-pass-prob.fgg
+	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/monom/misc/mono-ok/contamination.fgg
 
-	fggsim -oblit -eval=-1 examples/fgg/monom/misc/mono-ok/struct-poly-rec.fgg
-	fggsim -oblit -eval=-1 examples/fgg/monom/misc/mono-ok/Parameterised-Map.fgg
-	fggsim -oblit -eval=10 examples/fgg/monom/misc/mono-ok/alternate.fgg
-	fggsim -oblit -eval=-1 examples/fgg/monom/misc/mono-ok/i-closure.fgg
-	fggsim -oblit -eval=-1 examples/fgg/monom/misc/mono-ok/i-closure-bad.fgg
-	fggsim -oblit -eval=7 examples/fgg/monom/misc/mono-ok/meth-clash.fgg
-	fggsim -oblit -eval=2 examples/fgg/monom/misc/mono-ok/param-meth-cast.fgg
-	fggsim -oblit -eval=10 examples/fgg/monom/misc/mono-ok/poly-rec-iface.fgg
+	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/monom/misc/mono-ok/struct-poly-rec.fgg
+	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/monom/misc/mono-ok/Parameterised-Map.fgg
+	go run github.com/rhu1/fgg -fgg -test-oblit -eval=10 examples/fgg/monom/misc/mono-ok/alternate.fgg
+	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/monom/misc/mono-ok/i-closure.fgg
+	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/monom/misc/mono-ok/i-closure-bad.fgg
+	go run github.com/rhu1/fgg -fgg -test-oblit -eval=7 examples/fgg/monom/misc/mono-ok/meth-clash.fgg
+	go run github.com/rhu1/fgg -fgg -test-oblit -eval=2 examples/fgg/monom/misc/mono-ok/param-meth-cast.fgg
+	go run github.com/rhu1/fgg -fgg -test-oblit -eval=10 examples/fgg/monom/misc/mono-ok/poly-rec-iface.fgg
 
 # TODO: mono KO
 

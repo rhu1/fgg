@@ -52,6 +52,10 @@ func (x Variable) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 	return res
 }
 
+func (x Variable) DropSynthAsserts() FGRExpr {
+	return x
+}
+
 // From base.Expr
 func (x Variable) IsValue() bool {
 	return false
@@ -129,6 +133,14 @@ func (s StructLit) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 		}
 	}
 	return s.t_S
+}
+
+func (s StructLit) DropSynthAsserts() FGRExpr {
+	es := make([]FGRExpr, len(s.elems))
+	for i := 0; i < len(s.elems); i++ {
+		es[i] = s.elems[i].DropSynthAsserts()
+	}
+	return StructLit{s.t_S, es}
 }
 
 // From base.Expr
@@ -229,6 +241,11 @@ func (s Select) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 	panic("Field not found: " + s.field + " in " + t.String())
 }
 
+func (s Select) DropSynthAsserts() FGRExpr {
+	return Select{s.e_S.DropSynthAsserts(), s.field}
+}
+
+// From base.Expr
 func (s Select) IsValue() bool {
 	return false
 }
@@ -343,6 +360,15 @@ func (c Call) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 	return g.t_ret
 }
 
+func (c Call) DropSynthAsserts() FGRExpr {
+	e := c.e_recv.DropSynthAsserts()
+	args := make([]FGRExpr, len(c.args))
+	for i := 0; i < len(c.args); i++ {
+		args[i] = c.args[i].DropSynthAsserts()
+	}
+	return Call{e, c.meth, args}
+}
+
 // From base.Expr
 func (c Call) IsValue() bool {
 	return false
@@ -447,6 +473,10 @@ func (a Assert) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 		a.t_cast.String() + ", expr=" + t.String())
 }
 
+func (a Assert) DropSynthAsserts() FGRExpr {
+	return Assert{a.e_I.DropSynthAsserts(), a.t_cast}
+}
+
 // From base.Expr
 func (a Assert) IsValue() bool {
 	return false
@@ -535,6 +565,10 @@ func (a SynthAssert) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 		a.t_cast.String() + ", expr=" + t.String())
 }
 
+func (a SynthAssert) DropSynthAsserts() FGRExpr {
+	return a.e_I.DropSynthAsserts()
+}
+
 // IsValue from base.Expr
 func (a SynthAssert) IsValue() bool {
 	return false
@@ -585,6 +619,10 @@ func (p Panic) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 
 func (p Panic) Eval(ds []Decl) (FGRExpr, string) {
 	panic("Cannot reduce panic.")
+}
+
+func (p Panic) DropSynthAsserts() FGRExpr {
+	return p
 }
 
 // From base.Expr
@@ -658,6 +696,10 @@ func (c IfThenElse) Eval(ds []Decl) (FGRExpr, string) {
 	} else {
 		return Panic{}, "If-false"
 	}
+}
+
+func (c IfThenElse) DropSynthAsserts() FGRExpr {
+	return IfThenElse{c.e1, c.e2, c.e3.DropSynthAsserts(), c.src}
 }
 
 // From base.Expr
@@ -747,6 +789,10 @@ func (e Let) Eval(ds []Decl) (FGRExpr, string) {
 	return e.e2.Subs(subs), "Let"
 }
 
+func (e Let) DropSynthAsserts() FGRExpr {
+	return Let{e.x, e.e1.DropSynthAsserts(), e.e2.DropSynthAsserts()}
+}
+
 // IsValue from base.Expr
 func (e Let) IsValue() bool {
 	return false
@@ -815,10 +861,6 @@ func (r TRep) Subs(subs map[Variable]FGRExpr) FGRExpr {
 	return TRep{r.t_name, es}
 }
 
-func (r TRep) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
-	return RepType
-}
-
 // !!! TRep evaluation contexts vs. reify aux?
 func (r TRep) Eval(ds []Decl) (FGRExpr, string) {
 	// Cf. StructLit.Eval
@@ -838,6 +880,14 @@ func (r TRep) Eval(ds []Decl) (FGRExpr, string) {
 	} else {
 		panic("Cannot reduce: " + r.String())
 	}
+}
+
+func (r TRep) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
+	return RepType
+}
+
+func (r TRep) DropSynthAsserts() FGRExpr {
+	return r
 }
 
 // From base.Expr
@@ -902,6 +952,10 @@ func (tmp TmpTParam) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 }
 
 func (tmp TmpTParam) Eval(ds []Decl) (FGRExpr, string) {
+	panic("Shouldn't get in here: " + tmp.String())
+}
+
+func (tmp TmpTParam) DropSynthAsserts() FGRExpr {
 	panic("Shouldn't get in here: " + tmp.String())
 }
 

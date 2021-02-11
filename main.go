@@ -510,7 +510,8 @@ func testOblit(verbose bool, src string, steps int) {
 // Fast forward "silent" steps
 func ffSilent(p fgr.FGRProgram) fgr.FGRProgram {
 	var foo base.Program = p
-	for isFFSilent(foo.GetMain()) {
+	ds := p.GetDecls()
+	for isFFSilent(ds, foo.GetMain()) {
 		foo, _ = foo.Eval()
 		frontend.VPrintln(verbose, "Fast forward one step: "+
 			foo.GetMain().String())
@@ -520,35 +521,42 @@ func ffSilent(p fgr.FGRProgram) fgr.FGRProgram {
 
 // FIXME: mismatch between isFFSilent predicate and actual next eval step
 // (e.g., if silent is in second struct arg expr, but first arg expr can eval)
-func isFFSilent(e base.Expr) bool {
+func isFFSilent(ds []base.Decl, e base.Expr) bool {
 	switch e1 := e.(type) {
 	case fgr.StructLit:
 		for _, v := range e1.GetElems() {
-			if isFFSilent(v) {
+			if isFFSilent(ds, v) {
 				return true
+			} else if v.CanEval(ds) {
+				return false
 			}
 		}
 		return false
 	case fgr.Select:
-		return isFFSilent(e1.GetExpr())
+		return isFFSilent(ds, e1.GetExpr())
 	case fgr.Call:
-		if isFFSilent(e1.GetReceiver()) {
+		e2 := e1.GetReceiver()
+		if isFFSilent(ds, e2) {
 			return true
+		} else if e2.CanEval(ds) {
+			return false
 		}
 		for _, v := range e1.GetArgs() {
-			if isFFSilent(v) {
+			if isFFSilent(ds, v) {
 				return true
+			} else if v.CanEval(ds) {
+				return false
 			}
 		}
 		return false
 	case fgr.Assert:
-		return isFFSilent(e1.GetExpr())
+		return isFFSilent(ds, e1.GetExpr())
 	case fgr.SynthAssert:
 		e2 := e1.GetExpr()
-		if e2.IsValue() {
+		if e2.IsValue() { // TODO FIXME: refactor with DropSynthAsserts
 			return true
 		}
-		return isFFSilent(e2)
+		return isFFSilent(ds, e2)
 	case fgr.IfThenElse:
 		return true
 	case fgr.Let:
@@ -556,7 +564,7 @@ func isFFSilent(e base.Expr) bool {
 		if eX.IsValue() {
 			return true
 		}
-		return isFFSilent(eX)
+		return isFFSilent(ds, eX)
 	default: // Variable, TRep
 		return false
 	}
@@ -594,7 +602,7 @@ func testOblitStep(verbose bool, pFgg fgg.FGGProgram,
 	// Right-vertical arrow
 	bar := fgr.Obliterate(pFgg1.(fgg.FGGProgram))
 	pFgg1Oblit := ffSilent(bar)
-	eFgg1Oblit := pFgg1Oblit.GetMain() // N.B. the monom'd FGG expr (i.e., an FGExpr)
+	eFgg1Oblit := pFgg1Oblit.GetMain().(fgr.FGRExpr) // N.B. the monom'd FGG expr (i.e., an FGExpr)
 	frontend.VPrintln(verbose, "Obliterated one step'd FGG: "+
 		eFgg1Oblit.String())
 
@@ -603,10 +611,16 @@ func testOblitStep(verbose bool, pFgg fgg.FGGProgram,
 	//if !(string_fgg && string_mono) {
 	// Replaced parens by angle bracks -- hack for StringLit (cf. examples/fgg/ooplsa20/fig6/expression.fgg)
 	//hacked := testMonomStringHack(eFgg.(fg.FGExpr)).String()
-	eOblit1 := pOblit1.GetMain()
-	if eFgg1Oblit.String() != eOblit1.String() {
+	eOblit1 := pOblit1.GetMain().(fgr.FGRExpr)
+	//if eFgg1Oblit.String() != eOblit1.String() {
+	fggDrop := eFgg1Oblit.DropSynthAsserts()
+	oblitDrop := eOblit1.DropSynthAsserts()
+	if fggDrop.String() != oblitDrop.String() {
+		fmt.Println("aaa:", eOblit1)
+		fmt.Println("bbb:", pTmp.GetMain())
+		fmt.Println("ccc:", oblitDrop)
 		panic("-test-oblit failed: exprs do not correspond\n\tFGG->oblit   =" +
-			eFgg1Oblit.String() + "\n\tStepped oblit=" + eOblit1.String())
+			fggDrop.String() + "\n\tStepped oblit=" + oblitDrop.String())
 	}
 	//}
 
