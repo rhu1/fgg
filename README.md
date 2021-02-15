@@ -121,7 +121,7 @@ of `go run`.
 This package has been tested using Go version 1.11.5+ on:
 
 * MacOS Catalina
-* Cygwin/Windows 10
+* WSL2/Windows 10
 
 ---
 
