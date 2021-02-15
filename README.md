@@ -91,10 +91,11 @@ in this
 [tutorial](https://blog.gopheracademy.com/advent-2017/parsing-with-antlr4-and-go/).
 
 Clone the `fgg` repo into the `src` directory of your Go workspace, i.e.,
-`$GOPATH/src` (or use `go get`).  It should end up located at
-`src/github.com/rhu1/fgg`.
+`$GOPATH/src`.  It should end up located at `src/github.com/rhu1/fgg`.  You can 
+also use `go get` -- this should fetch ANTLR for you, but will report that it
+cannot find the parser pacakge (that's fine, we generate it in the next step).
 
-Then, either copy over the pre-generated parser files and install by
+Next, either copy over the pre-generated parser files and install by
 
 - `make install-pregen-parser`  
   (generated using ANTLR 4.7.1)
@@ -105,7 +106,7 @@ or generate the parsers yourself using ANTLR and install by
 `antlr4 -Dlanguage=Go -o parser/fg parser/FG.g4`  
   `antlr4 -Dlanguage=Go -o parser/fgg parser/FGG.g4`  
   
-Then do:
+Finally, do:
 
 - `make install`
 
