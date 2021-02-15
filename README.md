@@ -104,7 +104,10 @@ or generate the parsers yourself using ANTLR and install by
 - (assuming some suitable `antlr4` command; e.g., `java -jar [antlr-4.7.1-complete.jar]`)  
 `antlr4 -Dlanguage=Go -o parser/fg parser/FG.g4`  
   `antlr4 -Dlanguage=Go -o parser/fgg parser/FGG.g4`  
-  `make install`
+  
+Then do:
+
+- `make install`
 
 To test the install -- inside the `github.com/rhu1/fgg` directory, this command
 should work:
