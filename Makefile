@@ -435,7 +435,7 @@ simulate-oblit:
 	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/misc/booleans/booleans.fgg
 	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/misc/compose/compose.fgg
 	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/misc/graph/graph.fgg
-	#go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/misc/irregular/irregular.fgg
+	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/misc/irregular/irregular.fgg
 	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/misc/map/map.fgg
 	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/misc/monomorph/monomorph.fgg
 

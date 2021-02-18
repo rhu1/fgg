@@ -534,6 +534,12 @@ func isFFSilent(ds []base.Decl, e base.Expr) bool {
 		}
 		return false
 	case fgr.Select:
+		if e1.CanEval(ds) { // TODO FIXME: refactor with DropSynthAsserts
+			e2, _ := e1.Eval(ds)
+			if _, ok := e2.(fgr.TRep); ok { // !!! cf. nomono.fgg
+				return true
+			}
+		}
 		return isFFSilent(ds, e1.GetExpr())
 	case fgr.Call:
 		e2 := e1.GetReceiver()
@@ -623,16 +629,13 @@ func testOblitStep(verbose bool, pFgg fgg.FGGProgram,
 	//hacked := testMonomStringHack(eFgg.(fg.FGExpr)).String()
 	eOblit1 := pOblit1.GetMain().(fgr.FGRExpr)
 	//if eFgg1Oblit.String() != eOblit1.String() {
-	fggDrop := eFgg1Oblit.DropSynthAsserts()
-	oblitDrop := eOblit1.DropSynthAsserts()
+	fggDrop := eFgg1Oblit.DropSynthAsserts(pFgg1Oblit.GetDecls())
+	oblitDrop := eOblit1.DropSynthAsserts(pOblit1.GetDecls())
 	re := regexp.MustCompile("_x[0-9]*")
-	tmpA := re.ReplaceAllString(fggDrop.String(), "_xxx") // TODO FIXME
+	tmpA := re.ReplaceAllString(fggDrop.String(), "_xxx") // !!! TODO FIXME: oblit indexes vars by a counter
 	tmpB := re.ReplaceAllString(oblitDrop.String(), "_xxx")
 	//if fggDrop.String() != oblitDrop.String() {
 	if tmpA != tmpB {
-		fmt.Println("aaa:", eOblit1)
-		fmt.Println("bbb:", pTmp.GetMain())
-		fmt.Println("ccc:", oblitDrop)
 		panic("-test-oblit failed: exprs do not correspond\n\tFGG->oblit   =" +
 			//fggDrop.String() + "\n\tStepped oblit=" + oblitDrop.String())
 			tmpA + "\n\tStepped oblit=" + tmpB)

@@ -109,7 +109,7 @@ type FGRExpr interface {
 
 	//IsPanic() bool  // TODO "explicit" FGR panic -- cf. underlying runtime panic
 
-	DropSynthAsserts() FGRExpr
+	DropSynthAsserts(ds []Decl) FGRExpr
 }
 
 /* Helpers */
