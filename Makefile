@@ -427,9 +427,8 @@ endef
 .PHONY: simulate-oblit
 simulate-oblit:
 
-# FIXME: "expansion"
-#fggsim -oblit -eval=10 examples/fgg/hello/hello.fgg
-#fggsim -oblit -eval=10 examples/fgg/hello/fmtprintf/fmtprintf.fgg
+	fggsim -oblit -eval=10 examples/fgg/hello/hello.fgg
+	fggsim -oblit -eval=10 examples/fgg/hello/fmtprintf/fmtprintf.fgg
 
 	fggsim -oblit -eval=-1 examples/fgg/misc/booleans/booleans.fgg
 	fggsim -oblit -eval=-1 examples/fgg/misc/compose/compose.fgg
@@ -438,9 +437,8 @@ simulate-oblit:
 	fggsim -oblit -eval=-1 examples/fgg/misc/map/map.fgg
 	fggsim -oblit -eval=-1 examples/fgg/misc/monomorph/monomorph.fgg
 
-# FIXME: "expansion"
-#fggsim -oblit -eval=10 examples/fgg/monom/box/box.fgg
-#fggsim -oblit -eval=10 examples/fgg/monom/box/box2.fgg
+	fggsim -oblit -eval=10 examples/fgg/monom/box/box.fgg
+	fggsim -oblit -eval=10 examples/fgg/monom/box/box2.fgg
 
 	fggsim -oblit -eval=-1 examples/fgg/monom/misc/ifacebox.fgg
 
