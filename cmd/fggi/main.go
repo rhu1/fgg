@@ -85,16 +85,5 @@ func main() {
 		src = frontend.ReadSourceFile(flag.Arg(0))
 	}
 
-	intrpFgg := frontend.NewFGGInterp(verbose, src, strictParse)
-
-	if evalSteps > frontend.NO_EVAL {
-		intrpFgg.Eval(evalSteps)
-		frontend.PrintResult(printf, intrpFgg.GetProgram())
-	}
-	frontend.PrintResult(printf, intrpFgg.GetProgram())
-
-	// TODO: refactor (cf. Frontend, Interp)
-	intrpFgg.Monom(false, monomc)
-	intrpFgg.Oblit(oblitc)
-	////doWrappers(prog, wrapperc)
+	frontend.FGGmain(verbose, src, strictParse, evalSteps, printf, false, monomc, oblitc)
 }

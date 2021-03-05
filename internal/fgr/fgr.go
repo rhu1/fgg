@@ -1,8 +1,10 @@
 package fgr
 
-import "reflect"
+import (
+	"reflect"
 
-import "github.com/rhu1/fgg/internal/base"
+	"github.com/rhu1/fgg/internal/base"
+)
 
 //import "github.com/rhu1/fgg/fgg"
 
@@ -106,6 +108,9 @@ type FGRExpr interface {
 	Eval(ds []Decl) (FGRExpr, string)
 
 	//IsPanic() bool  // TODO "explicit" FGR panic -- cf. underlying runtime panic
+
+	// General "nested" subexpr dropping for fgr sim -- also Select-TRep (not only SynthAsserts)
+	DropSynthAsserts(ds []Decl) FGRExpr
 }
 
 /* Helpers */

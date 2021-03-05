@@ -66,9 +66,5 @@ func main() {
 		src = frontend.ReadSourceFile(flag.Arg(0))
 	}
 
-	intrpFg := frontend.NewFGInterp(verbose, src, strictParse)
-	if evalSteps > frontend.NO_EVAL {
-		intrpFg.Eval(evalSteps)
-		frontend.PrintResult(printf, intrpFg.GetProgram())
-	}
+	frontend.FGmain(verbose, src, strictParse, evalSteps, printf)
 }

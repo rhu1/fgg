@@ -3,6 +3,8 @@ package fgr
 import (
 	"fmt"
 	"reflect"
+	"strconv"
+
 	//"strings"
 
 	"github.com/rhu1/fgg/internal/fgg"
@@ -156,7 +158,7 @@ func oblitMDecl(ds_fgg []Decl, d fgg.MethDecl) MDecl {
 		v := NewVariable(x)
 		u := pd.GetType()
 		//if _, ok := u.(fgg.TParam); ok || fgg.IsInterfaceTName1(ds_fgg, u) { // !!! cf. y := y.(erase(\sigma)) -- no: allowStupid
-		subs[v] = NewAssert(v, toFgrTypeFromBounds(delta, u))
+		subs[v] = NewSynthAssert(v, toFgrTypeFromBounds(delta, u))
 	}
 	gamma := make(fgg.Gamma)
 	tfs_recv := d.GetRecvPsi().GetTFormals()
@@ -214,7 +216,7 @@ func oblitExpr(ds_fgg []Decl, delta fgg.Delta, gamma fgg.Gamma, e_fgg fgg.FGGExp
 		//if !fgg.IsStructType(ds_fgg, u_f) { // !!! don't add cast when field type is a struct
 		du := dtype(ds_fgg, delta, gamma, e)
 		if !fgg.IsStructType(ds_fgg, du) { // if the FGR field decl type is (erased) non-struct, in general need to cast the select result to the (erasure of the) expected FGG type
-			res = NewAssert(res, toFgrTypeFromBounds(delta, u_f))
+			res = NewSynthAssert(res, toFgrTypeFromBounds(delta, u_f))
 		}
 		return res
 	case fgg.Call:
@@ -232,7 +234,9 @@ func oblitExpr(ds_fgg []Decl, delta fgg.Delta, gamma fgg.Gamma, e_fgg fgg.FGGExp
 		}
 
 		u_recv := e_fgg.Typing(ds_fgg, delta, gamma, true)
-		g := fgg.Methods(ds_fgg, fgg.Bounds(delta, u_recv))[m]
+
+		//g := fgg.Methods(ds_fgg, fgg.Bounds(delta, u_recv))[m]
+		g := fgg.MethodsDelta1(ds_fgg, delta, fgg.Bounds(delta, u_recv))[m]
 		tsubs := make(map[fgg.TParam]fgg.Type)
 		tfs := g.GetPsi().GetTFormals()
 		for i := 0; i < len(targs); i++ {
@@ -242,15 +246,17 @@ func oblitExpr(ds_fgg []Decl, delta fgg.Delta, gamma fgg.Gamma, e_fgg fgg.FGGExp
 
 		var res FGRExpr
 		res = NewCall(e_fgr, m, es_fgr)
-		res = NewAssert(res, t_ret)
+		res = NewSynthAssert(res, t_ret)
 		return res
 	case fgg.Assert:
-		x := oblitExpr(ds_fgg, delta, gamma, e.GetExpr())
+		x := Variable{"_x" + strconv.Itoa(nextLetIndex())}
+		eX := oblitExpr(ds_fgg, delta, gamma, e.GetExpr())
 		e1 := NewCall(x, GET_REP, []FGRExpr{})
 		u := e.GetType()
-		e3 := NewAssert(x, toFgrTypeFromBounds(delta, u))
-		p_fgg := fgg.NewProgram(ds_fgg, fgg.NewVariable(fgg.Name("dummy")), false)
-		return IfThenElse{e1, mkRep_oblit(u), e3, p_fgg.String()} // TODO: New constructor
+		e3 := NewAssert(x, toFgrTypeFromBounds(delta, u)) // Not synth
+		pFgg := fgg.NewProgram(ds_fgg, fgg.NewVariable(fgg.Name("dummy")), false)
+		cond := IfThenElse{e1, mkRep_oblit(u), e3, pFgg.String()} // TODO: New constructor
+		return Let{x, eX, cond}
 	default:
 		panic("Unknown FGG Expr type: " + e_fgg.String())
 	}
@@ -260,7 +266,7 @@ func oblitExpr(ds_fgg []Decl, delta fgg.Delta, gamma fgg.Gamma, e_fgg fgg.FGGExp
 
 // i.e., "erase" -- cf. oblit
 func toFgrTypeFromBounds(delta fgg.Delta, u fgg.Type) Type {
-	return Type(fgg.Bounds(delta, u).(fgg.TNamed).GetName())
+	return Type(fgg.Bounds(delta, u).(fgg.TNamed).GetName()) // !!! cf. STRING_TYPE hack, TParam
 }
 
 // TODO: check where dtype should be used in wrapper translation -- and add unit tests (when return type is type param, don't want the FGG type arg, which may be struct; want the FGR target decl type as the wrapper target)
@@ -315,4 +321,11 @@ func mkRep_oblit(u fgg.Type) FGRExpr { // Duplicated from fgr_translation
 		panic("Unknown fgg.Type kind " + reflect.TypeOf(u).String() +
 			": " + u.String())
 	}
+}
+
+var letCounter = 0
+
+func nextLetIndex() int {
+	letCounter++
+	return letCounter
 }

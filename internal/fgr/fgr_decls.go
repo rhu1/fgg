@@ -5,11 +5,13 @@
 
 package fgr
 
-import "fmt"
-import "reflect"
-import "strings"
+import (
+	"fmt"
+	"reflect"
+	"strings"
 
-import "github.com/rhu1/fgg/internal/base"
+	"github.com/rhu1/fgg/internal/base"
+)
 
 var _ = fmt.Errorf
 
@@ -232,7 +234,6 @@ func (pd ParamDecl) GetName() Name { return pd.name }
 func (pd ParamDecl) GetType() Type { return pd.t }
 
 func (pd ParamDecl) String() string {
-	return pd.name + " " + pd.t.String()
 	var b strings.Builder
 	b.WriteString(pd.name)
 	b.WriteString(" ")

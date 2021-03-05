@@ -234,10 +234,11 @@ func (intrp *FGGInterp) Oblit(compile string) {
 	// cf. interp -- TODO: factor out with others
 	p_fgr.Ok(false)
 	if OblitEvalSteps > NO_EVAL {
-		intrp.VPrint("\nEvaluating FGR:") // eval prints a leading "\n"
+		/*intrp.VPrint("\nEvaluating FGR:") // eval prints a leading "\n"
 		intrp_fgr := NewFGRInterp(Verbose, p_fgr)
 		intrp_fgr.Eval(OblitEvalSteps)
-		fmt.Println(intrp_fgr.GetProgram().GetMain())
+		fmt.Println(intrp_fgr.GetProgram().GetMain())*/
+		Eval(NewFGRInterp(true, p_fgr), OblitEvalSteps)
 	}
 }
 
