@@ -141,8 +141,7 @@ test-fg-examples-against-go:
 
 
 .PHONY: test-fgg
-test-fgg: test-fgg-unit test-fgg-examples test-nomono-bad simulate-monom 
-		#simulate-oblit
+test-fgg: test-fgg-unit test-fgg-examples test-nomono-bad simulate-monom simulate-oblit
 #test-fgg-examples executes nomono examples (e.g., oopsla20/fig10/nomono.fgg)
 
 
@@ -432,44 +431,44 @@ simulate-oblit:
 #fggsim -oblit -eval=10 examples/fgg/hello/hello.fgg
 #fggsim -oblit -eval=10 examples/fgg/hello/fmtprintf/fmtprintf.fgg
 
-	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/misc/booleans/booleans.fgg
-	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/misc/compose/compose.fgg
-	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/misc/graph/graph.fgg
-	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/misc/irregular/irregular.fgg
-	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/misc/map/map.fgg
-	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/misc/monomorph/monomorph.fgg
+	fggsim -oblit -eval=-1 examples/fgg/misc/booleans/booleans.fgg
+	fggsim -oblit -eval=-1 examples/fgg/misc/compose/compose.fgg
+	fggsim -oblit -eval=-1 -eval=-1 examples/fgg/misc/graph/graph.fgg
+	fggsim -oblit -eval=-1 examples/fgg/misc/irregular/irregular.fgg
+	fggsim -oblit -eval=-1 examples/fgg/misc/map/map.fgg
+	fggsim -oblit -eval=-1 examples/fgg/misc/monomorph/monomorph.fgg
 
 # FIXME: "expansion"
 #fggsim -oblit -eval=10 examples/fgg/monom/box/box.fgg
 #fggsim -oblit -eval=10 examples/fgg/monom/box/box2.fgg
 
-	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/monom/misc/ifacebox.fgg
+	fggsim -oblit -eval=-1 examples/fgg/monom/misc/ifacebox.fgg
 
 # TODO?
 #fgg -test-oblit -eval=-1 examples/fgg/monom/misc/iface-embedding-simple.fgg
 #fgg -test-oblit -eval=-1 examples/fgg/monom/misc/iface-embedding.fgg
 
-	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/monom/misc/mono-ok/rcver-iface.fgg
-	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/monom/misc/mono-ok/one-pass-prob.fgg
-	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/monom/misc/mono-ok/contamination.fgg
+	fggsim -oblit -eval=-1 examples/fgg/monom/misc/mono-ok/rcver-iface.fgg
+	fggsim -oblit -eval=-1 examples/fgg/monom/misc/mono-ok/one-pass-prob.fgg
+	fggsim -oblit -eval=-1 examples/fgg/monom/misc/mono-ok/contamination.fgg
 
-	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/monom/misc/mono-ok/struct-poly-rec.fgg
-	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/monom/misc/mono-ok/Parameterised-Map.fgg
-	go run github.com/rhu1/fgg -fgg -test-oblit -eval=10 examples/fgg/monom/misc/mono-ok/alternate.fgg
-	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/monom/misc/mono-ok/i-closure.fgg
-	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/monom/misc/mono-ok/i-closure-bad.fgg
-	go run github.com/rhu1/fgg -fgg -test-oblit -eval=7 examples/fgg/monom/misc/mono-ok/meth-clash.fgg
-	go run github.com/rhu1/fgg -fgg -test-oblit -eval=2 examples/fgg/monom/misc/mono-ok/param-meth-cast.fgg
-	go run github.com/rhu1/fgg -fgg -test-oblit -eval=10 examples/fgg/monom/misc/mono-ok/poly-rec-iface.fgg
+	fggsim -oblit -eval=-1 examples/fgg/monom/misc/mono-ok/struct-poly-rec.fgg
+	fggsim -oblit -eval=-1 examples/fgg/monom/misc/mono-ok/Parameterised-Map.fgg
+	fggsim -oblit -eval=10 examples/fgg/monom/misc/mono-ok/alternate.fgg
+	fggsim -oblit -eval=-1 examples/fgg/monom/misc/mono-ok/i-closure.fgg
+	fggsim -oblit -eval=-1 examples/fgg/monom/misc/mono-ok/i-closure-bad.fgg
+	fggsim -oblit -eval=7 examples/fgg/monom/misc/mono-ok/meth-clash.fgg
+	fggsim -oblit -eval=2 examples/fgg/monom/misc/mono-ok/param-meth-cast.fgg
+	fggsim -oblit -eval=10 examples/fgg/monom/misc/mono-ok/poly-rec-iface.fgg
 
 # TODO: mono KO
 
-	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/oopsla20/fig4/functions.fgg
-	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/oopsla20/fig5/equality.fgg
-	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/oopsla20/fig6/lists.fgg
-	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/oopsla20/fig7/graph.fgg
+	fggsim -oblit -eval=-1 examples/fgg/oopsla20/fig4/functions.fgg
+	fggsim -oblit -eval=-1 examples/fgg/oopsla20/fig5/equality.fgg
+	fggsim -oblit -eval=-1 examples/fgg/oopsla20/fig6/lists.fgg
+	fggsim -oblit -eval=-1 examples/fgg/oopsla20/fig7/graph.fgg
 	#go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/oopsla20/fig8/expression.fgg
-	go run github.com/rhu1/fgg -fgg -test-oblit -eval=-1 examples/fgg/oopsla20/fig10/nomono.fgg
+	fggsim -oblit -eval=-1 examples/fgg/oopsla20/fig10/nomono.fgg
 
 
 # !!! currently unused (no monom equiv, closest is test-monom-against-go)
