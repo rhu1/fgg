@@ -109,6 +109,7 @@ type FGRExpr interface {
 
 	//IsPanic() bool  // TODO "explicit" FGR panic -- cf. underlying runtime panic
 
+	// General "nested" subexpr dropping for fgr sim -- also Select-TRep (not only SynthAsserts)
 	DropSynthAsserts(ds []Decl) FGRExpr
 }
 

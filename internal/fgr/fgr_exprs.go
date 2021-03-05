@@ -241,10 +241,15 @@ func (s Select) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 	panic("Field not found: " + s.field + " in " + t.String())
 }
 
+// DropSynthAsserts from FGRExpr
 func (s Select) DropSynthAsserts(ds []Decl) FGRExpr {
-	if s.CanEval(ds) { // !!!
+	if s.CanEval(ds) { // Cf. fast-forwarding (some overlap, intentional)
 		e2, _ := s.Eval(ds)
-		if v, ok := e2.(TRep); ok { // !!! cf. nomono.fgg
+		if v, ok := e2.(TRep); ok { // !!! Select-TRep cf. nomono.fgg
+			if !v.IsValue() { // CHECKME: temp assertion -- may need to (attempt to) further reduce TRep to ground
+				panic("CHECKME: Select-TRep produced non-ground TRep: " +
+					v.String())
+			}
 			return v
 		}
 	}
@@ -572,6 +577,7 @@ func (a SynthAssert) Typing(ds []Decl, gamma Gamma, allowStupid bool) Type {
 }
 
 func (a SynthAssert) DropSynthAsserts(ds []Decl) FGRExpr {
+	// Cf. fast-forwarding (some overlap, intentional)
 	return a.e_I.DropSynthAsserts(ds)
 }
 

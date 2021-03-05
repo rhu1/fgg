@@ -244,6 +244,7 @@ func testMonomStringHack(e1 fg.FGExpr) fg.FGExpr {
 	}
 }
 
+/*
 // For convenient quick testing -- via flag "-internal"
 func internalSrc() string {
 	Any := "type Any interface {}"
@@ -251,6 +252,7 @@ func internalSrc() string {
 	e := "ToAny{1}"                        // CHECKME: `1` skipped by parser?
 	return fg.MakeFgProgram(Any, ToAny, e) // FIXME: hardcoded FG
 }
+*/
 
 /*
 

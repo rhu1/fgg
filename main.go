@@ -508,7 +508,7 @@ func testOblit(verbose bool, src string, steps int) {
 		"\n\toblit="+pOblit.GetMain().String())
 }
 
-// Fast forward "silent" steps
+// Fast forward "silent" FGR steps
 func ffSilent(p fgr.FGRProgram) fgr.FGRProgram {
 	var foo base.Program = p
 	ds := p.GetDecls()
@@ -520,8 +520,6 @@ func ffSilent(p fgr.FGRProgram) fgr.FGRProgram {
 	return foo.(fgr.FGRProgram)
 }
 
-// FIXME: mismatch between isFFSilent predicate and actual next eval step
-// (e.g., if silent is in second struct arg expr, but first arg expr can eval)
 func isFFSilent(ds []base.Decl, e base.Expr) bool {
 	switch e1 := e.(type) {
 	case fgr.StructLit:
@@ -534,8 +532,9 @@ func isFFSilent(ds []base.Decl, e base.Expr) bool {
 		}
 		return false
 	case fgr.Select:
-		if e1.CanEval(ds) { // TODO FIXME: refactor with DropSynthAsserts
+		if e1.CanEval(ds) {
 			e2, _ := e1.Eval(ds)
+			// N.B. the following overlaps with DropSynthAsserts -- but keep: do FF greedily first, then do DropSynthAsserts at end (o/w may need to interleave)
 			if _, ok := e2.(fgr.TRep); ok { // !!! cf. nomono.fgg
 				return true
 			}
@@ -560,7 +559,8 @@ func isFFSilent(ds []base.Decl, e base.Expr) bool {
 		return isFFSilent(ds, e1.GetExpr())
 	case fgr.SynthAssert:
 		e2 := e1.GetExpr()
-		if e2.IsValue() { // TODO FIXME: refactor with DropSynthAsserts
+		// N.B. the following overlaps with DropSynthAsserts -- but keep: do FF greedily first, then do DropSynthAsserts at end (o/w may need to interleave)
+		if e2.IsValue() {
 			return true
 		}
 		return isFFSilent(ds, e2)
@@ -584,7 +584,7 @@ func isFFSilent(ds []base.Decl, e base.Expr) bool {
 	}
 }
 
-// HERE: irregular and nomono
+// HERE: refactor to fggsim (or fgrsim?) -- fix -test-oblit in Makefile to use fgrsim -- make mini examples -- check "non-empty typerep" cases for typerep-select dropping
 
 // TODO: factor out with testMonomStep
 // Pre: u = p_fgg.Ok(), t = p_mono.Ok(), both CanEval
