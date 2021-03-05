@@ -93,7 +93,7 @@ in this
 Clone the `fgg` repo into the `src` directory of your Go workspace, i.e.,
 `$GOPATH/src`.  It should end up located at `src/github.com/rhu1/fgg`.  You can 
 also use `go get` -- this should fetch ANTLR for you, but will report that it
-cannot find the parser pacakges (that's fine, we generate it in the next step).
+cannot find the parser packages (that's fine, we generate them in the next step).
 
 Next, either copy over the pre-generated parser files and install by
 
