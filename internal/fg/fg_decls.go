@@ -173,7 +173,6 @@ func (f FieldDecl) GetType() Type { return f.t }
 func (f FieldDecl) GetName() Name { return f.name }
 
 func (fd FieldDecl) String() string {
-	return fd.name + " " + fd.t.String()
 	var b strings.Builder
 	b.WriteString(fd.name)
 	b.WriteString(" ")
@@ -461,7 +460,7 @@ func writeParamDecls(b *strings.Builder, pds []ParamDecl) {
 
 /* Old */
 
-//*/
+/*/
 
 // RH: Possibly refactor aspects of this and related as "Decl.Wf()" -- the parts of "Ok()" omitted from the paper
 func isDistinctDecl(decl Decl, ds []Decl) bool {

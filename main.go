@@ -15,7 +15,7 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/rhu1/fgg/internal/fg"
+	"github.com/rhu1/fgg/internal/fg" // For "internal source"
 	"github.com/rhu1/fgg/internal/frontend"
 )
 
