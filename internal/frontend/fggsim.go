@@ -304,7 +304,7 @@ func isFFSilent(ds []base.Decl, e base.Expr) bool {
 	}
 }
 
-// HERE: refactor to fggsim (or fgrsim?) -- fix -test-oblit in Makefile to use fgrsim -- make mini examples -- check "non-empty typerep" cases for typerep-select dropping
+// HERE: -- make mini tests/examples -- check non-ground typerep cases for select-typerep dropping
 
 // TODO: factor out with testMonomStep
 // Pre: u = p_fgg.Ok(), t = p_mono.Ok(), both CanEval
